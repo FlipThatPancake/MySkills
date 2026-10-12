@@ -1,0 +1,4 @@
+interface:
+  display_name: "Hierarchical Knowledge"
+  short_description: "Organize and read project knowledge by node"
+  default_prompt: "Use $hierarchical-knowledge to organize this projectâs knowledge into a tree with selective, hierarchical reads."
