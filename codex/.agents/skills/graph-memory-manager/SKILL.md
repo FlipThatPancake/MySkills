@@ -1,11 +1,24 @@
 ---
 name: graph-memory-manager
-description: Maintains project memory as selectively readable nodes with nested parent folders and cross-references when saving, organizing, restructuring, or auditing knowledge. Routine reading follows AGENTS.md.
+description: Maintains project memory as selectively readable nodes with nested parent folders and cross-references. Use for saving, organizing, restructuring, auditing retrieval, upgrading existing graphs after skill updates, or reporting session retrieval quality and efficiency for skill maintenance. Routine reading follows AGENTS.md.
 ---
 
 # Graph memory manager
 
 Use the project's reader and identity format. Memory has a parent tree with explicit cross-references. Store each node in its own file; put its children in a sibling folder named after its ID and repeat at every level. Follow [format](references/format.md) for nested layout, migration, and its read-only checker; leave unrelated content in place.
+
+## Commands
+
+These are requests to the agent after invoking this skill, not shell commands or new reader options. For example: `$graph-memory-manager upgrade`.
+
+| Request | Behavior | Reference |
+| --- | --- | --- |
+| `upgrade` | Compare an existing graph with the installed skill and preview required changes. Apply the reviewed plan only after approval, then validate and record the result. | [Upgrade](references/upgrade.md) |
+| `usage-report [PATH]` | Assess when and why nodes were read, excessive or insufficient retrieval, and evidence for token savings; produce a portable maintenance report at PATH when supplied. | [Usage report](references/usage-report.md) |
+
+Installing a revision does not itself authorize or require a graph rewrite. Run these workflows when requested; ordinary saves retain their affected-branch scope. A usage report does not require prior audit logging.
+
+## Saving and organizing
 
 Before every save, reconsider placement using the affected node and nearby hierarchy. Reuse existing junctions and IDs. Give independently useful subjects their own branches; promote an existing leaf when distinct subjects or optional details arrive. Do this during the save, not after a size threshold. Keep short context normally used together in one node.
 

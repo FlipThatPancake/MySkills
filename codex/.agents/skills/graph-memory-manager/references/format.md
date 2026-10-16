@@ -43,6 +43,8 @@ Use explicit relative file links for cross-references; they do not load bodies. 
 
 ## Existing layouts and moves
 
+For a requested upgrade after installing a skill revision, use [upgrade](upgrade.md) to compare the existing graph with the current contract, preserve a recoverable baseline, and record verification. The affected-branch rule below applies to ordinary knowledge updates; an unqualified upgrade checks the full graph.
+
 The reader also supports older inline nodes marked by identified headings and matching anchors. Treat these as legacy input, not the layout for new nodes. When creating, promoting, or moving nodes in an affected branch, extract its inline children and place its node files in the nested layout. Preserve IDs, parent relationships, facts, qualifications, and required verbatim source text. Leave unrelated branches for their own tasks.
 
 Move a parent file and its child directory together when changing its location. Derive descendant paths from the resulting ancestry, update changed `parent` fields, and repair inbound and outbound relative links, including links in project instructions. Inspect existing destinations before merging; do not overwrite an unrelated node or leave duplicate canonical files. Retain `context.json` root/foundation IDs unless identities actually change.
