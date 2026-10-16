@@ -1,0 +1,4 @@
+interface:
+  display_name: "Graph Memory Manager"
+  short_description: "Organize project memory with selective node reads"
+  default_prompt: "Use $graph-memory-manager to organize this project's memory into nested node folders with selective reads and cross-references."
