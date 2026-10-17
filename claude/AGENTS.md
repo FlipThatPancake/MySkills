@@ -4,6 +4,7 @@ Load a skill when its task begins, not at chat start. Reuse loaded guidance whil
 
 | Task | Skill |
 | --- | --- |
+| Choose or connect Blender tools | [blender-access](.claude/skills/blender-access/SKILL.md) |
 | Prepare project-file changes | [approval-first-changes](.claude/skills/approval-first-changes/SKILL.md) |
 | Save, organize, or restructure knowledge; audit retrieval | [graph-memory-manager](.claude/skills/graph-memory-manager/SKILL.md) |
 | User says âgrill meâ | [grill-me](.claude/skills/grill-me/SKILL.md) |
