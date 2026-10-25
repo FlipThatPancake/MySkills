@@ -33,7 +33,7 @@ Keep parents brief: their bodies load with descendants. Give each fact one owner
 
 Write compact, self-contained notes. Preserve decision status, conditions, units, and meaningful rationale. Keep transcripts and quoted source material verbatim unless transformation is requested.
 
-For saves, use the proposer–critic–approval workflow in [review](references/review.md); apply only the approved proposal. Load other references as needed:
+For saves, the orchestrator uses separate proposer and critic threads in Claude Projects, falling back to subagents. Follow [review](references/review.md); apply only the approved proposal. Load other references as needed:
 
 - [Organization](references/organization.md): creating or restructuring branches, node patterns, and substantial placement proposals.
 - [Review](references/review.md): session handoff, proposal, independent critique, revisions, approval, and application.
