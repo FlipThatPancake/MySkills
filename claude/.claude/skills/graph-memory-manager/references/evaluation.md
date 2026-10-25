@@ -1,8 +1,12 @@
 # Evaluating changes to this skill
 
-Use this workflow when assessing a skill revision or a proposed delegation policy. Do not run it on each knowledge save. Testing reusable guidance can benefit many later sessions; reviewing every update adds recurring overhead.
+Use when assessing a skill revision or delegation policy. Ordinary saves use [review](review.md), not this evaluation workflow.
 
 Choose realistic cases relevant to the change. Useful contrasts include an empty collection gaining detailed subjects, an existing subject gaining a new detail, a brief inseparable list, and material overlapping an established branch. Judge retrieval and preservation, not exact filenames, wording, or a single preferred tree.
+
+Placement cases should contrast a scalar update with an optional procedure, a leaf gaining children, a new sibling without an invented junction, a shared policy needing links, duplicate owners needing consolidation, and an essential caveat that must remain visible. Include mixed input, aliases in another branch, already-recorded facts, incidental material versus explicit preservation, and corrections versus unresolved conflicts. Check claim scope, provenance, and useful history without imposing metadata on every node.
+
+For the save workflow, test a session handoff containing a rejected idea and a conditional decision. Inspect the exact proposal and critic findings; verify no project writes precede approval, feedback yields revised edits rather than application, and approved edits are applied once. Include partial approval, changed files before application, bounded disagreement, and unavailable subagents. User feedback starts a new bounded cycle; unchanged approved portions remain approved. Check final files and reads, not agent agreement.
 
 When delegation is available and permitted, give a fresh subagent the candidate skill, a realistic user request, and the minimum raw project artifacts in an isolated scratch workspace. It may edit only that copy and must not publish or delegate further. Do not give it the intended tree, suspected bug, proposed solution, or prior conclusions. Provide normal tool and access instructions.
 

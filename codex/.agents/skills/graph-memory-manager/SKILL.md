@@ -20,16 +20,23 @@ Installing a revision does not itself authorize or require a graph rewrite. Run 
 
 ## Saving and organizing
 
-Before every save, reconsider placement using the affected node and nearby hierarchy. Reuse existing junctions and IDs. Give independently useful subjects their own branches; promote an existing leaf when distinct subjects or optional details arrive. Do this during the save, not after a size threshold. Keep short context normally used together in one node.
+Before every save, ask internally:
 
-Keep parents brief: their bodies load with descendants. Give each fact one owner and link elsewhere. Preserve facts and inbound links when moving content; replace superseded placeholder claims. Create only nodes justified by supplied material.
+- Does this answer the same question as an existing node and normally belong in the same read? Update it; shared subject alone is insufficient.
+- What realistic read needs either information group without the other? Separate useful subjects or optional details; keep dependent fragments together.
+- Which existing parent encompasses it and supplies useful shared context? A leaf can gain children; related topics may need links instead.
+- Could separation hide a qualification needed to act correctly? Keep essential conditions visible in the node or shared ancestor.
+
+Use [organization](references/organization.md) for the remaining placement checks. Reuse junctions and IDs; split when retrieval warrants it, not at a size threshold. Create only nodes justified by supplied material.
+
+Keep parents brief: their bodies load with descendants. Give each fact one owner and link elsewhere. Preserve facts and inbound links when moving content; replace superseded placeholder claims.
 
 Write compact, self-contained notes. Preserve decision status, conditions, units, and meaningful rationale. Keep transcripts and quoted source material verbatim unless transformation is requested.
 
-The main agent handles routine placement. Load only the reference needed:
+For saves, use the proposer–critic–approval workflow in [review](references/review.md); apply only the approved proposal. Load other references as needed:
 
 - [Organization](references/organization.md): creating or restructuring branches, node patterns, and substantial placement proposals.
-- [Review](references/review.md): ambiguous ownership or extensive restructuring; optional bounded independent review.
+- [Review](references/review.md): session handoff, proposal, independent critique, revisions, approval, and application.
 - [Evaluation](references/evaluation.md): testing changes to this skill, not ordinary knowledge updates.
 - [Format](references/format.md): writing node syntax or checking reader behavior.
 - [Audit](references/audit.md): investigating retrieval usage.
