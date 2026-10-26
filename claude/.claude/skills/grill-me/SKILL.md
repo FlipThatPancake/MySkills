@@ -46,15 +46,13 @@ Number questions across the session, never renumbering. [position] is "3/4 this 
 ## Commands
 
 The user may say at any point:
-- **one at a time** / **rounds of N** / **whole branch**: change pace (default: one at a time)
-- **print tree**: show the decision tree
-- **list questions**: show the answerable questions on every branch, to jump between
+- **rounds of N** / **whole branch**: change pace (default: one question at a time)
+- **tree**: show the decision tree and the questions answerable now
 - **deeper**: rethink the current question
 - **ask again Qn**: undo that answer and re-ask it
-- **digest**: take in their input without asking the next question
-- **wrap up**: pause with a summary
+- **save**: write the grill to a file for a later session
 
-The first time one is used, read `references/commands.md`.
+The first time one is used, read `references/commands.md`; for **save**, read `references/saving.md`.
 
 ## Finishing
 
