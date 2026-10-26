@@ -23,20 +23,20 @@ Each branch has a frontier: the questions answerable now, because nothing they d
 
 ## Ask clearly
 
-Use plain language and define technical terms. Every question must make sense on its own. Offer 3â5 options (fewer only if no more are feasible), leaning toward more since grilling doubles as brainstorming. Mark one or two as recommended.
+Use plain language and define technical terms. Every question must make sense on its own. Offer 3–5 options (fewer only if no more are feasible), leaning toward more since grilling doubles as brainstorming. Mark one or two as recommended.
 
 Use this format for every question, including in a question tool such as AskUserQuestion when the options fit:
 
 ```
-â **Q[n] Â· [position] â [branch or issue #] â [the question, in one line]**
+❓ **Q[n] · [position] — [branch or issue #] — [the question, in one line]**
 
 [Background in plain, full sentences, as long as it needs to be: where this sits in the plan, what the problem actually is, and what depends on the answer.]
 
-**A.** â­ **[Option]** â [its advantages; its disadvantages or risks]
+**A.** ⭐ **[Option]** — [its advantages; its disadvantages or risks]
 
-**B.** **[Option]** â [its advantages; its disadvantages or risks]
+**B.** **[Option]** — [its advantages; its disadvantages or risks]
 
-**C.** **[Option]** â [its advantages; its disadvantages or risks]
+**C.** **[Option]** — [its advantages; its disadvantages or risks]
 
 ---
 ```
@@ -60,4 +60,4 @@ The first time one is used, read `references/commands.md`.
 
 When no questions remain, summarize what's settled, provisional, and still open, and ask the user to confirm the shared understanding. Don't act on the plan until they do.
 
-When project-specific terms worth pinning down come up, offer to capture them with the `domain-modeling` skill: once when the first appears, and again at the summary if many did. Save anything only when the user says yes; `references/saving.md` explains how.
+When project-specific terms worth pinning down come up, offer to capture them with the `domain-modeling` skill: once when the first appears, and again at the summary if many did. Save anything only when the user says yes.

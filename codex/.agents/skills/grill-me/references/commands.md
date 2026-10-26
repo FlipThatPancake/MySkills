@@ -14,4 +14,4 @@
 
 **digest**: Take in what the user sent (a partial answer, new context, new issues), update the tree, and acknowledge in one line, noting anything it reopened. Resume asking on their next ordinary message.
 
-**wrap up**: Summarize what's settled, provisional, and still open, including every open question and finding that isn't recorded anywhere else, because the tree disappears when the session ends. Then offer to save it.
+**wrap up**: Summarize what's settled, provisional, and still open, including every open question and finding that isn't recorded anywhere else, because the tree disappears when the session ends. The user saves it with `$save-grill`.

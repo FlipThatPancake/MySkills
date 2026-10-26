@@ -7,7 +7,8 @@ Load a skill when its task begins, not at chat start. Reuse loaded guidance whil
 | Choose or connect Blender tools | [blender-access](.claude/skills/blender-access/SKILL.md) |
 | Prepare project-file changes | [approval-first-changes](.claude/skills/approval-first-changes/SKILL.md) |
 | Save, organize, or restructure knowledge; audit retrieval | [graph-memory-manager](.claude/skills/graph-memory-manager/SKILL.md) |
-| User says âgrill meâ | [grill-me](.claude/skills/grill-me/SKILL.md) |
+| User says “grill me” | [grill-me](.claude/skills/grill-me/SKILL.md) |
+| User types `/save-grill` | [save-grill](.claude/skills/save-grill/SKILL.md) |
 
 Apply approval-first before writing; use other skills to prepare the proposed result. Ordinary discussion and reading need none of these. Optional skills mentioned by a bundled skill are usable only when installed.
 
