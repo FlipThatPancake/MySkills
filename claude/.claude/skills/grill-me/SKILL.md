@@ -59,4 +59,4 @@ The first time one is used, read `references/commands.md`; for **save**, read `r
 
 When no questions remain, summarize what's settled, provisional, and still open, and ask the user to confirm the shared understanding. Don't act on the plan until they do.
 
-When project-specific terms worth pinning down come up, offer to capture them with the project's glossary or domain-modeling skill, if one is installed: once when the first appears, and again at the summary if many did. Save anything only when the user says yes.
+When project-specific terms worth pinning down come up, offer to capture them with the `glossary` skill, if it is installed: once when the first appears, and again at the summary if many did. Save anything only when the user says yes.
