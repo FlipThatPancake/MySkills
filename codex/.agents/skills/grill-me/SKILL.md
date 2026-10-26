@@ -9,7 +9,8 @@ Interview the user relentlessly until you reach a shared understanding. Challeng
 
 ## Prepare
 
-Grill whatever the user gives you: pasted issues, a project vision, project files (read as the project's instructions direct), a saved grill file (see `references/saving.md`), or open questions from earlier in this conversation. First organize it: group what overlaps, conflicts, or depends on each other, and surface problems the user can't see: undecided points, contradictions, vague or missing information, likely bugs. Refer to the user's issues by their numbers.
+Grill whatever the user gives you: pasted issues, a project vision, project files (read as the project's instructions direct), a saved grill file (see `references/saving.md`), or open questions from earlier in this conversation. First organize it: group what overlaps, conflicts, or depends on each other, and surface problems the user can't see: undecided points, contradictions, vague or missing
+information, likely bugs. Refer to the user's issues by their numbers.
 
 Model it as a decision tree: each decision branches into the decisions that depend on it. Look up facts yourself; the decisions are the user's.
 
@@ -46,18 +47,16 @@ Number questions across the session, never renumbering. [position] is "3/4 this 
 ## Commands
 
 The user may say at any point:
-- **one at a time** / **rounds of N** / **whole branch**: change pace (default: one at a time)
-- **print tree**: show the decision tree
-- **list questions**: show the answerable questions on every branch, to jump between
+- **rounds of N** / **whole branch**: change pace (default: one question at a time)
+- **tree**: show the decision tree and the questions answerable now
 - **deeper**: rethink the current question
 - **ask again Qn**: undo that answer and re-ask it
-- **digest**: take in their input without asking the next question
-- **wrap up**: pause with a summary
+- **save**: write the grill to a file for a later session
 
-The first time one is used, read `references/commands.md`.
+The first time one is used, read `references/commands.md`; for **save**, read `references/saving.md`.
 
 ## Finishing
 
 When no questions remain, summarize what's settled, provisional, and still open, and ask the user to confirm the shared understanding. Don't act on the plan until they do.
 
-When project-specific terms worth pinning down come up, offer to capture them with the `domain-modeling` skill: once when the first appears, and again at the summary if many did. Save anything only when the user says yes.
+When project-specific terms worth pinning down come up, offer to capture them with the `glossary` skill, if it is installed: once when the first appears, and again at the summary if many did. Save anything only when the user says yes.
