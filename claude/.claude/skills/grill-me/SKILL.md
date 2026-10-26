@@ -9,7 +9,8 @@ Interview the user relentlessly until you reach a shared understanding. Challeng
 
 ## Prepare
 
-Grill whatever the user gives you: pasted issues, a project vision, project files (read as the project's instructions direct), a saved grill file (see `references/saving.md`), or open questions from earlier in this conversation. First organize it: group what overlaps, conflicts, or depends on each other, and surface problems the user can't see: undecided points, contradictions, vague or missing information, likely bugs. Refer to the user's issues by their numbers.
+Grill whatever the user gives you: pasted issues, a project vision, project files (read as the project's instructions direct), a saved grill file (see `references/saving.md`), or open questions from earlier in this conversation. First organize it: group what overlaps, conflicts, or depends on each other, and surface problems the user can't see: undecided points, contradictions, vague or missing
+information, likely bugs. Refer to the user's issues by their numbers.
 
 Model it as a decision tree: each decision branches into the decisions that depend on it. Look up facts yourself; the decisions are the user's.
 
