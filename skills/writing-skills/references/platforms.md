@@ -1,50 +1,28 @@
-# Platform compatibility and project loaders
+# Format, platform differences, and project loaders
 
-## Shared contract
+## Shared format
 
-Use a folder containing `SKILL.md`, with YAML `name` and `description`, as the portable source. Keep supporting files with it. Follow the Agent Skills naming and length limits; host-managed installation may assign a different storage directory.
+The portable source is a folder containing `SKILL.md` with YAML `name` and `description`. Use a lowercase name with digits and single hyphens, 1–64 characters, matching the source folder; managed installers may assign another storage directory. The description is nonempty and at most 1,024 characters.
 
-The open specification also defines `license`, `compatibility`, `metadata`, and experimental `allowed-tools`. Add these only for a real need and after checking every target. Host extensions belong in a separately generated variant or host configuration; keep the underlying procedure shared.
+The open specification also defines `license`, `compatibility`, `metadata`, and experimental `allowed-tools`. Include optional fields only when needed and supported by the targets. Keep the common workflow shared; use host configuration or an exported variant for extensions.
 
-Check four distinct things before claiming compatibility:
+## Host differences
 
-1. **Format:** the host accepts the package and metadata.
-2. **Discovery:** the host can find and activate it.
-3. **Capabilities:** required tools, files, runtimes, network, and dependencies exist.
-4. **Behavior:** representative tasks work in that host.
+Reference points checked on 2026-10-27; consult the active host's guidance when acting on changing platform details.
 
-An instruction-only chat may follow pasted guidance while being unable to run scripts or read repository files. Describe that limit accurately.
+| Host | Relevant difference |
+| --- | --- |
+| Claude Code | Local skills use `.claude/skills/` or `~/.claude/skills/`; `/skill-name` invokes one. Invocation controls, hooks, substitutions, and dynamic shell injection are host features. |
+| Claude chat/API | Uses its own upload and enablement mechanisms. Claude Code-only frontmatter can cause upload errors; Code-only body features do not execute here. |
+| Local Codex | Local discovery uses `.agents/skills/` and `~/.agents/skills/`; explicit selection uses `$` or `/skills`. Optional `agents/openai.yaml` carries OpenAI-specific configuration. |
+| ChatGPT | Availability depends on the surface and installation or plugin mechanism; supported skill selection uses `@`. Hosted installation follows the active creator/installer's rules. |
 
-## Host details
+`paths` is not a universal skill trigger. A project can supply custom routing, but the shared format does not guarantee that behavior. Tool names, permissions, runtimes, and network availability also vary; describe required capabilities rather than assuming one environment's interface exists everywhere.
 
-These are reference points checked on 2026-10-27, not permanent installation rules. Prefer the active host's instructions and current official documentation when performing an installation.
+Format acceptance, discovery, available capabilities, and successful behavior are separate compatibility questions. Claim only the compatibility supported by the available evidence.
 
-| Host | Local discovery or invocation | Adaptation |
-| --- | --- | --- |
-| Claude Code | Project `.claude/skills/<name>/`; personal `~/.claude/skills/<name>/`; `/skill-name` | Fields such as `disable-model-invocation`, hooks, argument substitutions, and dynamic shell injection are Claude Code features. Verify support before using them. |
-| Claude chat/API | Uses its own upload, enablement, and API mechanisms | Claude Code-only fields can cause packaging/upload errors; Code-only body features do not execute here. |
-| Local Codex | Repository `.agents/skills/<name>/`; personal `~/.agents/skills/<name>/`; `$skill-name` or `/skills` | Optional `agents/openai.yaml` configures OpenAI UI, invocation policy, and dependencies. Follow its current schema. |
-| ChatGPT | Skill availability depends on the surface and installation or plugin mechanism; supported skill selection uses `@` | Use the active creator/installer workflow for hosted personal skills. Do not treat a cloud-managed checkout path as a public cross-platform location. |
+## Project loaders
 
-Do not use `paths` frontmatter as a universal skill trigger. A project may implement routing that reads it; that behavior is not guaranteed by the shared format. Do not translate tool names by guesswork: inspect the available tool interface and describe required capabilities when an exact name is not portable.
+Keep one canonical workflow. A sibling project instruction can identify its scope and source, route to relevant references, and add project-specific preferences such as review before edits. Avoid repeating the skill's procedure in the loader.
 
-A tool allowlist or invocation setting is not universal authorization. Keep actual access control in the host or tool. Likewise, a prompt cannot guarantee exactly-once effects, transaction safety, or mandatory ordering; enforce critical guarantees in code when needed.
-
-## One source, several destinations
-
-Keep a canonical skill directory in the user's source repository. Copy or generate complete host packages from it when needed; avoid separate hand-maintained procedures. If the repository already distributes copies, use its synchronization convention and check that shared content stays identical. A repository directory is not automatically an installed skill.
-
-Use optional metadata only when needed. For OpenAI metadata, keep its display text and default prompt consistent with the skill; avoid adding dependencies the workflow does not require.
-
-## Sibling instructions for a ChatGPT project
-
-Use a short loader that identifies the scope, canonical source, conditional references, and access fallback. A URL tells the agent where to retrieve guidance; it does not install the skill or prove the files were read. ChatGPT project settings must be changed through an available supported mechanism or by the user.
-
-Keep the project loader with the repository's instruction templates, outside the installable skill.
-
-When loading any repository skill:
-
-1. Reuse a complete copy already read in the session while it remains current. Refresh if an edit, conflicting version, or requested revision makes it stale.
-2. Otherwise read `SKILL.md` through an available repository tool, local checkout, or web retrieval. Resolve relative references against its directory. Retrieve all files needed by the current branch of the workflow, including truncated portions.
-3. Use one revision for the main file and its supporting resources. When fetching a changing branch, resolve a commit when practical so a mid-task update cannot mix versions.
-4. If retrieval fails, state which guidance is unavailable. Use a verified available copy if suitable; otherwise request the missing content for dependent work and continue useful independent work. Do not claim to have followed unread files.
+A repository link does not install or load a skill. Retrieve the main file and needed resources from a consistent revision, or use an already-read current copy. If required content is inaccessible, use a suitable verified copy or request the missing material for dependent work.

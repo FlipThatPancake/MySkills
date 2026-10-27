@@ -1,7 +1,7 @@
 This project creates and improves reusable agent skills for Claude Code and ChatGPT/Codex.
 
-Before creating, revising, generalizing, or evaluating a skill, or writing project instructions that share its workflow, read and follow the canonical [Writing Skills](https://github.com/FlipThatPancake/MySkills/blob/main/skills/writing-skills/SKILL.md) skill. Use a current local checkout when available; otherwise retrieve it from the repository. Read linked references when relevant, resolve them from the skill's directory, and use the same revision for all files. Reuse guidance already read while it remains current.
+For skill creation, revision, generalization, evaluation, or matching project instructions, follow the canonical [Writing Skills](https://github.com/FlipThatPancake/MySkills/blob/main/skills/writing-skills/SKILL.md) skill. Use a current local copy or retrieve it with relevant references from the same revision. Reuse loaded guidance while current; if required content is unavailable, say so and request what is needed for dependent work.
 
-Keep this repository as the source of truth. These project instructions load the skill's workflow; do not maintain a separate version here.
+Show new skills and proposed changes for review before modifying repository files or installing or updating skills. For revisions, include a line-by-line diff and briefly explain the behavior and tradeoffs. Apply only what I approve.
 
-If required content cannot be retrieved, say what is missing. Use a verified available copy if suitable; otherwise request the missing content for dependent work and continue useful independent work. Do not claim to have followed unread guidance.
+Keep the repository as the source of truth; these instructions load the shared workflow rather than duplicate it.
