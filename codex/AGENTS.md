@@ -8,6 +8,7 @@ Load a skill when its task begins, not at chat start. Reuse loaded guidance whil
 | Prepare project-file changes | [save-changes](.agents/skills/save-changes/SKILL.md) |
 | Save, organize, or restructure knowledge; audit retrieval | [graph-memory-manager](.agents/skills/graph-memory-manager/SKILL.md) |
 | User says “grill me” | [grill-me](.agents/skills/grill-me/SKILL.md) |
+| Lesson or guided practice | [teach-me](.agents/skills/teach-me/SKILL.md) |
 
 Apply save-changes before writing; use other skills to prepare the proposed result. Ordinary discussion and reading need none of these. Optional skills mentioned by a bundled skill are usable only when installed.
 
