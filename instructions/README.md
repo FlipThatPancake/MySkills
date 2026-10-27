@@ -11,6 +11,7 @@ This file is guidance for the person setting up a project. The other files in th
 | [projects/building.md](projects/building.md) | Project instructions for building projects in ChatGPT or Claude |
 | [projects/learning.md](projects/learning.md) | Project instructions for learning projects |
 | [projects/writing-and-brainstorming.md](projects/writing-and-brainstorming.md) | Project instructions for writing and brainstorming projects |
+| [projects/skills.md](projects/skills.md) | Project instructions for creating and improving skills; loads the canonical Writing Skills workflow |
 | [repo/AGENTS.md](repo/AGENTS.md) | Root `AGENTS.md` in a working coding repo |
 | [repo/CLAUDE.md](repo/CLAUDE.md) | Root `CLAUDE.md` alongside that `AGENTS.md` |
 

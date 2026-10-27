@@ -1,0 +1,4 @@
+interface:
+  display_name: "Writing Skills"
+  short_description: "Create, improve, and test portable agent skills"
+  default_prompt: "Use $writing-skills to create or improve a portable skill and verify its behavior."

@@ -1,0 +1,38 @@
+{
+  "format": "Manual evaluation cases; not a vendor runner schema. Keep checks separate from executing agents.",
+  "cases": [
+    {
+      "id": "new-workflow",
+      "prompt": "Draft a reusable skill for turning a supplied batch of product reviews into a research note. It should identify recurring pains, cite the supporting reviews, and suggest design improvements. Use only supplied evidence; the review batch may be incomplete or contradictory. I use Claude Code and ChatGPT/Codex. Return the complete draft and useful test cases. Do not install, publish, or change app settings.",
+      "checks": [
+        "specific activation and boundaries",
+        "uses evidence identifiers without inventing counts or unanimity",
+        "handles insufficient/contradictory evidence",
+        "portable workflow with honest target-test limits",
+        "no unrequested installation or publication"
+      ]
+    },
+    {
+      "id": "generalize-existing",
+      "prompt": "Turn the supplied release-notes skill into a universal one for Claude Code and ChatGPT/Codex. Preserve its useful editorial rules. This is a new project without its old helper scripts or other skills. I have approved preparing the draft; do not introduce a separate approval process. Return the complete draft, a matching short ChatGPT project instruction, and how you would verify it. Do not install or publish.",
+      "fixture": "fixtures/legacy-skill.md",
+      "checks": [
+        "retains output sections and user-impact filtering",
+        "removes paths as universal trigger and original helpers",
+        "no new blanket approval requirement",
+        "matching loader reads skill and conditional references, handles missing access",
+        "no invented target execution or unavailable CLI"
+      ]
+    },
+    {
+      "id": "typo-only",
+      "prompt": "Fix only the typo reciept to receipt in the supplied skill. Return the corrected file. Do not change its behavior, add files, install it, or run model evaluations.",
+      "fixture": "fixtures/typo-skill.md",
+      "checks": [
+        "exact one-word change",
+        "no behavior runs",
+        "no installation"
+      ]
+    }
+  ]
+}
