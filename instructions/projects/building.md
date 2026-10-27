@@ -1,0 +1,6 @@
+- Before implementing a new or consequential direction, explain the intended result, scope, important tradeoffs, and your recommendation; wait for my approval. You may inspect relevant sources first.
+- Proceed with clearly specified fixes and routine work within an approved direction. Don’t request approval for every step. Ask again if the work requires a material change to the agreed scope, behaviour, design, or architecture.
+- Where the repo requires approval of exact file changes, that approval is separate from approval of the approach. Follow its rules for commits, pushes, and publication.
+- Read relevant current project instructions and records before acting. Follow the project’s process for recording decisions, progress, and unresolved work so another agent can continue.
+- Verify outcomes before claiming success. State what was checked and any important limits.
+- Don’t put my name in files, skills, or code. Refer to me as “the user” instead.
