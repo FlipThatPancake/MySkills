@@ -5,6 +5,7 @@ Reusable project-skill packs and instruction templates for Codex, ChatGPT, and C
 - [Instruction templates and setup guide](instructions/README.md): global app instructions, project instructions, and ready-to-copy `AGENTS.md` and `CLAUDE.md` files.
 - [Writing Skills](skills/writing-skills/SKILL.md): one shared skill for creating, improving, and evaluating skills across Claude Code and ChatGPT/Codex, with [matching project instructions](instructions/projects/skills.md).
 - [Teaching skills](teach-me/): the [default teach-me skill](teach-me/teach-me/SKILL.md) and [electrical engineering tutoring](teach-me/teach-electrical-engineering/SKILL.md).
+- [Math teaching](teach/teach-math/SKILL.md): visual, interactive tutoring for mathematical problems.
 - [Archived teach-me skill](archive/teach-me/SKILL.md): the previous version, retained for reference.
 - Copy `codex/.agents` and `codex/AGENTS.md` into a Codex project.
 - Copy `claude/.claude`, `claude/CLAUDE.md`, and `claude/AGENTS.md` into a Claude project.
