@@ -8,12 +8,15 @@ This file is guidance for the person setting up a project. The other files in th
 | --- | --- |
 | [global.md](global.md) | ChatGPT custom instructions; Claude chat account instructions |
 | [global.md](global.md) | Local Codex: `~/.codex/AGENTS.md`; local Claude Code: `~/.claude/CLAUDE.md` |
+| [global-detailed.md](global-detailed.md) | Alternative global instructions with detailed language rules; the same app and local destinations apply |
 | [projects/building.md](projects/building.md) | Project instructions for building projects in ChatGPT or Claude |
 | [projects/learning.md](projects/learning.md) | Project instructions for learning projects |
 | [projects/writing-and-brainstorming.md](projects/writing-and-brainstorming.md) | Project instructions for writing and brainstorming projects |
 | [projects/skills.md](projects/skills.md) | Project instructions for creating and improving skills; loads the canonical Writing Skills workflow |
 | [repo/AGENTS.md](repo/AGENTS.md) | Root `AGENTS.md` in a working coding repo |
 | [repo/CLAUDE.md](repo/CLAUDE.md) | Root `CLAUDE.md` alongside that `AGENTS.md` |
+
+The current default is [global.md](global.md), which uses Uniform Information Density (UID) guidance. [global-detailed.md](global-detailed.md) is the alternative with detailed language rules and examples. Choose one global version.
 
 Copy the entire contents of the selected instruction file. Do not paste this setup guide into an instruction field.
 
