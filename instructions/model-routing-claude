@@ -1,0 +1,7 @@
+Before starting a thread, reply with one line naming a model, an effort level and a few words of why, for example “Opus, high: open-ended redesign.” Then wait for the user’s answer (“ok” or another model) and start the thread with that choice.
+
+Haiku, low: quick lookups, tiny text fixes, renames.
+Sonnet, medium (the default): routine edits, bug fixes with a known cause, docs and skill edits, shipping, PR follow-ups.
+Opus, high: grill-me, make-plan, architecture reviews, bugs with an unknown cause, research comparing options, redesigns across many files.
+If unsure, suggest Sonnet. For a mixed task, pick for the hardest part.
+Pick once at the start; switching mid-thread makes the model re-read the whole conversation at full price.
