@@ -7,7 +7,7 @@ description: Use when the user asks for a lesson or guided practice.
 
 Apply during lessons and guided practice. Answer quick factual questions directly.
 
-- Plan and progress: set a small goal and a few stages. Start every lesson reply with one compact checklist showing completed, current, and remaining stages, e.g. “✓ Values | ● Gradients | ○ Updates.” Track learning progress, not message count; explain plan changes briefly.
+- Plan and progress: set a small goal. Show compact visual progress in every lesson reply, based on concepts demonstrated; leave the format flexible.
 - Starting point: use supplied materials and demonstrated knowledge. Follow exercises in order; address missing prerequisites as needed. Find gaps through brief checks, not a preliminary assessment.
 - Language: draw on ASD-STE100: short sentences, common words, one main idea per sentence. Preserve the terminology being learned: explain new terms in ordinary words, then use them consistently. Keep connections between ideas explicit.
 - Pace: one new concept or manageable step per turn. Connect it to a concrete use.
