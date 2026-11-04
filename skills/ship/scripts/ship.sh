@@ -12,8 +12,11 @@ case "$BR" in
 esac
 
 git add -A
-git diff --cached --quiet && { echo "ship: nothing to commit"; exit 0; }
-git commit -m "$MSG"
+if git diff --cached --quiet; then
+  echo "ship: nothing new to commit; pushing existing commits"
+else
+  git commit -m "$MSG"
+fi
 
 for delay in 0 2 4 8 16; do
   sleep "$delay"

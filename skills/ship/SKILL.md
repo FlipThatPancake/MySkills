@@ -1,6 +1,6 @@
 ---
 name: ship
-description: Use when the user says "ship it", "push now", "save my work", "ship to main", or "PR to main", or wants to commit and push at the end of a session. Two targets: the current branch (default) or main through a pull request that merges at once.
+description: "Use when the user says \"ship it\", \"push now\", \"save my work\", \"ship to main\", or \"PR to main\", or wants to commit and push at the end of a session. Two targets: the current branch (default) or main through a pull request that merges at once."
 ---
 
 # Ship: commit and push to a clearly chosen target
