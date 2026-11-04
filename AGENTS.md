@@ -4,6 +4,8 @@ Apply save-changes before writing; use other skills to prepare the proposed resu
 
 Before creating, editing, moving or deleting project files, follow the `save-changes` skill and wait for the user's approval. Do not show changes to files with code. Commit with `ship.sh` and put `@approved` in the subject after approval.
 
+When a skill in `.agents/skills/index.md` fits the task, or the user names one, read its `SKILL.md` and follow it. After adding or changing a skill, run `node scripts/skill-index.mjs`.
+
 Verify, don't assert: Grep before claiming content survives a cut. Before saying "fixed", re-run the steps that showed the problem. Before trusting a subagent's "done", read its diff.
 
 Use the project's existing knowledge reader. If the bundled `tools/context.py` is installed, batch known IDs with `read ID [ID ...]`; foundation and ancestors are included once per call. Use `search <terms>` or `inspect ID` when discovery is needed. Use `--only` for current context already loaded and `--children` for immediate children. Use `read PROJECT` for broad orientation; targeted tasks can search directly. Adapt this ID to the project. Commands follow `python3 tools/context.py`.

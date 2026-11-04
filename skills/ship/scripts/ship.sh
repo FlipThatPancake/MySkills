@@ -11,6 +11,7 @@ case "$BR" in
   ""|main) echo "ship: refusing to ship from '${BR:-detached HEAD}'; switch to a feature branch" >&2; exit 2;;
 esac
 
+[ -f scripts/skill-index.mjs ] && node scripts/skill-index.mjs
 git add -A
 if git diff --cached --quiet; then
   echo "ship: nothing new to commit; pushing existing commits"
