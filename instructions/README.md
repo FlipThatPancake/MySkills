@@ -13,8 +13,8 @@ This file is guidance for the person setting up a project. The other files in th
 | [projects/learning.md](projects/learning.md) | Project instructions for learning projects |
 | [projects/writing-and-brainstorming.md](projects/writing-and-brainstorming.md) | Project instructions for writing and brainstorming projects |
 | [projects/skills.md](projects/skills.md) | Project instructions for creating and improving skills; loads the canonical Writing Skills workflow |
-| [repo/AGENTS.md](repo/AGENTS.md) | Root `AGENTS.md` in a working coding repo |
-| [repo/CLAUDE.md](repo/CLAUDE.md) | Root `CLAUDE.md` alongside that `AGENTS.md` |
+| [global.md](global.md), then [projects/building.md](projects/building.md) | Root `AGENTS.md` in a working coding repo |
+| One line: `@AGENTS.md` | Root `CLAUDE.md` alongside that `AGENTS.md` |
 
 The current default is [global.md](global.md), which uses Uniform Information Density (UID) guidance. [global-detailed.md](global-detailed.md) is the alternative with detailed language rules and examples. Choose one global version.
 
@@ -24,17 +24,15 @@ Use the global instructions across projects and choose the relevant project modu
 
 ## Working repos
 
-The ready-to-copy `repo/AGENTS.md` combines the global communication rules and the building workflow. It deliberately includes the communication rules so cloud coding sessions do not depend on local home-directory configuration.
-
-The ready-to-copy `repo/CLAUDE.md` imports the adjacent `AGENTS.md`. Keep both files together. Add Claude-specific rules only if needed.
+A working repo's root `AGENTS.md` starts with the contents of `global.md`, followed by `projects/building.md`. Include the communication rules there so cloud coding sessions do not depend on local home-directory configuration. Its root `CLAUDE.md` holds `@AGENTS.md`, which imports it; add Claude-specific rules only if needed.
 
 Add actual project facts and procedures to the working repo's `AGENTS.md`: purpose, constraints, authoritative records, relevant skills, build/test commands, and release procedures. These vary by project and are not included in this generic template.
 
 For an existing working repo, merge these instructions with its current rules. Preserve its skill routing and any stricter approval requirements rather than overwriting them.
 
-## Existing skill packs in this repository
+## This repository's own pack
 
-The existing [Claude pack](../claude/) and [Codex pack](../codex/) contain their own skill routing and bootstrap procedures. They remain unchanged. If using a pack, merge the communication and building sections from the new `repo/AGENTS.md` into the pack's existing `AGENTS.md`; preserve its routing and setup sections. Do not replace the pack's file wholesale with the generic template.
+The root `AGENTS.md`, `CLAUDE.md`, `skills/` and `bootstrap/` of this repository are the skill pack, with their own skill routing and setup procedure. When adding the instructions above to a project that already uses the pack, merge them into its `AGENTS.md` and keep its routing and setup sections.
 
 These templates do not install skills or change when existing skills activate. Approval of an approach does not bypass a project's requirement to approve exact edits.
 
