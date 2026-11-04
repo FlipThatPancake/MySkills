@@ -20,6 +20,8 @@ Keep expected answers and diagnoses separate from an executing agent. Isolate ca
 
 Inspect task artifacts and available traces. Use deterministic checks for objective properties and human or rubric-based review for judgment. Look for unnecessary questions, tool calls, delays, rigidity, or loss of quality as well as the intended improvement. A baseline that already succeeds is useful evidence; do not force it to fail.
 
+To find cases, ask a fresh reviewer for situations of four kinds: two careful agents would act differently, the skill is silent, it conflicts with other instructions, or a file it names is missing. For a skill that enforces a discipline, add a real task where cutting the corner is tempting ("just push it", a long session), not a quiz. Before paid runs, estimate the cost and cap it.
+
 ## Interpret the result
 
 Distinguish format, activation, task behavior, and output quality. An agent saying it would load a skill is not observed activation. A single successful run is not a reliability estimate. Independent review is not execution.
@@ -27,3 +29,5 @@ Distinguish format, activation, task behavior, and output quality. An agent sayi
 Generalize from failures rather than tuning only to known examples. Repeat or add held-out cases when variability or the strength of the claim warrants it. Preserve real failure cases when they remain useful regression checks; avoid creating permanent test machinery without a demonstrated need.
 
 Report the evidence relevant to the claim and its limits. If a target or runner is unavailable, narrow the conclusion accordingly. Stop when additional evaluation would not materially resolve the question being asked.
+
+When a skill misbehaves in real use, add that situation as a case before fixing it, so the fix is proven and stays fixed.
