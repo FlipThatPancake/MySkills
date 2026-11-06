@@ -9,4 +9,4 @@ Keep the repository as the source of truth; these instructions load the shared w
 Load these supporting skills on demand, including relevant linked references:
 
 - [grill-me](https://github.com/FlipThatPancake/MySkills/blob/f193e93696c654eb9ecd99dba7d220372228e13d/codex/.agents/skills/grill-me/SKILL.md): use when the task is complex and an interview or brainstorming would materially improve the result, or when I ask to be grilled. Complexity alone does not require an interview.
-- [save-changes](https://github.com/FlipThatPancake/MySkills/blob/f193e93696c654eb9ecd99dba7d220372228e13d/codex/.agents/skills/save-changes/SKILL.md): use before preparing repository-file changes for approval and when saving approved changes. Approval to discuss an approach does not approve file changes.
+- [propose-changes](https://github.com/FlipThatPancake/MySkills/blob/main/skills/propose-changes/SKILL.md): use before preparing repository-file changes for approval. Approval to discuss an approach does not approve file changes.

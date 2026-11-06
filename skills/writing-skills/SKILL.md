@@ -16,6 +16,7 @@ A user's request for the skill is enough grounding. If the idea is your own and 
 For each proposed instruction, consider:
 
 - Does the current host already provide this behavior? If so, omit it unless a task-specific difference matters.
+- Is it already stated in context loaded every session, such as project instructions or an index? If so, point to it instead of restating it.
 - Is this a durable preference, domain decision, required output, or known failure the skill needs to address?
 - Would stating the desired result leave useful freedom? Prescribe the method only when the method is necessary for correctness or a stated preference.
 
@@ -30,7 +31,7 @@ A domain workflow can be valuable: one algebra step at a time may be essential t
 - Give an exception its own "if" line. "X unless it matters" invites the agent to argue its way out.
 - Match strictness to the consequence of getting that part wrong. Keep exact steps or schemas when necessary; leave judgment where several methods work.
 - End a step with a check the agent can verify ("every changed file named", not "understood").
-- Use complete sentences and consistent terms. Remove generic advice, duplication, and rules whose original reason no longer applies. Explain non-obvious constraints briefly.
+- Use complete sentences and consistent terms. Remove generic advice, duplication, and rules whose original reason no longer applies. State the rule, not the story of how it arose; add half a sentence of why only where the rule would look arbitrary.
 - Prefer a well-known term over a sentence that describes it. Leave out what a file or command already shows; write the convention or trap that no file shows.
 - Keep reusable knowledge separate from incidental project names, helpers, and paths. Preserve dependencies the task genuinely requires and identify their prerequisites.
 - When improving an existing skill, preserve useful user preferences and expertise. Treat repeated failure as a reason to examine the cause, not automatically to add another prohibition.

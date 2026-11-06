@@ -1,0 +1,7 @@
+{
+  "hooks": {
+    "SessionStart": [
+      { "hooks": [ { "type": "command", "command": "bash \"$CLAUDE_PROJECT_DIR/skills/ship/scripts/ship.sh\" start", "timeout": 30 } ] }
+    ]
+  }
+}

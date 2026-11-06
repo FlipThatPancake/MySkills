@@ -1,45 +1,40 @@
 ---
 name: blender-access
-description: Choose and connect Blender tools for an agent. Use when starting Blender work or troubleshooting access to a live scene, background scripts, or validation tools.
+description: Choose or troubleshoot Blender access for live edits, saved files, scripts, renders, and validation. Find installed add-ons for generation and specialist edits, or search asset libraries for reusable assets. Also use for image cards, billboards, impostors, and distant asset optimization.
 ---
 
 # Blender access
 
-Discover available tools and read their schemas. Honor the user's chosen integration.
-Read only the reference needed for the current task.
+Honor the user's integration choice. Check which tools are available and open
+only the reference needed for the current step.
 
-## Session choice
+- [MCP for Blender (ahujasid)](references/ahuja.md) is the live default when connected.
+- [Blender Lab MCP](references/blender-lab.md) for live fallback, Blender docs, and file diagnostics.
+- [Blender Agent Studio](references/agent-studio.md) for independent asset checks and repeatable renders.
+- [Blender CLI](references/blender-cli.md) for saved-file scripts and batch jobs.
+- [Higgsfield Bridge](references/higgsfield.md) for Higgsfield-specific or cross-app work.
 
-Default to **Higgsfield Bridge** for live Blender work. Infer the best fit from
-the session's prompt and briefly state the recommendation and reason. If another
-MCP offers a meaningful advantage or the choice is unclear, ask one concise
-question with a recommended option. Otherwise proceed with Higgsfield.
-Keep the user's choice for the session; revisit it only when the task changes
-or the chosen connection is unavailable.
+Confirm the target before live edits and use one editing controller per scene at
+a time. For visual work, inspect a viewport capture or render at useful
+checkpoints. Report any gap in visual verification.
 
-## Route
+## Reuse assets
 
-- **Guided live builds and work across creative apps:** default to
-  [Higgsfield Bridge](reference/higgsfield.md).
-- **Direct local live control or an alternative connection:** use
-  [Blender Lab MCP](reference/blender-lab.md).
-- **Scripts and batch jobs:** use [Blender CLI](reference/blender-cli.md).
-- **Structured inspection or render validation:** optionally use
-  [Blender Agent Studio](reference/agent-studio.md).
-- **Sketchfab and other packaged asset services:** use
-  [Ahuja MCP for Blender](reference/ahuja.md) when useful.
+When a ready-made asset could fit the brief, offer to search the user's
+installed libraries. For a requested search, go straight to discovery. Use the
+[asset source index](references/asset-sources.md) to pick a provider by asset
+type and load only its reference. Prefer a short, text-first summary of the
+fit and access requirements. Use existing provider previews when the user
+requests a visual comparison.
 
-## Live sessions
+## On-demand workflows
 
-Identify the controller and report the active `.blend` path or that it is unsaved
-before editing. If multiple Blender instances are open, ask which to use.
-Use one live controller at a time; checkpoint before destructive edits.
-
-Verify the connection with a scene summary and screenshot. If it fails, inspect
-the add-on, client registration, and endpoint; report unresolved blockers and use
-a suitable available fallback. CLI work uses saved files, not unsaved live state.
-
-Keep local bridges local and avoid port conflicts. In client configuration,
-separate the server executable (`command`) from its arguments (`args`).
-Use existing subscription access for the assistant; external generation services
-have separate account and billing requirements.
+- [Installed add-on workflows](references/addon-workflows.md) for generators and specialist edits. Prefer native Blender Python for straightforward or exact work. Use a verified add-on command when it saves substantial setup.
+- [Complex scene planning and review](references/complex-scenes.md) for full scenes or substantial revisions that benefit from staged work.
+- [Generated props](references/generated-props.md) for preparing image-to-3D inputs or qualifying a generated mesh.
+- [Shot sequences](references/shot-sequences.md) for multi-shot continuity, shot variants, and motion previews.
+- [Compositing handoff](references/compositing-handoff.md) for moving rendered shots into a compositor or applying a localized finishing effect.
+- [Real-time handoff](references/realtime-handoff.md) for translating a Blender scene to Unreal or another real-time engine.
+- [Impostor cards](references/impostor-cards.md) for billboards and distant asset optimization.
+- `blender-to-web` for interactive Blender-backed web or Three.js deliverables.
+- For Astra Test setup, use `BLENDER_AGENT_INSTRUCTIONS.md` when present in the project root.
