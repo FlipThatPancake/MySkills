@@ -1,48 +1,15 @@
-# Instruction templates — setup guide
+# Instructions
 
-This file is guidance for the person setting up a project. The other files in this folder contain only copyable instructions.
+Storage for the user's instructions. The live copies are already set in ChatGPT and Claude: global instructions in the app settings, project instructions in each project's instruction field. Use this folder to change them, or to copy them from or to another repo. It is not a setup guide.
 
-## Choose what to copy
+- `global.md`: global instructions (communication and working style).
+- `projects/`: one file per kind of project, each pasted into that project's instruction field.
+  - `building.md`: building software.
+  - `learning.md`: lessons and guided practice.
+  - `writing-and-brainstorming.md`: writing, editing and brainstorming.
+  - `skills.md`: creating and improving skills; loads the `writing-skills` skill.
+  - `career.md` and `life.md`: decision support (identical files).
+- `model-routing-claude`: rule for naming a model and effort before starting a thread.
+- `teach/`: teaching skills (`teach-me`, `teach-math`, `teach-electrical-engineering`). They are outside `skills/`, so the skill index does not list them.
 
-| Source file | Destination |
-| --- | --- |
-| [global.md](global.md) | ChatGPT custom instructions; Claude chat account instructions |
-| [global.md](global.md) | Local Codex: `~/.codex/AGENTS.md`; local Claude Code: `~/.claude/CLAUDE.md` |
-| [global-detailed.md](global-detailed.md) | Alternative global instructions with detailed language rules; the same app and local destinations apply |
-| [projects/building.md](projects/building.md) | Project instructions for building projects in ChatGPT or Claude |
-| [projects/learning.md](projects/learning.md) | Project instructions for learning projects |
-| [projects/writing-and-brainstorming.md](projects/writing-and-brainstorming.md) | Project instructions for writing and brainstorming projects |
-| [projects/skills.md](projects/skills.md) | Project instructions for creating and improving skills; loads the canonical Writing Skills workflow |
-| [repo/AGENTS.md](repo/AGENTS.md) | Root `AGENTS.md` in a working coding repo |
-| [repo/CLAUDE.md](repo/CLAUDE.md) | Root `CLAUDE.md` alongside that `AGENTS.md` |
-
-The current default is [global.md](global.md), which uses Uniform Information Density (UID) guidance. [global-detailed.md](global-detailed.md) is the alternative with detailed language rules and examples. Choose one global version.
-
-Copy the entire contents of the selected instruction file. Do not paste this setup guide into an instruction field.
-
-Use the global instructions across projects and choose the relevant project module. If a project mixes brainstorming and building, both modules can apply; discussing an idea does not approve its implementation.
-
-## Working repos
-
-The ready-to-copy `repo/AGENTS.md` combines the global communication rules and the building workflow. It deliberately includes the communication rules so cloud coding sessions do not depend on local home-directory configuration.
-
-The ready-to-copy `repo/CLAUDE.md` imports the adjacent `AGENTS.md`. Keep both files together. Add Claude-specific rules only if needed.
-
-Add actual project facts and procedures to the working repo's `AGENTS.md`: purpose, constraints, authoritative records, relevant skills, build/test commands, and release procedures. These vary by project and are not included in this generic template.
-
-For an existing working repo, merge these instructions with its current rules. Preserve its skill routing and any stricter approval requirements rather than overwriting them.
-
-## Existing skill packs in this repository
-
-The existing [Claude pack](../claude/) and [Codex pack](../codex/) contain their own skill routing and bootstrap procedures. They remain unchanged. If using a pack, merge the communication and building sections from the new `repo/AGENTS.md` into the pack's existing `AGENTS.md`; preserve its routing and setup sections. Do not replace the pack's file wholesale with the generic template.
-
-These templates do not install skills or change when existing skills activate. Approval of an approach does not bypass a project's requirement to approve exact edits.
-
-## App and local setup
-
-- ChatGPT: Settings → Personalization → Custom instructions.
-- Claude chat: Settings → Your Claude → Instructions (older layout: Account → Instructions for Claude).
-- Learning, writing, and building modules go in the relevant project's instruction field.
-- `~` means the home directory of the environment running the coding tool. WSL has its own home directory.
-- Codex can use a custom `CODEX_HOME`; in that case, place the global `AGENTS.md` there.
-- This folder stores templates. Copying them to this repository does not configure an app or install them in another project.
+To keep a project's instructions in a repo, put `global.md` and then the project file in the repo's `AGENTS.md`, and put `@AGENTS.md` in its `CLAUDE.md`.

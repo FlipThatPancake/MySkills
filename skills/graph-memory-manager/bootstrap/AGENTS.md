@@ -6,5 +6,6 @@ Read stored knowledge when the task needs it. Commands follow `python3 tools/con
 - `search <terms>` locates subjects; `inspect ID` shows ancestry, children, and references without bodies. Discovery is optional when IDs are known.
 - `--only` reuses already-loaded, current context; `--children` adds immediate children. Deeper nodes and links stay optional.
 - `read --all` emits all knowledge. For large output use `--batch 1` through the final batch with the same selection and snapshot. Restart if it changes. Check receipts and tool truncation; retry smaller batches or read an oversized node's reported source range in portions. Claim completeness only after reading all selected content; report anything unread.
+- For full reads or truncated output, follow [complete reads](.agents/skills/graph-memory-manager/references/complete-reads.md). Review only authored changes; inspect tool source when adapting or debugging it.
 
 Keep these reading rules here; load the knowledge skill when saving or restructuring information, not merely to read it.

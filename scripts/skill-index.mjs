@@ -10,7 +10,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = 'skills', SHARED = '.agents/skills';
 
 const field = (text, key) => {
-  const fm = (text.match(/^---\n([\s\S]*?)\n---/) || [])[1] || '';
+  const fm = (text.match(/^---\r?\n([\s\S]*?)\r?\n---/) || [])[1] || '';
   const v = (fm.match(new RegExp(`^${key}:\\s*(.*)$`, 'm')) || [])[1] || '';
   return v.replace(/^"(.*)"$/, (_, s) => s.replace(/\\"/g, '"')).replace(/^'(.*)'$/, '$1');
 };

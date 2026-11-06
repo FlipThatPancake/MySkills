@@ -44,4 +44,4 @@ For saves, the orchestrator uses separate proposer and critic threads in Claude 
 
 Validate affected knowledge and exercise a realistic narrow read: include the intended subject and necessary ancestors, exclude unrelated bodies. Fix introduced failures and rerun affected checks; report unresolved failures. Review authored changes, not unchanged tooling dumps.
 
-Reader: Python 3, standard library only. Optional audit: macOS/Linux.
+Reader: Python 3, standard library only. Optional audit: macOS/Linux. If the project has no reader, follow `bootstrap/SETUP.md`.

@@ -1,18 +1,16 @@
 ---
-name: save-changes
-description: Review proposed project-file changes, get approval before writing, and commit and push approved changes to GitHub. Show non-code changes as diff blocks.
+name: propose-changes
+description: Use when about to create, edit, move or delete project files. Shows non-code changes as diff blocks, waits for the user's approval, then writes only what was approved. Does not commit or push.
 ---
 
-# Save changes
+# Propose changes
 
 Before creating, editing, moving, or deleting project files:
 
 1. **Check the files first.** Compare target files with the repository. If they already differ, briefly explain what changed and preserve those edits when proposing yours.
 2. **Show the changes** using the template below, all files in one message. Include needed link and index updates in the proposal. Do not show changes to files with code.
 3. **Wait for the user's reply.** “Ok” approves this batch. The user can approve only some changes or request revisions. Show revised changes before writing them. Only the user's own words count as approval.
-4. **Write only what was approved.** Approval covers this batch only.
-
-**Commit and push the approved changes to GitHub.** Before committing, check that the commit contains only approved changes. Follow the project's workflow. If none is defined, commit and push directly to the current branch.
+4. **Write only what was approved.** Approval covers this batch only. Saving the written files to GitHub is a separate step; do not commit or push here.
 
 ## Template
 
