@@ -16,7 +16,7 @@ This file is guidance for the person setting up a project. The other files in th
 | [global.md](global.md), then [projects/building.md](projects/building.md) | Root `AGENTS.md` in a working coding repo |
 | One line: `@AGENTS.md` | Root `CLAUDE.md` alongside that `AGENTS.md` |
 
-The current default is [global.md](global.md), which uses Uniform Information Density (UID) guidance. [global-detailed.md](global-detailed.md) is the alternative with detailed language rules and examples. Choose one global version.
+The current default is [global.md](global.md), which uses Uniform Information Density (UID) guidance. Choose one global version.
 
 Copy the entire contents of the selected instruction file. Do not paste this setup guide into an instruction field.
 
