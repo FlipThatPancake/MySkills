@@ -8,13 +8,12 @@ cleanup fits the brief. Use [Generated props](generated-props.md) for that route
 Combine methods when useful, such as building a dimensioned shell and sourcing
 its furnishings.
 
-Verified in the user's live Blender 5.2.2 LTS on 2026-11-06. Use
-`get_addon_status` for MCP providers and inspect `bpy.context.preferences.addons`
-and `bpy.context.preferences.filepaths.asset_libraries` for add-ons and configured
-local libraries. MCP provider flags cover the built-in search tool. Other
-enabled add-ons can be reached through Blender Python or their own UI.
+Use `get_addon_status` for MCP search providers. Inspect
+`bpy.context.preferences.addons` for enabled add-ons and
+`bpy.context.preferences.filepaths.asset_libraries` for configured Asset
+Browser libraries. Open the matching guide below for search and import.
 
-| Need | Open on demand | Verified access |
+| Need | Open on demand | Discovery route |
 | --- | --- | --- |
 | Realistic models, scanned PBR surfaces, lighting HDRIs | [Poly Haven](assets-poly-haven.md) | Native MCP search and local asset library |
 | Specific models, stylized props, sci-fi, materials, scenes | [BlenderKit](assets-blenderkit.md) | Live catalog through the add-on via MCP Python |
