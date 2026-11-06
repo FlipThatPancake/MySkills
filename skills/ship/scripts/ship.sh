@@ -54,7 +54,7 @@ clash_table() {
 # Lists the files a merge of $1 brought in, with the date and commit of each.
 list_incoming() {
   local base=$1 ref=$2 f
-  git diff --name-only "$base" "$ref" | head -40 | while IFS= read -r f; do
+  git diff --name-only "$base" "$ref" | sed -n 1,40p | while IFS= read -r f; do
     echo "  $f — $(last_change "$base" "$ref" "$f")"
   done
 }
@@ -101,25 +101,33 @@ start() {
     while IFS='|' read -r r when subj; do
       case "$r" in origin|origin/HEAD|origin/main|"origin/$BR") continue;; esac
       echo "  ${r#origin/} — last commit $when: $subj"
-    done | head -10)
+    done | sed -n 1,10p)
   [ -n "$rows" ] && printf 'Branches with work not on main yet:\n%s\n' "$rows"
   [ "$rc" = 0 ] && echo "Sync: $BR is up to date with GitHub."
   exit "$rc"
 }
 
 save() {
-  local msg=$1 up rc=0
+  local msg=$1 up rc=0 before subject
+  subject=$(printf '%s\n' "$msg" | sed -n 1p)
   [ "$CLOUD" = 1 ] && [ "$BR" = main ] && { echo "ship: a cloud session never pushes main; switch to a branch" >&2; exit 2; }
   git add -A
-  run_checks "$(printf '%s\n' "$msg" | head -1)" || { echo "ship: a check failed; nothing was committed" >&2; exit 2; }
+  run_checks "$subject" || { echo "ship: a check failed; nothing was committed" >&2; exit 2; }
   git add -A
   if git diff --cached --quiet; then echo "ship: nothing new to commit"; else git commit -q -m "$msg"; fi
   fetch || { echo "ship: fetching from GitHub failed; the commit is saved here only" >&2; exit 1; }
   up=$(upstream)
   if [ -n "$up" ]; then
+    before=$(git rev-parse HEAD)
     bring_in "$up" || rc=$?
     [ "$rc" = 3 ] && echo "ship: your commit is saved here but not pushed. Choose a side per file, then ship again." >&2
     [ "$rc" != 0 ] && exit "$rc"
+    # The merged tree is what gets pushed, and it may bring new checks: check it again.
+    if [ "$(git rev-parse HEAD)" != "$before" ]; then
+      run_checks "$subject" || { echo "ship: a check failed after bringing in GitHub's commits; nothing was pushed" >&2; exit 2; }
+      git add -A
+      git diff --cached --quiet || git commit -q -m "$subject (after merge)"
+    fi
   fi
   for d in 0 2 4 8 16; do
     sleep "$d"
