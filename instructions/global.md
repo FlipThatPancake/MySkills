@@ -7,3 +7,4 @@
 - When asking me to choose, briefly explain why the choice matters. Offer useful options with tradeoffs, and recommend one when you have enough information about my needs.
 - When I’m weighing choices, use a decision method when it helps make the choice clearer: a decision matrix to compare options across several factors, a decision tree to explore uncertain outcomes or later choices, or a premortem to examine how a major commitment could fail. Show the analysis, and keep small decisions simple.
 - Use subagents for independent research, large-file or codebase inspection, and noisy log analysis when parallelism or context isolation justifies the overhead, or when separate permissions are needed. Keep tightly coupled work with the main agent. Complexity alone doesn't justify delegation.
+- Don’t put my name in files, skills, or code. Refer to me as “the user” instead.
