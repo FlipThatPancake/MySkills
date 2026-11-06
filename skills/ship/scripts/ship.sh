@@ -84,6 +84,20 @@ run_checks() {
   return "$bad"
 }
 
+# Runs every check until none changes the staged files, so each check sees what will be committed.
+check_staged() {
+  local tree _
+  git add -A
+  for _ in 1 2 3; do
+    tree=$(git write-tree)
+    run_checks "$1" || return 1
+    git add -A
+    [ "$(git write-tree)" = "$tree" ] && return 0
+  done
+  echo "ship: checks keep changing files" >&2
+  return 1
+}
+
 start() {
   git rev-parse -q --verify HEAD >/dev/null || { echo "Sync check skipped: no commits yet."; exit 0; }
   fetch || { echo "Sync check skipped: fetching from GitHub failed."; exit 0; }
@@ -111,9 +125,7 @@ save() {
   local msg=$1 up rc=0 before subject
   subject=$(printf '%s\n' "$msg" | sed -n 1p)
   [ "$CLOUD" = 1 ] && [ "$BR" = main ] && { echo "ship: a cloud session never pushes main; switch to a branch" >&2; exit 2; }
-  git add -A
-  run_checks "$subject" || { echo "ship: a check failed; nothing was committed" >&2; exit 2; }
-  git add -A
+  check_staged "$subject" || { echo "ship: a check failed; nothing was committed" >&2; exit 2; }
   if git diff --cached --quiet; then echo "ship: nothing new to commit"; else git commit -q -m "$msg"; fi
   fetch || { echo "ship: fetching from GitHub failed; the commit is saved here only" >&2; exit 1; }
   up=$(upstream)
@@ -124,8 +136,7 @@ save() {
     [ "$rc" != 0 ] && exit "$rc"
     # The merged tree is what gets pushed, and it may bring new checks: check it again.
     if [ "$(git rev-parse HEAD)" != "$before" ]; then
-      run_checks "$subject" || { echo "ship: a check failed after bringing in GitHub's commits; nothing was pushed" >&2; exit 2; }
-      git add -A
+      check_staged "$subject" || { echo "ship: a check failed after bringing in GitHub's commits; nothing was pushed" >&2; exit 2; }
       git diff --cached --quiet || git commit -q -m "$subject (after merge)"
     fi
   fi
