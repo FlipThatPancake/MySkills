@@ -3,6 +3,12 @@
 Use for an explicitly requested real-time version. Preserve the Blender
 master and stage the transfer separately.
 
+For a browser deliverable, use `blender-to-web` and put the same
+representative piece used for look review into the actual page before
+expanding the scene. Compare matching views and exercise the intended
+visitor input. A still or video can serve as a preview or fallback.
+Get a separate decision before replacing requested live 3D with either.
+
 - **Test the risky subset first.** Include a scale reference and whichever
   parts can invalidate the approach, such as a material, pivot, transparent
   surface, camera, or animation. Verify import in the target engine for
