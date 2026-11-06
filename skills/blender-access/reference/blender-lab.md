@@ -1,7 +1,6 @@
 # Blender Lab MCP
 
-Use for direct local live control, when selected for the session, or when
-Higgsfield is unavailable. Requires a supported Blender version (currently 5.1+).
+Use for direct local live control when selected or as a fallback to MCP for Blender. Requires a supported Blender version (currently 5.1+).
 
 - Use the [official setup](https://www.blender.org/lab/mcp-server/) and
   [official source](https://projects.blender.org/lab/blender_mcp).
