@@ -23,6 +23,11 @@ composition, prototype checks, multiview review, and delivery validation.
   limit ends the pass, report the remaining issue and saved checkpoint.
   Pause at review gates the user requests.
 
+For a look revision, keep the camera and color settings fixed for comparison
+unless the brief changes them. If the issue is local, inspect the surface
+response and light contribution before changing global exposure. For multiple
+looks, keep named lighting variants on the same geometry when practical.
+
 ## Optional brief
 
 Use only the fields that help the task. A few lines in the existing project
@@ -38,3 +43,5 @@ For optional examples, the [Kapwing dragon build](https://www.kapwing.com/resour
 shows how a team separated scale, layout, and motion tests. The
 [Giza revision](https://www.superbash.ai/benchmarks/gpt-6-astra/five-builds-2026-10-02/)
 shows a scoped change to an existing scene with a matched comparison view.
+[Brandon Lerry's bedroom project](https://brandonlerry.beehiiv.com/products/free-blender-bedroom-scene-prompts)
+is a worked example of separate prop studies, a shared scene, and shot development.

@@ -4,8 +4,9 @@ Choose how to make each important asset or asset family before choosing a
 provider. Reuse a library asset when it fits the scene and needs little rework.
 Favor direct modeling when exact dimensions, joints, or controlled variation matter.
 Consider generation for a distinctive or irregular form when the expected
-cleanup fits the brief. Combine methods when useful, such as building a
-dimensioned shell and sourcing its furnishings.
+cleanup fits the brief. Use [Generated props](generated-props.md) for that route.
+Combine methods when useful, such as building a dimensioned shell and sourcing
+its furnishings.
 
 Verified in the user's live Blender 5.2.2 LTS on 2026-11-06. Use
 `get_addon_status` for MCP providers and inspect `bpy.context.preferences.addons`
