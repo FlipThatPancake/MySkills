@@ -13,8 +13,11 @@ composition, prototype checks, multiview review, and delivery validation.
 - **Test the decisions that would be expensive to redo.** Choose the cheapest
   preview that can answer the current question. A rough layout can check
   circulation or composition. A clay preview can check silhouette and scale.
-  A short clip can check framing, timing, and movement. If lighting, materials,
-  or an effect drives the design, test it early in a representative area.
+  A short clip can check framing, timing, and movement. If the look depends
+  on an unproven asset or method, finish one representative piece before
+  making a batch or expanding the scene. Inspect it under neutral light,
+  then in the intended shot. Show the result and resolve any gap that would
+  carry into the rest of the scene before scaling up.
 - **Define the scope and finish of each substantial pass.** Name the scene
   elements it may change, the important properties to preserve, and the
   evidence that would make the change acceptable. For risky or long edits,
@@ -23,10 +26,13 @@ composition, prototype checks, multiview review, and delivery validation.
   limit ends the pass, report the remaining issue and saved checkpoint.
   Pause at review gates the user requests.
 
-For a look revision, keep the camera and color settings fixed for comparison
-unless the brief changes them. If the issue is local, inspect the surface
-response and light contribution before changing global exposure. For multiple
-looks, keep named lighting variants on the same geometry when practical.
+For a look revision, establish light direction, softness, and contrast from
+the reference. Keep camera, exposure, and view transform fixed for comparison.
+Change one major category at a time and preserve accepted settings outside it.
+Inspect local surface and light contributions before changing global exposure.
+If a focused retry leaves the same visible defect, change methods before
+making more variants. For multiple looks, keep named lighting variants on
+the same geometry when practical.
 
 ## Optional brief
 
