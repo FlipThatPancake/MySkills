@@ -8,9 +8,5 @@ Verify, don't assert: Grep before claiming content survives a cut. Before saying
 
 Write each fact in one file only, the one that owns it. Never restate what is loaded every session (this file, `CLAUDE.md`, the skill index). Files say what to do, not design history; add half a sentence of why only where a rule would look arbitrary.
 
-Use the project's existing knowledge reader. If the bundled `tools/context.py` is installed, batch known IDs with `read ID [ID ...]`; foundation and ancestors are included once per call. Use `search <terms>` or `inspect ID` when discovery is needed. Use `--only` for current context already loaded and `--children` for immediate children. Use `read PROJECT` for broad orientation; targeted tasks can search directly. Adapt this ID to the project. Commands follow `python3 tools/context.py`.
-
-For full reads or truncated output, follow [complete reads](.agents/skills/graph-memory-manager/references/complete-reads.md) directly. Review only authored changes; inspect tool source when adapting or debugging it.
-
 # Rules
 Don’t put my name in files, skills, or code. Refer to me as “the user” instead.
