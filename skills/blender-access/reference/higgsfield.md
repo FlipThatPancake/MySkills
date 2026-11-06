@@ -1,13 +1,13 @@
 # Higgsfield Bridge
 
-Default for live Blender work, guided builds, and work across creative apps.
+Optional for its specific features, guided builds, or work across creative apps.
 It executes Blender Python with full `bpy` access, alongside specialized tools.
 
 - Follow the [Blender bridge setup](https://higgsfield.ai/plugins/blender).
   Enable the add-on's MCP connection, add `https://bridge.higgsfield.ai/mcp`
   to the assistant, and complete Higgsfield sign-in.
 - Start with `get_host_status`; if Blender is disconnected, have the user open
-  its Higgsfield panel and connect.
+  its Higgsfield panel and check the connection status; do not assume a button exists.
 - Load `bl_get_skill(name="blender-scene")`, then only its task-matched modules
   before edits: modeling, lookdev, lighting/camera, animation, or audit.
 - Inspect `bl_get_scene_summary`. Use the specialized `bl_` tools when available,
