@@ -3,7 +3,7 @@
 Reusable project-skill packs and instruction templates for Codex, ChatGPT, and Claude.
 
 - [Instruction templates and setup guide](instructions/README.md): global app instructions, project instructions, and ready-to-copy `AGENTS.md` and `CLAUDE.md` files.
-- [Ship](skills/ship/SKILL.md): commit and push to the current branch, or to main through a pull request.
+- [Ship](skills/ship/SKILL.md): keep a copy and GitHub in step: update at the start of a session, run the project's checks, commit and push, and reach main through a pull request from the cloud.
 - [Writing Skills](skills/writing-skills/SKILL.md): one shared skill for creating, improving, and evaluating skills across Claude Code and ChatGPT/Codex, with [matching project instructions](instructions/projects/skills.md).
 - [Try variants](skills/try-variants/SKILL.md): throwaway prototypes to compare designs or try how logic feels, then fold the winners into the real product.
 - [Teaching skills](teach-me/): the [default teach-me skill](teach-me/teach-me/SKILL.md) and [electrical engineering tutoring](teach-me/teach-electrical-engineering/SKILL.md).
