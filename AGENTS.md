@@ -1,7 +1,5 @@
 # Project routing
 
-Optional skills mentioned by a bundled skill are usable only when installed.
-
 When a skill in `.agents/skills/index.md` fits the task, or the user names one, read its `SKILL.md` and follow it. After adding or changing a skill, run `node scripts/skill-index.mjs`.
 
 Skills here are shared with other projects and must work in Claude Code and in ChatGPT/Codex. Create and edit them only in `skills/<name>/`; `.agents/skills` and `.claude/skills` are symlinks.

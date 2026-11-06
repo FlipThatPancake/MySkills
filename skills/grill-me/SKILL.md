@@ -58,5 +58,3 @@ The first time one is used, read `references/commands.md`; for **save**, read `r
 ## Finishing
 
 When no questions remain, or you can predict the user's remaining answers (show your guesses), summarize the decisions and ask the user to confirm. Don't act on the plan until they do.
-
-When project-specific terms worth pinning down come up, offer to capture them with the `glossary` skill, if it is installed: once when the first appears, and again at the summary if many did. Save anything only when the user says yes.
