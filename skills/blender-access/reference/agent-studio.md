@@ -1,18 +1,17 @@
 # Blender Agent Studio
 
-Optional convenience layer for saved-file inspection, validation, and rendering.
-Use the [installed plugin](https://github.com/ifBars/blender-agent-studio) and
-its relevant workflow skills when available.
+The [plugin's file tools](https://ifbars.github.io/blender-agent-studio/mcp-tools/)
+run in background Blender. They can check a saved copy alongside live work.
 
-- Start with `blender_version`; supply the installed executable if discovery fails.
-- Use `blender_inspect_asset` for asset metrics.
-- Use `blender_render_scene` for authored cameras and lighting, or
-  `blender_render_evidence` for standardized multiview images.
-- Discover specialized topology, motion, reference-comparison, and asset tools
-  only when needed. Read each tool's output-directory and runtime requirements.
-- SceneIR analysis needs the optional Rust runtime; basic inspection and
-  rendering do not. Avoid setting it up for tasks that do not need it.
+- Use `blender_inspect_asset` for evaluated geometry, hierarchy, materials,
+  and animation data. Pass the exported GLB, FBX, or other supported file
+  directly for a fresh-import check.
+- Use `blender_render_evidence` for fixed views and a contact sheet, or
+  `blender_render_scene` for the scene's own cameras and lighting. Match views
+  and settings for before-and-after comparisons.
+- If discovery fails, check the executable with `blender_version`. Load
+  specialized checks as needed. SceneIR tools require the optional Rust runtime.
 
-These tools operate on saved assets in background processes, not the open scene.
-Disabling its MCP and uninstalling the plugin are different choices: the plugin
-also supplies skills.
+For live observation and navigation, `blender_open_viewport` needs the
+[optional Live add-on](https://github.com/ifBars/blender-agent-studio/blob/main/docs/live-viewport.md)
+and an open 3D View. Use a live editing integration for scene changes.

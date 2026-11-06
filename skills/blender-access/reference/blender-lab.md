@@ -1,17 +1,14 @@
 # Blender Lab MCP
 
-Use for direct local live control when selected or as a fallback to MCP for Blender. Requires a supported Blender version (currently 5.1+).
+Use for live fallback, Blender API and manual search, or diagnosing missing
+files and linked libraries. Some file checks run in background Blender.
 
-- Use the [official setup](https://www.blender.org/lab/mcp-server/) and
-  [official source](https://projects.blender.org/lab/blender_mcp).
-- Enable its Blender add-on and register its companion server in the assistant
-  client. Use an official bundle or reviewed source revision; name the entry
-  distinctly, such as `blender_lab`.
-- Bare `uvx blender-mcp` selects Ahuja's community package, not Blender Lab.
-- Discover the installed tool catalog. Confirm Blender's version, active file,
-  scene summary, and screenshot; use documentation lookup and Python as needed.
-- Match the official server to its own add-on endpoint. Higgsfield's listener
-  has different authentication; do not assume the components are interchangeable.
-
-The MCP supplies Blender tools, not model inference. Ordinary local control
-requires no separately funded model API when the client already has model access.
+- Follow the [official setup](https://www.blender.org/lab/mcp-server/) for
+  Blender 5.1+. Pair Lab's own add-on and server under a distinct client name
+  such as `blender_lab`. Bare `uvx blender-mcp` selects Ahuja.
+- For live use, verify the active file and scene. Use the exposed screenshot,
+  documentation, or Python tools as needed.
+- Lab and Ahuja can be installed side by side. Both default to `localhost:9876`.
+  To run both listeners, use distinct local ports and match each client entry
+  to its add-on. Lab uses `BLENDER_MCP_PORT` on the server side. Simultaneous
+  control of one Blender session is unverified here.

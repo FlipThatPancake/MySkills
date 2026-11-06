@@ -1,45 +1,35 @@
 ---
 name: blender-access
-description: Choose and connect Blender tools for an agent. Use when starting Blender work or troubleshooting access to a live scene, background scripts, or validation tools.
+description: Choose or troubleshoot Blender access for live edits, saved files, scripts, renders, and validation. Search installed Blender add-ons and asset libraries for reusable assets. Also use for image cards, billboards, impostors, and distant asset optimization.
 ---
 
 # Blender access
 
-Discover available tools and read their schemas. Honor the user's chosen integration.
-Read only the reference needed for the current task.
+Honor the user's integration choice. Check which tools are available and open
+only the reference needed for the current step.
 
-## Session choice
+- [MCP for Blender (ahujasid)](reference/ahuja.md) is the live default when connected.
+- [Blender Lab MCP](reference/blender-lab.md) for live fallback, Blender docs, and file diagnostics.
+- [Blender Agent Studio](reference/agent-studio.md) for independent asset checks and repeatable renders.
+- [Blender CLI](reference/blender-cli.md) for saved-file scripts and batch jobs.
+- [Higgsfield Bridge](reference/higgsfield.md) for Higgsfield-specific or cross-app work.
 
-Prefer **MCP for Blender (Ahuja)** for live work. Honor an explicit user choice;
-use another suitable integration when it is unavailable or better suited.
+Confirm the target before live edits and use one editing controller per scene at
+a time. For visual work, inspect a viewport capture or render at useful
+checkpoints. Report any gap in visual verification.
 
-## Route
+## Reuse assets
 
-- **Live editing and viewport feedback:** prefer
-  [MCP for Blender](reference/ahuja.md).
-- **Alternative live control:** use
-  [Blender Lab MCP](reference/blender-lab.md).
-- **Scripts and batch jobs:** use [Blender CLI](reference/blender-cli.md).
-- **Structured inspection or render validation:** optionally use
-  [Blender Agent Studio](reference/agent-studio.md).
-- **Higgsfield-specific capabilities or cross-app work:** optionally use
-  [Higgsfield Bridge](reference/higgsfield.md).
+When a ready-made asset could fit the brief, offer to search the user's
+installed libraries. For a requested search, go straight to discovery. Use the
+[asset source index](references/asset-sources.md) to pick a provider by asset
+type and load only its reference. Prefer a short, text-first summary of the
+fit and access requirements. Use existing provider previews when the user
+requests a visual comparison.
 
-## Live sessions
+## Optional
 
-Identify the controller and report the active `.blend` path or that it is unsaved
-before editing. If multiple Blender instances are open, ask which to use.
-Use one live editing controller at a time per scene; serialize changes and
-checkpoint before destructive edits. Multiple installed integrations need not
-conflict; simultaneous live control is unverified.
-
-Verify the connection with a scene summary and screenshot. If it fails, inspect
-the add-on, client registration, and endpoint; report unresolved blockers and use
-a suitable available fallback. CLI work uses saved files, not unsaved live state.
-
-Keep local bridges local; separate listeners need distinct host/port pairs.
-Background validation can inspect a saved copy alongside live work. Compare token
-cost and reliability with equivalent tests, not assumptions. In client configuration,
-separate the server executable (`command`) from its arguments (`args`).
-Use existing subscription access for the assistant; external generation services
-have separate account and billing requirements.
+- [Complex scene planning and review](references/complex-scenes.md) for full scenes, shot sequences, or substantial revisions that benefit from staged work.
+- [Impostor cards](references/impostor-cards.md) for billboards and distant asset optimization.
+- `blender-to-web` for interactive Blender-backed web or Three.js deliverables.
+- [Astra Test project notes](../BLENDER_AGENT_INSTRUCTIONS.md) for local setup.
