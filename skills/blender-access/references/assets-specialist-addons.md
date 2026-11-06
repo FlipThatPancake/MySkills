@@ -16,11 +16,9 @@ panel when a preset needs custom setup, dependencies, placement or controls.
 | Lens Sim | `LensSimCollection` in `LensSim_Data/camera/camera.blend` is the add-on's lens rig. Use the Lens Sim panel for optical effects. |
 | Colorist Pro | The 1.5 bundle has `Wet Lens`, `Vibrance` and selective color node groups for post-processing. |
 | Lazy Composer 2 | Bundled `Vignette` and `Lens Distortion` groups for compositing. Use the panel to review settings. |
-| SurfaceFlow | `Assets/SurfaceFlow.blend` contains `SurfaceFlow` and its simulation groups. Use the add-on workflow for effects that follow a surface. |
+| SurfaceFlow | `Assets/SurfaceFlow.blend` contains `SurfaceFlow` and its simulation groups. Check the [environment workflow](addons-environments.md#surfaceflow) before assigning a target. |
 | Ground Modifier | `assets/SnapToGround_v1_2.blend` contains `Ground`, a node group for conforming objects to ground. |
 | Lazy Decals | Installed and disabled. Its `Lazy_decal.blend` contains a decal node group and an asphalt demo. Consider it for surface decals when already enabled for the task. |
 
-Physical Open Waters, Physical Starlight and Atmosphere, and A.N.T.Landscape
-are enabled procedural tools for oceans, skies and terrain. Their controls
-are a route for creating an effect or terrain. For a catalog search, choose
-a provider from the [asset source index](asset-sources.md).
+For procedural generation and specialist editing commands, use the
+[add-on workflow index](addon-workflows.md).
