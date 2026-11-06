@@ -1,8 +1,7 @@
 # Ahuja MCP for Blender
 
-Retain for Sketchfab, Poly Pizza, Poly Haven models, and supported generation
-providers. Reach for it when those packaged integrations help. It can also serve
-older Blender versions, remote hosts, or a working local fallback.
+Prefer for live editing and viewport inspection when connected. Its optional
+asset services and remote access can also help when needed.
 
 - Follow the [project setup](https://github.com/ahujasid/mcp-for-blender).
   The active package is `mcp-for-blender`; `blender-mcp` is its compatibility name.
@@ -14,5 +13,5 @@ older Blender versions, remote hosts, or a working local fallback.
   Sketchfab, Poly Pizza, or supported generation services. Check each provider's
   credentials and costs separately.
 
-Keep this distinct from the official Blender Lab installation. Retain a working
-controller until its replacement is verified; avoid duplicate active servers.
+Keep this distinct from the official Blender Lab installation. Use one live editing controller per scene at a time; match each server to its
+own add-on and port.
