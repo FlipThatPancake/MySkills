@@ -12,9 +12,5 @@ Use the project's existing knowledge reader. If the bundled `tools/context.py` i
 
 For full reads or truncated output, follow [complete reads](.agents/skills/graph-memory-manager/references/complete-reads.md) directly. Review only authored changes; inspect tool source when adapting or debugging it.
 
-## One-time knowledge setup
-
-When initial knowledge setup is requested, follow [setup](bootstrap/SETUP.md). Remove this section after successful setup and bootstrap cleanup.
-
 # Rules
 Don’t put my name in files, skills, or code. Refer to me as “the user” instead.

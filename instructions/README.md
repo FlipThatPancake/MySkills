@@ -31,7 +31,7 @@ For an existing working repo, merge these instructions with its current rules. P
 
 ## This repository's own pack
 
-The root `AGENTS.md`, `CLAUDE.md`, `skills/` and `bootstrap/` of this repository are the skill pack, with their own skill routing and setup procedure. When adding the instructions above to a project that already uses the pack, merge them into its `AGENTS.md` and keep its routing and setup sections.
+The root `AGENTS.md`, `CLAUDE.md`, and `skills/` of this repository are the skill pack, with their own skill routing. When adding the instructions above to a project that already uses the pack, merge them into its `AGENTS.md` and keep its routing and setup sections.
 
 These templates do not install skills or change when existing skills activate. Approval of an approach does not bypass a project's requirement to approve exact edits.
 
