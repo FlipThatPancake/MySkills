@@ -16,7 +16,7 @@ In Claude Code, a start hook runs it. Add this to the project's `.claude/setting
 `{"hooks":{"SessionStart":[{"hooks":[{"type":"command","command":"bash \"$CLAUDE_PROJECT_DIR/skills/ship/scripts/ship.sh\" start","timeout":30}]}]}}`
 
 ## Saving
-1. Files that are not code go through `propose-changes` first. After the user's ok, put `@approved` in the commit subject.
+1. Markdown files go through `propose-changes` first. After the user's ok, put `@approved` in the commit subject.
 2. Use the user's commit message, else a one-line summary of the session (imperative, at most 72 characters).
 3. Run `ship.sh "<message>"`. It runs every check, commits, brings in new commits from the branch on GitHub, and pushes. A failing check stops the commit: fix the cause and ship again.
 4. Report the commit and the branch. On a cloud branch, say that nothing reached main and that "ship to main" does that.
