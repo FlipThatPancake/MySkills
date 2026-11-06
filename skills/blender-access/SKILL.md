@@ -21,20 +21,27 @@ checkpoints. Report any gap in visual verification.
 ## Reuse assets
 
 When a ready-made asset could fit the brief, offer to search the user's
-installed libraries. For a requested search, go straight to discovery. Use the
-[asset source index](references/asset-sources.md) to pick a provider by asset
-type and load only its reference. Prefer a short, text-first summary of the
-fit and access requirements. Use existing provider previews when the user
-requests a visual comparison.
+installed libraries. For a requested search, go straight to discovery.
+Open the [asset source index](references/asset-sources.md) to choose between
+Blender's configured Asset Browser libraries, an add-on catalog, and MCP
+search. Follow the matching provider or local library guide for discovery
+and import. Prefer a short, text-first summary of fit and access. Use
+existing provider previews when the user requests a visual comparison.
+
+## Use installed add-ons
+
+Open [installed add-on workflows](references/addon-workflows.md) when an
+add-on could build or edit scene data. Follow the task link for environments,
+cameras, modeling and UVs, or simulation. Use that guide to choose a command,
+an appendable preset, or a UI step. Use native Blender for routine or exact work.
 
 ## On-demand workflows
 
-- [Installed add-on workflows](references/addon-workflows.md) for generators and specialist edits. Prefer native Blender Python for straightforward or exact work. Use a verified add-on command when it saves substantial setup.
-- [Complex scene planning and review](references/complex-scenes.md) for full scenes or substantial revisions that benefit from staged work.
+- [Complex scene planning and review](references/complex-scenes.md) for proving a representative asset or look before expanding a scene.
 - [Generated props](references/generated-props.md) for preparing image-to-3D inputs or qualifying a generated mesh.
 - [Shot sequences](references/shot-sequences.md) for multi-shot continuity, shot variants, and motion previews.
 - [Compositing handoff](references/compositing-handoff.md) for moving rendered shots into a compositor or applying a localized finishing effect.
-- [Real-time handoff](references/realtime-handoff.md) for translating a Blender scene to Unreal or another real-time engine.
+- [Real-time handoff](references/realtime-handoff.md) for proving the look and behavior in the browser or target engine before expanding the scene.
 - [Impostor cards](references/impostor-cards.md) for billboards and distant asset optimization.
 - `blender-to-web` for interactive Blender-backed web or Three.js deliverables.
 - For Astra Test setup, use `BLENDER_AGENT_INSTRUCTIONS.md` when present in the project root.
