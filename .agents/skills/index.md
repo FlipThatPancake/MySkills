@@ -2,6 +2,7 @@
 
 <!-- written by scripts/skill-index.mjs -->
 - `blender-access`: Choose or troubleshoot Blender access for live edits, saved files, scripts, renders, and validation. Find installed add-ons for generation and specialist edits, or search asset libraries for reusable assets. Also use for image cards, billboards, impostors, and distant asset optimization. `.agents/skills/blender-access/SKILL.md`
+- `comment-mode`: Use when an HTML page the user will read, such as a lesson or prototype, should let them leave Figma-style pinned comments and export them as JSON to paste into the chat. `.agents/skills/comment-mode/SKILL.md`
 - `graph-memory-manager`: Maintains project memory as selectively readable nodes with nested parent folders and cross-references. Use for saving, organizing, restructuring, auditing retrieval, upgrading existing graphs after skill updates, or reporting session retrieval quality and efficiency for skill maintenance. Routine reading follows AGENTS.md. `.agents/skills/graph-memory-manager/SKILL.md`
 - `grill-me`: Interviews the user about plans, issues, and open decisions when they say "grill me". A shared plan alone does not start an interview. `.agents/skills/grill-me/SKILL.md`
 - `save-changes`: Review proposed project-file changes, get approval before writing, and commit and push approved changes to GitHub. Show non-code changes as diff blocks. `.agents/skills/save-changes/SKILL.md`
