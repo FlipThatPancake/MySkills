@@ -1,8 +1,6 @@
 # Project routing
 
-Apply save-changes before writing; use other skills to prepare the proposed result. Ordinary discussion and reading need none of these. Optional skills mentioned by a bundled skill are usable only when installed.
-
-Before creating, editing, moving or deleting project files, follow the `save-changes` skill and wait for the user's approval. Do not show changes to files with code. Commit with the `ship` skill and put `@approved` in the subject after approval.
+Optional skills mentioned by a bundled skill are usable only when installed.
 
 When a skill in `.agents/skills/index.md` fits the task, or the user names one, read its `SKILL.md` and follow it. After adding or changing a skill, run `node scripts/skill-index.mjs`.
 

@@ -13,7 +13,7 @@ A cloud session's git repository disappears when the session ends, so a push is 
 
 ## Branch
 1. Use the user's commit message, else a one-line summary of the session (imperative, at most 72 characters).
-2. If the changes include non-code project files, follow `save-changes` first and add `@approved` to the subject only after the user approved them.
+2. If the changes include non-code project files, follow `save-changes` first and add `@approved` to the subject only after the user approved them. `ship.sh` refuses to commit non-code files without it.
 3. Run `skills/ship/scripts/ship.sh "<message>"` (use the installed path of the skill). Report the commit and the branch.
 
 ## Main

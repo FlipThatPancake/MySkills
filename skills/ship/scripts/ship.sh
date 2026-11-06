@@ -13,6 +13,16 @@ esac
 
 [ -f scripts/skill-index.mjs ] && node scripts/skill-index.mjs
 git add -A
+
+# Approval guard: files that are not code need the user's approval first (save-changes skill);
+# "@approved" in the subject records it. The generated skill index is exempt.
+UNAPPROVED="$(git -c core.quotePath=false diff --cached --name-only | grep -Ev '\.(sh|mjs|js|ts|py)$|^\.agents/skills/index\.md$' || true)"
+if [ -n "$UNAPPROVED" ] && ! printf '%s' "$MSG" | grep -q '@approved'; then
+  echo "ship: stopped. These non-code files changed:" >&2
+  echo "$UNAPPROVED" | sed 's/^/  /' >&2
+  echo "ship: show the user these changes (save-changes skill); after they say yes, ship again with @approved in the subject." >&2
+  exit 1
+fi
 if git diff --cached --quiet; then
   echo "ship: nothing new to commit; pushing existing commits"
 else
