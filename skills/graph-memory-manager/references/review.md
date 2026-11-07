@@ -1,6 +1,6 @@
 # Propose, critique, approve, save
 
-Use for saving or reorganizing knowledge. Upgrade and usage-report retain their own workflows. The orchestrator owns source fidelity, resolves feedback, and obtains approval. In Claude Projects, use separate proposer and critic threads; if unavailable, use subagents. Start each without inherited chat history when supported; neither may delegate further or publish. If neither form of delegation is available or permitted, perform the stages locally and state that independent review was unavailable.
+Use for saving or reorganizing knowledge. Upgrade keeps its own workflow. The orchestrator owns source fidelity, resolves feedback, and obtains approval. In Claude Projects, use separate proposer and critic threads; if unavailable, use subagents. Start each without inherited chat history when supported; neither may delegate further or publish. If neither form of delegation is available or permitted, perform the stages locally and state that independent review was unavailable.
 
 ## Handoff and proposal
 
