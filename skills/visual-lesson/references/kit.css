@@ -1,0 +1,113 @@
+/* Learning-visuals kit styles. Paste into one <style> in <head>.
+   Colour roles: change values per lesson if needed, never the meaning. */
+:root {
+  color-scheme: dark;
+  --bg: #000000;
+  --panel: #0d1016;
+  --line: #2a2e36;
+  --text: #e6e8ec;
+  --muted: #9aa0a8;
+  --dim: #3a3f47;
+  --yellow: #ffd400;   /* title, focus, "look here" */
+  --blue: #4a90e2;     /* main subject or quantity */
+  --red: #e8453c;      /* measurement, evidence, error */
+  --orange: #f5a623;   /* second quantity, prediction */
+  --green: #4cd08a;
+  --teal: #2ec4b6;    /* correct, confirmed (sparingly) */
+  --sans: Montserrat, "Segoe UI", system-ui, -apple-system, sans-serif;
+  --math: "Cambria Math", Cambria, "STIX Two Math", "Latin Modern Math", Georgia, serif;
+}
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); overflow: hidden; font-family: var(--sans); }
+.lv-stage { position: absolute; left: 50%; top: 50%; width: 1600px; height: 900px; transform-origin: 50% 50%; background: var(--bg); overflow: hidden; }
+.lv-slide { position: absolute; inset: 0; opacity: 0; visibility: hidden; transition: opacity .45s ease, visibility 0s linear .45s; }
+.lv-slide.lv-active { opacity: 1; visibility: visible; transition: opacity .45s ease; }
+
+/* title = the slide's claim; caption = one short line */
+.lv-title { position: absolute; left: 80px; right: 80px; top: 70px; margin: 0; text-align: center; color: var(--yellow); font-size: 50px; font-weight: 500; letter-spacing: .01em; line-height: 1.15; }
+.lv-sub { position: absolute; left: 80px; right: 80px; top: 136px; margin: 0; text-align: center; font-size: 30px; color: var(--muted); }
+/* explanation text: the lower part of the stage, below the picture (keep the picture above y = 570) */
+.lv-text { position: absolute; left: 200px; right: 200px; top: 600px; margin: 0; font-size: 31px; line-height: 1.45; color: var(--text); }
+.lv-text p { margin: 0 0 .4em; }
+.lv-caption { position: absolute; left: 120px; right: 120px; bottom: 64px; margin: 0; text-align: center; font-size: 34px; line-height: 1.3; color: var(--text); }
+.lv-label { font-size: 28px; fill: var(--text); color: var(--text); }
+.lv-small { font-size: 22px; fill: var(--muted); color: var(--muted); letter-spacing: .04em; }  /* no uppercase: it turns η into Η and w into W */
+.lv-big { font-size: 96px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.lv-math { font-family: var(--math); font-size: 58px; }
+.lv-math i, .lv-math .v { font-style: italic; }
+.lv-pill { display: inline-flex; align-items: center; gap: 10px; padding: 6px 18px; border: 1.5px solid var(--line); border-radius: 999px; font-size: 22px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+.lv-pill::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: currentColor; }
+.lv-panel { background: var(--panel); border: 1.5px solid var(--line); border-radius: 28px; }
+
+/* beats: hidden until revealed; .lv-enter is the start pose of the reveal */
+[data-beat] { transition: opacity .5s cubic-bezier(.2,.7,.2,1), transform .6s cubic-bezier(.2,.7,.2,1); }
+[data-beat].lv-off { opacity: 0 !important; pointer-events: none; }
+[data-beat].lv-enter { opacity: 0; transform: translateY(14px); transition: none; }
+.lv-dimmed { opacity: .32; transition: opacity .5s ease; }
+.lv-hidden { display: none !important; }
+
+/* breadcrumb with progress, top-left corner */
+.lv-crumb { position: absolute; left: 80px; right: 80px; top: 26px; display: flex; justify-content: center; align-items: center; gap: 16px; font-size: 18px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); z-index: 5; }
+.lv-dots { display: inline-flex; gap: 7px; }
+.lv-dot { width: 11px; height: 11px; padding: 0; border-radius: 50%; border: 1.5px solid var(--dim); background: transparent; cursor: pointer; }
+.lv-dot-seen { background: var(--dim); }
+.lv-dot-on { background: var(--yellow); border-color: var(--yellow); }
+.lv-crumb-n { color: var(--dim); }
+
+/* Edge notches behave like a drop of water: a small, faint notch on the edge swells into an outlined
+   circle with an arrow while the pointer hovers it, and melts back into the notch when it leaves.
+   A blur-and-threshold SVG filter (#lv-goo) merges the line and the moving circle and keeps only their outline. */
+.lv-notch { position: fixed; top: 50%; width: 140px; height: 200px; margin-top: -100px; z-index: 6; pointer-events: none; transform: scale(var(--lv-s, 1)); }
+.lv-notch-l { left: 0; transform-origin: 0 50%; }
+.lv-notch-r { right: 0; transform-origin: 100% 50%; }
+.lv-notch-r .lv-drop { transform: scaleX(-1); }
+.lv-drop { display: block; width: 140px; height: 200px; overflow: visible; opacity: .22; transition: opacity .4s; }
+.lv-drop-shape { fill: #fff; transition: fill .2s; }
+.lv-drop-ball, .lv-drop-arrow { transform: translateX(-120px); transition: transform .7s cubic-bezier(.65,0,.35,1), opacity .3s, stroke .2s; }
+.lv-drop-arrow { fill: none; stroke: #fff; stroke-width: 4.5; stroke-linecap: round; stroke-linejoin: round; opacity: 0; transform-box: fill-box; transform-origin: center; }
+.lv-notch.lv-over .lv-drop, .lv-near-b .lv-more-tab .lv-drop, .lv-more-open .lv-more-tab .lv-drop { opacity: 1; }
+.lv-notch.lv-over :is(.lv-drop-ball, .lv-drop-arrow),
+.lv-near-b .lv-more-tab :is(.lv-drop-ball, .lv-drop-arrow), .lv-more-open .lv-more-tab :is(.lv-drop-ball, .lv-drop-arrow) { transform: none; opacity: 1; }
+.lv-near-l, .lv-near-r { cursor: pointer; }
+.lv-first .lv-notch-l, .lv-last .lv-notch-r { display: none; }
+
+/* "more" pane: extra context that slides up over the bottom of a slide */
+.lv-more { position: absolute; left: 160px; right: 160px; bottom: 0; max-height: 56%; overflow: auto; box-sizing: border-box; padding: 40px 56px 24px; background: #0d1016f7; border: 1.5px solid var(--line); border-bottom: 150px solid #0d1016f7; /* the thick bottom border keeps scrolling text clear of the notch */ border-radius: 32px 32px 0 0; font-size: 30px; line-height: 1.5; transform: translateY(105%); transition: transform .6s cubic-bezier(.22,1,.36,1); z-index: 7; }
+.lv-more p { margin: 0 0 .6em; }
+.lv-more-open .lv-more { transform: translateY(0); }
+.lv-more-tab { position: absolute; left: 50%; bottom: 0; width: 200px; height: 140px; margin-left: -100px; padding: 0; background: none; border: none; cursor: pointer; z-index: 8; }
+.lv-more-tab .lv-drop { position: absolute; left: 30px; top: -30px; transform: rotate(-90deg); }
+.lv-more-open .lv-more-tab .lv-drop-arrow { transform: rotate(180deg); }
+
+/* controls */
+.lv-control { display: flex; align-items: center; gap: 22px; font-size: 26px; }
+.lv-control input[type=range] { width: 420px; accent-color: var(--yellow); height: 44px; }
+.lv-btn, .lv-check [data-choice] { font: inherit; font-size: 26px; color: var(--text); background: var(--panel); border: 1.5px solid var(--line); border-radius: 999px; padding: 12px 28px; cursor: pointer; min-height: 44px; }
+.lv-btn:hover, .lv-check [data-choice]:hover { border-color: var(--yellow); }
+:focus-visible { outline: 3px solid var(--yellow); outline-offset: 3px; }
+
+/* tooltips: dotted underline marks a word or part with more to say */
+[data-tip] { cursor: help; }
+span[data-tip], tspan[data-tip] { text-decoration: underline dotted var(--muted); text-underline-offset: 6px; }
+.lv-pinned { outline: 2px solid var(--yellow); outline-offset: 4px; }
+.lv-tip { position: fixed; z-index: 50; max-width: 420px; padding: 14px 18px; background: #11151c; border: 1.5px solid var(--line); border-radius: 14px; font-family: var(--sans); font-size: 20px; line-height: 1.4; color: var(--text); opacity: 0; pointer-events: none; transition: opacity .15s; }
+.lv-tip.lv-tip-on { opacity: 1; }
+.lv-tip.lv-tip-pinned { pointer-events: auto; border-color: var(--yellow); }
+
+/* checks */
+.lv-check { display: flex; flex-wrap: wrap; gap: 18px; align-items: center; }
+.lv-check .lv-q { flex-basis: 100%; margin: 0 0 6px; font-size: 34px; }
+.lv-check .lv-idk { color: var(--muted); }
+.lv-check .lv-why, .lv-check .lv-hint { flex-basis: 100%; margin: 8px 0 0; font-size: 28px; display: none; }
+.lv-check.lv-done .lv-why { display: block; }
+.lv-check.lv-wrong .lv-hint { display: block; color: var(--orange); }
+.lv-check.lv-done [data-choice] { cursor: default; opacity: .45; }
+.lv-check.lv-done .lv-correct { opacity: 1; border-color: var(--green); color: var(--green); }
+.lv-check.lv-wrong .lv-picked { opacity: 1; border-color: var(--red); color: var(--red); }
+.lv-check.lv-compact [data-choice], .lv-check.lv-compact .lv-hint { display: none; }
+.lv-check.lv-compact .lv-q, .lv-check.lv-compact .lv-why { font-size: 24px; color: var(--muted); }
+
+/* export */
+.lv-export { position: fixed; right: 16px; bottom: 14px; z-index: 20; font: 15px var(--sans); color: var(--muted); background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px; cursor: pointer; }
+.lv-modal { position: fixed; inset: 10% 20%; z-index: 60; display: flex; flex-direction: column; gap: 12px; padding: 18px; background: #0b0d12; border: 1.5px solid var(--line); border-radius: 16px; }
+.lv-modal textarea { flex: 1; background: #000; color: var(--text); border: 1px solid var(--line); border-radius: 10px; font: 15px/1.4 ui-monospace, Consolas, monospace; padding: 12px; }
+.lv-modal button { align-self: flex-end; font: 16px var(--sans); color: var(--text); background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 8px 18px; cursor: pointer; }
