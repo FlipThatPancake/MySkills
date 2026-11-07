@@ -1,9 +1,9 @@
 ---
-name: learning-visuals
+name: visual-lesson
 description: Use when the user asks for a lesson, explainer, or visual explanation as an HTML page, or when a lesson would teach better as an animated, interactive visual. Produces one self-contained HTML lesson for self-study: clear pictures in the style of a maths and science explainer video, with short, plain explanations.
 ---
 
-# Learning visuals
+# Visual lesson
 
 Make one HTML file that teaches one topic with the look of a good maths explainer video: a dark stage, one picture per slide, motion that shows what changes, and controls the learner can move. The learner opens the file in a desktop browser and studies it alone, with no narrator and no chat beside it. Later the learner brings questions and exported answers back to the chat.
 

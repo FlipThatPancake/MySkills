@@ -1,4 +1,0 @@
-interface:
-  display_name: "Learning Visuals"
-  short_description: "Animated, interactive HTML lessons in a YouTube-explainer style"
-  default_prompt: "Use $learning-visuals to make an interactive HTML lesson about this topic."
