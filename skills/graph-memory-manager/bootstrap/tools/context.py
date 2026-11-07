@@ -5,7 +5,6 @@ import argparse
 from dataclasses import dataclass
 import hashlib
 import json
-import os
 from pathlib import Path
 import re
 import sys
@@ -168,34 +167,6 @@ def positive(value):
     if number<1: raise argparse.ArgumentTypeError('must be a positive integer')
     return number
 
-def audit_event(args, nodes, ids, **extra):
-    options = vars(args).copy()
-    options.pop('command')
-    if 'terms' in options:
-        options['term_count'] = len(options.pop('terms'))
-    items=[]
-    for id in ids:
-        node=nodes[id]
-        # Fingerprint emitted content, not unshown bodies from discovery commands.
-        if args.command=='read':
-            content=node.title+'\n'+node.body
-        elif args.command=='search':
-            terms=[term.casefold() for term in args.terms]
-            hit=next((line for line in node.body.splitlines() if any(term in line.casefold() for term in terms)), '')
-            content=f'{label(node)}|{node.path}:{node.start}-{node.end}|{hit[:180]}'
-        elif args.command=='tree':
-            content=label(node)
-        else:
-            content=json.dumps({'label':label(node),'parent':node.parent,'path':str(node.path),
-                'lines':[node.start,node.end],'children':children(nodes,id),'references':refs(nodes,node)},sort_keys=True)
-        items.append({'id':id,'fingerprint':hashlib.sha256(content.encode()).hexdigest()})
-    if args.command=='read':
-        extra.update(knowledge_parents={id:node.parent for id,node in nodes.items()},
-            knowledge_node_count=len(nodes), knowledge_inventory=hashlib.sha256(
-            json.dumps(sorted(nodes),separators=(',', ':')).encode()).hexdigest())
-    return dict(command=args.command,options=options,items=items,**extra)
-
-
 def _main():
     parser=argparse.ArgumentParser(description=__doc__)
     sub=parser.add_subparsers(dest='command',required=True)
@@ -214,7 +185,7 @@ def _main():
         if args.json: print(json.dumps(data,ensure_ascii=False,indent=2))
         else:
             for n in nodes.values():print(f'{label(n)} | {n.path.relative_to(ROOT)}:{n.start}-{n.end}')
-        return audit_event(args,nodes,list(nodes))
+        return
     if args.command=='tree':
         args.id = args.id or config['root']
         # Validate every parent edge before recursion, including descendants.
@@ -227,7 +198,7 @@ def _main():
             print('  '*depth+label(nodes[id]))
             if args.depth is None or depth<args.depth:
                 pending.extend((child, depth+1) for child in reversed(children(nodes,id)))
-        return audit_event(args,nodes,emitted)
+        return
     if args.command=='search':
         emitted=[]
         terms=[t.casefold() for t in args.terms]
@@ -238,7 +209,7 @@ def _main():
                 print(f'  {n.path.relative_to(ROOT)}:{n.start}-{n.end}')
                 hit=next((line for line in n.body.splitlines() if any(t in line.casefold() for t in terms)),None)
                 if hit: print('  '+hit[:180])
-        return audit_event(args,nodes,emitted)
+        return
     if args.command=='inspect':
         emitted=[]
         for id in args.ids:
@@ -249,7 +220,7 @@ def _main():
             for child in children(nodes,id):
                 emitted.append(child)
                 c=nodes[child];print('  '+label(c));print('    References: '+(', '.join(refs(nodes,c)) or '(none)'))
-        return audit_event(args,nodes,emitted)
+        return
     if args.all and (args.ids or args.children or args.only):
         parser.error('--all cannot be combined with node IDs, --children or --only')
     if not args.all and not args.ids: parser.error('read requires node IDs or --all')
@@ -272,20 +243,11 @@ def _main():
         print(f'\n[READ COMPLETE | snapshot {snapshot} | {len(ids)}/{len(ids)} selected nodes emitted | IDs: '+', '.join(ids)+']')
 
     emitted = [id for id,_ in batch] if args.batch else ids
-    return audit_event(args,nodes,emitted,snapshot=snapshot,selected_ids=ids,
-                       batch=args.batch or 0,batch_count=len(batches),foundation_ids=config['foundation'])
+    return
 
 
 def main():
-    if os.name != 'posix':
-        return _main()
-    try:
-        import context_audit
-    except ModuleNotFoundError as exc:
-        if exc.name != 'context_audit':
-            raise
-        return _main()
-    return context_audit.run_instrumented(ROOT, _main)
+    return _main()
 
 
 if __name__=='__main__':
