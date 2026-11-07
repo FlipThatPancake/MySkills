@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gradient descent: finding the lowest point</title>
+<style>
+/* KIT CSS: paste references/kit.css here */
+</style>
+<style>
+/* lesson styles */
+.hill { fill: none; stroke: var(--text); stroke-width: 3; }
+.ball { fill: var(--yellow); }
+.step { stroke: var(--orange); stroke-width: 3; fill: none; }
+.slope { stroke: var(--blue); stroke-width: 4; }
+.num { font-variant-numeric: tabular-nums; }
+.formula { position: absolute; left: 0; right: 0; top: 470px; height: 80px; text-align: center; }
+.formula > div { position: absolute; left: 0; right: 0; }
+.formula span { display: inline-block; margin: 0 .12em; }
+</style>
+</head>
+<body>
+<main class="lv-stage" data-topic="Gradient descent">
+
+  <!-- 1. Start from a concrete picture: a ball on a curve. State the goal once. -->
+  <section class="lv-slide" id="s-hill" aria-label="The slope of the curve under the ball shows which way is downhill">
+    <h1 class="lv-title">How do we find the lowest point of a curve?</h1>
+    <p class="lv-sub">Many machine-learning models learn by searching for the lowest point of an error curve.</p>
+    <svg viewBox="0 0 1600 900" width="1600" height="900" style="position:absolute;inset:0">
+      <path id="hill1" class="hill" d="" data-comment="Curve"/>
+      <text x="1260" y="250" class="lv-math" style="font-size:40px" fill="var(--text)" data-tip="The curve used in this lesson. For each position x, its height is the error.">f(<tspan font-style="italic">x</tspan>) = ½<tspan font-style="italic">x</tspan>²</text>
+      <g data-beat="1">
+        <line id="slope1" class="slope" data-comment="Slope line"/>
+        <text id="slopeLbl" class="lv-label num" fill="var(--blue)" text-anchor="end" data-tip="">slope</text>
+      </g>
+      <circle id="ball1" class="ball" r="16" data-comment="Ball"/>
+      <text id="xLbl" class="lv-label num" fill="var(--muted)" text-anchor="middle"></text>
+      <g data-beat="2" data-comment="Minimum marker" data-tip="The lowest point of the curve is at x = 0, where the error is 0. The slope there is exactly 0, so the ball stops.">
+        <circle cx="800" cy="470" r="8" fill="none" stroke="var(--yellow)" stroke-width="3"/>
+        <text x="826" y="480" class="lv-small">minimum (0, 0)</text>
+      </g>
+    </svg>
+    <div class="lv-text">
+      <p>Think of the curve as a valley and of the ball as someone looking for its lowest point. The blue line shows how steep the curve is under the ball, and this steepness is called the <span id="slopeWord" data-tip="">slope</span>.</p>
+      <p>Because the slope is negative on this side, the curve goes down to the right, so the ball moves right.</p>
+    </div>
+    <div class="lv-more">
+      <p><b style="color:var(--yellow)">Why look for the lowest point?</b> A machine-learning model has settings, and for each choice of settings we can measure how wrong its answers are. This measure is called the error.</p>
+      <p>When we plot the error against one setting, we often get a curve shaped like this valley. Training the model means finding the setting at the bottom, where the error is smallest.</p>
+      <p>Real models have millions of settings, so their error has millions of directions instead of one. Each step of the search still works the same way as on this curve.</p>
+    </div>
+  </section>
+
+  <!-- 2. Explore: one control, with a cue that says what to watch. -->
+  <section class="lv-slide" id="s-rate" aria-label="The step size changes how the ball reaches the bottom">
+    <h1 class="lv-title">What happens when the steps get bigger?</h1>
+    <svg viewBox="0 0 1600 900" width="1600" height="900" style="position:absolute;inset:0">
+      <path id="hill2" class="hill" d="" data-comment="Curve"/>
+      <path id="path2" class="step" data-comment="Path of the steps"/>
+      <circle id="ball2" class="ball" r="14" data-comment="Ball"/>
+    </svg>
+    <div class="lv-control" style="position:absolute;left:0;right:0;top:500px;justify-content:center">
+      <label for="rate" class="lv-small" data-tip="This number is also called the learning rate.">step size</label>
+      <input id="rate" type="range" min="0.05" max="2.1" step="0.01" value="0.3">
+      <span id="rateOut" class="lv-label num" style="width:70px">0.30</span>
+      <span class="lv-small" style="margin-left:40px">steps to the bottom</span>
+      <span id="stepsOut" class="num" style="font-size:56px;font-weight:700;color:var(--yellow);width:110px">0</span>
+    </div>
+    <div class="lv-text">
+      <p>The ball does not roll smoothly. It moves in steps, and each step is the slope multiplied by a number that we choose, called the step size. The orange line shows every step from the start to the bottom.</p>
+      <p>Drag the slider and watch the path and the step count. Try a value above 1, and then one above 2.</p>
+    </div>
+    <div class="lv-more">
+      <p><b style="color:var(--yellow)">What you should see.</b> With small steps, the ball creeps down and needs many steps. With larger steps, it gets there faster.</p>
+      <p>Above 1, each step is so long that the ball jumps past the bottom to the other side, and then back again. It still settles, but in a zigzag.</p>
+      <p>Above 2, each jump lands higher than the one before, so the ball never settles. Choosing a step size that is too large is a common reason why training a model fails.</p>
+    </div>
+  </section>
+
+  <!-- 3. Name it: the same picture, with the rule written first in words and then in symbols. -->
+  <section class="lv-slide" id="s-rule" aria-label="One step of gradient descent as a formula, matched to the picture">
+    <h1 class="lv-title">Writing one step as a formula</h1>
+    <svg viewBox="0 0 1600 900" width="1600" height="900" style="position:absolute;inset:0">
+      <defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--orange)"/></marker></defs>
+      <path id="hill3" class="hill" d="" data-comment="Curve"/>
+      <line id="slope3" class="slope" data-comment="Slope line"/>
+      <circle id="ball3old" data-comment="Ball at old position" r="13" fill="none" stroke="var(--text)" stroke-width="3"/>
+      <circle id="ball3" class="ball" r="13" data-comment="Ball at new position"/>
+      <line id="stepArrow" data-comment="Step arrow" stroke="var(--orange)" stroke-width="4" marker-end="url(#arr)"/>
+      <text id="oldLbl" class="lv-label" text-anchor="middle" fill="var(--muted)">old position</text>
+      <text id="newLbl" class="lv-label" text-anchor="middle" fill="var(--yellow)">new position</text>
+      <text id="stepLbl" class="lv-label" text-anchor="middle" fill="var(--orange)">step</text>
+    </svg>
+    <div class="formula lv-math" data-comment="Update formula">
+      <div id="f1"><span data-k="new" style="color:var(--yellow)">new position</span><span data-k="eq">=</span><span data-k="old">old position</span><span data-k="minus">−</span><span data-k="step" style="color:var(--orange)">step size × slope</span></div>
+      <div id="f2" style="visibility:hidden"><span data-k="new" style="color:var(--yellow)"><i>x</i><sub>new</sub></span><span data-k="eq">=</span><span data-k="old"><i>x</i></span><span data-k="minus">−</span><span data-k="step" style="color:var(--orange)"><span data-tip="η (the Greek letter eta) is the step size from the previous slide.">η</span>·<span style="color:var(--blue)" data-tip="f′(x) is the slope of the curve at x. For f(x) = ½x², the slope is simply x.">f′(<i>x</i>)</span></span></div>
+    </div>
+    <div class="lv-text">
+      <p>To take one step, we start from the old position and subtract the step size times the slope. We subtract because the ball must move against the slope, which is the downhill direction.</p>
+      <p data-beat="1">In symbols, the step size is written η and the slope is written f′(<i>x</i>). Hover over them for details.</p>
+    </div>
+  </section>
+
+  <!-- 4. Check, with a picture of the situation it asks about. -->
+  <section class="lv-slide" id="s-check" aria-label="Check: which way a step goes for a given slope">
+    <h1 class="lv-title">Check: which way does the next step go?</h1>
+    <svg viewBox="0 0 1600 900" width="1600" height="900" style="position:absolute;inset:0">
+      <path id="hill4" class="hill" d="" data-comment="Curve"/>
+      <line id="slope4" class="slope" data-comment="Slope line"/>
+      <text id="slopeLbl4" class="lv-label num" fill="var(--blue)" text-anchor="middle"></text>
+      <circle id="ball4" class="ball" r="14" data-comment="Ball"/>
+    </svg>
+    <div style="position:absolute;left:820px;right:80px;top:190px;display:flex;flex-direction:column;gap:36px">
+    <div class="lv-check" id="q-sign" data-answer="b" data-followup="q-sign-2">
+      <p class="lv-q">The slope at the ball is −2.5. Which way does the next step go?</p>
+      <button data-choice="a">Left</button>
+      <button data-choice="b">Right</button>
+      <button data-choice="c">It stays where it is</button>
+      <p class="lv-why">Subtracting η × (−2.5) adds a positive number to x, so the ball moves right, which is downhill.</p>
+      <p class="lv-hint">Hint: a negative slope means that the curve goes down to the right.</p>
+    </div>
+    <div class="lv-check lv-hidden" id="q-sign-2" data-answer="a">
+      <p class="lv-q">Now the ball is on the other side, where the slope is +2. Which way does it go?</p>
+      <button data-choice="a">Left</button>
+      <button data-choice="b">Right</button>
+      <p class="lv-why">Subtracting a positive step makes x smaller, so the ball moves left, which is downhill.</p>
+      <p class="lv-hint">Hint: the ball always moves against the slope.</p>
+    </div>
+    </div>
+  </section>
+
+</main>
+<script>
+/* KIT JS: paste references/kit.js here */
+</script>
+<script>
+// Lesson code. One state per slide; the picture and the numbers both read from it.
+(function () {
+  var f = function (x) { return 0.5 * x * x; };          // valley, minimum at 0
+  var df = function (x) { return x; };
+  // The picture is centred on the stage: x = 0 sits at 800, the middle of 1600.
+  function scaleTo(cx, base, sx, sy) { return function (x, y) { return [cx + x * sx, base - y * sy]; }; }
+  var big = scaleTo(800, 470, 100, 30), mid = scaleTo(800, 400, 90, 24), small = scaleTo(430, 700, 72, 36);
+  function hillPath(P, w) {
+    var d = '';
+    for (var x = -w; x <= w + 1e-9; x += 0.05) { var p = P(x, f(x)); d += (d ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1); }
+    return d;
+  }
+  var $ = function (id) { return document.getElementById(id); };
+  $('hill1').setAttribute('d', hillPath(big, 4.2));
+  $('hill2').setAttribute('d', hillPath(big, 4.2));
+  $('hill3').setAttribute('d', hillPath(mid, 4.2));
+  $('hill4').setAttribute('d', hillPath(small, 4.6));
+  function fmt(v) { return (v < 0 ? '−' : '') + Math.abs(v).toFixed(2); }
+  function tangent(P, x, dx, line) {
+    var m = df(x), a = P(x - dx, f(x) - m * dx), c = P(x + dx, f(x) + m * dx);
+    line.setAttribute('x1', a[0]); line.setAttribute('y1', a[1]); line.setAttribute('x2', c[0]); line.setAttribute('y2', c[1]);
+    return [a, c];
+  }
+  function at(id, p, dy) { $(id).setAttribute('x', p[0]); $(id).setAttribute('y', p[1] + (dy || 0)); }
+
+  // slide 1: the ball moves down; slope, position and tooltip text are live
+  var s1 = { x: -4.0 };
+  function draw1() {
+    var x = s1.x, m = df(x), p = big(x, f(x));
+    $('ball1').setAttribute('cx', p[0]); $('ball1').setAttribute('cy', p[1] - 16);
+    var ends = tangent(big, x, 1.1, $('slope1'));
+    var lbl = $('slopeLbl'), up = m < 0 ? ends[0] : ends[1];
+    lbl.setAttribute('x', up[0] + (m < 0 ? -16 : 16)); lbl.setAttribute('y', up[1] - 12);
+    lbl.setAttribute('text-anchor', m < 0 ? 'end' : 'start');
+    lbl.textContent = 'slope ' + fmt(m);
+    at('xLbl', [p[0], 520]); $('xLbl').textContent = 'x = ' + fmt(x);
+    var dir = m < 0 ? 'Because it is negative, the curve goes down to the right, so downhill is to the right.'
+                    : 'Because it is positive, the curve goes down to the left, so downhill is to the left.';
+    var tipText = 'The slope tells how steep the curve is under the ball. Right now it is <b>' + fmt(m) + '</b>. ' + dir;
+    lbl.setAttribute('data-tip', tipText); $('slopeWord').setAttribute('data-tip', tipText);
+  }
+  LV.on('s-hill', { enter: function () { s1.x = -4.0; draw1(); } });
+  LV.loop('s-hill', function (dt) {
+    s1.x -= df(s1.x) * dt * 0.6;
+    if (Math.abs(s1.x) < 0.05) s1.x = -4.0;
+    draw1();
+  });
+  draw1();
+
+  // slide 2: the slider sets the step size; the path and the count update at once
+  var rate = $('rate');
+  function draw2() {
+    var eta = +rate.value, x = -4.1, d = '', n = 0;
+    $('rateOut').textContent = eta.toFixed(2);
+    while (n < 60 && Math.abs(x) > 0.05) {
+      var p = big(x, f(x)); d += (d ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1);
+      x = x - eta * df(x); n++;
+      if (Math.abs(x) > 4.2) { x = Math.sign(x) * 4.2; n = 60; break; }
+    }
+    var q = big(x, f(x)); d += 'L' + q[0].toFixed(1) + ' ' + q[1].toFixed(1);
+    $('path2').setAttribute('d', d);
+    $('ball2').setAttribute('cx', q[0]); $('ball2').setAttribute('cy', q[1] - 14);
+    $('stepsOut').textContent = n >= 60 ? '60+' : String(n);
+  }
+  rate.addEventListener('input', draw2);
+  draw2();
+
+  // slide 3: one step drawn on the curve, and the words morph into symbols on the first beat
+  (function draw3() {
+    var x = -3, eta = 0.5, xn = x - eta * df(x);
+    var p = mid(x, f(x)), q = mid(xn, f(xn));
+    tangent(mid, x, 1.0, $('slope3'));
+    $('ball3old').setAttribute('cx', p[0]); $('ball3old').setAttribute('cy', p[1] - 13);
+    $('ball3').setAttribute('cx', q[0]); $('ball3').setAttribute('cy', q[1] - 13);
+    var y = 432, a = $('stepArrow');
+    a.setAttribute('x1', p[0]); a.setAttribute('y1', y); a.setAttribute('x2', q[0] - 6); a.setAttribute('y2', y);
+    at('oldLbl', [p[0] - 110, p[1] + 6]); at('newLbl', [q[0] + 30, q[1] - 40]); at('stepLbl', [(p[0] + q[0]) / 2, y - 14]);
+  })();
+  LV.on('s-rule', {
+    enter: function () {
+      var a = $('f1'), b = $('f2');
+      a.style.opacity = '1'; a.style.visibility = 'visible'; b.style.visibility = 'hidden';
+    },
+    beat: function (s, n) { if (n === 1) LV.morph($('f1'), $('f2'), 1000); }
+  });
+
+  // slide 4: the picture shows the situation each check asks about
+  function draw4(x) {
+    var p = small(x, f(x)), ends = tangent(small, x, 1.0, $('slope4'));
+    $('ball4').setAttribute('cx', p[0]); $('ball4').setAttribute('cy', p[1] - 14);
+    var up = df(x) < 0 ? ends[0] : ends[1];
+    $('slopeLbl4').setAttribute('x', up[0] + (df(x) < 0 ? -16 : 16)); $('slopeLbl4').setAttribute('y', up[1] - 12);
+    $('slopeLbl4').setAttribute('text-anchor', df(x) < 0 ? 'end' : 'start');
+    $('slopeLbl4').textContent = 'slope ' + (x < 0 ? '−' : '+') + Math.abs(df(x));
+  }
+  draw4(-2.5);
+  $('q-sign').addEventListener('lv:answer', function (e) {
+    if (!e.detail.correct) LV.tween(900, function (u) { draw4(LV.lerp(-2.5, 2, u)); }, LV.ease.inOut);
+  });
+})();
+</script>
+</body>
+</html>

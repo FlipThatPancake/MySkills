@@ -1,5 +1,7 @@
 # Design brief: HTML learning visuals
 
+> Superseded for text and titles by `skills/learning-visuals/SKILL.md`: titles say plainly what a slide explains, and each slide has a short, connected explanation instead of a 12-word caption.
+
 Purpose: describe the target look, motion, interaction, and technical limits for an AI skill that makes `.html` learning visuals. The skill will run in ChatGPT and Claude. It will pair each visual with minimal text.
 
 This brief replaces the moodboard screenshots. It is written so that nobody needs the images again. The screenshots were removed from the repository in the same change that added this file.
