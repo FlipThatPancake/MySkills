@@ -1,7 +1,8 @@
 #!/usr/bin/env node
-// Usage: node test.mjs [--size=1440x900] page.html
+// Usage: node test.mjs [--size=1440x900] [--setup='js'] page.html
 // Tests comment mode on a page it is installed in: the theme took effect, the toolbar fits and nothing in it overlaps,
 // and commenting, saving, export and clearing work. Each run starts with no stored comments. Exits 1 on any failure.
+// A first-visit dialog (role=dialog, aria-modal or <dialog open>) is passed by clicking its first button; --setup runs your own JS instead.
 import { createRequire } from 'node:module';
 import { resolve } from 'node:path';
 let chromium;
@@ -9,6 +10,7 @@ try { ({ chromium } = createRequire(import.meta.url)('playwright')); } catch (e)
 const args = process.argv.slice(2);
 const [W, H] = ((args.find((a) => a.startsWith('--size=')) || '').slice(7) || '1440x900').split('x').map(Number);
 const file = resolve(args.find((a) => !a.startsWith('--')) || '');
+const setup = (args.find((a) => a.startsWith('--setup=')) || '').slice(8);
 let failed = 0;
 const check = (name, ok, detail = '') => { if (!ok) failed++; console.log((ok ? 'PASS ' : 'FAIL ') + name + (ok || !detail ? '' : ' — ' + detail)); };
 const near = (a, b, d = 3) => a && b && Math.abs(a[0] - b[0]) <= d && Math.abs(a[1] - b[1]) <= d;
@@ -23,6 +25,13 @@ await p.goto('file://' + file);
 await p.evaluate(() => localStorage.clear());
 await p.reload();
 await p.waitForTimeout(600);
+// Get past anything a first visit puts in front of the page, so comments land on the page itself.
+const gate = setup ? await p.evaluate(setup) : await p.evaluate(() => {
+  const d = [...document.querySelectorAll('[aria-modal="true"],[role="dialog"],dialog[open]')].find((e) => e.checkVisibility() && e.querySelector('button'));
+  if (d) d.querySelector('button').click();
+  return d && (d.getAttribute('aria-label') || d.id || d.localName);
+});
+if (gate) { console.log('Passed a first-visit dialog: ' + gate); await p.waitForTimeout(800); }
 
 // Everything below reads the toolbar's shadow root.
 const ui = (fn, arg) => p.evaluate(([src, arg]) => {
@@ -30,7 +39,7 @@ const ui = (fn, arg) => p.evaluate(([src, arg]) => {
   const $ = (s) => host && host.shadowRoot.querySelector(s);
   const $$ = (s) => (host ? [...host.shadowRoot.querySelectorAll(s)] : []);
   const shown = (el) => !!el && !el.closest('[hidden]') && el.getClientRects().length > 0;
-  const rect = (el) => { const r = el.getBoundingClientRect(); return { left: r.left, top: r.top, right: r.right, bottom: r.bottom, width: r.width, height: r.height }; };
+  const rect = (el) => { if (!el) throw new Error('a toolbar or comment element it needed is missing'); const r = el.getBoundingClientRect(); return { left: r.left, top: r.top, right: r.right, bottom: r.bottom, width: r.width, height: r.height }; };
   return new Function('host', '$', '$$', 'shown', 'rect', 'arg', 'return (' + src + ')(arg)')(host, $, $$, shown, rect, arg);
 }, [fn.toString(), arg]);
 const settle = (ms = 700) => p.waitForTimeout(ms);
@@ -62,6 +71,8 @@ const words = await p.evaluate(() => {
   return null;
 });
 
+let stage = 'install';
+try {
 // 1. Install and theme
 const theme = await ui(() => { const b = $('.tg'), s = getComputedStyle(b); return { ok: !!b, themed: /PP Neue Montreal/.test((window.commentModeOptions || {}).css || ''), font: s.fontFamily, h: b.offsetHeight }; });
 check('toolbar is installed', theme.ok);
@@ -71,9 +82,11 @@ if (theme.themed) {
   check('m2 theme: font face loaded', await p.evaluate(() => document.fonts.check("500 14px 'PP Neue Montreal'")));
 }
 
+stage = 'mode off';
 // 2. Mode off, no comments: the toggle alone
 check('mode off shows only the toggle', JSON.stringify(await visibleButtons()) === '["tg"]', JSON.stringify(await visibleButtons()));
 
+stage = 'point comment';
 // 3. A point comment: the bubble tip marks the spot, the numbered pin waits until the box closes
 await p.keyboard.press('c');
 await settle(300);
@@ -100,6 +113,7 @@ if (spot) {
   check('Enter saves it as pin 1 at the spot', pin && pin.n === '1' && near(pin.at, spot), pin && JSON.stringify(pin));
 }
 
+stage = 'text comment';
 // 4. A text comment
 check('found text to select', !!words);
 if (words) {
@@ -113,6 +127,7 @@ if (words) {
   await settle(400);
 }
 
+stage = 'toolbar';
 // 5. Toolbar with comments: every button on screen, none overlapping, labels open on hover
 await p.mouse.move(W / 2, H / 2);
 await settle();
@@ -133,6 +148,7 @@ check('hovering download shows "Download comments"', await ui(() => shown($('.dl
 const nowBar = await ui(() => $$('.bar .p').filter(shown).map((b) => rect(b)));
 check('no buttons overlap while a label is open', nowBar.every((a, i) => nowBar.every((b, j) => j <= i || !overlap(a, b))));
 
+stage = 'export';
 // 6. Export
 const [dl] = await Promise.all([p.waitForEvent('download'), p.mouse.click(...(await center('.dl')))]);
 let json = null;
@@ -148,6 +164,7 @@ await p.keyboard.press('Escape');
 await settle();
 check('after saving, mode off shows only the toggle', JSON.stringify(await visibleButtons()) === '["tg"]', JSON.stringify(await visibleButtons()));
 
+stage = 'reload';
 // 7. Comments survive a reload
 await p.reload();
 await settle(600);
@@ -155,6 +172,7 @@ await p.keyboard.press('c');
 await settle(300);
 check('comments survive a reload', (await ui(() => $$('.pin').filter(shown).length)) === 2);
 
+stage = 'reopen and delete';
 // 8. Reopen and delete
 const pin1 = await ui(() => { const r = rect($$('.pin').find((e) => shown(e) && e.textContent === '1')); return [r.left + r.width / 2, r.top + r.height / 2]; });
 await p.mouse.click(...pin1);
@@ -165,6 +183,7 @@ await p.mouse.click(...(await center('.box .del')));
 await settle(400);
 check('delete removes the comment', (await ui(() => $$('.pin').filter(shown).length)) === 1);
 
+stage = 'clear';
 // 9. Clear needs two clicks
 await p.mouse.click(...(await center('.cl')));
 await settle(300);
@@ -173,10 +192,14 @@ await p.mouse.click(...(await center('.cl')));
 await settle(300);
 check('the second Clear click removes every comment', (await ui(() => $$('.pin').length)) === 0);
 
+stage = 'leaving';
 // 10. Leaving
 await p.keyboard.press('Escape');
 await settle(300);
 check('Esc turns comment mode off', !(await ui(() => $('.bar').classList.contains('on'))));
+} catch (e) {
+  check(`the test stopped at "${stage}"`, false, String(e.message).split('\n')[0].replace(/^.*Error: /, ''));
+}
 check('no script errors', errors.length === 0, errors.join(' | '));
 
 await browser.close();
