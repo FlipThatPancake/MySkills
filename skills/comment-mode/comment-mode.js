@@ -342,7 +342,7 @@
         // A point comment hangs from the bubble's tip, its bottom corner, flipping left near the right edge; a text comment sits under its text.
         const flip = isText(box.c) ? px + 8 + w > innerWidth - 8 : px + w > innerWidth - 8;
         box.el.classList.toggle('flip', flip);
-        const x = isText(box.c) ? clamp(px + 8, 8, innerWidth - w - 8) : flip ? px - w : px;
+        const x = isText(box.c) ? clamp(px + 8, 8, innerWidth - w - 8) : clamp(flip ? px - w : px, 8, innerWidth - w - 8);
         box.el.style.transform = `translate(${x}px,${clamp(isText(box.c) ? py + 10 : py - h, 8, innerHeight - h - 8)}px)`;
       }
     }
