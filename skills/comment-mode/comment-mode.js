@@ -122,7 +122,7 @@
     pre.setEnd(r.startContainer, r.startOffset);
     sel.removeAllRanges();
     const start = pre.toString().length;
-    return make(el, { target: { type: 'text selection', text: cut(clean(quote), 300) }, quote, start, end: start + quote.length });
+    return make(el, { target: { type: 'text selection', text: clean(quote) }, quote, start, end: start + quote.length });
   }
   function make(el, extra) {
     let context = null;
@@ -143,7 +143,7 @@
     [hidden]{display:none!important}
     button{font:inherit;cursor:pointer;border:0;padding:0;color:inherit;background:none}
     .bar{position:fixed;${vert}:16px;${horiz === 'center' ? 'left:50%;transform:translateX(-50%)' : horiz + ':16px'};pointer-events:auto}
-    .x{position:absolute;top:50%;transform:translateY(-50%);${horiz === 'right' ? 'right' : 'left'}:calc(100% + 6px);display:flex;align-items:center;gap:6px;white-space:nowrap}
+    .x{position:absolute;${vert}:0;min-height:30px;${horiz === 'right' ? 'right' : 'left'}:calc(100% + 6px);display:flex;flex-wrap:wrap;align-items:center;gap:6px;width:max-content;max-width:${horiz === 'center' ? 'calc(50vw - 90px)' : 'calc(100vw - 190px)'}}
     .p,.hint{display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 13px;border-radius:99px;font-weight:500;
       background:#161616ee;color:#e8e6e1;border:1px solid #ffffff26;box-shadow:0 2px 10px #0004;backdrop-filter:blur(8px)}
     .p:hover{border-color:#ffffff77}
