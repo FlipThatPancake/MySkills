@@ -199,7 +199,8 @@
 
   const css = document.createElement('style');
   // @font-face only works in the page's own stylesheet, so a theme's font rules are copied there.
-  css.textContent = 'html.cm-on,html.cm-on *{cursor:crosshair!important;-webkit-user-select:text!important;user-select:text!important}' + (((window.commentModeOptions || {}).css || '').match(/@font-face\{[^}]*\}/g) || []).join('');
+  // The empty area of an SVG laid over text lets clicks and selections through; its drawn shapes still catch them.
+  css.textContent = 'html.cm-on,html.cm-on *{cursor:crosshair!important;-webkit-user-select:text!important;user-select:text!important}:where(html.cm-on svg){pointer-events:none}:where(html.cm-on svg *){pointer-events:visiblePainted}' +(((window.commentModeOptions || {}).css || '').match(/@font-face\{[^}]*\}/g) || []).join('');
   // A theme can style light pages differently: the host gets .light when the page background is light.
   const lightPage = () => {
     for (const el of [document.body, document.documentElement]) {
