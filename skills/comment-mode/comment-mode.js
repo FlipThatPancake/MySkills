@@ -175,7 +175,7 @@
     .cb svg{width:52%;height:52%}
     .cb.go{background:var(--c);color:#fff}.cb:disabled{background:#2929290f;color:#929292;cursor:not-allowed}
   </style><div id="marks"></div><div class="hl" hidden></div><div class="tag" hidden></div><div id="pins"></div>
-  <div class="bar"><button class="p tg" data-a="mode" title="Comment mode (C)"><i class="dot"></i>Comment mode</button>
+  <div class="bar"><button class="p tg" data-a="mode" title="Comment mode (C)"><i class="dot"></i><span>Comment mode · OFF</span></button>
   <div class="x"><span class="hint">Select text or click anything · Esc exits</span>
   <button class="p cp" data-a="copy">Copy JSON</button><button class="p dl" data-a="dl"></button><button class="p cl" data-a="clear"></button></div></div>`;
   if (window.commentModeOptions && window.commentModeOptions.css) root.appendChild(document.createElement('style')).textContent = window.commentModeOptions.css;
@@ -183,7 +183,8 @@
   const pins = $('#pins'), marks = $('#marks'), hl = $('.hl'), tag = $('.tag'), bar = $('.bar');
 
   const css = document.createElement('style');
-  css.textContent = 'html.cm-on,html.cm-on *{cursor:crosshair!important;-webkit-user-select:text!important;user-select:text!important}';
+  // @font-face only works in the page's own stylesheet, so a theme's font rules are copied there.
+  css.textContent = 'html.cm-on,html.cm-on *{cursor:crosshair!important;-webkit-user-select:text!important;user-select:text!important}' + (((window.commentModeOptions || {}).css || '').match(/@font-face\{[^}]*\}/g) || []).join('');
   const mount = () => { document.head.appendChild(css); document.body.appendChild(host); };
   document.body ? mount() : document.addEventListener('DOMContentLoaded', mount);
 
@@ -203,13 +204,14 @@
   function syncBar() {
     const n = items.length, dl = $('.dl'), cl = $('.cl');
     bar.classList.toggle('on', on);
+    $('.tg span').textContent = 'Comment mode · ' + (on ? 'ON' : 'OFF');
     pins.hidden = marks.hidden = !on;
     for (const b of root.querySelectorAll('.cp,.dl,.cl')) b.hidden = !n;
     $('.hint').hidden = !on || n > 0;
-    dl.textContent = on ? 'Download' : '↓ ' + n + (dirty ? ' unsaved' : '');
+    dl.textContent = on ? 'Download comments (' + n + ')' : '↓ ' + n + (dirty ? ' unsaved' : '');
     dl.title = n + (n === 1 ? ' comment' : ' comments') + (dirty ? ', not downloaded or copied yet' : ', saved') + ' · click to download';
     dl.classList.toggle('dirty', dirty);
-    cl.textContent = armed ? 'Click again to clear all' : 'Clear';
+    cl.textContent = armed ? 'Click again to clear all' : 'Clear comments';
     cl.classList.toggle('arm', !!armed);
   }
   const setMode = (v) => {
