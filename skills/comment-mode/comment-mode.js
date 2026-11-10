@@ -151,7 +151,7 @@
     [hidden]{display:none!important}
     button{font:inherit;cursor:pointer;border:0;padding:0;color:inherit;background:none}
     .bar{position:fixed;${vert}:var(--edge);${horiz === 'center' ? 'left:50%;transform:translateX(-50%)' : horiz + ':var(--edge)'};pointer-events:auto}
-    .x{position:absolute;${vert}:0;display:flex;flex-direction:${horiz === 'right' ? 'row' : 'row-reverse'};align-items:center;gap:6px;width:max-content;${horiz === 'right' ? 'right' : 'left'}:calc(100% + 6px)}
+    .x{position:absolute;${vert}:0;display:flex;flex-direction:${horiz === 'right' ? 'row' : 'row-reverse'};align-items:center;flex-wrap:wrap;gap:6px;width:max-content;max-width:${horiz === 'center' ? 'calc(50vw - 90px)' : 'calc(100vw - 190px)'};${horiz === 'right' ? 'right' : 'left'}:calc(100% + 6px)}
     .p{position:relative;display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 12px;border-radius:99px;font-weight:500;white-space:nowrap;
       background:#161616ee;color:#e8e6e1;border:1px solid #ffffff26;box-shadow:0 2px 10px #0004;backdrop-filter:blur(8px)}
     .p:hover{border-color:#ffffff77}
