@@ -95,7 +95,8 @@
     return { el: block, rect: r, type: 'text line', text: text || describe(block), txt: true };
   }
   function targetAt(x, y) {
-    const el = document.elementFromPoint(x, y);
+    let el = document.elementFromPoint(x, y);
+    if (el === document.documentElement) el = document.body; // below a short page
     if (!el || el === host) return null;
     const named = el.closest('[data-comment]');
     if (named) return { el: named, type: named.localName, name: named.dataset.comment, text: cut(describe(named)), txt: !!el.closest('text') || (!(el instanceof SVGElement) && !el.closest(OBJECTS) && !!(el.closest(BLOCKS) || ownText(el))) }; // text inside a named element can still be selected
@@ -145,7 +146,7 @@
     cl: TRASH.replace('<svg', '<svg preserveAspectRatio="xMidYMid meet"'),
   };
   // Every toolbar button is an icon plus a label; a theme decides when the label shows.
-  const tool = (a, label, title) => `<button class="p ${a}" data-a="${a}" title="${title}"><i class="ic">${ICON[a]}</i><span class="lw"><span class="lb">${label}</span></span>${a === 'dl' ? '<span class="us">Unsaved comments</span>' : ''}</button>`;
+  const tool = (a, label, title) => `<button class="p ${a}" data-a="${a}" title="${title}"><i class="ic">${ICON[a]}</i><span class="lw"><span class="lb">${label}</span></span></button>`;
   root.innerHTML = `<style>
     :host{position:fixed;inset:0;pointer-events:none;z-index:2147483647;font:13px/1.4 system-ui,sans-serif;--blue:#0d99ff;--edge:16px}
     @media print{:host{display:none}}
@@ -158,7 +159,7 @@
       background:#161616ee;color:#e8e6e1;border:1px solid #ffffff26;box-shadow:0 2px 10px #0004;backdrop-filter:blur(8px)}
     .p:hover{border-color:#ffffff77}
     .ic{display:flex;width:12px;height:12px}.ic svg{width:100%;height:100%}
-    .lw{display:contents}.us{display:none}
+    .lw{display:contents}.dl:is(:hover,:not(.dirty)) .n,.dl.dirty:not(:hover) .h{display:none}
     .on .tg{background:#dbdbd6;color:#292929;border-color:#dbdbd6}
     .bar:not(.on) .dl{height:22px;padding:0 9px;font-size:11px;box-shadow:none}
     .dl.dirty{color:#ffb454;border-color:#ffb45477}
@@ -190,7 +191,7 @@
     .cb.go{background:var(--c);color:#fff}.cb:disabled{background:#2929290f;color:#929292;cursor:not-allowed}
   </style><div id="marks"></div><div class="hl" hidden></div><div class="tag" hidden></div><div id="pins"></div>
   <div class="bar${col ? ' col' : ''}">${tool('tg', 'Comment', 'Comment mode (C)')}
-  <div class="x">${tool('cl', '', 'Clear all comments')}${tool('cp', 'Copy JSON', 'Copy every comment as JSON')}${tool('dl', '', 'Download every comment as JSON')}</div>
+  <div class="x">${tool('cl', '', 'Clear all comments')}${tool('cp', 'Copy JSON', 'Copy every comment as JSON')}${tool('dl', '<span class="n"></span><span class="h">Download comments</span>', 'Download every comment as JSON')}</div>
   <div class="tip" hidden><p>Select text, or click anything on the page, to pin a comment there.</p><div><span>Esc exits · C toggles</span><button>Got it</button></div></div></div>`;
   if (window.commentModeOptions && window.commentModeOptions.css) root.appendChild(document.createElement('style')).textContent = window.commentModeOptions.css;
   const $ = (s) => root.querySelector(s);
@@ -236,9 +237,8 @@
     pins.hidden = marks.hidden = !on;
     $('.cp').hidden = cl.hidden = !on || !n;
     dl.hidden = !n || (!on && !dirty);
-    $('.us').hidden = !dirty;
     $('.tip').hidden = !on || tipSeen;
-    say(dl, on ? 'Save comments' : n + ' unsaved');
+    dl.querySelector('.n').textContent = n + ' unsaved'; // shown while dirty; hover shows Download comments
     dl.title = n + (n === 1 ? ' comment' : ' comments') + (dirty ? ', not downloaded or copied yet' : ', saved') + ' · click to download';
     dl.classList.toggle('dirty', dirty);
     say(cl, armed ? 'Click again to clear' : 'Clear comments');
@@ -327,7 +327,7 @@
       for (const c of items.concat(box && box.isNew ? [box.c] : [])) {
         const g = geoOf(c), pin = pinEls.get(c), mk = markEls.get(c);
         if (!pin) continue;
-        pin.hidden = !g;
+        pin.hidden = !g || (box && box.c === c); // the open box stands in for its pin
         if (mk) mk.hidden = !g;
         if (!g) continue;
         pin.style.transform = `translate(${g.pin[0]}px,${g.pin[1]}px)`;
@@ -338,9 +338,12 @@
       }
       const g = box && geoOf(box.c);
       if (g) {
-        const w = box.el.offsetWidth, x = clamp(g.at[0] + 8, 8, innerWidth - w - 8);
-        box.el.classList.toggle('flip', g.at[0] > x + w / 2);
-        box.el.style.transform = `translate(${x}px,${clamp(g.at[1] + 10, 8, innerHeight - box.el.offsetHeight - 8)}px)`;
+        const w = box.el.offsetWidth, h = box.el.offsetHeight, [px, py] = g.at;
+        // A point comment hangs from the bubble's tip, its bottom corner, flipping left near the right edge; a text comment sits under its text.
+        const flip = isText(box.c) ? px + 8 + w > innerWidth - 8 : px + w > innerWidth - 8;
+        box.el.classList.toggle('flip', flip);
+        const x = isText(box.c) ? clamp(px + 8, 8, innerWidth - w - 8) : flip ? px - w : px;
+        box.el.style.transform = `translate(${x}px,${clamp(isText(box.c) ? py + 10 : py - h, 8, innerHeight - h - 8)}px)`;
       }
     }
     requestAnimationFrame(tick);
