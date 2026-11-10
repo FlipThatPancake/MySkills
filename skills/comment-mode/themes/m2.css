@@ -16,7 +16,11 @@
 .on .tg,.cl.arm{background:#dbdbd6;border-color:#bebebe;color:#292929}
 .cl.arm{color:#a71414}
 .bar .dl,.bar .dl.dirty{color:var(--red);border-color:transparent}
-.dl .lb{color:var(--ink)}
+.dl .lb{display:flex;color:var(--ink)}
+.bar .dl.p :is(.nw,.hw){display:grid;grid-template-columns:0fr;transition:grid-template-columns .51s var(--ease)}
+.bar .dl.p :is(.n,.h){overflow:hidden;min-width:0;opacity:0;translate:-6px 0;transition:opacity .24s var(--ease),translate .3s var(--ease)}
+.bar .dl.dirty:not(:hover) .nw,.bar .dl:is(:hover,:not(.dirty)) .hw{grid-template-columns:1fr}
+.bar .dl.dirty:not(:hover) .n,.bar .dl:is(:hover,:not(.dirty)) .h{opacity:1;translate:0 0;transition-delay:.18s}
 .tip{width:min(calc(100vw - 32px),380px);box-sizing:border-box;padding:24px 28px;border-radius:28px;background:#000000e0;color:#dfdeda}
 .tip p{font-size:18px;font-weight:400}
 .tip div{margin-top:20px;font-size:13px}

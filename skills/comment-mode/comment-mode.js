@@ -159,7 +159,7 @@
       background:#161616ee;color:#e8e6e1;border:1px solid #ffffff26;box-shadow:0 2px 10px #0004;backdrop-filter:blur(8px)}
     .p:hover{border-color:#ffffff77}
     .ic{display:flex;width:12px;height:12px}.ic svg{width:100%;height:100%}
-    .lw{display:contents}.dl:is(:hover,:not(.dirty)) .n,.dl.dirty:not(:hover) .h{display:none}
+    .lw{display:contents}.dl:is(:hover,:not(.dirty)) .nw,.dl.dirty:not(:hover) .hw{display:none}
     .on .tg{background:#dbdbd6;color:#292929;border-color:#dbdbd6}
     .bar:not(.on) .dl{height:22px;padding:0 9px;font-size:11px;box-shadow:none}
     .dl.dirty{color:#ffb454;border-color:#ffb45477}
@@ -191,7 +191,7 @@
     .cb.go{background:var(--c);color:#fff}.cb:disabled{background:#2929290f;color:#929292;cursor:not-allowed}
   </style><div id="marks"></div><div class="hl" hidden></div><div class="tag" hidden></div><div id="pins"></div>
   <div class="bar${col ? ' col' : ''}">${tool('tg', 'Comment', 'Comment mode (C)')}
-  <div class="x">${tool('cl', '', 'Clear all comments')}${tool('cp', 'Copy JSON', 'Copy every comment as JSON')}${tool('dl', '<span class="n"></span><span class="h">Download comments</span>', 'Download every comment as JSON')}</div>
+  <div class="x">${tool('cl', '', 'Clear all comments')}${tool('cp', 'Copy JSON', 'Copy every comment as JSON')}${tool('dl', '<span class="nw"><span class="n"></span></span><span class="hw"><span class="h">Download comments</span></span>', 'Download every comment as JSON')}</div>
   <div class="tip" hidden><p>Select text, or click anything on the page, to pin a comment there.</p><div><span>Esc exits · C toggles</span><button>Got it</button></div></div></div>`;
   if (window.commentModeOptions && window.commentModeOptions.css) root.appendChild(document.createElement('style')).textContent = window.commentModeOptions.css;
   const $ = (s) => root.querySelector(s);
