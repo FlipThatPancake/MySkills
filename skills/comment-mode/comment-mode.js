@@ -7,6 +7,7 @@
   const KEY = 'comment-mode:' + location.pathname;
   const SPOTS = ['top-left', 'top-center', 'top-right', 'bottom-left', 'bottom-center', 'bottom-right'];
   const spot = SPOTS.includes((window.commentModeOptions || {}).toolbar) ? window.commentModeOptions.toolbar : 'bottom-center';
+  const col = (window.commentModeOptions || {}).layout === 'column'; // actions stack above or below the toggle instead of beside it
   const COLORS = ['#0d99ff', '#f69b13', '#af63f2', '#f35151', '#1fbf5a', '#10b8c4', '#e5469a'];
   let items = [], dirty = false, on = false, box = null, picked = false, armed = 0; // box: { c, isNew, el }
   const pinEls = new Map(), markEls = new Map();
@@ -151,7 +152,8 @@
     [hidden]{display:none!important}
     button{font:inherit;cursor:pointer;border:0;padding:0;color:inherit;background:none}
     .bar{position:fixed;${vert}:var(--edge);${horiz === 'center' ? 'left:50%;transform:translateX(-50%)' : horiz + ':var(--edge)'};pointer-events:auto}
-    .x{position:absolute;${vert}:0;display:flex;flex-direction:${horiz === 'right' ? 'row' : 'row-reverse'};align-items:center;flex-wrap:wrap;gap:6px;width:max-content;max-width:${horiz === 'center' ? 'calc(50vw - 90px)' : 'calc(100vw - 190px)'};${horiz === 'right' ? 'right' : 'left'}:calc(100% + 6px)}
+    .x{position:absolute;display:flex;align-items:center;gap:var(--xgap,6px);width:max-content}
+    .x{${col ? `${vert}:calc(100% + var(--xgap,6px));flex-direction:${vert === 'bottom' ? 'column' : 'column-reverse'};align-items:${horiz === 'right' ? 'flex-end' : horiz === 'center' ? 'center' : 'flex-start'};${horiz === 'center' ? 'left:50%;transform:translateX(-50%)' : horiz + ':0'}` : `${vert}:0;flex-direction:${horiz === 'right' ? 'row' : 'row-reverse'};flex-wrap:wrap;max-width:${horiz === 'center' ? 'calc(50vw - 90px)' : 'calc(100vw - 190px)'};${horiz === 'right' ? 'right' : 'left'}:calc(100% + 6px)`}}
     .p{position:relative;display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 12px;border-radius:99px;font-weight:500;white-space:nowrap;
       background:#161616ee;color:#e8e6e1;border:1px solid #ffffff26;box-shadow:0 2px 10px #0004;backdrop-filter:blur(8px)}
     .p:hover{border-color:#ffffff77}
@@ -187,7 +189,7 @@
     .cb svg{width:52%;height:52%}
     .cb.go{background:var(--c);color:#fff}.cb:disabled{background:#2929290f;color:#929292;cursor:not-allowed}
   </style><div id="marks"></div><div class="hl" hidden></div><div class="tag" hidden></div><div id="pins"></div>
-  <div class="bar">${tool('tg', 'Comment', 'Comment mode (C)')}
+  <div class="bar${col ? ' col' : ''}">${tool('tg', 'Comment', 'Comment mode (C)')}
   <div class="x">${tool('cl', '', 'Clear all comments')}${tool('cp', 'Copy JSON', 'Copy every comment as JSON')}${tool('dl', '', 'Download every comment as JSON')}</div>
   <div class="tip" hidden><p>Select text, or click anything on the page, to pin a comment there.</p><div><span>Esc exits · C toggles</span><button>Got it</button></div></div></div>`;
   if (window.commentModeOptions && window.commentModeOptions.css) root.appendChild(document.createElement('style')).textContent = window.commentModeOptions.css;
