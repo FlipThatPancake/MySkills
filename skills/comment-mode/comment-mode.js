@@ -1,6 +1,6 @@
 /* comment-mode: Figma-style comments for any HTML page. Press C or use the toggle; Esc exits.
    Select text or click anything to comment; Enter saves. Copy JSON or Download exports every comment.
-   With comment mode off, only the toggle and a tiny download chip remain. */
+   With comment mode off, only the toggle stays, plus the download button while comments are unsaved. */
 (() => {
   if (window.__commentMode) return;
   window.__commentMode = true;
@@ -137,23 +137,35 @@
   const SEND = '<svg viewBox="0 0 12 13"><path d="M5.4.2.25 5.1c-.27.27-.37.86-.07 1.18.3.32.88.32 1.19 0l3.77-3.57v9.48a.81.81 0 0 0 1.62 0V2.7l3.77 3.57c.3.32.9.34 1.18 0 .26-.31.27-.9-.07-1.18L6.51.22C6.3 0 5.76-.15 5.4.22Z" fill="currentColor"/></svg>';
   const TRASH = '<svg viewBox="0 0 9 11"><path d="M6.13.57 6 .1A.14.14 0 0 0 5.87 0H2.57a.14.14 0 0 0-.14.1l-.13.47a.14.14 0 0 1-.13.1H.14A.14.14 0 0 0 0 .81v.4c0 .07.06.13.14.13h8.16c.08 0 .14-.06.14-.14V.8a.14.14 0 0 0-.14-.14H6.26a.14.14 0 0 1-.13-.1ZM.25 1.94v7.2c0 .69.55 1.23 1.23 1.23h5.47c.68 0 1.23-.55 1.23-1.23v-7.2H.25Zm1.54 7.01a.23.23 0 0 1-.23.23h-.05a.23.23 0 0 1-.23-.23V3.34c0-.12.1-.22.23-.22h.05c.13 0 .23.1.23.22v5.61Zm2.68 0a.23.23 0 0 1-.23.23h-.05a.23.23 0 0 1-.23-.23V3.34c0-.12.1-.22.23-.22h.05c.13 0 .23.1.23.22v5.61Zm2.68 0a.23.23 0 0 1-.23.23h-.05a.23.23 0 0 1-.23-.23V3.34c0-.12.1-.22.23-.22h.05c.13 0 .23.1.23.22v5.61Z" fill="currentColor"/></svg>';
   const BUBBLE = '<svg class="bub" viewBox="9 3 21 22"><path d="M25.32 4.58c2.04 0 3.68 1.65 3.68 3.69v7.63c0 2.03-1.65 3.68-3.68 3.68H14.66l-4.5 3.84V8.27c0-2.04 1.65-3.69 3.68-3.69h11.48Z" fill="currentColor"/></svg>';
+  const ICON = {
+    tg: '<svg viewBox="0 0 16 16"><path d="M2.95 0h9.18a2.95 2.95 0 0 1 2.94 2.95v6.1A2.95 2.95 0 0 1 12.13 12H3.6L0 15.06V2.95A2.95 2.95 0 0 1 2.95 0Z" fill="currentColor"/></svg>',
+    dl: '<svg viewBox="0 0 16 17"><path d="M14.48 9.59 9.33 14.57c-.46.46-.76.72-1.05.93h5.03v1.25H2v-1.25h5.02c-.29-.21-.67-.47-1.13-.93L.74 9.5c-.84-.92-.25-1.13.38-1.13h2.51V1.68C3.63.5 4.47 0 5.3 0h4.6c1.35 0 1.69.88 1.69 1.68v6.7h2.47c1.05 0 1.26.33.42 1.21Z" fill="currentColor"/></svg>',
+    cp: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="5" y="5" width="10" height="10" rx="2"/><path d="M11 2.8A1.8 1.8 0 0 0 9.2 1H2.8A1.8 1.8 0 0 0 1 2.8v6.4A1.8 1.8 0 0 0 2.8 11"/></svg>',
+    cl: TRASH.replace('<svg', '<svg preserveAspectRatio="xMidYMid meet"'),
+  };
+  // Every toolbar button is an icon plus a label; a theme decides when the label shows.
+  const tool = (a, label, title) => `<button class="p ${a}" data-a="${a}" title="${title}"><i class="ic">${ICON[a]}</i><span class="lw"><span class="lb">${label}</span></span>${a === 'dl' ? '<span class="us">Unsaved comments</span>' : ''}</button>`;
   root.innerHTML = `<style>
-    :host{position:fixed;inset:0;pointer-events:none;z-index:2147483647;font:13px/1.4 system-ui,sans-serif;--blue:#0d99ff}
+    :host{position:fixed;inset:0;pointer-events:none;z-index:2147483647;font:13px/1.4 system-ui,sans-serif;--blue:#0d99ff;--edge:16px}
     @media print{:host{display:none}}
     [hidden]{display:none!important}
     button{font:inherit;cursor:pointer;border:0;padding:0;color:inherit;background:none}
-    .bar{position:fixed;${vert}:16px;${horiz === 'center' ? 'left:50%;transform:translateX(-50%)' : horiz + ':16px'};pointer-events:auto}
-    .x{position:absolute;${vert}:0;min-height:30px;${horiz === 'right' ? 'right' : 'left'}:calc(100% + 6px);display:flex;flex-wrap:wrap;align-items:center;gap:6px;width:max-content;max-width:${horiz === 'center' ? 'calc(50vw - 90px)' : 'calc(100vw - 190px)'}}
-    .p,.hint{display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 13px;border-radius:99px;font-weight:500;
+    .bar{position:fixed;${vert}:var(--edge);${horiz === 'center' ? 'left:50%;transform:translateX(-50%)' : horiz + ':var(--edge)'};pointer-events:auto}
+    .x{position:absolute;${vert}:0;display:flex;flex-direction:${horiz === 'right' ? 'row' : 'row-reverse'};align-items:center;gap:6px;width:max-content;${horiz === 'right' ? 'right' : 'left'}:calc(100% + 6px)}
+    .p{position:relative;display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 12px;border-radius:99px;font-weight:500;white-space:nowrap;
       background:#161616ee;color:#e8e6e1;border:1px solid #ffffff26;box-shadow:0 2px 10px #0004;backdrop-filter:blur(8px)}
     .p:hover{border-color:#ffffff77}
-    .hint{border-color:transparent;color:#bdbab3;font-weight:400;font-size:12px}
-    .dot{width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.35}
-    .on .tg{background:#dbdbd6;color:#292929;border-color:#dbdbd6}.on .tg .dot{background:var(--blue);opacity:1}
-    .bar:not(.on) :is(.cp,.cl){display:none}
+    .ic{display:flex;width:12px;height:12px}.ic svg{width:100%;height:100%}
+    .lw{display:contents}.us{display:none}
+    .on .tg{background:#dbdbd6;color:#292929;border-color:#dbdbd6}
     .bar:not(.on) .dl{height:22px;padding:0 9px;font-size:11px;box-shadow:none}
     .dl.dirty{color:#ffb454;border-color:#ffb45477}
     .cl.arm{background:#e5484d;border-color:#e5484d;color:#fff}
+    .tip{position:absolute;${vert}:calc(100% + 12px);${horiz === 'center' ? 'left:50%;transform:translateX(-50%)' : horiz + ':0'};width:300px;padding:16px 18px;
+      background:#000000e0;color:#dfdeda;border:1px solid #dfdeda24;border-radius:20px;backdrop-filter:blur(14px);cursor:pointer}
+    .tip p{margin:0;font-size:15px;line-height:1.4}
+    .tip div{display:flex;align-items:center;justify-content:space-between;margin-top:14px;font-size:11px;letter-spacing:.05em;text-transform:uppercase}
+    .tip span{opacity:.55}.tip button{padding:6px 12px;border:1px solid #dfdeda55;border-radius:99px;letter-spacing:inherit}
     .hl{position:fixed;border:2px solid var(--blue);background:#0d99ff14;border-radius:3px;box-sizing:border-box}
     .tag{position:fixed;max-width:280px;padding:2px 6px;background:var(--blue);color:#fff;border-radius:4px;font-size:11px;
       white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -175,9 +187,9 @@
     .cb svg{width:52%;height:52%}
     .cb.go{background:var(--c);color:#fff}.cb:disabled{background:#2929290f;color:#929292;cursor:not-allowed}
   </style><div id="marks"></div><div class="hl" hidden></div><div class="tag" hidden></div><div id="pins"></div>
-  <div class="bar"><button class="p tg" data-a="mode" title="Comment mode (C)"><i class="dot"></i><span>Comment mode · OFF</span></button>
-  <div class="x"><span class="hint">Select text or click anything · Esc exits</span>
-  <button class="p cp" data-a="copy">Copy JSON</button><button class="p dl" data-a="dl"></button><button class="p cl" data-a="clear"></button></div></div>`;
+  <div class="bar">${tool('tg', 'Comment', 'Comment mode (C)')}
+  <div class="x">${tool('cl', '', 'Clear all comments')}${tool('cp', 'Copy JSON', 'Copy every comment as JSON')}${tool('dl', '', 'Download every comment as JSON')}</div>
+  <div class="tip" hidden><p>Select text, or click anything on the page, to pin a comment there.</p><div><span>Esc exits · C toggles</span><button>Got it</button></div></div></div>`;
   if (window.commentModeOptions && window.commentModeOptions.css) root.appendChild(document.createElement('style')).textContent = window.commentModeOptions.css;
   const $ = (s) => root.querySelector(s);
   const pins = $('#pins'), marks = $('#marks'), hl = $('.hl'), tag = $('.tag'), bar = $('.bar');
@@ -185,7 +197,15 @@
   const css = document.createElement('style');
   // @font-face only works in the page's own stylesheet, so a theme's font rules are copied there.
   css.textContent = 'html.cm-on,html.cm-on *{cursor:crosshair!important;-webkit-user-select:text!important;user-select:text!important}' + (((window.commentModeOptions || {}).css || '').match(/@font-face\{[^}]*\}/g) || []).join('');
-  const mount = () => { document.head.appendChild(css); document.body.appendChild(host); };
+  // A theme can style light pages differently: the host gets .light when the page background is light.
+  const lightPage = () => {
+    for (const el of [document.body, document.documentElement]) {
+      const m = getComputedStyle(el).backgroundColor.match(/[\d.]+/g);
+      if (m && (m[3] === undefined || +m[3] > 0.5)) return 0.3 * m[0] + 0.59 * m[1] + 0.11 * m[2] > 140;
+    }
+    return true;
+  };
+  const mount = () => { document.head.appendChild(css); document.body.appendChild(host); host.classList.toggle('light', lightPage()); };
   document.body ? mount() : document.addEventListener('DOMContentLoaded', mount);
 
   const label = (t) => (t.name ? t.name : t.type) + (t.text && !t.name ? ': ' + t.text : '');
@@ -200,18 +220,26 @@
     tag.style.top = (r.top - 26 > 0 ? r.top - 26 : r.bottom + 6) + 'px';
   }
 
-  // Toolbar: with comment mode off only the toggle shows, plus a tiny chip that downloads the comments.
+  // Toolbar: with comment mode off only the toggle shows, plus the download button while comments are unsaved.
+  const TIP = 'comment-mode:tip-seen';
+  let tipSeen = false;
+  try { tipSeen = !!localStorage.getItem(TIP); } catch (e) {}
+  const hideTip = () => { tipSeen = true; try { localStorage.setItem(TIP, '1'); } catch (e) {} syncBar(); };
+  $('.tip').onclick = hideTip;
+  const say = (b, t) => (b.querySelector('.lb').textContent = t);
   function syncBar() {
     const n = items.length, dl = $('.dl'), cl = $('.cl');
     bar.classList.toggle('on', on);
-    $('.tg span').textContent = 'Comment mode · ' + (on ? 'ON' : 'OFF');
+    $('.tg').setAttribute('aria-pressed', on);
     pins.hidden = marks.hidden = !on;
-    for (const b of root.querySelectorAll('.cp,.dl,.cl')) b.hidden = !n;
-    $('.hint').hidden = !on || n > 0;
-    dl.textContent = on ? 'Download comments (' + n + ')' : '↓ ' + n + (dirty ? ' unsaved' : '');
+    $('.cp').hidden = cl.hidden = !on || !n;
+    dl.hidden = !n || (!on && !dirty);
+    $('.us').hidden = !dirty;
+    $('.tip').hidden = !on || tipSeen;
+    say(dl, on ? 'Save comments' : n + ' unsaved');
     dl.title = n + (n === 1 ? ' comment' : ' comments') + (dirty ? ', not downloaded or copied yet' : ', saved') + ' · click to download';
     dl.classList.toggle('dirty', dirty);
-    cl.textContent = armed ? 'Click again to clear all' : 'Clear comments';
+    say(cl, armed ? 'Click again to clear' : 'Clear comments');
     cl.classList.toggle('arm', !!armed);
   }
   const setMode = (v) => {
@@ -248,6 +276,7 @@
 
   function openBox(c, isNew) {
     highlight(null);
+    if (!tipSeen) hideTip();
     const el = document.createElement('div');
     el.className = 'box' + (isNew ? '' : ' review');
     el.style.setProperty('--c', colorOf(c));
@@ -377,12 +406,12 @@
     const b = e.target.closest('button');
     if (!b) return;
     const a = b.dataset.a, json = JSON.stringify(exportData(), null, 2);
-    if (a === 'mode') setMode(!on);
-    if (a === 'copy') {
+    if (a === 'tg') setMode(!on);
+    if (a === 'cp') {
       const fallback = () => { const ta = document.createElement('textarea'); ta.value = json; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); };
       (navigator.clipboard ? navigator.clipboard.writeText(json) : Promise.reject()).catch(fallback).then(() => {
-        b.textContent = 'Copied ✓';
-        setTimeout(() => (b.textContent = 'Copy JSON'), 1500);
+        say(b, 'Copied ✓');
+        setTimeout(() => say(b, 'Copy JSON'), 1500);
         delivered();
       });
     }
@@ -394,7 +423,7 @@
       URL.revokeObjectURL(l.href);
       delivered();
     }
-    if (a === 'clear') {
+    if (a === 'cl') {
       if (!armed) { armed = setTimeout(() => { armed = 0; syncBar(); }, 4000); return syncBar(); }
       clearTimeout(armed);
       armed = 0;
