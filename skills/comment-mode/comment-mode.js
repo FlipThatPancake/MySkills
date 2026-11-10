@@ -97,7 +97,7 @@
     const el = document.elementFromPoint(x, y);
     if (!el || el === host) return null;
     const named = el.closest('[data-comment]');
-    if (named) return { el: named, type: named.localName, name: named.dataset.comment, text: cut(describe(named)) };
+    if (named) return { el: named, type: named.localName, name: named.dataset.comment, text: cut(describe(named)), txt: !!el.closest('text') || (!(el instanceof SVGElement) && !el.closest(OBJECTS) && !!(el.closest(BLOCKS) || ownText(el))) }; // text inside a named element can still be selected
     if (el instanceof SVGElement) return { el, type: el.localName === 'svg' ? 'svg' : 'svg ' + el.localName, text: cut(describe(el)), txt: !!el.closest('text') };
     const obj = el.closest(OBJECTS);
     if (obj) return { el: obj, type: obj.localName === 'a' ? 'link' : obj.matches('.katex,.MathJax,math') ? 'math' : obj.localName, text: cut(describe(obj)) };
