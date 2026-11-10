@@ -1,0 +1,12 @@
+/* m2.0 prototype look: tall pills with a soft hover and press, a light "on" state, roomier comment bubble. */
+:host{--ease:cubic-bezier(.22,1,.36,1);font-family:'PP Neue Montreal',system-ui,sans-serif}
+.p,.hint{height:44px;padding:0 18px;font-size:16px;letter-spacing:.02em}
+.p{background:#000000d1;border-color:#dfdeda24;color:#dfdeda;box-shadow:none;transition:background-color .25s var(--ease),border-color .25s var(--ease),transform .25s var(--ease)}
+.p:hover{border-color:#dfdeda66}
+.p:active{transform:translateY(1px)}
+.dot{width:8px;height:8px}
+.bar:not(.on) .dl{height:26px;padding:0 10px;font-size:12px}
+.field{width:320px;padding:14px 8px 14px 20px;animation:pop .22s var(--ease)}
+.box.review .field{border-radius:26px 26px 26px 4px}
+textarea{font-size:17px;letter-spacing:.04em}
+@keyframes pop{from{opacity:0;transform:translateY(4px) scale(.97)}}
