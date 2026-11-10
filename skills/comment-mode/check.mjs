@@ -64,5 +64,8 @@ for (const r of results) {
   console.log(`${r.spot}: covers ${r.off.length} with comment mode off, ${r.on.length} with it on`);
   for (const t of [...new Set(r.off.concat(r.on))].slice(0, 5)) console.log('   ' + t);
 }
-const best = results.slice().sort((a, b) => a.off.length * 3 + a.on.length - (b.off.length * 3 + b.on.length))[0];
-console.log(best.off.length + best.on.length ? 'No spot is clear. Least covered: ' + best.spot : 'Clear spots: ' + results.filter((r) => !r.off.length && !r.on.length).map((r) => r.spot).join(', '));
+// Least covered wins, mode off counting most; ties go to a corner, the least distracting place for a full toolbar.
+const score = (r) => (r.off.length * 3 + r.on.length) * 10 + (r.spot.includes('center') ? 1 : 0);
+const best = results.slice().sort((a, b) => score(a) - score(b))[0];
+const [spot, layout] = best.spot.split(', ');
+console.log((best.off.length + best.on.length ? 'No option is clear. Least covered: ' : 'Recommended: ') + `--toolbar=${spot}` + (layout ? ' --layout=column' : ''));
