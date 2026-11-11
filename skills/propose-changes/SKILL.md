@@ -16,22 +16,24 @@ Before creating, editing, moving, or deleting project Markdown (.md) files:
 
 One bold path heading per file, then one `diff` block. `+` marks added text; `-` marks removed text. For replacements, show the old text followed by the new text. Include enough context to recognise the change. A long section may be summarised.
 
+Number each `+` line so the user can refer to it, counting on across files: `[1]`, `[2]`. If a line has several sentences, number each sentence: `[3.1]`, `[3.2]`. Leave `-` lines unnumbered.
+
 Give new files, moves, and deletions their own headings.
 
 **GLOSSARY.md**
 ```diff
 - Workspace: a folder containing project files.
-+ Workspace: a folder containing project files and shared knowledge.
++ [1] Workspace: a folder containing project files and shared knowledge.
 ```
 
 **New file: knowledge/research.md**
 ```diff
-+ # Research
-+ Findings and sources for the project.
++ [2] # Research
++ [3] Findings and sources for the project.
 ```
 
 **Moved: notes/research.md → knowledge/research.md**
 
 **Deleted: plans/completed-review.md** (all tasks finished)
 
-Reply **ok** to write these, or tell me what to change.
+Reply **ok** to write these, or tell me what to change by number.
