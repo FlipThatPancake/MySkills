@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Usage: node check.mjs [--theme=m2] [--sizes=1440x900,1280x720] page.html
+// Usage: node check.mjs [--theme=agent-default] [--css=file.css] [--sizes=1440x900,1280x720] page.html
 // Renders the page with each toolbar spot and layout (row, column) and reports what the toolbar would cover, with comment mode off and on.
 // Counts text, images, controls and drawn shapes on every slide (hidden slides keep their layout), not empty space.
 import { execFileSync } from 'node:child_process';
@@ -19,7 +19,7 @@ for (const spot of SPOTS) for (const layout of ['row', 'column']) {
   // A copy next to the original, so relative assets still load.
   const file = join(dirname(page), '.cm-check-' + spot + '-' + basename(page));
   copyFileSync(page, file);
-  execFileSync('node', [new URL('add.mjs', import.meta.url).pathname, '--toolbar=' + spot, ...(layout === 'column' ? ['--layout=column'] : []), ...(opt('theme') ? ['--theme=' + opt('theme')] : []), file]);
+  execFileSync('node', [new URL('add.mjs', import.meta.url).pathname, '--toolbar=' + spot, ...(layout === 'column' ? ['--layout=column'] : []), ...(opt('theme') ? ['--theme=' + opt('theme')] : []), ...(opt('css') ? ['--css=' + opt('css')] : []), file]);
   const r = { spot: spot + (layout === 'column' ? ', column' : ''), off: new Set(), on: new Set() };
   for (const [w, h] of sizes) {
   const tab = await browser.newPage({ viewport: { width: w, height: h } });

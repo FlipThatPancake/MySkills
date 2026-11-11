@@ -77,9 +77,9 @@ try {
 const theme = await ui(() => { const b = $('.tg'), s = getComputedStyle(b); return { ok: !!b, themed: /PP Neue Montreal/.test((window.commentModeOptions || {}).css || ''), font: s.fontFamily, h: b.offsetHeight }; });
 check('toolbar is installed', theme.ok);
 if (theme.themed) {
-  check('m2 theme: buttons use PP Neue Montreal', /PP Neue Montreal/.test(theme.font), theme.font);
-  check('m2 theme: buttons are 48px tall', theme.h === 48, theme.h + 'px');
-  check('m2 theme: font face loaded', await p.evaluate(() => document.fonts.check("500 14px 'PP Neue Montreal'")));
+  check('author theme: buttons use PP Neue Montreal', /PP Neue Montreal/.test(theme.font), theme.font);
+  check('author theme: buttons are 48px tall', theme.h === 48, theme.h + 'px');
+  check('author theme: font face loaded', await p.evaluate(() => document.fonts.check("500 14px 'PP Neue Montreal'")));
 }
 
 stage = 'mode off';
