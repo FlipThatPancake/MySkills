@@ -16,7 +16,3 @@ Checked 2026-10-27. These sources inform the workflow; its file layout, proporti
 | [OpenAI: skills in plugins](https://developers.openai.com/plugins/build/skills) | Workflow inputs/outputs, boundaries, supporting files, and tool integrations. |
 | [OpenAI: testing skills with evals](https://developers.openai.com/blog/eval-skills) | Observable process and output checks, realistic prompts, traces, and regression cases. Prefer current product docs over older examples for installation paths. |
 | [OpenAI: rethinking skills and prompts](https://developers.openai.com/blog/rethinking-skills-and-prompts-for-gpt-6-astra) | Simplifying overlapping instructions, keeping routers small, and revisiting restrictions that add overhead. Model-specific guidance needs testing on other models. |
-
-The user's [original project skill](https://github.com/FlipThatPancake/m2.0-interactive/tree/62e30517980719b22074faa4f8cfa341f07662be/.claude/skills/writing-skills) contributed the focus on concrete failures, choosing the correct home, grammatical concision, conditional rules, and independent evaluation. Project-specific helper names, custom routing, fixed CLI recipes, approval batches, and cost assumptions were not carried into the shared contract.
-
-A later revision of that skill (`.agents/skills/write-skills` at e4b5a8c) contributed the wanted-behavior rule, exception-as-its-own-line, verifiable step endings, description rules, and the extra evaluation cases. Its repo-specific loader, check runner, eval scaffold and layout rules were not carried over.
