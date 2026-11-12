@@ -33,7 +33,7 @@ The kit is two files to copy into every lesson unchanged: `kit.css` goes in a `<
 | `lv-pill`, `lv-panel` | A pill badge (`style="color:var(--red)"` sets the dot), a dark panel |
 | `lv-control` | A row holding a label, a range input, and its value |
 | `lv-btn` | A button in the kit's style |
-| `lv-dimmed` | Fades finished parts to about a third |
+| `lv-dimmed` | Fades a part that returns soon to about a third |
 | `lv-hidden` | Hides an element |
 
 ## Beats
