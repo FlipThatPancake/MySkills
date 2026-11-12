@@ -45,7 +45,7 @@ Prepare inputs and check results with [Generated props](references/generated-pro
 
 ## On-demand workflows
 
-- [Complex scene planning and review](references/complex-scenes.md) for proving a representative asset or look before expanding a scene.
+- [Complex scene planning and review](references/complex-scenes.md) for planning full scenes, scoping substantial revisions, or proving a representative asset or look before expanding.
 - [Generated props](references/generated-props.md) for preparing image-to-3D inputs or qualifying a generated mesh.
 - [Shot sequences](references/shot-sequences.md) for multi-shot continuity, shot variants, and motion previews.
 - [Compositing handoff](references/compositing-handoff.md) for moving rendered shots into a compositor or applying a localized finishing effect.

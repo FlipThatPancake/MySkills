@@ -13,10 +13,12 @@ composition, prototype checks, multiview review, and delivery validation.
 - **Test the decisions that would be expensive to redo.** Choose the cheapest
   preview that can answer the current question. A rough layout can check
   circulation or composition. A clay preview can check silhouette and scale.
-  A short clip can check framing, timing, and movement. If the look depends
-  on an unproven asset or method, finish one representative piece before
-  making a batch or expanding the scene. Inspect it under neutral light,
-  then in the intended shot. Show the result and resolve any gap that would
+  A short clip can check framing, timing, and movement. When lighting,
+  materials, or an effect drives the design, test it early in a representative
+  part of the scene. If the look depends on an unproven asset or method, finish
+  one representative piece before making a batch or expanding the scene.
+  Use neutral light when it helps diagnose the asset, then check the result
+  in the intended shot. Show the result and resolve any gap that would
   carry into the rest of the scene before scaling up.
 - **Define the scope and finish of each substantial pass.** Name the scene
   elements it may change, the important properties to preserve, and the
