@@ -35,6 +35,14 @@ add-on could build or edit scene data. Follow the task link for environments,
 cameras, modeling and UVs, or simulation. Use that guide to choose a command,
 an appendable preset, or a UI step. Use native Blender for routine or exact work.
 
+## Tripo generation
+
+Paid 3D generation via MCP `generate_3d`, `provider="tripo"`; add-on holds the key.
+Propose, with expected cost, for: organic shapes (characters, creatures, plants, sculpted props); photo or multi-view reference to 3D; quick textured or rig-ready drafts.
+Script in Blender instead for exact sizes, hard-surface or architectural parts, clean editable topology, parametric repeats.
+Never call `generate_3d` with `tripo` or `auto` without the user's explicit ok; each retry needs a new ok.
+Prepare inputs and check results with [Generated props](references/generated-props.md).
+
 ## On-demand workflows
 
 - [Complex scene planning and review](references/complex-scenes.md) for proving a representative asset or look before expanding a scene.
