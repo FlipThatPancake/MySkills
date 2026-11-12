@@ -46,6 +46,7 @@ Assign the roles in the lesson plan, and add an accent to a slide only when that
 - A technical-drawing feel works well: dimension lines with end ticks ("3 m"), rulers with a few labelled ticks, and zoom callouts that join a small square to an enlarged copy.
 - Objects are simple but real-looking when that helps: a robot, a stopwatch, a cannon, a bookshelf. Use flat vectors with light shading.
 - Arrows have thin, clean heads. A curved yellow arrow means "this value goes there". Label arrows with a verb when they carry meaning.
+- Emphasis tools: a faint ghost of the previous state under the new one, strike-through and replace, a `???` placeholder for an unknown, a brace with a label, and a title that transforms in place.
 
 ## Example layouts from the references
 
