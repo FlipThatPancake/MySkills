@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inspira 3.0 · Kitchen</title>
+<!-- @inline:chrome.css -->
+<!-- @inline:settings-panel.css -->
+<style>
+  /* The scene fills the rounded screen, behind the chrome. */
+  #scene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+  #scene:active { cursor: grabbing; }
+</style>
+</head>
+<body>
+<div id="oven-gen3-page-container">
+  <div id="oven-gen3-screen">
+    <canvas id="scene"></canvas>
+
+    <!-- Chrome copied as-is from the oven prototype; to be edited later. -->
+    <div class="title-section content-layer">
+      <span class="title-word">Inspira</span>
+      <span class="title-ver">3.0</span>
+      <p class="title-model">80M90ED/80P90ED</p>
+      <p class="title-kind">Interactive UI prototype</p>
+      <div class="pill-row">
+        <div class="status-pill"><i class="status-dot" aria-hidden="true"></i><span class="status-text-wrap"><span class="status-text-track"><span class="status-text status-text--default">Developed</span><span class="status-text status-text--hover">ver. @build:datetime</span></span></span></div>
+        <button type="button" class="info-button"><span class="info-icon" aria-hidden="true">i</span><span class="info-text-wrap"><span class="info-text-track"><span class="info-text info-text--default">Project Info</span><span class="info-text info-text--hover">Contact 20662095 on MX</span></span></span></button>
+      </div>
+    </div>
+
+    <div class="readout-feed content-layer-right">
+      <div class="ro-track">
+        <div class="ro-row" data-ro="lock"><span class="ro-val" data-field="lock">Off</span><span class="ro-key">Lock</span></div>
+        <div class="ro-row" data-ro="state"><span class="ro-val" data-field="state">Standby</span><span class="ro-key">State</span></div>
+        <div class="ro-row" data-ro="mode"><span class="ro-val" data-field="mode">Conventional+Fan</span><span class="ro-key">Mode</span></div>
+        <div class="ro-row" data-ro="door"><span class="ro-val" data-field="door">Closed</span><span class="ro-key">Door</span></div>
+      </div>
+    </div>
+
+    <div class="logo-frame content-layer-right" aria-hidden="true"></div>
+
+    <div class="prototype-tools content-layer-right">
+      <button type="button" class="tool-button" data-tool="comment" aria-label="Comment" aria-pressed="false">
+        <span class="tool-icon tool-icon--comment" aria-hidden="true"></span>
+        <span class="tool-label-wrap"><span class="tool-label">Comment</span></span>
+      </button>
+      <button type="button" class="tool-button" data-tool="view3d" aria-label="3D view" aria-pressed="false">
+        <span class="tool-icon tool-icon--view3d" aria-hidden="true"></span>
+        <span class="tool-label-wrap"><span class="tool-label">3D view</span></span>
+      </button>
+      <button type="button" class="tool-button" data-tool="hide-hud" aria-label="Hide HUD" aria-pressed="false">
+        <span class="tool-icon tool-icon--hide-hud" aria-hidden="true"></span>
+        <span class="tool-label-wrap"><span class="tool-label">Hide HUD</span></span>
+      </button>
+      <button type="button" class="tool-button" data-tool="settings" aria-label="Settings" aria-pressed="false">
+        <span class="tool-icon tool-icon--settings" aria-hidden="true"></span>
+        <span class="tool-label-wrap"><span class="tool-label">Settings</span></span>
+      </button>
+    </div>
+
+    <!-- @sec:settings-panel (19:870) -->
+    <div class="settings-panel content-layer-right" id="settings-panel" role="menu" aria-hidden="true">
+      <!-- The rest-state `d` is panel-shape.svg's contour widened to --panel-w,
+           so the panel is correct before the wiring runs; then `d` and viewBox
+           are rewritten live. Filter primitives verbatim; the userSpaceOnUse
+           region is dropped so the default bbox tracks the panel's height. -->
+      <svg class="settings-panel-shape" viewBox="0 0 320 773.76" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <filter id="panel-inner-shadow" color-interpolation-filters="sRGB">
+            <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+            <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+            <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+            <feMorphology radius="6" operator="erode" in="SourceAlpha" result="effect1_innerShadow"/>
+            <feOffset/>
+            <feGaussianBlur stdDeviation="12"/>
+            <feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"/>
+            <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.2 0"/>
+            <feBlend mode="normal" in2="shape" result="effect1_innerShadow"/>
+          </filter>
+        </defs>
+        <path fill="#DBDBD6" filter="url(#panel-inner-shadow)" d="M288.000 0C305.673 0 320.000 14.3269 320.000 32L320.000 741.760C320.000 759.433 305.673 773.760 288.000 773.760L32 773.760C14.3271 773.760 0 759.433 0 741.760L0 88.3223C0 70.6493 14.3271 56.3225 32 56.3223L170.081 56.3223L170.081 56.3184L154.608 56.3184C156.736 56.3151 159.720 56.1642 165.017 50.8574C168.216 47.6516 169.535 43.7291 170.081 41.4795L170.081 32C170.081 14.3269 184.408 0 202.081 0Z"/>
+      </svg>
+      <div class="settings-panel-viewport">
+        <div class="settings-panel-body" id="settings-panel-body">
+        <div class="settings-section-title">Scene</div>
+        <div class="setting-row">
+          <span class="setting-label">Toggle</span>
+          <button type="button" class="toggle-switch" id="setting-demo-toggle" role="switch" aria-checked="true" aria-label="Toggle"><span class="toggle-switch-thumb"></span></button>
+        </div>
+        <div class="setting-row">
+          <span class="setting-label">Cycle (click)</span>
+          <button type="button" class="setting-adjustment setting-adjustment--link" id="setting-demo-cycle" data-options="One,Two,Three">One</button>
+        </div>
+        <div class="setting-row">
+          <span class="setting-label">Stepper</span>
+          <div class="setting-stepper" data-setting="demo-stepper">
+            <button type="button" class="setting-stepper-btn" data-dir="-1" aria-label="Decrease">−</button>
+            <span class="setting-adjustment setting-stepper-value" id="setting-demo-stepper-value">100%</span>
+            <button type="button" class="setting-stepper-btn" data-dir="1" aria-label="Increase">+</button>
+          </div>
+        </div>
+        <div class="settings-section-title">Look</div>
+        <div class="setting-row setting-row--slider">
+          <span class="setting-label">Slider</span>
+          <span class="setting-adjustment" id="setting-demo-slider-value">60°</span>
+          <input type="range" class="setting-slider" id="setting-demo-slider" min="30" max="90" step="5" value="60" aria-label="Slider">
+        </div>
+        <div class="setting-row setting-row--stacked">
+          <span class="setting-label">Segmented choice</span>
+          <div class="seg-toggle" id="setting-demo-seg" role="radiogroup" aria-label="Segmented choice">
+            <button type="button" class="seg-toggle-option" role="radio" data-value="a" aria-checked="true">First</button>
+            <button type="button" class="seg-toggle-option" role="radio" data-value="b" aria-checked="false">Second</button>
+            <button type="button" class="seg-toggle-option" role="radio" data-value="c" aria-checked="false">Third</button>
+          </div>
+        </div>
+        <div class="setting-row" >
+          <span class="setting-label">Toggle with a child</span>
+          <button type="button" class="toggle-switch" id="setting-demo-parent" role="switch" aria-checked="false" aria-label="Toggle with a child"><span class="toggle-switch-thumb"></span></button>
+        </div>
+        <div class="setting-row setting-row--stacked" data-depends-on="setting-demo-parent">
+          <span class="setting-label">Child choice</span>
+          <div class="seg-toggle" id="setting-demo-child" role="radiogroup" aria-label="Child choice">
+            <button type="button" class="seg-toggle-option" role="radio" data-value="30" aria-checked="false">30%</button>
+            <button type="button" class="seg-toggle-option" role="radio" data-value="50" aria-checked="true">50%</button>
+          </div>
+        </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="top-notch" aria-hidden="true"></div>
+  </div>
+</div>
+<!-- @inline:pill-text.js -->
+<!-- @inline:settings-panel.js -->
+<!-- @inline:settings-demo.js -->
+<!-- @bundle:main.js -->
+</body>
+</html>

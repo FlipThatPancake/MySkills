@@ -1,0 +1,612 @@
+/* @css:chrome — copied verbatim from the oven prototype (src/oven-prototype/index.html): fonts, the Figma shell, title, pills, readout, logo, notch and the tool buttons. To be edited later. */
+/* Fonts: self-hosted, no network. PP Neue Montreal is licensed
+   (src/shared/assets/pp-neue-montreal/); the faces used are copied here under
+   plain names because the build's asset marker cannot carry the spaces in the
+   vendor's folder names. */
+@font-face {
+  font-family: 'PP Neue Montreal'; font-style: normal; font-weight: 400; font-display: swap;
+  src: url(@asset:assets/fonts/pp-neue-montreal-book.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'PP Neue Montreal'; font-style: normal; font-weight: 500; font-display: swap;
+  src: url(@asset:assets/fonts/pp-neue-montreal-medium.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'PP Neue Montreal'; font-style: normal; font-weight: 100; font-display: swap;
+  src: url(@asset:assets/fonts/pp-neue-montreal-thin.woff2) format('woff2');
+}
+/* True italic face — a real italic glyph set, registered as `font-style:
+   normal` like the others: setting `italic` would double-slant it. */
+@font-face {
+  font-family: 'PP Neue Montreal Italic'; font-style: normal; font-weight: 400; font-display: swap;
+  src: url(@asset:assets/fonts/pp-neue-montreal-italic.woff2) format('woff2');
+}
+/* draws the `Inspira` wordmark and nothing else */
+@font-face {
+  font-family: 'Aguafina Script'; font-style: normal; font-weight: 400; font-display: swap;
+  src: url(@asset:assets/fonts/aguafina-script.woff2) format('woff2');
+}
+/* @css:shell — the Figma `Ship` page (file cglQ7IVW1OkVcnezw0I2TU, page
+   1:48392, frame `viewport-container` 18:1589). The page container is the
+   black viewport; the screen is a rounded panel inside it. Every box inside
+   the screen is a Figma coordinate in --u units, unconverted. */
+:root {
+  --screen-w: 1400;       /* `oven-gen3-screen` 18:1590 (also 1:3 in the newer
+                              `inspira-2.5` file, same numbers), inset 20 on
+                              every side of the 1440×855 viewport-container */
+  --screen-h-design: 815; /* base (pre reveal-more) design height */
+  --frame-w: 1440;
+  --frame-h: 855;
+  /* oven-body.png's remaining content below the base 815u crop — 1334 minus
+     (815 - 205.583) — the ceiling reveal-more can uncover before the image
+     runs out (205.583 = the #oven-body top offset). */
+  --reveal-ceiling: 724.583;
+  /* Width leads: --u = 100vw/1440 gives Figma's 4.30% side gap at every size.
+     The midline is the only vertical cap: the viewport's middle stays inside
+     the panel, 2 * (20 + 259.913) = 559.826; it binds past a 2.572 ratio,
+     where --u freezes and leftover width becomes side space via --cx.
+     Vertical slack: reveal-more on tall windows, bottom crop on short ones.
+     The user turned down a letterbox mode, a fixed 20px margin and a `100vh/855`
+     cap: height must never shrink the panel.
+     TRAP: --u reads ONLY raw viewport dimensions — deriving it from
+     `100vw - 2*bezel` while bezel is `20*u` is circular and silently dropped. */
+  --midline-h: 559.826;
+  --u: min(calc(100vw / var(--frame-w)), calc(100vh / var(--midline-h)));
+  --bezel-x: calc(20 * var(--u));
+  --bezel-y: calc(20 * var(--u));
+  /* The screen box's own width, uncapped. In the MIDLINE case it outgrows the
+     frozen content width, so the screen stretches to the margin instead of
+     freezing behind a widening bezel; in the WIDTH case it equals the frozen
+     content width by construction. */
+  --screen-fill-px: calc(100vw - 2 * var(--bezel-x));
+  --screen-content-px: calc(var(--screen-w) * var(--u));
+  /* Half the gap between the stretched screen and the frozen content — 0 in the
+     WIDTH case. `.content-layer` elements translate by this to stay centred.
+     `#bg-plate` and `#grid-lines` skip it: they stretch to the real edges. */
+  --cx: calc((var(--screen-fill-px) - var(--screen-content-px)) / 2);
+  /* Reveal-more: leftover height below the base 815u screen is closed by
+     extending the screen (revealing more of oven-body.png), capped at
+     --reveal-ceiling. It reads --frame-h, NOT --midline-h: 855 is the frame a
+     gap is measured against; --midline-h only caps --u. Nonzero only on a tall
+     window (ratio < 1.684); 0 in the midline case, where the screen crops. */
+  --needed: max(calc(100vh - (var(--frame-h) * var(--u))), 0px);
+  --reveal-extra: min(var(--needed), calc(var(--reveal-ceiling) * var(--u)));
+  --content-h: calc(var(--screen-h-design) * var(--u) + var(--reveal-extra));
+  /* Viewport-bound bottom flush. Positive when --content-h wins the min() below
+     (gap below screen: round all 4 corners); negative/zero when the viewport
+     wins (door crops: flush, square bottom). --bottom-radius amplifies the sign
+     1000x then clamps to [0, 24u], so it never lands on a partial radius. */
+  --bottom-gap: calc(calc(100vh - var(--bezel-y)) - var(--content-h));
+  --bottom-radius: clamp(0px, calc(var(--bottom-gap) * 1000), calc(24 * var(--u)));
+  --shadow-drop: clamp(0px, calc(var(--bottom-gap) * -1000), calc(40 * var(--u)));
+  --halo-strength: 0.06;
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --warm: #E47C32; /* warm LEDs and digits; line.js and display.js carry their own copies */
+  /* Wheel-over-oven-body scale (handler is the last script block); oven-body +
+     control-panel scale as one unit, never the shell. */
+  --oven-scale: 1;
+  /* Chinese reads small at Latin sizes: a +18% multiplier folded into every
+     font-size calc(). 1 in English, raised under :lang(zh). */
+  --fs: 1;
+  /* The settings panel's shape is one `<path>` whose `d` and viewBox JS
+     rewrites live from the Settings button's box — nothing to tune here. */
+}
+/* @css:lang-zh — Chinese chrome: larger text only. The tab's width follows
+   the button's measured box in JS, so a label change needs no rule here. */
+:root:lang(zh) {
+  --fs: 1.18;
+}
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: #000;
+  overflow: hidden;
+  font-family: 'PP Neue Montreal', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+#oven-gen3-page-container {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  justify-items: center;
+  align-items: start;
+  padding-top: var(--bezel-y);
+  background: #000;
+}
+#oven-gen3-screen {
+  position: relative;
+  /* Uncapped — stretches to the margin past --screen-content-px; content stays
+     frozen (--u, --cx), so the widening is extra plate + grid, not extra oven. */
+  width: var(--screen-fill-px);
+  /* Two jobs in one min(): --content-h closes a GAP (reveal-more, tall
+     window); the viewport term closes an OVERFLOW (short window: the door
+     crops, the panel never moves). overflow also clips asset bleed. The
+     viewport term uses --bezel-y (top only) and --bottom-gap must track this
+     same term, or the radius snap desyncs from the actual crop. */
+  height: min(var(--content-h), calc(100vh - var(--bezel-y)));
+  border-top-left-radius: calc(24 * var(--u));
+  border-top-right-radius: calc(24 * var(--u));
+  border-bottom-right-radius: var(--bottom-radius);
+  border-bottom-left-radius: var(--bottom-radius);
+  /* `overflow: clip`, never `hidden`: a `hidden` box is a scroll container,
+     and `scrollIntoView()` (native or Playwright's click prep) walks it and
+     shoves ITS scrollTop, dragging #oven-scale-wrap off-screen once the
+     settings panel needs its own scroll. `clip` still clips the asset bleed. */
+  overflow: clip;
+}
+/* Figma `oven-gen3-screen` inner shadow: x0 y0 blur24 spread6 #000 15%. On a
+   pseudo so flush mode can push its bottom edge below the clip. No z-index
+   and no `isolation` on the screen — either breaks `.hint`'s difference
+   blend against the hand overlay. */
+#oven-gen3-screen::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 calc(-1 * var(--shadow-drop)) 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 calc(24 * var(--u)) calc(6 * var(--u)) rgba(0, 0, 0, .15);
+  pointer-events: none;
+}
+
+/* Recentres every frozen-scale, LEFT-anchored content element inside a
+   stretched screen (--cx); a no-op below the scale cap. `#bg-plate` and
+   `#grid-lines-h` don't carry it: they stretch to the screen's edges. */
+.content-layer { translate: var(--cx) 0; }
+/* `right:`-anchored content: `right` is measured from the stretched edge, so
+   the offset is SUBTRACTED, or it drifts an extra --cx and crops. */
+.content-layer-right { translate: calc(-1 * var(--cx)) 0; }
+.title-section {
+  position: absolute;
+  left: calc(61.072 * var(--u));
+  top: calc(27.269 * var(--u));
+  width: calc(270.505 * var(--u));
+  height: calc(157.067 * var(--u));
+  user-select: none;
+  -webkit-user-select: none;
+}
+.title-section > * { position: absolute; margin: 0; white-space: nowrap; }
+.title-word, .title-ver {
+  font-family: 'Aguafina Script', cursive;
+  line-height: 1.4;
+  translate: 0 -50%;
+}
+/* .title-word/.title-ver/.title-model never translate to Chinese — no
+   `* var(--fs)`, unlike .title-kind. */
+.title-word {
+  left: calc(10.087 * var(--u));
+  top: calc(58.5 * var(--u));
+  font-size: calc(83.226 * var(--u));
+  color: rgba(27, 27, 27, .9);
+}
+.title-ver {
+  left: calc(199.710 * var(--u));
+  top: calc(36.913 * var(--u));
+  font-size: calc(39.267 * var(--u));
+  color: rgba(27, 27, 27, .8);
+  opacity: .5;
+}
+.title-model, .title-kind {
+  translate: 0 -50%;
+  text-transform: uppercase;
+  line-height: 1.4;
+  font-weight: 400;
+}
+.title-model {
+  left: 0;
+  top: calc(92.109 * var(--u));
+  font-size: calc(17.452 * var(--u));
+  letter-spacing: calc(-0.1745 * var(--u));
+  color: rgba(0, 0, 0, .3);
+}
+.title-kind {
+  left: 0;
+  top: calc(111.109 * var(--u));
+  font-size: calc(16.361 * var(--u) * var(--fs));
+  letter-spacing: calc(-0.1636 * var(--u));
+  color: rgba(0, 0, 0, .44);
+}
+/* pill-row (18:2039's "Extra-info" frame) — a real flex row, so info-button
+   shifts with status-pill's hover/i18n width changes. */
+.pill-row {
+  left: 0;
+  top: calc(127.313 * var(--u));
+  display: flex;
+  align-items: center;
+  gap: calc(4 * var(--u)); /* 130.707 (button's old flat left) - 126.707 (pill's English width) */
+  /* Softens the clip edge of both text rolls (`.info-button` has no background
+     to cut against). Percent stops follow --u and --fs. 13%, NOT ~18%: CJK
+     ideographs fill more of the em box, and a measured sweep put the first
+     nibbled zh pixel at 15%. Re-sweep in pixels before raising it, or before
+     changing font or line-height. */
+  --roll-mask: linear-gradient(to bottom, transparent 0, #000 13%, #000 87%, transparent 100%);
+}
+.status-pill, .info-button {
+  display: flex;
+  align-items: center;
+  gap: calc(7.363 * var(--u));
+  padding: calc(6.999 * var(--u)) calc(10.498 * var(--u));
+  font-size: calc(10.309 * var(--u) * var(--fs));
+  font-weight: 500;
+  letter-spacing: calc(0.4123 * var(--u));
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+.status-pill {
+  background: rgba(0, 0, 0, .7);
+  border-radius: calc(24.299 * var(--u));
+  color: #d9ba53;
+}
+/* Vertical roll on hover. ONE moving element: both labels sit in
+   `.status-text-track` edge to edge, so the clip box never goes empty
+   mid-roll (two independent spans could). `align-items: flex-start` is
+   load-bearing: each label stays shrink-wrapped, so pill-text-width measures
+   intrinsic widths into `--w-rest`/`--w-hover`. */
+.status-text-wrap {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: middle;
+  flex: none;
+  height: calc(1em * 1.3);
+  width: var(--w-rest, auto);
+  transition: width .51s var(--btn-ease) .075s;
+  -webkit-mask-image: var(--roll-mask);
+  mask-image: var(--roll-mask);
+}
+.status-pill:hover .status-text-wrap {
+  width: var(--w-hover, auto);
+  transition-delay: 0s; /* opens the moment the pointer commits, no lag */
+}
+.status-text-track {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  transition: translate .42s var(--btn-ease);
+}
+/* One line height, so it tracks font-size at any --u/--fs instead of a px. */
+.status-pill:hover .status-text-track {
+  translate: 0 -1.3em;
+}
+.status-text--default, .status-text--hover {
+  white-space: nowrap;
+  flex: none;
+}
+.status-text--hover {
+  text-transform: none;
+}
+.status-dot {
+  width: calc(5.347 * var(--u));
+  height: calc(5.345 * var(--u));
+  border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
+.info-button {
+  background: none;
+  border: 0;
+  border-radius: calc(24.368 * var(--u));
+  color: rgba(35, 35, 35, .5);
+  font-family: inherit;
+  /* The label is meant to be copied: override the UA button's
+     `user-select: none` and show a text cursor. */
+  cursor: text;
+  user-select: text;
+  -webkit-user-select: text;
+}
+/* Same rolling-track + mask language as `.status-pill`'s text swap; this is
+   the element the mask exists for (nothing to clip against). */
+.info-text-wrap {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: middle;
+  flex: none;
+  height: calc(1em * 1.3);
+  width: var(--w-rest, auto);
+  transition: width .51s var(--btn-ease) .075s;
+  -webkit-mask-image: var(--roll-mask);
+  mask-image: var(--roll-mask);
+}
+.info-button:hover .info-text-wrap {
+  width: var(--w-hover, auto);
+  transition-delay: 0s;
+}
+.info-text-track {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  transition: translate .42s var(--btn-ease);
+}
+.info-button:hover .info-text-track {
+  translate: 0 -1.3em;
+}
+.info-text--default, .info-text--hover {
+  white-space: nowrap;
+  flex: none;
+}
+.info-icon {
+  display: grid;
+  place-items: center;
+  width: calc(22.971 * var(--u));
+  height: calc(22.971 * var(--u));
+  border: calc(0.877 * var(--u)) solid rgba(35, 35, 35, .15);
+  border-radius: 50%;
+  text-transform: none;
+  flex: none;
+}
+
+/* ── readout-feed (18:1989 / Frame 324 18:1991), wired by readout.js. Row
+   height is the design's 11 units with the taller line box centred and
+   overflowing: Figma trims boxes to cap height (a natural line box makes the
+   stack ~160, not 98.63). The box stays exactly the Figma box (grid line 4's
+   gradient is keyed to its bottom-right corner); `overflow:hidden` makes it
+   the scroll VIEWPORT, `.ro-track` is what readout.js moves. 5 rows exactly
+   fill the box, so rest already centres the middle row. ── */
+.readout-feed {
+  position: absolute;
+  right: calc(58.835 * var(--u));
+  top: calc(111.749 * var(--u));
+  width: calc(215.968 * var(--u));
+  height: calc(98.628 * var(--u));
+  overflow: hidden;
+  /* stands in for Figma's own alpha mask on Frame 324 */
+  mask-image: linear-gradient(to bottom, transparent 0, #000 22%, #000 78%, transparent 100%);
+}
+/* No CSS transition: readout.js writes `transform` every frame, and a
+   transition racing a per-frame inline write fights it. readout.js appends an
+   `aria-hidden` copy of the rows (`.ro-row--clone`) so the drift wraps
+   seamlessly after exactly one copy's height. */
+.ro-track {
+  display: flex;
+  flex-direction: column;
+  gap: calc(10.907 * var(--u));
+  will-change: transform;
+}
+.ro-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: calc(2.181 * var(--u));
+  height: calc(11 * var(--u));
+}
+/* `hidden` alone loses the specificity tie against `display: flex` above, so
+   it needs this override (as .hint[hidden], .p2-tooltip[hidden]). readout.js
+   clones rows individually, so `hidden` carries into the clone. */
+.ro-row[hidden] {
+  display: none;
+}
+.ro-val {
+  font-size: calc(15.961 * var(--u) * var(--fs));
+  font-weight: 400;
+  letter-spacing: calc(-0.1596 * var(--u));
+  line-height: 1;
+  color: rgba(0, 0, 0, .5);
+}
+.ro-key {
+  flex: none;
+  width: calc(54.537 * var(--u));
+  text-align: right;
+  font-size: calc(14.533 * var(--u) * var(--fs));
+  font-weight: 500;
+  letter-spacing: calc(-0.1453 * var(--u));
+  line-height: 1;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, .31);
+}
+
+/* ── version (18:2037), bottom-to-top up the left edge. Pinned by its bottom
+   edge (765 of 815): the build-stamped string grows upward. ── */
+.version {
+  position: absolute;
+  left: calc(39 * var(--u));
+  bottom: calc(50 * var(--u));
+  width: calc(17 * var(--u));
+  margin: 0;
+  display: flex;
+  align-items: flex-start;
+  writing-mode: vertical-rl;
+  rotate: 180deg;
+  font-size: calc(15.707 * var(--u) * var(--fs));
+  font-weight: 100;
+  letter-spacing: calc(-0.1571 * var(--u));
+  color: #232323;
+  white-space: nowrap;
+}
+
+/* ── logo-frame (18:2017) and top-notch (18:2052). Each element is its NODE's
+   box, with the artwork positioned in the SVG's own viewBox units: both files
+   carry padding the node does not (logo.svg's viewBox is inflated for a
+   drop-shadow filter, the mark at 36.933,6.156). ── */
+.logo-frame {
+  position: absolute;
+  /* 2 design units right of Figma's 18.419. */
+  right: calc(16.419 * var(--u));
+  bottom: calc(27.744 * var(--u));
+  width: calc(25.065 * var(--u));
+  height: calc(22.256 * var(--u));
+  background: url(@asset:assets/logo.svg) no-repeat;
+  background-size: calc(77 * var(--u)) calc(74 * var(--u));
+  background-position: calc(-36.933 * var(--u)) calc(-6.156 * var(--u));
+}
+/* The notch hangs from the screen's top edge; Figma's node y (22.597) is the
+   path's own maximum, not a screen offset. */
+.top-notch {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  translate: -50% 0;
+  width: calc(253.576 * var(--u));
+  height: calc(22.810 * var(--u));
+  background: url(@asset:assets/top-notch.svg) no-repeat 0 0;
+  background-size: calc(254 * var(--u)) calc(23 * var(--u));
+  /* Stays above the comment-mode dim (z-index 1). */
+  z-index: 2;
+}
+
+/* ── prototype-tools (20:1263) — "button" component (19:1064) instances with
+   an "icon" (20:1141). Only Settings persists a pinned-open state and drives
+   #settings-panel. Right-anchored, so a button widening on hover/press pushes
+   its neighbours LEFT, never the logo. ── */
+.prototype-tools {
+  position: absolute;
+  right: calc(32.952 * var(--u));
+  top: calc(32.944 * var(--u));
+  height: calc(51.265 * var(--u));
+  display: flex;
+  align-items: center;
+  gap: calc(12 * var(--u));
+  padding: 0 calc(10.907 * var(--u));
+  /* The panel's notch tucks under the settings button, so the buttons must
+     paint above it or the open panel intercepts their hover/click. */
+  z-index: 2;
+}
+/* CSS :hover/:active stand in for Figma's "hover"/"pressed"; Figma's "active"
+   names this rule block's REST state (icon-only, no fill/border). */
+.tool-button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  box-sizing: border-box;
+  height: calc(51.265 * var(--u));
+  padding: calc(13.743 * var(--u)) calc(20 * var(--u));
+  gap: calc(9.817 * var(--u));
+  background: none;
+  border: calc(1 * var(--u)) solid transparent;
+  border-radius: calc(99 * var(--u));
+  box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+  cursor: pointer;
+  translate: 0 0;
+  /* background/border-color transitions serve `.is-open` only; hover/pressed
+     carry just the shadow + lift/press translate, and the text reveal comes
+     later still — a deliberately staggered open, not one tween. */
+  transition:
+    background-color .33s var(--btn-ease) .03s,
+    border-color .33s var(--btn-ease) .03s,
+    box-shadow .45s var(--btn-ease),
+    translate .45s var(--btn-ease);
+}
+/* Rest = circle: side padding centres the icon in a height-wide pill; the
+   icon-to-text gap is the wrap's margin so it grows in with the text.
+   Hover/active/open restore the 20-unit padding on the label tween's curve. */
+.tool-button:not(.tool-button--download) {
+  gap: 0;
+  padding-inline: calc((51.265 - 2 - var(--tool-icon-w)) / 2 * var(--u));
+  transition:
+    background-color .33s var(--btn-ease) .03s,
+    border-color .33s var(--btn-ease) .03s,
+    box-shadow .45s var(--btn-ease),
+    translate .45s var(--btn-ease),
+    padding .51s var(--btn-ease) .075s;
+}
+.tool-button:not(.tool-button--download):hover,
+.tool-button:not(.tool-button--download):active,
+.tool-button:not(.tool-button--download).is-open {
+  padding-inline: calc(20 * var(--u));
+  transition-delay: .03s, .03s, 0s, 0s, 0s;
+}
+.tool-button:not(.tool-button--download):active {
+  transition-duration: .18s, .18s, .24s, .24s, .51s;
+}
+.tool-button:not(.tool-button--download) .tool-label-wrap {
+  margin-left: 0;
+  transition:
+    grid-template-columns .51s var(--btn-ease) .075s,
+    margin-left .51s var(--btn-ease) .075s;
+}
+.tool-button:not(.tool-button--download):hover .tool-label-wrap,
+.tool-button:not(.tool-button--download):active .tool-label-wrap,
+.tool-button:not(.tool-button--download).is-open .tool-label-wrap {
+  margin-left: calc(9.817 * var(--u));
+  transition-delay: 0s;
+}
+.tool-button[data-tool="comment"] { --tool-icon-w: 15.074; }
+.tool-button[data-tool="hide-hud"] { --tool-icon-w: 17.078; }
+.tool-button[data-tool="settings"] { --tool-icon-w: 15.322; }
+.tool-button:hover {
+  translate: 0 calc(-1 * var(--u));
+  box-shadow: none;
+}
+.tool-button:active {
+  translate: 0 calc(3 * var(--u));
+  transition-duration: .18s, .18s, .24s, .24s; /* press reacts quicker than it releases */
+  box-shadow: none;
+}
+/* "enabled" — a flat resting ring that reads settled, not hovered. `.is-open`
+   is click-pinned: for Settings it tracks the PANEL's visibility (moving onto
+   the panel keeps the look), for Hide HUD the toggled state. */
+.tool-button.is-open {
+  border-color: #bebebe;
+}
+/* Settings' is-open ring is invisible but kept as a real border (alpha 0, not
+   `border: 0`) so its width reserves the same box. */
+.tool-button[data-tool="settings"].is-open {
+  border-color: rgba(190, 190, 190, 0);
+}
+.tool-button:disabled {
+  opacity: .35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+/* @css:figma-art — each icon element is its own node's box; the background is
+   the file's whole viewBox (sized to the artwork alone it clips the shadow bleed)
+   scaled so the artwork inside lands exactly on that box. All three
+   files draw from their origin, hence position 0 0. */
+.tool-icon { flex: none; background-repeat: no-repeat; background-position: 0 0; }
+.tool-icon--comment {
+  width: calc(15.074 * var(--u)); height: calc(15.062 * var(--u));
+  background-image: url(@asset:assets/speech-bubble-cursor.svg);
+  background-size: calc(16 * var(--u)) calc(16 * var(--u));
+}
+.tool-icon--hide-hud {
+  width: calc(17.078 * var(--u)); height: calc(11.528 * var(--u));
+  background-image: url(@asset:assets/hide-hud-icon.svg);
+  background-size: calc(18 * var(--u)) calc(12 * var(--u));
+}
+.tool-icon--settings {
+  width: calc(15.322 * var(--u)); height: calc(15.903 * var(--u));
+  background-image: url(@asset:assets/settings-icon.svg);
+  background-size: calc(16 * var(--u)) calc(16 * var(--u));
+}
+/* Text reveal: the wrap tweens its grid track (0fr -> 1fr) so each label sizes
+   itself; the label fades + slides in later, so the pill opens before the
+   word streams in. */
+.tool-label-wrap {
+  display: grid;
+  grid-template-columns: 0fr;
+  overflow: hidden;
+  transition: grid-template-columns .51s var(--btn-ease) .075s;
+}
+.tool-button:hover .tool-label-wrap,
+.tool-button:active .tool-label-wrap,
+.tool-button.is-open .tool-label-wrap {
+  grid-template-columns: 1fr;
+  transition-delay: 0s; /* opens the moment the pointer commits, no lag */
+}
+.tool-label {
+  overflow: hidden;
+  min-width: 0;
+  white-space: nowrap;
+  opacity: 0;
+  translate: calc(-6 * var(--u)) 0;
+  font-size: calc(13.743 * var(--u) * var(--fs));
+  font-weight: 500;
+  letter-spacing: calc(.5497 * var(--u));
+  line-height: 1.3;
+  text-transform: uppercase;
+  color: #292929;
+  transition: opacity .24s var(--btn-ease), translate .3s var(--btn-ease);
+}
+.tool-button:hover .tool-label,
+.tool-button:active .tool-label,
+.tool-button.is-open .tool-label {
+  opacity: 1;
+  translate: 0 0;
+  transition-delay: .18s; /* streams in once the pill has started opening */
+}
+
+:root { --capture-color: #0D99FF; --btn-ease: var(--ease-out-quint); }
+.tool-button[data-tool="view3d"] { --tool-icon-w: 16; }
+.tool-icon--view3d { width: calc(16 * var(--u)); height: calc(16 * var(--u)); background-image: url(@asset:assets/view3d-icon.svg); background-size: 100% 100%; }
+.title-section, .readout-feed, .logo-frame { transition: opacity .2s ease; }
+#oven-gen3-screen.hud-hidden .title-section, #oven-gen3-screen.hud-hidden .readout-feed, #oven-gen3-screen.hud-hidden .logo-frame { opacity: 0; pointer-events: none; }
