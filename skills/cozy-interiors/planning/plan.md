@@ -118,6 +118,8 @@ Idle tour: a sway after 12 s, then a cut to a composed view every 4 s, picked fr
 ## 7. Whole, varied rooms (round 3, 2026-11-13)
 
 A room is a whole space: a floor plan (walls as a shape such as a rectangle, an L or a room with an alcove), doors and windows in the walls, a floor and a ceiling.
+The camera sees in through a cutaway: walls facing the camera hide, like a dollhouse with its front taken off.
+Zooming out shows the whole room, then the entire space (every room of a flat or house, each cut away the same way).
 The skill ships parts: the kit, the library, the checks and an empty room shell.
 The corner kitchen moves out of the skill to `tests/`, as a fixture for the checks.
 Variety: dice tables in the skill (room size, shape, layout type, door and window walls, style, time of day, how lived-in).
