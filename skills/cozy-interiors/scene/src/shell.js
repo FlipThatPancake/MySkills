@@ -1,11 +1,10 @@
-// @js:room-shell — walls, floor and openings from a floor plan, with a dollhouse cutaway.
+// @js:room-shell — walls, floor and openings from a floor plan, with a view that fades blocking walls.
 // plan = { height, thickness, rooms: [{ name, outline: [[x, z], ...] }], openings: [{ at: [x, z], width, kind: 'door' | 'window', sill, height }] }
 // Millimetres; x right, z toward the viewer, floor at y 0. Outlines run either way round; walls stand outside each outline (the outline is the inner face).
 // A wall shared by two rooms is built once, centred on the shared edge. An opening sits on the wall nearest its `at` point.
-// Cutaway: an outer wall whose outside faces the camera sinks into the floor, leaving a stub at `stub` mm, so the camera sees in from any side and,
-// zoomed out, sees every room at once. It sinks over about 0.4 s, so nothing pops.
+// Every wall stands full height and each room has a ceiling. shell.userData.view(camera, target, dt) fades whatever blocks the view and thins the whole scene into the backdrop with distance from the target (see below).
 export function roomShell(kit, plan) {
-  const { THREE } = kit, H = plan.height || 2500, T = plan.thickness || 120, STUB = plan.stub ?? 160;
+  const { THREE } = kit, H = plan.height || 2500, T = plan.thickness || 120, CEIL = 30;
   const g = kit.group(), walls = [];
   const key = (a, b) => [a, b].map((p) => p.join(',')).sort().join('|');
   const edges = new Map();
@@ -58,7 +57,7 @@ export function roomShell(kit, plan) {
     const cu = (o.u0 + o.u1) / 2, cv = o.v0 + (o.v1 - o.v0) * 0.62;
     g.add(piece(cu - B / 2, o.v0 + F, mid - 20, cu + B / 2, o.v1 - F, mid + 20, { tone: 'lo' }), piece(o.u0 + F, cv - B / 2, mid - 20, o.u1 - F, cv + B / 2, mid + 20, { tone: 'lo' }));
     const glass = new THREE.Mesh(new THREE.PlaneGeometry(o.u1 - o.u0 - 2 * F, o.v1 - o.v0 - 2 * F), new THREE.MeshBasicMaterial({ color: 0xdfe8ee, transparent: true, opacity: 0.35, depthWrite: false, side: THREE.DoubleSide }));
-    glass.position.set(cu, (o.v0 + o.v1) / 2, mid);
+    glass.position.set(cu, (o.v0 + o.v1) / 2, mid); glass.userData.glass = true;
     g.add(glass);
     return g;
   }
@@ -112,18 +111,78 @@ export function roomShell(kit, plan) {
     for (const o of ops) holder.add(o.kind === 'door' ? doorParts(o, z0, z1) : windowParts(o, z0, z1, e.shared));
     holder.position.set(e.a[0], 0, e.a[1]);
     holder.rotation.y = ang;
-    holder.userData = { part: 'wall', edge: e, sink: 0, mid: new THREE.Vector3((e.a[0] + e.b[0]) / 2, H / 2, (e.a[1] + e.b[1]) / 2), out: new THREE.Vector3(e.out[0], 0, e.out[1]) };
+    const dir = [(e.b[0] - e.a[0]) / e.len, (e.b[1] - e.a[1]) / e.len], zc = (z0 + z1) / 2;
+    holder.userData = { part: 'wall', edge: e, fade: 0, dir, n: [lz.x, lz.z], zc, len: e.len, fa: kit.fadable(), glass: [], hulls: [] };
+    kit.useFade(holder, holder.userData.fa);
+    holder.traverse((o) => { if (o !== holder && o.userData.glass === true) holder.userData.glass.push(o); if (o.isMesh && kit.hulls.includes(o.material)) holder.userData.hulls.push(o); });
+    // A faint line on the floor where the wall stands (broken at doors) stays when the wall fades away.
+    const at = (u, z) => [e.a[0] + dir[0] * u + lz.x * z, 1, e.a[1] + dir[1] * u + lz.z * z];
+    const spans = [], cuts = ops.filter((o) => o.kind === 'door').sort((p, q) => p.u0 - q.u0);
+    let u = 0; for (const d of cuts) { spans.push([u, d.u0]); u = d.u1; } spans.push([u, e.len]);
+    const pts = [];
+    for (const [s0, s1] of spans) pts.push(at(s0, z0), at(s1, z0), at(s0, z1), at(s1, z1), at(s0, z0), at(s0, z1), at(s1, z0), at(s1, z1));
+    g.add(kit.lines(pts, 'lo'));
     walls.push(holder); g.add(holder);
   }
-  g.userData.walls = walls;
-  g.userData.plan = plan;
-  // Call each frame: sinks the outer walls the camera is outside of.
-  g.userData.cutaway = (camera, dt) => {
-    for (const w of walls) {
-      const d = w.userData, facing = !d.edge.shared && camera.position.clone().sub(d.mid).dot(d.out) > 0;
-      const target = facing ? -(H - STUB) : 0;
-      d.sink += (target - d.sink) * (1 - Math.exp(-dt * 9));
-      w.position.y = d.sink;
+  // A flat ceiling over each room, sitting on the wall tops.
+  const ceilings = [];
+  if (plan.ceiling !== false) for (const room of plan.rooms) {
+    const c = kit.solid(new THREE.ExtrudeGeometry(floorShape(room.outline), { depth: CEIL, bevelEnabled: false }), 0, H, 0);
+    c.rotation.x = -Math.PI / 2;
+    c.userData = { part: 'ceiling', room: room.name, outline: room.outline, fade: 0, fa: kit.fadable(), glass: [], hulls: [] };
+    kit.useFade(c, c.userData.fa);
+    ceilings.push(c); g.add(c);
+  }
+  const blockers = [...walls, ...ceilings];
+  g.userData.walls = walls; g.userData.ceilings = ceilings; g.userData.plan = plan;
+
+  // view(camera, target, dt, opts): call each frame with the orbit camera and its target.
+  //  - walls and ceilings that stand between the camera and the focus area round the target fade away (smoothly, over about 3 degrees of view), with their frames, glass and door leaf;
+  //  - everything thins into the backdrop with distance from the target, the radius scaling with the camera distance: zoomed in shows a soft-edged cutout of one area, zoomed out covers the whole plan.
+  // opts: r0, r1 (fade radii as fractions of the camera distance, default 0.7 and 1.6), focus (focus-area radius as a fraction of the distance, 0.12, at most focusMax = 900 mm), rate (fade-in/out speed per second, 14).
+  const sat = (x) => Math.min(1, Math.max(0, x)), S = (x) => { x = sat(x); return x * x * (3 - 2 * x); };
+  const inside = (pt, o) => {   // signed distance from a point to a polygon in plan: positive inside
+    let d = 1e9, ins = false;
+    for (let i = 0; i < o.length; i++) {
+      const a = o[i], b = o[(i + 1) % o.length], ex = b[0] - a[0], ez = b[1] - a[1], L2 = ex * ex + ez * ez;
+      const t = sat(((pt[0] - a[0]) * ex + (pt[1] - a[1]) * ez) / L2);
+      d = Math.min(d, Math.hypot(pt[0] - a[0] - ex * t, pt[1] - a[1] - ez * t));
+      if ((a[1] > pt[1]) !== (b[1] > pt[1]) && pt[0] < a[0] + ex * (pt[1] - a[1]) / ez) ins = !ins;
+    }
+    return ins ? d : -d;
+  };
+  const C = new THREE.Vector3(), P = new THREE.Vector3(), X = new THREE.Vector3();
+  const blocks = (w, w3) => {   // 0..1: does w stand between the camera C and the point P
+    const d = w.userData;
+    let sdC, sdP;
+    if (d.part === 'wall') {
+      const a = d.edge.a; sdC = (C.x - a[0]) * d.n[0] + (C.z - a[1]) * d.n[1] - d.zc; sdP = (P.x - a[0]) * d.n[0] + (P.z - a[1]) * d.n[1] - d.zc;
+    } else { sdC = C.y - (H + CEIL / 2); sdP = P.y - (H + CEIL / 2); }
+    const wp = Math.max(w3, 80), cs = S(sdC / w3 + 0.5), pp = S(sdP / wp + 0.5), b = cs * (1 - pp) + (1 - cs) * pp;
+    if (b < 1e-3) return 0;
+    const t = sat(sdC / ((sdC - sdP) || 1e-9)); X.lerpVectors(C, P, t);
+    const m = Math.max(80, t * C.distanceTo(P) * Math.sin(3 * Math.PI / 180));
+    if (d.part === 'wall') {
+      const a = d.edge.a, u = (X.x - a[0]) * d.dir[0] + (X.z - a[1]) * d.dir[1];
+      return b * S(u / m + 0.5) * S((d.len - u) / m + 0.5) * S((H - X.y) / m + 0.5);
+    }
+    return b * S(inside([X.x, X.z], d.outline) / m + 0.5);
+  };
+  g.userData.view = (camera, target, dt = 1 / 60, o = {}) => {
+    const dist = camera.position.distanceTo(target), w3 = Math.max(1, dist * Math.sin(3 * Math.PI / 180)), f = Math.min((o.focus ?? 0.12) * dist, o.focusMax ?? 900), k = 1 - Math.exp(-dt * (o.rate ?? 14));
+    kit.setViewFade(target, dist * (o.r0 ?? 0.7), dist * (o.r1 ?? 1.6));
+    C.copy(camera.position);
+    const spots = [[0, 0], [f, 0], [-f, 0], [0, f], [0, -f]];
+    for (const w of blockers) {
+      let want = 0;
+      for (const [dx, dz] of spots) { P.set(target.x + dx, target.y, target.z + dz); want = Math.max(want, blocks(w, w3)); }
+      const d = w.userData;
+      d.fade += (want - d.fade) * k; if (Math.abs(d.fade - want) < 1e-3) d.fade = want;
+      const a = 1 - d.fade;
+      d.fa.set(a);
+      w.visible = a > 0.002;
+      for (const gl of d.glass) gl.material.opacity = 0.35 * a;
+      for (const h of d.hulls) h.visible = a > 0.999;
     }
   };
   return g;
