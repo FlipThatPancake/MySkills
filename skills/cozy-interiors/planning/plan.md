@@ -2,7 +2,13 @@
 
 Status: draft for grilling. Round 1 answers (2026-11-13): the oven is NOT part of the skill (imported from Blender, realistic, keeps its own materials). No grid: free placement in mm, checks catch overlaps. No ceiling rose (the hanging cord is liked). No poster or print sheets. Idle tour starts after 12 s and hands over smoothly. Generated assets follow the skill look; an imported asset may keep its own look when the user says so. Skill shape ok for now.
 
-Status line continues: Nothing is built. Research from the second thread will be folded in when it lands (`research.md` in this folder).
+Round 2 (2026-11-13): kitchens only, done well.
+The agent writes mm positions in scene.json and the checks report problems.
+A placer that turns relations into mm comes only if new rooms keep failing.
+The editor comes later and reads scene.json.
+The library grows from hand-written assets plus free CC0 models restyled on import.
+A neutral page frame by default; product frames (like Inspira) are added per project.
+Door swing clashes: a check finds them, and fitter fixes remove them (a 90° hinge stop first, then a filler strip).
 
 ## 1. What Anatomy does that our kitchen doesn't (yet)
 
@@ -76,7 +82,7 @@ Base run, wall cabinets, hob + hood, oven column with niche, fridge, countertop 
 - **One scene file is the single source.** Today the layout lives in code twice (`butterfly.js` keeps its own list of solid boxes that must mirror `room.js`). The scene file feeds the renderer, the editor, the checks and the butterfly's no-go zones.
 - **Checks in two tiers, each with an ID and a one-line reason.** Hard (refuse): overlap, outside the room, floating or sunk, wall-mounted thing off its wall, door, drawer and oven-door swing. Soft (score): clearance, reach, sightlines, balance. Plus a check no paper has: a walk path from every door at least about 800 mm wide (a flood fill over the grid). The editor shows the reason on the red object, like the Sims house builder does.
 - **Checks use the true shape** of each object (from its mesh), never a padded box, because a fake box can silence a check.
-- **Generation: the agent writes relations, a solver writes coordinates** (the Holodeck paper). The agent says "fridge against the right wall, hob under the hood, plant on the worktop near the window"; a small placer turns that into grid cells and runs the hard checks. This is what makes "generate various interiors" reliable, because language models are bad at raw coordinates.
+- **Generation: the agent writes mm directly for now** (round 2); relations plus a solver (the Holodeck paper) only if rooms keep failing.
 - **Draw a run, auto-fill it**: drawing a counter run fills it with standard cabinet widths plus a filler piece (Codrops kitchen designer).
 - **Restyle on import**: any free CC0 model (Kenney, Quaternius, Poly Pizza) gets our paper fill and crease outlines on import, so the library can grow fast. Footprint, height, anchors, tags and licence go in a data file next to it.
 - **Colour tokens**: every colour (paper, four shades, lines, one accent, cavity, daylight) comes from one table, so a room can be re-themed without touching code. The cavity gets its own darker token set (Anatomy's fix for our brown).
@@ -99,6 +105,12 @@ Base run, wall cabinets, hob + hood, oven column with niche, fridge, countertop 
 In MySkills: split the kitchen into one file per object (fridge, plant, window...), then add one scene file that says where each object stands. The checks, and later the editor, read that file.
 
 ## 6. Experiments to try (the user's queue)
+
+Results (2026-11-13):
+4× detail: a socket and a light switch are scene objects marked `detail`. Settings or `?plain` hides them. Fridge feet were removed because they looked odd.
+Opening fronts: drawers and hob-unit doors open on click, and the units are hollow inside. Cost: about +1.5k triangles and +15 draw calls.
+Swing check: every front is opened step by step, and every pair together.
+Idle tour: a sway after 12 s, then a cut to a composed view every 4 s, picked from scene.json `camera.shots`. Any input eases the camera back to the starting view.
 
 - **4× detail pass**: add small real parts so surfaces are not empty up close: a skirting board, a wall socket and switch, the cabinet plinth gap, a worktop edge line, fridge feet. Try it behind a setting, so the plain and detailed versions can be compared.
 - **Opening doors and drawers**: cabinet doors and drawers open on hover or click, eased like the oven door. Each opening cabinet gets a simple inside (back panel, four walls, one shelf); doors may open only partly so less inside shows. Measure the triangle count and frame rate before and after.
