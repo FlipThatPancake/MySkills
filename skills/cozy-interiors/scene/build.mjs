@@ -21,8 +21,10 @@ html = assets(html).replace(/@build:datetime/g, stamp);
 if (/@(asset|inline|bundle|build):/.test(html)) { console.error('unresolved marker'); process.exit(1); }
 writeFileSync(join(here, 'kitchen-scene.html'), html);
 console.log('kitchen-scene.html', (html.length / 1024).toFixed(0), 'KB');
-// shell-test.html: the room shell on its own, for checking walls, openings and the view fade (open it in a browser, or drive window.shellTest).
+// shell-test.html and runs-test.html: the room shell and the library runs on their own (open in a browser, or drive window.shellTest / window.runsTest).
 const bundle = (entry) => safe(esbuild.buildSync({ entryPoints: [join(src, entry)], bundle: true, format: 'iife', minify: true, write: false, legalComments: 'none' }).outputFiles[0].text);
-const test = `<!doctype html><html><head><meta charset="utf-8"><title>Room shell test</title><style>html,body{margin:0;height:100%;background:#f4f4f1}canvas{width:100%;height:100%;display:block}</style></head><body><canvas id="scene"></canvas><script>${bundle('shell-test.js')}</script></body></html>`;
-writeFileSync(join(here, 'shell-test.html'), test);
-console.log('shell-test.html', (test.length / 1024).toFixed(0), 'KB');
+for (const name of ['shell-test', 'runs-test']) {
+  const page = `<!doctype html><html><head><meta charset="utf-8"><title>${name}</title><style>html,body{margin:0;height:100%;background:#f4f4f1}canvas{width:100%;height:100%;display:block}</style></head><body><canvas id="scene"></canvas><script>${bundle(name + '.js')}</script></body></html>`;
+  writeFileSync(join(here, name + '.html'), page);
+  console.log(name + '.html', (page.length / 1024).toFixed(0), 'KB');
+}

@@ -1,11 +1,15 @@
 // @js:library-runs — fitted kitchen runs, generated from a list of modules. Local frame: x along the run from 0, front at z = 0, wall at z = -depth, floor y = 0.
-// baseRun(kit, { modules, depth = 600, top = 900, overhang = 20, trimStart = 0, trimEnd = 0, hob, sink })
+// baseRun(kit, { modules, depth = 600, top = 900, overhang = 20, trimStart = 0, trimEnd = 0, joins, ownsTop = true })
 //   modules: [{ w, kind }] left to right; kind: doors (two), door (one, hinge 'l' or 'r'), drawers (n, default 3), drawerDoors (a shallow drawer over two doors),
-//   sink (two doors, a basin and a tap above), hob (a shallow drawer over two doors; the hob product sits on top), filler (a plain strip), open (a shelf, no front).
-//   The worktop runs the whole length, cut for each sink; trimStart/trimEnd shorten it where it butts another run's worktop at a corner.
+//   sink (two doors, a basin and a tap above), hob (a shallow drawer over two doors; the hob product sits on top), filler (a plain strip), open (a shelf, no front),
+//   blind (a corner unit: a fixed panel over the `dead` side ('l' or 'r', one depth wide) where the other run stands, and one door over the rest; w at least depth + 300).
+//   A corner: run A has joins: { side: 'start' | 'end', length } (the other run stands at that end of A and reaches `length` mm out from A's front); A then builds the L-shaped worktop and plinth for both,
+//   and the other run is built with ownsTop: false. Its end at the corner is a filler wide enough for both runs' fronts to open (check-runs.mjs finds the width).
+//   The worktop runs the whole length, cut for each sink; trimStart/trimEnd shorten it where it butts another run's worktop.
 // wallRun(kit, { modules, y0 = 1450, h = 720, depth = 320 }): wall cabinets; kind door, doors, open, filler.
 // fillWidths(length, fixed): fills a length with standard widths (300-900 by 50 mm) round fixed modules, leaving a filler under 100 mm.
-// Every opening front is listed in group.userData.openables ({ kind: 'drawer' | 'door', v, target, max, dir }) for the scene to animate.
+// Every opening front is listed in group.userData.openables ({ kind: 'drawer' | 'door', v, target, max, dir, len, side }) for the scene to animate:
+// a door turns about its hinge (len mm long, reaching toward +x when side is 1, -x when -1); a drawer slides out max mm; x0 and w locate its front; yr is the front's height range.
 export const WIDTHS = [300, 400, 450, 500, 600, 800, 900];
 
 export function fillWidths(length, fixed = []) {
@@ -39,30 +43,42 @@ function carcass(kit, add, x, w, y0, y1, depth, back = 0) {
   add(kit.box(x + SIDE, y0, -back, w - 2 * SIDE, SIDE, depth - SIDE - back, lo));
 }
 
-export function baseRun(kit, { modules, depth = 600, top = 900, overhang = 20, trimStart = 0, trimEnd = 0 }) {
+export function baseRun(kit, { modules, depth = 600, top = 900, overhang = 20, trimStart = 0, trimEnd = 0, joins = null, ownsTop = true }) {
   const g = kit.group(), leaves = [], P = parts(kit, g, leaves), { T, add, hbar, vbar, front, leaf } = P;
   const length = modules.reduce((s, m) => s + m.w, 0), CT = 38, TOP = top - CT, y0 = PL + 1.5, y1 = TOP - 1.5, H = y1 - y0;
-  // plinth, recessed 50
-  add(kit.box(0, 0, -50, length, PL, depth - 50, { tone: 'lo' }));
+  // plinth, recessed 50; round a corner it is one L-shaped piece
+  const slab = (pts, y, h, opts) => { const sh = new T.Shape(pts.map(([a, b]) => new T.Vector2(a, -b))); const m = kit.solid(new T.ExtrudeGeometry(sh, { depth: h, bevelEnabled: false }), 0, y, 0, opts); m.rotation.x = -Math.PI / 2; return m; };
+  const J = joins && joins.length, atStart = joins && joins.side !== 'end';
+  const plinthPts = !J ? [[0, -depth], [length, -depth], [length, -50], [0, -50]]
+    : atStart ? [[0, -depth], [length, -depth], [length, -50], [depth - 50, -50], [depth - 50, J], [0, J]]
+    : [[0, -depth], [length, -depth], [length, J], [length - depth + 50, J], [length - depth + 50, -50], [0, -50]];
+  if (ownsTop) add(slab(plinthPts, 0, PL, { tone: 'lo' }));
   const cuts = [];
   let x = 0;
   for (const m of modules) {
     const w = m.w;
     if (m.kind === 'filler') { add(kit.box(x, PL, 2, w, TOP - PL, depth + 2)); x += w; continue; }
     carcass(kit, add, x, w, PL, TOP, depth, 15);
+    if (m.kind === 'blind') {   // fixed panel over the dead side, one door over the rest, hinged at the far edge so it swings clear of the other run
+      const dead = m.dead === 'r' ? 'r' : 'l', dw = w - depth - 2 * GAP, fx = dead === 'l' ? x + depth + GAP : x + GAP, px = dead === 'l' ? fx + dw : fx;
+      front(g, dead === 'l' ? x + GAP / 2 : x + w - depth + GAP / 2, y0, depth - GAP, H);
+      const L = leaf('door', px, 2, { dir: dead === 'l' ? 1 : -1, max: 90, len: dw, side: dead === 'l' ? -1 : 1, yr: [y0, y0 + H] });
+      front(L, fx, y0, dw, H); vbar(L, dead === 'l' ? fx + 30 : fx + dw - 30, y0 + H - 100, Math.min(160, H - 60));
+      x += w; continue;
+    }
     if (m.kind === 'open') add(kit.box(x + SIDE, PL + (TOP - PL) / 2, -15, w - 2 * SIDE, SIDE, depth - SIDE - 15, { tone: 'lo' }));
     const doorsIn = (yy0, hh, n) => {   // n doors across the module, swinging out from the outer hinges
       const dw = (w - GAP * (n + 1)) / n;
       for (let i = 0; i < n; i++) {
         const hingeLeft = n === 2 ? i === 0 : m.hinge !== 'r', fx = x + GAP + i * (dw + GAP), px = hingeLeft ? fx : fx + dw;
-        const L = leaf('door', px, 2, { dir: hingeLeft ? -1 : 1, max: 90 });
+        const L = leaf('door', px, 2, { dir: hingeLeft ? -1 : 1, max: 90, len: dw, side: hingeLeft ? 1 : -1, yr: [yy0, yy0 + hh] });
         front(L, fx, yy0, dw, hh); vbar(L, hingeLeft ? fx + dw - 30 : fx + 30, yy0 + hh - 100, Math.min(160, hh - 60));
       }
     };
     const drawers = (yy0, hh, n) => {
       const dh = (hh - GAP * (n - 1)) / n;
       for (let i = 0; i < n; i++) {
-        const y = yy0 + i * (dh + GAP), D = leaf('drawer', 0, 0, { max: Math.min(depth - 120, 480) });
+        const y = yy0 + i * (dh + GAP), D = leaf('drawer', 0, 0, { max: Math.min(depth - 120, 480), x0: x, w, yr: [y, y + dh] });
         front(D, x + GAP / 2, y, w - GAP, dh); hbar(D, x + w / 2, y + dh - 45, Math.min(320, w - 160));
         const bx0 = x + SIDE + 4, bx1 = x + w - SIDE - 4, by = y + 20, bh = Math.max(60, dh - 50), BD = Math.min(depth - 120, 480), lo = { tone: 'lo' };
         add(kit.box(bx0, by, -16, 12, bh, BD, lo), D); add(kit.box(bx1 - 12, by, -16, 12, bh, BD, lo), D);
@@ -78,9 +94,14 @@ export function baseRun(kit, { modules, depth = 600, top = 900, overhang = 20, t
     x += w;
   }
   // worktop: one slab the length of the run (less any trims), overhanging the fronts, with a hole for each sink
-  const s = new T.Shape([[trimStart, -depth], [length - trimEnd, -depth], [length - trimEnd, overhang], [trimStart, overhang]].map(([a, b]) => new T.Vector2(a, -b)));
-  for (const c of cuts) s.holes.push(new T.Path(c.map(([a, b]) => new T.Vector2(a, -b))));
-  const wt = kit.solid(new T.ExtrudeGeometry(s, { depth: CT, bevelEnabled: false }), 0, TOP, 0); wt.rotation.x = -Math.PI / 2; add(wt);
+  const topPts = !J ? [[trimStart, -depth], [length - trimEnd, -depth], [length - trimEnd, overhang], [trimStart, overhang]]
+    : atStart ? [[0, -depth], [length - trimEnd, -depth], [length - trimEnd, overhang], [depth + overhang, overhang], [depth + overhang, J], [0, J]]
+    : [[trimStart, -depth], [length, -depth], [length, J], [length - depth - overhang, J], [length - depth - overhang, overhang], [trimStart, overhang]];
+  if (ownsTop) {
+    const s = new T.Shape(topPts.map(([a, b]) => new T.Vector2(a, -b)));
+    for (const c of cuts) s.holes.push(new T.Path(c.map(([a, b]) => new T.Vector2(a, -b))));
+    const wt = kit.solid(new T.ExtrudeGeometry(s, { depth: CT, bevelEnabled: false }), 0, TOP, 0); wt.rotation.x = -Math.PI / 2; add(wt);
+  }
   return finish(kit, g, leaves, { length, depth, top });
 }
 
@@ -116,7 +137,7 @@ export function wallRun(kit, { modules, y0 = 1450, h = 720, depth = 320 }) {
     else {
       const n = m.kind === 'doors' ? 2 : 1, dw = (w - GAP * (n + 1)) / n, dy = cy0 + GAP, dh = cy1 - cy0 - 2 * GAP;
       for (let i = 0; i < n; i++) {
-        const hingeLeft = n === 2 ? i === 0 : m.hinge !== 'r', fx = x + GAP + i * (dw + GAP), L = leaf('door', hingeLeft ? fx : fx + dw, 2, { dir: hingeLeft ? -1 : 1, max: 95 });
+        const hingeLeft = n === 2 ? i === 0 : m.hinge !== 'r', fx = x + GAP + i * (dw + GAP), L = leaf('door', hingeLeft ? fx : fx + dw, 2, { dir: hingeLeft ? -1 : 1, max: 95, len: dw, side: hingeLeft ? 1 : -1, yr: [dy, dy + dh] });
         front(L, fx, dy, dw, dh); vbar(L, hingeLeft ? fx + dw - 30 : fx + 30, dy + 90, 100);
       }
     }
