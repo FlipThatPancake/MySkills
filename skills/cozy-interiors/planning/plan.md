@@ -114,3 +114,20 @@ Idle tour: a sway after 12 s, then a cut to a composed view every 4 s, picked fr
 
 - **4× detail pass**: add small real parts so surfaces are not empty up close: a skirting board, a wall socket and switch, the cabinet plinth gap, a worktop edge line, fridge feet. Try it behind a setting, so the plain and detailed versions can be compared.
 - **Opening doors and drawers**: cabinet doors and drawers open on hover or click, eased like the oven door. Each opening cabinet gets a simple inside (back panel, four walls, one shelf); doors may open only partly so less inside shows. Measure the triangle count and frame rate before and after.
+
+## 7. Whole, varied rooms (round 3, 2026-11-13)
+
+A room is a whole space: a floor plan (walls as a shape such as a rectangle, an L or a room with an alcove), doors and windows in the walls, a floor and a ceiling.
+The skill ships parts: the kit, the library, the checks and an empty room shell.
+The corner kitchen moves out of the skill to `tests/`, as a fixture for the checks.
+Variety: dice tables in the skill (room size, shape, layout type, door and window walls, style, time of day, how lived-in).
+A small roll script picks one option from each table using a seed, which is saved in scene.json, so a room can be rebuilt exactly.
+The agent places everything in mm by room rules, and the checks report problems.
+Kitchen rules: runs filled with cabinet widths of 300 to 900 mm plus a filler strip. Sink, hob and fridge 1.2 to 2.7 m apart, each pair (the work triangle). Walkways at least 900 mm, and 1000 to 1200 mm between facing runs.
+Other rooms' rules are added when a room type is first asked for.
+Library, two kinds. Fixed products (fridge, hob, sink, oven) come from tables of standard sizes and options.
+Fitted things are generated from the scene: worktops follow the runs with cut-outs; walls, floor and tiles follow the floor plan; plinths and fillers fill the gaps; shadows follow each footprint.
+Moving life is generated too: the butterfly's flight path comes from the room's free space, and gust and drift settings come from ranges.
+When nothing fits a request, the agent writes a new generator in the kit's style; the checks test it like any object.
+New room checks: a clear walking path from every door, windows clear of wall units, and the work triangle.
+Build order: room shell, library, dice tables and roll script, kitchen moved to tests, then SKILL.md.
