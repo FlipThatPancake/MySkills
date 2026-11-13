@@ -1,48 +1,8 @@
-// @js:kitchen-props — a few small line drawings that make the counter look used: a frying pan, a cutting board, a potted plant and cat scratches.
-// Kitchen millimetres, like room.js; all small parts in the light tone. Nothing stands in the oven column or hides the oven.
-export function props(kit) {
-  const T = kit.THREE, g = kit.group();
-  const lo = { tone: 'lo' };
-
-  // Frying pan on the hob's back-left burner (the left one nearest the wall; hob unit at x 2400, the grate top is at y 932): wide flat dish, handle toward the front.
-  // Set down by hand: turned 40° and a few cm off the burner's centre, the handle pointing front-left.
-  const pan = kit.group();
-  pan.add(kit.cyl(0, 0, 0, 105, 38, { rTop: 125, seg: 40, ...lo }));
-  const rim = [];
-  for (let i = 0; i < 40; i++) { const a = i / 40 * Math.PI * 2, b = (i + 1) / 40 * Math.PI * 2, r = 112; rim.push([Math.cos(a) * r, 38.5, Math.sin(a) * r], [Math.cos(b) * r, 38.5, Math.sin(b) * r]); }
-  pan.add(kit.lines(rim));
-  pan.add(kit.box(-12, 22, 305, 24, 10, 190, lo));    // handle, z 115..305 from the pan's centre
-  pan.add(kit.cyl(0, 27, 118, 10, 8, lo));
-  pan.position.set(2400 + 225 + 14, 932, -440 + 22);
-  pan.rotation.y = -0.7;
-  g.add(pan);
-
-  // Cat scratches on the outer end panel of the return's last unit (the panel at z = 1500 facing the room, under the window side): a real cat leaves groups of
-  // 3-4 claw marks 40-90 mm long, 6-8 mm apart and slightly bowed, 120-420 mm above the floor. Drawn a hair proud of the panel in the faintest line, so they show only up close.
-  const scratch = [], PZ = 1500.8;
-  const groups = [[170, 330, 0.25, 4], [214, 250, 0.1, 3], [330, 410, -0.2, 4], [372, 200, 0.04, 3]];   // x, top y, lean (rad), strokes
-  groups.forEach(([gx, gy, lean, n], gi) => {
-    for (let k = 0; k < n; k++) {
-      const len = 40 + ((gi * 3 + k * 5) % 6) * 9, bow = 2 + ((gi + k) % 3), x0 = gx + k * (6 + (k % 2)) - n * 3.5;
-      let prev = null;
-      for (let i = 0; i <= 6; i++) {
-        const t = i / 6, p = [x0 + Math.sin(lean) * len * t + Math.sin(t * Math.PI) * bow, gy - Math.cos(lean) * len * t, PZ];
-        if (prev) scratch.push(prev, p);
-        prev = p;
-      }
-    }
-  });
-
-  // Cutting board leaning on the back wall to the right of the sink: 300 x 460 x 20, top edge 30 mm off the wall.
-  const board = kit.group();
-  board.add(kit.rbox(0, 0, 0, 300, 460, 20, 24, lo));
-  board.add(kit.cyl(150, 405, 12, 22, 6, { axis: 'z', seg: 24, ...lo }));   // hanging hole
-  board.rotation.x = -0.2;
-  board.position.set(1750, 900, -470);
-  g.add(board);
-
-  // Potted plant at the inner corner of the L: neutral tapered pot and a fan of sage leaves.
-  const cx = 800, cz = -170, cy = 900;
+// @js:kitchen-plant — a potted plant: neutral tapered pot and a fan of sage blades that bend in gusts from the window.
+// Origin: the middle of the pot's foot. userData: landing (the butterfly's perch, local), gust(), update(dt).
+export function plant(kit) {
+  const T = kit.THREE;
+  const g = kit.group(), lo = { tone: 'lo' }, cx = 0, cz = 0, cy = 0;
   g.add(kit.cyl(cx, cy, cz, 42, 95, { rTop: 58, seg: 28, ...lo }));
   const merged = kit.merge(g);
   // @js:kitchen-plant-blades — the plant: curved blades with a damped spring each, pushed by gusts from the window
@@ -154,6 +114,5 @@ export function props(kit) {
     blades.forEach(shape);
     if (!live) rest = true;
   };
-  merged.add(kit.lines(scratch, 'faint'));   // after the merge: the faint line has its own material
   return merged;
 }

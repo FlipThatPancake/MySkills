@@ -4,10 +4,15 @@
 import { ovenColumn } from './ovenColumn.js';
 import { fridge } from './fridge.js';
 import { baseRun } from './baseRun.js';
-import { hobHood } from './hobHood.js';
+import { hob } from './hob.js';
+import { hood } from './hood.js';
 import { wallCabinets } from './wallCabinets.js';
 import { counterOven } from './counterOven.js';
-import { props } from './props.js';
+import { pan } from './pan.js';
+import { cuttingBoard } from './cuttingBoard.js';
+import { plant } from './plant.js';
+import { catScratches } from './catScratches.js';
+import SCENE from './scene.json';
 import { cat } from './cat.js';
 import { fruitBowl } from './fruitBowl.js';
 import { butterfly } from './butterfly.js';
@@ -26,7 +31,6 @@ export const FADE = [0.15, 0.6];   // the wall and floor thin out between these 
 const WALL_Z = -600;
 // The cat is hidden while it is rebuilt; set this to true to bring it (and its Settings row) back.
 export const SHOW_CAT = false;
-const BOWL = [300, 900, -330];   // the fruit bowl's foot on the corner of the return's counter
 // 60 m each way, so no edge comes into view at any allowed angle or zoom.
 const EDGE = { x0: -28000, x1: 33000, depth: 28000, height: 40000 };
 
@@ -34,18 +38,22 @@ export function buildKitchen(kit) {
   const { THREE } = kit;
   const room = kit.group();
   const put = (g, x, y, z) => { g.position.set(x, y, z); room.add(g); return g; };
-  put(baseRun(kit), 0, 0, 0);
-  put(hobHood(kit), 2400, 0, 0);
-  put(wallCabinets(kit), 0, 0, WALL_Z + 320);
-  const co = counterOven(kit);
-  co.rotation.y = Math.PI / 2;           // its door faces +x, into the L
-  put(co, 540, 900, 1410);   // its back stands 190 mm off the side wall, clear of the open window sashes
-  const col = ovenColumn(kit, { x: OVEN.x + OVEN.w / 2 - 3300 - NICHE.w / 2, y: OVEN.y + OVEN.h / 2 - 100 - NICHE.h / 2, w: NICHE.w, h: NICHE.h });
-  put(col.group || col, 3300, 0, 0);
-  room.add(builtinOven(kit, { cx: OVEN_FACE.x, cy: OVEN_FACE.y, nicheW: NICHE.w, nicheH: NICHE.h }));   // stand-in for the prototype's Blender oven
-  put(fridge(kit), 4220, 0, 100);
-  const pr = put(props(kit), 0, 0, 0);
-  const bowl = put(fruitBowl(kit), ...BOWL);
+  // Every object comes from scene.json: which asset, where (`at`, mm), `turn` in degrees about the vertical, and what it stands on (`mount`, read by the checks).
+  // The oven column and the hero oven take the niche worked out above; the lamp and the scratches still draw themselves in kitchen millimetres, so they sit at the origin.
+  const ASSETS = { baseRun, hob, hood, wallCabinets, counterOven, fridge, fruitBowl, pan, cuttingBoard, plant, catScratches, pendantLamp,
+    ovenColumn: (k) => ovenColumn(k, { x: OVEN.x + OVEN.w / 2 - 3300 - NICHE.w / 2, y: OVEN.y + OVEN.h / 2 - 100 - NICHE.h / 2, w: NICHE.w, h: NICHE.h }).group,
+    builtinOven: (k) => builtinOven(k, { cx: OVEN_FACE.x, cy: OVEN_FACE.y, nicheW: NICHE.w, nicheH: NICHE.h }) };   // stand-in for the prototype's Blender oven
+  const obj = {};
+  for (const o of SCENE.objects) {
+    const g = ASSETS[o.asset](kit, o.params || {});
+    g.rotation.y = (o.turn || 0) * Math.PI / 180;
+    put(g, ...o.at);
+    g.userData.scene = o;
+    obj[o.id] = g;
+  }
+  const pr = obj.plant, bowl = obj['fruit-bowl'];
+  room.userData.objects = obj;
+  room.userData.SCENE = SCENE;
 
   // Back wall, side wall along the return's outer end, and floor: three planes that meet in a corner.
   // The planes are one-sided, so from outside the side wall the room is open (a cutaway).
@@ -77,13 +85,14 @@ export function buildKitchen(kit) {
   const sx = X0 + 3, sz = WALL_Z - 1;
   const sideSeam = kit.meltingLine([sx, -1, sz], [sx, -1, SIZE.front + 500], floorTone);
   const win = windowAndLight(kit);
-  room.add(wall, floor, side, shadows(kit, { SIZE, WALL_Z }), tiles(kit, { SIZE, WALL_Z }), win, pendantLamp(kit), kit.backdrop(),
+  room.add(wall, floor, side, shadows(kit, { SIZE, WALL_Z }), tiles(kit, { SIZE, WALL_Z }), win, kit.backdrop(),
     kit.meltingLine([sx, -1, sz], [SIZE.w + 500, -1, sz], floorTone),            // back wall meets floor
     sideSeam,  // side wall meets floor
     kit.meltingLine([sx, -1, sz], [sx, 2900, sz], cornerTone));     // back wall meets side wall
   const theCat = SHOW_CAT ? cat(kit) : null;
   if (theCat) { room.add(theCat.group); room.userData.cat = theCat; }
-  const bf = butterfly(kit, { plant: pr.userData.landing, bowl: bowl.userData.landing.map((v, i) => v + BOWL[i]) });
+  const at = (g) => new THREE.Vector3(...g.userData.landing).applyEuler(g.rotation).add(g.position).toArray();   // a perch in room millimetres
+  const bf = butterfly(kit, { plant: at(pr), bowl: at(bowl) });
   room.add(bf.group);
   room.userData.butterfly = bf;
   // One call a frame for everything in the room that moves (only while the kitchen is visible).

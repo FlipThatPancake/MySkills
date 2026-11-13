@@ -15,6 +15,7 @@ renderer.toneMapping = THREE.NeutralToneMapping;
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(FOV, 1, 10, 300000);
 const kit = createKit();
+kit.keepParts = new URLSearchParams(location.search).has('check');
 const room = buildKitchen(kit);
 scene.add(room);
 kit.setOpacity(1, 1);

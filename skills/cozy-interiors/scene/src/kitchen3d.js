@@ -99,7 +99,7 @@ export function createKit() {
     return d[0] < 200 || d[1] < 40 || (d[2] <= 20 && d[1] >= 150) ? 'lo' : 'mid';
   };
   const kit = {
-    THREE, fill, fadeFill, line,
+    THREE, fill, fadeFill, line, hulls: [hull, hullLo], depth,
     // 0..1: how visible the side wall's things (window, its seam and shadow) are; view3d lowers it while the camera is outside that wall.
     sideVis: { value: 1 },
     // Own copies of the fill and line materials, so a group can fade on its own: kit.useFade(group, fa) swaps them in, fa.set(a) fades it.
@@ -294,6 +294,7 @@ export function createKit() {
     // Bake an element into three meshes (fills, lines, silhouettes) so it costs three draw calls,
     // not hundreds. Call it last, on the element's group; the group keeps its own position.
     merge(group) {
+      if (kit.keepParts) return group;   // the scene checks need every part on its own (?check in the page address)
       group.updateMatrixWorld(true);
       const inv = group.matrixWorld.clone().invert();
       const fills = [], hulls = [], hullsLo = [], segs = { mid: [], lo: [] };
