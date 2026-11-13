@@ -2,6 +2,11 @@
   "units": "mm",
   "origin": "left-front-floor corner of the main run; x right, y up, z toward the viewer",
   "room": { "backWall": -600, "sideWall": -14, "floor": 0 },
+  "camera": {
+    "after": 12, "cutsAfter": 12, "cutEvery": 4,
+    "shots": ["hero-oven", "fruit-bowl", "pan", "plant", { "look": [2100, 1050, -450], "size": 1300 }, "fridge", "cutting-board",
+              { "look": [0, 1500, 750], "size": 1700, "from": [70, 10] }, "counter-oven"]
+  },
   "objects": [
     { "id": "base-run",      "asset": "baseRun",      "at": [0, 0, 0],                "mount": "floor" },
     { "id": "hob",           "asset": "hob",          "at": [2400, 0, 0],             "mount": "on", "inset": 8 },

@@ -4,8 +4,9 @@ import * as THREE from './vendor/three/three.module.js';
 import { OrbitControls } from './vendor/three/OrbitControls.js';
 import { createKit } from './kitchen3d.js';
 import { buildKitchen, SIZE, FADE } from './kitchen/room.js';
+import { createTour } from './tour.js';
 
-const FOV = 30, TOUR_AFTER_MS = 12000, TOUR_DEG = 25, TOUR_PERIOD_S = 40, TOUR_EASE_S = 6;
+const FOV = 30;
 const rad = THREE.MathUtils.degToRad;
 
 const canvas = document.getElementById('scene');
@@ -60,9 +61,12 @@ controls.update();
 addEventListener('resize', resize);
 if (window.ResizeObserver) new ResizeObserver(resize).observe(canvas);
 
-// Idle tour: after 12 s without input the camera sways slowly left and right round the target.
-// It eases in from where the camera stands, so it never jumps; any input stops it on the spot.
-let lastInput = performance.now(), tour = null;
+// Idle tour (tour.js): a sway after 12 s idle, then video-style cuts to close-ups; input brings the camera home.
+// ?cuts=<s> shortens the wait before the tour and before the cuts, to watch it quickly.
+const quick = Number(new URLSearchParams(location.search).get('cuts')) || 0;
+const home = { pos: camera.position.clone(), target: controls.target.clone() };
+const tour = createTour({ THREE, camera, controls, room, home, cfg: { ...room.userData.SCENE.camera, ...(quick ? { after: quick, cutsAfter: quick } : {}) } });
+let lastInput = performance.now();
 for (const ev of ['pointerdown', 'pointermove', 'wheel', 'keydown', 'touchstart']) addEventListener(ev, () => { lastInput = performance.now(); }, { capture: true, passive: true });
 
 // Opening fronts: a click (not a drag) on a drawer or door opens it, a second click shuts it. Each eases like the oven door, about 0.5 s.
@@ -95,15 +99,7 @@ const moveFronts = (dt) => {
 let last = performance.now();
 renderer.setAnimationLoop((now) => {
   const dt = Math.max(0, Math.min(0.1, (now - last) / 1000)); last = now;
-  if (now - lastInput > TOUR_AFTER_MS) {
-    tour = tour || { t0: now, last: 0 };
-    const t = (now - tour.t0) / 1000, k = Math.min(1, t / TOUR_EASE_S), amp = rad(TOUR_DEG) * k * k * (3 - 2 * k);
-    const ang = amp * Math.sin(2 * Math.PI * t / TOUR_PERIOD_S);
-    const off = camera.position.clone().sub(controls.target).applyAxisAngle(new THREE.Vector3(0, 1, 0), ang - tour.last);
-    camera.position.copy(controls.target).add(off);
-    tour.last = ang;
-  } else tour = null;
-  controls.update();
+  if (!tour.update(now, now - lastInput)) controls.update();
   room.userData.tick(dt, { butterfly: true });
   moveFronts(dt);
   // Outside the side wall the window and its seam fade away over about 3 degrees.
@@ -113,4 +109,4 @@ renderer.setAnimationLoop((now) => {
   room.userData.fade.set(side);
   renderer.render(scene, camera);
 });
-window.kitchenScene = { scene, camera, controls, room, kit, renderer };
+window.kitchenScene = { scene, camera, controls, room, kit, renderer, tour };
