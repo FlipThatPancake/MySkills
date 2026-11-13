@@ -44,4 +44,5 @@ let last = performance.now();
 renderer.setAnimationLoop((now) => { const dt = Math.min(0.1, (now - last) / 1000); last = now; controls.update(); shell.userData.view(camera, controls.target, dt); renderer.render(scene, camera); });
 // shellTest.look(dist, az, el, target?) jumps the camera at once (the fades settle in about a second) for screenshots.
 const look = (d, a, e, t) => { if (t) controls.target.set(...t); camera.position.copy(controls.target).add(new THREE.Vector3().setFromSphericalCoords(d, THREE.MathUtils.degToRad(90 - e), THREE.MathUtils.degToRad(a))); controls.update(); shell.userData.view(camera, controls.target, 10); };
-window.shellTest = { camera, controls, shell, kit, look };
+const at = (pos, t) => { controls.target.set(...t); camera.position.set(...pos); controls.update(); shell.userData.view(camera, controls.target, 10); };   // camera at a position (e.g. eye height 1600)
+window.shellTest = { camera, controls, shell, kit, look, at };

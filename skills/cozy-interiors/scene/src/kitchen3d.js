@@ -120,10 +120,11 @@ export function createKit() {
     sideVis: { value: 1 },
     // Own copies of the fill and line materials, so a group can fade on its own: kit.useFade(group, fa) swaps them in, fa.set(a) fades it.
     fadable() {
-      const fa = { fill: Object.assign(fill.clone(), {}), mid: biased(lineMid.clone()), lo: biased(lineLo.clone()), seam: biased(seamLine.clone()),
+      const hc = (h) => { const m = h.clone(); Object.assign(m.uniforms, hullU, { uOpacity: { value: 1 } }); return m; };   // own opacity; resolution and view fade stay shared
+      const fa = { hull: hc(hull), hullLo: hc(hullLo), fill: fill.clone(), mid: biased(lineMid.clone()), lo: biased(lineLo.clone()), seam: biased(seamLine.clone()),
         twins: [],
         // The group's depth twins follow it: gone when it is invisible, there while it fades (else hidden parts of the group would show through).
-        set(a) { fa.twins.forEach((t) => { t.visible = a > 0.001 && (t.visible || a < 0.999); }); fa.fill.uniforms.uOpacity.value = a; fa.mid.opacity = fa.lo.opacity = fa.seam.opacity = a; fa.fill.transparent = fa.mid.transparent = fa.lo.transparent = fa.seam.transparent = a < 0.999; } };
+        set(a) { fa.twins.forEach((t) => { t.visible = a > 0.001 && (t.visible || a < 0.999); }); fa.hull.uniforms.uOpacity.value = fa.hullLo.uniforms.uOpacity.value = a; fa.hull.transparent = fa.hullLo.transparent = a < 0.999; fa.fill.uniforms.uOpacity.value = a; fa.mid.opacity = fa.lo.opacity = fa.seam.opacity = a; fa.fill.transparent = fa.mid.transparent = fa.lo.transparent = fa.seam.transparent = a < 0.999; } };
       Object.assign(fa.fill.uniforms, viewFade);   // clone() copied the values; share the view fade again
       fadables.push(fa);
       return fa;
@@ -131,6 +132,7 @@ export function createKit() {
     useFade(group, fa) {
       group.traverse((o) => {
         if (o.isMesh && o.material === fill) { o.material = fa.fill; o.children.forEach((c) => { if (c.material === depth) fa.twins.push(c); }); }
+        else if (o.isMesh && (o.material === hull || o.material === hullLo)) o.material = o.material === hull ? fa.hull : fa.hullLo;
         else if (o.isLineSegments2) o.material = o.material === lineMid ? fa.mid : o.material === lineLo ? fa.lo : o.material === seamLine ? fa.seam : o.material;
       });
     },

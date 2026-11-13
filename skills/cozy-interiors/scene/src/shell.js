@@ -112,9 +112,9 @@ export function roomShell(kit, plan) {
     holder.position.set(e.a[0], 0, e.a[1]);
     holder.rotation.y = ang;
     const dir = [(e.b[0] - e.a[0]) / e.len, (e.b[1] - e.a[1]) / e.len], zc = (z0 + z1) / 2;
-    holder.userData = { part: 'wall', edge: e, fade: 0, dir, n: [lz.x, lz.z], zc, len: e.len, fa: kit.fadable(), glass: [], hulls: [] };
+    holder.userData = { part: 'wall', edge: e, fade: 0, dir, n: [lz.x, lz.z], zc, len: e.len, fa: kit.fadable(), glass: [] };
     kit.useFade(holder, holder.userData.fa);
-    holder.traverse((o) => { if (o !== holder && o.userData.glass === true) holder.userData.glass.push(o); if (o.isMesh && kit.hulls.includes(o.material)) holder.userData.hulls.push(o); });
+    holder.traverse((o) => { if (o !== holder && o.userData.glass === true) holder.userData.glass.push(o); });
     // A faint line on the floor where the wall stands (broken at doors) stays when the wall fades away.
     const at = (u, z) => [e.a[0] + dir[0] * u + lz.x * z, 1, e.a[1] + dir[1] * u + lz.z * z];
     const spans = [], cuts = ops.filter((o) => o.kind === 'door').sort((p, q) => p.u0 - q.u0);
@@ -129,7 +129,7 @@ export function roomShell(kit, plan) {
   if (plan.ceiling !== false) for (const room of plan.rooms) {
     const c = kit.solid(new THREE.ExtrudeGeometry(floorShape(room.outline), { depth: CEIL, bevelEnabled: false }), 0, H, 0);
     c.rotation.x = -Math.PI / 2;
-    c.userData = { part: 'ceiling', room: room.name, outline: room.outline, fade: 0, fa: kit.fadable(), glass: [], hulls: [] };
+    c.userData = { part: 'ceiling', room: room.name, outline: room.outline, fade: 0, fa: kit.fadable(), glass: [] };
     kit.useFade(c, c.userData.fa);
     ceilings.push(c); g.add(c);
   }
@@ -137,9 +137,9 @@ export function roomShell(kit, plan) {
   g.userData.walls = walls; g.userData.ceilings = ceilings; g.userData.plan = plan;
 
   // view(camera, target, dt, opts): call each frame with the orbit camera and its target.
-  //  - walls and ceilings that stand between the camera and the focus area round the target fade away (smoothly, over about 3 degrees of view), with their frames, glass and door leaf;
+  //  - outside the rooms (or above the ceiling) an outer wall fades once the camera is past it and the ceilings fade once the camera is above them; inside a room only a wall that crosses the camera-to-target line fades. Fades ramp over about 3 degrees of view, frames, glass and door leaf go with their wall;
   //  - everything thins into the backdrop with distance from the target, the radius scaling with the camera distance: zoomed in shows a soft-edged cutout of one area, zoomed out covers the whole plan.
-  // opts: r0, r1 (fade radii as fractions of the camera distance, default 0.7 and 1.6), focus (focus-area radius as a fraction of the distance, 0.12, at most focusMax = 900 mm), rate (fade-in/out speed per second, 14).
+  // opts: r0, r1 (fade radii as fractions of the camera distance, default 0.7 and 1.6, with floors r0Min 2500 and r1Min 5000 mm), focus (focus-area radius as a fraction of the distance, 0.12, at most focusMax = 900 mm), rate (fade-in/out speed per second, 14).
   const sat = (x) => Math.min(1, Math.max(0, x)), S = (x) => { x = sat(x); return x * x * (3 - 2 * x); };
   const inside = (pt, o) => {   // signed distance from a point to a polygon in plan: positive inside
     let d = 1e9, ins = false;
@@ -170,19 +170,27 @@ export function roomShell(kit, plan) {
   };
   g.userData.view = (camera, target, dt = 1 / 60, o = {}) => {
     const dist = camera.position.distanceTo(target), w3 = Math.max(1, dist * Math.sin(3 * Math.PI / 180)), f = Math.min((o.focus ?? 0.12) * dist, o.focusMax ?? 900), k = 1 - Math.exp(-dt * (o.rate ?? 14));
-    kit.setViewFade(target, dist * (o.r0 ?? 0.7), dist * (o.r1 ?? 1.6));
+    kit.setViewFade(target, Math.max(dist * (o.r0 ?? 0.7), o.r0Min ?? 2500), Math.max(dist * (o.r1 ?? 1.6), o.r1Min ?? 5000));
     C.copy(camera.position);
+    // Regime B (camera inside a room, below the ceiling): everything stands except a wall the camera-to-focus line crosses.
+    // Regime A (outside, or above the ceiling): an outer wall fades once the camera is past its plane, a ceiling once the camera is above it; a shared wall fades only when it lies between camera and focus.
+    // `inside` blends the two over the same 3 degree width, so nothing pops when the camera crosses a wall or the ceiling.
+    const sdIn = Math.max(...plan.rooms.map((r) => inside([C.x, C.z], r.outline)));
+    const inside01 = S(sdIn / w3 + 0.5) * S((H - C.y) / w3 + 0.5);
     const spots = [[0, 0], [f, 0], [-f, 0], [0, f], [0, -f]];
     for (const w of blockers) {
-      let want = 0;
-      for (const [dx, dz] of spots) { P.set(target.x + dx, target.y, target.z + dz); want = Math.max(want, blocks(w, w3)); }
       const d = w.userData;
+      let ray = 0;
+      for (const [dx, dz] of spots) { P.set(target.x + dx, target.y, target.z + dz); ray = Math.max(ray, blocks(w, w3)); }
+      let outer = ray;
+      if (d.part === 'ceiling') outer = S((C.y - (H + CEIL / 2)) / w3 + 0.5);
+      else if (!d.edge.shared) outer = S(((C.x - d.edge.a[0]) * d.edge.out[0] + (C.z - d.edge.a[1]) * d.edge.out[1] - T / 2) / w3 + 0.5);
+      const want = inside01 * ray + (1 - inside01) * outer;
       d.fade += (want - d.fade) * k; if (Math.abs(d.fade - want) < 1e-3) d.fade = want;
       const a = 1 - d.fade;
       d.fa.set(a);
       w.visible = a > 0.002;
       for (const gl of d.glass) gl.material.opacity = 0.35 * a;
-      for (const h of d.hulls) h.visible = a > 0.999;
     }
   };
   return g;
