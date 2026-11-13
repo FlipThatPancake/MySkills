@@ -1,0 +1,260 @@
+/* ── settings-panel (19:870) — click-pinned until a click lands outside.
+   TRAP: tab and body are ONE closed `<path>` with panel-shape.svg's inner
+   shadow; any second contour seams (the filter rims its own edge, corners
+   step, SVG vs. CSS shadows never match). buildPanelPath(): `shift` moves
+   every x LEFT of the x=248/280 anchor; `H` REDRAWS the bottom-anchored
+   y-values (773.76, 741.76) — never stretch (flattens the 32u corners). The
+   default filter region tracks H; user-unit primitives scale with --u. ── */
+:root { --setting-blue: #4894f8; }
+.settings-panel {
+  position: absolute;
+  right: calc(37 * var(--u));
+  top: calc(26 * var(--u));
+  /* Unitless design width, read by the wiring as the path's viewBox width —
+     one source for both. The widest row plus the 40u scroll padding needs ~299. */
+  --panel-w: 320;
+  width: calc(var(--panel-w) * var(--u));
+  /* Content-driven height, capped at the design's 773.76u and at
+     `--panel-avail-h` (viewport-bottom margin). `.settings-panel-shape`'s
+     viewBox is written from this box's height, so the shape rides it. */
+  height: auto;
+  max-height: min(calc(773.76 * var(--u)), var(--panel-avail-h, calc(773.76 * var(--u))));
+  min-height: calc(88.3223 * var(--u));
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  /* The slide rides `transform`, NOT `translate`: `.content-layer-right`'s
+     re-centering IS a `translate`, and the later rule would silently win,
+     separating the panel from its button past the scale cap. `translate` and
+     `transform` compose, so both survive. */
+  transform: translateY(calc(-8 * var(--u)));
+  pointer-events: none;
+  transition: opacity .3s cubic-bezier(.22, 1, .36, 1), transform .33s cubic-bezier(.22, 1, .36, 1);
+}
+.settings-panel.is-visible {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+/* The whole silhouette — one path, one filter. The viewBox is `0 0 W H`
+   (W = `--panel-w`) in design units, so one unit is one --u and the 32u
+   corners hold. `preserveAspectRatio:none`: JS keeps the aspects matching, so
+   a sub-pixel mismatch shifts the bottom edge imperceptibly instead of
+   letterboxing a gap. TRAP: two shapes let the tab's filter rim its own
+   bottom edge (a stripe across the panel); sizing by width alone puts all
+   slack left of the right-pinned tab, over hide-hud. */
+.settings-panel-shape {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.settings-panel-viewport {
+  position: relative;
+  /* flex:1 1 auto + min-height:0 (not height:100%): the panel settles on its
+     content size first, then this shrinks to the remainder and scrolls. */
+  flex: 1 1 auto;
+  min-height: 0;
+  box-sizing: border-box;
+  /* Bottom 32u: at 20u the last row reads as clipped, undercutting the 26u
+     side inset. */
+  padding: calc(82 * var(--u)) calc(26 * var(--u)) calc(32 * var(--u));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.settings-panel-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: calc(20 * var(--u));
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #ababab transparent;
+  /* Without this, a wheel or scrollIntoView hitting this list's scroll limit
+     CHAINS into #oven-gen3-screen and shoves the whole oven off-screen. */
+  overscroll-behavior: contain;
+}
+/* Scroll-bar (22:1375) is optional — only content that outgrows the panel
+   earns one (`.has-scroll`). The 40u right padding is measured off Figma. */
+.settings-panel-body.has-scroll { padding-right: calc(40 * var(--u)); }
+.settings-panel-body::-webkit-scrollbar { width: calc(6 * var(--u)); }
+.settings-panel-body::-webkit-scrollbar-track { background: transparent; }
+.settings-panel-body::-webkit-scrollbar-thumb {
+  background: #ababab;
+  border: calc(1 * var(--u)) solid #b8b8b8;
+  border-radius: calc(21 * var(--u));
+}
+.settings-section-title {
+  height: calc(30 * var(--u));
+  display: flex;
+  align-items: center;
+  font-size: calc(14.74 * var(--u) * var(--fs));
+  font-weight: 500;
+  letter-spacing: calc(.5896 * var(--u));
+  text-transform: uppercase;
+  color: #929292;
+}
+.setting-row {
+  height: calc(24 * var(--u));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(8 * var(--u));
+}
+.setting-label {
+  white-space: nowrap;
+  font-size: calc(13.743 * var(--u) * var(--fs));
+  font-weight: 500;
+  letter-spacing: calc(.5497 * var(--u));
+  text-transform: uppercase;
+  color: #292929;
+}
+.setting-adjustment {
+  font-size: calc(13.743 * var(--u) * var(--fs));
+  font-weight: 500;
+  letter-spacing: calc(.5497 * var(--u));
+  text-transform: uppercase;
+  text-align: right;
+}
+.setting-adjustment--link { color: #227ff8; }
+/* @sec:settings-rows — Language toggles the route's chrome/readout/hints
+   between English and Chinese; this row's click handler flips it. */
+button.setting-adjustment--link {
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  transition: opacity .15s ease;
+}
+button.setting-adjustment--link:hover { opacity: .7; }
+button.setting-adjustment--link:active { opacity: .55; }
+.toggle-switch {
+  display: flex;
+  align-items: center;
+  width: calc(51.6 * var(--u));
+  height: calc(21.11 * var(--u));
+  padding: calc(2.4 * var(--u));
+  box-sizing: border-box;
+  background: rgba(245, 245, 245, .9);
+  border: 0;
+  border-radius: calc(4 * var(--u));
+  cursor: pointer;
+}
+.toggle-switch-thumb {
+  width: calc(23.254 * var(--u));
+  height: calc(16.31 * var(--u));
+  border-radius: calc(4 * var(--u));
+  background: #bcbcbc;
+  translate: 0 0;
+  transition: translate .18s cubic-bezier(.22, 1, .36, 1), background .18s ease;
+}
+/* Track content width 51.6-2*2.4=46.8u minus thumb 23.254u = 23.546u travel. */
+.toggle-switch[aria-checked="true"] .toggle-switch-thumb {
+  background: var(--setting-blue);
+  translate: calc(23.546 * var(--u)) 0;
+}
+
+/* Word segmented toggle — the Settings control shape for 2+ named options as
+   one group (beside `.toggle-switch` bool and `.setting-adjustment--link`
+   click-cycle). */
+.seg-toggle {
+  display: flex;
+  background: rgba(245, 245, 245, .9);
+  border-radius: calc(4 * var(--u));
+  padding: calc(2.4 * var(--u));
+  gap: calc(2 * var(--u));
+}
+.seg-toggle-option {
+  flex: none;
+  padding: 0 calc(8 * var(--u));
+  height: calc(16.31 * var(--u));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: calc(3 * var(--u));
+  background: transparent;
+  color: #767676;
+  font-size: calc(11 * var(--u) * var(--fs));
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background .15s ease, color .15s ease;
+}
+.seg-toggle-option:hover:not([aria-checked="true"]) { background: rgba(230, 230, 230, .9); }
+.seg-toggle-option[aria-checked="true"] {
+  background: var(--setting-blue);
+  color: #fff;
+}
+
+/* Oven-scale stepper — no Figma node exists; borrows the toggle-switch's
+   track colour and 4u radius. */
+.setting-stepper { display: flex; align-items: center; gap: calc(8 * var(--u)); }
+.setting-stepper-btn {
+  flex: none;
+  width: calc(21.11 * var(--u));
+  height: calc(21.11 * var(--u));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: rgba(245, 245, 245, .9);
+  border: 0;
+  border-radius: calc(4 * var(--u));
+  color: #292929;
+  font-size: calc(13.743 * var(--u) * var(--fs));
+  line-height: 1;
+  cursor: pointer;
+  transition: background .15s ease;
+}
+.setting-stepper-btn:hover:not(:disabled) { background: rgba(230, 230, 230, .9); }
+.setting-stepper-btn:active:not(:disabled) { background: rgba(216, 216, 216, .9); }
+.setting-stepper-btn:disabled { opacity: .35; cursor: not-allowed; pointer-events: none; }
+/* Fixed width (not min-width): a content-sized value would shift the +/-
+   buttons on every change. Sized for "150%". */
+.setting-stepper-value { flex: none; width: calc(40 * var(--u)); text-align: center; }
+
+/* Mode-knob-step slider — no Figma node; takes the toggle-switch's colours.
+   Two lines: beside the label it is too short to set by mouse. `--fill` is
+   the filled share, written by "settings-panel-rows" JS. */
+.setting-row--slider { height: auto; flex-wrap: wrap; row-gap: calc(8 * var(--u)); }
+/* Dependent rows (data-depends-on): dimmed and inert while their parent switch is off. */
+.setting-row--disabled { opacity: .4; pointer-events: none; }
+/* Word toggles are wider than the panel beside their label: stack them. */
+.setting-row--stacked { height: auto; flex-direction: column; align-items: flex-start; row-gap: calc(8 * var(--u)); }
+.setting-slider {
+  flex: 1 0 100%;
+  height: calc(16.31 * var(--u));
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.setting-slider::-webkit-slider-runnable-track {
+  height: calc(6 * var(--u));
+  border-radius: calc(4 * var(--u));
+  background: linear-gradient(to right, var(--setting-blue) var(--fill, 50%), rgba(225, 225, 225, .9) var(--fill, 50%));
+}
+.setting-slider::-moz-range-track {
+  height: calc(6 * var(--u));
+  border-radius: calc(4 * var(--u));
+  background: linear-gradient(to right, var(--setting-blue) var(--fill, 50%), rgba(225, 225, 225, .9) var(--fill, 50%));
+}
+.setting-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: calc(16.31 * var(--u));
+  height: calc(16.31 * var(--u));
+  margin-top: calc(-5.155 * var(--u));
+  border: 0;
+  border-radius: calc(4 * var(--u));
+  background: var(--setting-blue);
+}
+.setting-slider::-moz-range-thumb {
+  width: calc(16.31 * var(--u));
+  height: calc(16.31 * var(--u));
+  border: 0;
+  border-radius: calc(4 * var(--u));
+  background: var(--setting-blue);
+}
