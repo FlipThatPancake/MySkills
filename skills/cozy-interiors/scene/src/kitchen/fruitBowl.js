@@ -9,7 +9,8 @@ export function fruitBowl(kit) {
   // The bowl: 240 mm across, 85 mm high, a thick-lipped dish with a small foot and a thick base the fruit sits on.
   const H = 85, prof = [];
   const rOut = (y) => { const t = y / H; return 50 + 70 * (1 - (1 - t) * (1 - t)); };
-  for (let i = 0; i <= 10; i++) { const y = H * i / 10; prof.push(new T.Vector2(i === 0 ? 0.01 : rOut(y), y)); }
+  prof.push(new T.Vector2(0.01, 0), new T.Vector2(44, 0), new T.Vector2(47, 5));   // a flat foot ring, so it stands instead of rocking on a point
+  for (let i = 1; i <= 10; i++) { const y = H * i / 10; prof.push(new T.Vector2(rOut(y), y)); }
   prof.push(new T.Vector2(116, H + 0.5));
   for (let i = 10; i >= 1; i--) { const y = 46 + (H - 46) * i / 10; prof.push(new T.Vector2(rOut(y) - 5, y)); }
   prof.push(new T.Vector2(0.01, 46));

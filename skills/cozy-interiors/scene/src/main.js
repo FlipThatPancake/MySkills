@@ -19,6 +19,14 @@ kit.keepParts = new URLSearchParams(location.search).has('check');
 const room = buildKitchen(kit);
 scene.add(room);
 kit.setOpacity(1, 1);
+// 4× detail on unless the address says ?plain; the Settings switch flips it.
+const detailSwitch = document.getElementById('setting-detail');
+const plain = new URLSearchParams(location.search).has('plain');
+room.userData.setDetail(!plain);
+if (detailSwitch) {
+  detailSwitch.setAttribute('aria-checked', String(!plain));
+  detailSwitch.addEventListener('click', () => room.userData.setDetail(detailSwitch.getAttribute('aria-checked') === 'true'));
+}
 
 // The orbit: the front half of the room, from a little below eye level to nearly straight down.
 const controls = new OrbitControls(camera, canvas);

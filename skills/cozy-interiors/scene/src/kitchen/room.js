@@ -12,6 +12,7 @@ import { pan } from './pan.js';
 import { cuttingBoard } from './cuttingBoard.js';
 import { plant } from './plant.js';
 import { catScratches } from './catScratches.js';
+import { socket, lightSwitch, fridgeFeet } from './details.js';
 import SCENE from './scene.json';
 import { cat } from './cat.js';
 import { fruitBowl } from './fruitBowl.js';
@@ -40,7 +41,7 @@ export function buildKitchen(kit) {
   const put = (g, x, y, z) => { g.position.set(x, y, z); room.add(g); return g; };
   // Every object comes from scene.json: which asset, where (`at`, mm), `turn` in degrees about the vertical, and what it stands on (`mount`, read by the checks).
   // The oven column and the hero oven take the niche worked out above; the lamp and the scratches still draw themselves in kitchen millimetres, so they sit at the origin.
-  const ASSETS = { baseRun, hob, hood, wallCabinets, counterOven, fridge, fruitBowl, pan, cuttingBoard, plant, catScratches, pendantLamp,
+  const ASSETS = { baseRun, hob, hood, wallCabinets, counterOven, fridge, fruitBowl, pan, cuttingBoard, plant, catScratches, pendantLamp, socket, lightSwitch, fridgeFeet,
     ovenColumn: (k) => ovenColumn(k, { x: OVEN.x + OVEN.w / 2 - 3300 - NICHE.w / 2, y: OVEN.y + OVEN.h / 2 - 100 - NICHE.h / 2, w: NICHE.w, h: NICHE.h }).group,
     builtinOven: (k) => builtinOven(k, { cx: OVEN_FACE.x, cy: OVEN_FACE.y, nicheW: NICHE.w, nicheH: NICHE.h }) };   // stand-in for the prototype's Blender oven
   const obj = {};
@@ -53,6 +54,8 @@ export function buildKitchen(kit) {
   }
   const pr = obj.plant, bowl = obj['fruit-bowl'];
   room.userData.objects = obj;
+  // The 4× detail pass can be switched off to compare (Settings, or ?plain in the address).
+  room.userData.setDetail = (on) => SCENE.objects.forEach((o) => { if (o.detail) obj[o.id].visible = on; });
   room.userData.SCENE = SCENE;
 
   // Back wall, side wall along the return's outer end, and floor: three planes that meet in a corner.
