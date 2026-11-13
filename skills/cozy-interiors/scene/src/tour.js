@@ -35,8 +35,10 @@ export function createTour({ THREE, camera, controls, room, home, cfg }) {
   const api = {
     get state() { return state; },
     get shot() { return shot && shot.name; },
+    // Where the camera looks while the tour owns it (a cut or a held shot), else null: the view fade follows this, not the orbit target.
+    get look() { return state === 'cuts' || state === 'still' ? lookAt : null; },
     // Hold shot i at its middle, to look at the compositions side by side (a contact sheet).
-    preview(i) { state = 'still'; controls.enabled = false; place(shots[i], 0.5); return shots[i].name; },
+    preview(i) { state = 'still'; controls.enabled = false; lookAt = place(shots[i], 0.5); return shots[i].name; },
     // `idleMs`: time since the last input. Returns true while the tour owns the camera (the orbit controls must not move it then).
     update(now, idleMs) {
       if (idleMs < C.after * 1000) {

@@ -182,6 +182,7 @@ export function roomShell(kit, plan) {
       const d = w.userData;
       let ray = 0;
       for (const [dx, dz] of spots) { P.set(target.x + dx, target.y, target.z + dz); ray = Math.max(ray, blocks(w, w3)); }
+      ray = S((ray - 0.15) / 0.7);   // a grazing line should not leave a wall half faded: settle partial values to 0 or 1 faster
       let outer = ray;
       if (d.part === 'ceiling') outer = S((C.y - (H + CEIL / 2)) / w3 + 0.5);
       else if (!d.edge.shared) outer = S(((C.x - d.edge.a[0]) * d.edge.out[0] + (C.z - d.edge.a[1]) * d.edge.out[1] - T / 2) / w3 + 0.5);

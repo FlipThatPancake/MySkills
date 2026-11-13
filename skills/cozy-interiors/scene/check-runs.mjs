@@ -1,8 +1,9 @@
 // node check-runs.mjs — checks for library/runs.js without a browser.
-// 1. fillWidths always returns widths that sum exactly to the length, every width standard, with at most one filler of under 100 mm.
+// 1. fillWidths always returns widths that sum exactly to the run length, every width standard, with at most one filler of under 100 mm.
 import { fillWidths, WIDTHS } from './src/library/runs.js';
+import { readFileSync } from 'node:fs';
 import { createKit } from './src/kitchen3d.js';
-import { testKitchen, CORNER_FILLER } from './src/library/test-kitchen.js';
+import { buildScene } from './src/scene-build.js';
 let bad = 0, n = 0;
 for (let len = 600; len <= 4800; len += 10) {
   for (const off of [0, 3, 7]) { if (off) { const r = fillWidths(len + off).fill; if (r.reduce((s, m) => s + m.w, 0) !== len + off) { bad++; console.log("BAD odd", len + off); } n++; } }
@@ -17,14 +18,17 @@ for (let len = 600; len <= 4800; len += 10) {
 console.log(bad ? `fillWidths: ${bad} of ${n} lengths wrong` : `fillWidths: ${n} lengths sum exactly`);
 
 
-// 2. Swing check on the test kitchen: open every pair of fronts together, stepwise, and report any that touch (a door leaf is a line from its hinge, a drawer a box,
-// with no clearance added), or that reach into another run's cabinets. Plan coordinates are world mm.
+// 2. Swing check on a scene (node check-runs.mjs [scene.json], default scenes/l-kitchen.json): open every pair of runs' fronts together, stepwise, and report any that touch
+// (a door leaf is a line from its hinge, a drawer a box, with no clearance added), or that reach into another run's cabinets. Plan coordinates are world mm.
 const rad = Math.PI / 180, PAD = 0, STEPS = [0.25, 0.5, 0.75, 1];
 const kit = createKit();
+const sceneFile = process.argv[2] || new URL('./scenes/l-kitchen.json', import.meta.url).pathname;
+const S = JSON.parse(readFileSync(sceneFile, 'utf8'));
 const world = (r, x, z) => [r.x + x * Math.cos(r.rot) + z * Math.sin(r.rot), r.z - x * Math.sin(r.rot) + z * Math.cos(r.rot)];
-function shapes(filler) {
-  const { runs } = testKitchen(kit, { filler });
-  const bodies = runs.filter((r) => r.name === 'A' || r.name === 'B').map((r) => ({ name: r.name, pts: [[0, -r.depth], [r.length, -r.depth], [r.length, 0], [0, 0]].map(([x, z]) => world(r, x, z)) }));
+function shapes() {
+  const { objects } = buildScene(kit, S, { assets: ['baseRun', 'wallRun'] });
+  const runs = Object.entries(objects).map(([name, g]) => ({ name, obj: g, base: g.userData.scene.asset === 'baseRun', x: g.position.x, z: g.position.z, rot: g.rotation.y, length: g.userData.size.length, depth: g.userData.size.depth }));
+  const bodies = runs.filter((r) => r.base).map((r) => ({ name: r.name, pts: [[0, -r.depth], [r.length, -r.depth], [r.length, 0], [0, 0]].map(([x, z]) => world(r, x, z)) }));
   const fronts = [];
   for (const r of runs) for (const m of r.obj.userData.openables) {
     const o = m.userData.open;
@@ -47,8 +51,8 @@ const gap = (A, B) => {   // smallest distance between two shapes (0 when they c
   if (A.box && inPoly(pb[0][0], A.box) || B.box && inPoly(pa[0][0], B.box)) return 0;
   return d;
 };
-function clashes(filler) {
-  const { fronts, bodies } = shapes(filler), out = [];
+function clashes() {
+  const { fronts, bodies } = shapes(), out = [];
   for (let i = 0; i < fronts.length; i++) {
     for (const b of bodies) if (b.name !== fronts[i].run && fronts[i].yr[0] < 900 && gap(fronts[i].at(1), { box: b.pts }) <= PAD) out.push(`${fronts[i].label} reaches into run ${b.name}`);
     for (let j = i + 1; j < fronts.length; j++) {
@@ -59,10 +63,6 @@ function clashes(filler) {
   }
   return [...new Set(out)];
 }
-if (process.env.DBG) { const s = shapes(0); const d = s.fronts.filter((f) => f.kind === "drawer"); console.log(JSON.stringify(d.map((f) => [f.label, f.yr, f.at(1).box]))); }
-let min = null;
-for (let f = 0; f <= 800; f += 10) if (!clashes(f).length) { min = f; break; }
-const atDefault = clashes(CORNER_FILLER);
-console.log(`swing check: minimum corner filler ${min} mm; test kitchen uses ${CORNER_FILLER} mm: ${atDefault.length ? atDefault.join('; ') : 'no front touches another'}`);
-if (min !== null && CORNER_FILLER < min) console.log(`  CORNER_FILLER in test-kitchen.js should be at least ${min}`);
-process.exit(bad || atDefault.length ? 1 : 0);
+const found = clashes();
+console.log(`swing check (${sceneFile.replace(/^.*\//, '')}): ${found.length ? found.join('; ') : 'no front touches another'}`);
+process.exit(bad || found.length ? 1 : 0);
