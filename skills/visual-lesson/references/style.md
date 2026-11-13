@@ -44,7 +44,7 @@ Assign the roles in the lesson plan, and add an accent to a slide only when that
 - Lines are thin and crisp: 1.5–3 units for structure, and 3–5 for the highlighted thing.
 - Pills are fully rounded, with a thin outline and a leading dot in the role colour ("LASER SCAN", "PARTICLE FILTER").
 - A technical-drawing feel works well: dimension lines with end ticks ("3 m"), rulers with a few labelled ticks, and zoom callouts that join a small square to an enlarged copy.
-- Objects are simple but real-looking when that helps: a robot, a stopwatch, a cannon, a bookshelf. Use flat vectors with light shading.
+- Objects are simple but real-looking: a battery, a bulb, a robot, a stopwatch. Draw them as inline SVG with flat colour, a few soft gradients, and a highlight. When a drawing would take long and you can download files, a Google Noto emoji (Apache 2.0, `https://api.iconify.design/noto/<name>.svg`) may replace it; paste its SVG into the page so the lesson works offline.
 - Arrows have thin, clean heads. A curved yellow arrow means "this value goes there". Label arrows with a verb when they carry meaning.
 - Emphasis tools: a faint ghost of the previous state under the new one, strike-through and replace, a `???` placeholder for an unknown, a brace with a label, and a title that transforms in place.
 
