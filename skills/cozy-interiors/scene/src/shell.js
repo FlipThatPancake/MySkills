@@ -177,7 +177,9 @@ export function roomShell(kit, plan) {
     // `inside` blends the two over the same 3 degree width, so nothing pops when the camera crosses a wall or the ceiling.
     const sdIn = Math.max(...plan.rooms.map((r) => inside([C.x, C.z], r.outline)));
     const inside01 = S(sdIn / w3 + 0.5) * S((H - C.y) / w3 + 0.5);
-    const spots = [[0, 0], [f, 0], [-f, 0], [0, f], [0, -f]];
+    // Focus samples: the target and four points round it, those inside some room or within a wall's thickness of one (a sample out past an outer wall is not part of the view).
+    const near = (dx, dz) => Math.max(...plan.rooms.map((r) => inside([target.x + dx, target.z + dz], r.outline))) > -T;
+    const spots = [[0, 0], [f, 0], [-f, 0], [0, f], [0, -f]].filter(([dx, dz], i) => i === 0 || near(dx, dz));
     for (const w of blockers) {
       const d = w.userData;
       let ray = 0;
