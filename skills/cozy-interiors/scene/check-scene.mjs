@@ -14,18 +14,22 @@ const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=sw
 const page = await browser.newPage();
 const errors = [];
 page.on('pageerror', (e) => errors.push(String(e)));
+if (process.env.DEBUG) page.on('console', (m) => console.log(m.text()));
 await page.goto('file://' + join(here, 'kitchen-scene.html') + '?check');
 await page.waitForFunction(() => window.kitchenScene);
+if (process.env.DEBUG) await page.evaluate(() => { globalThis.DEBUG = true; });
 const report = await page.evaluate(() => {
   const { room, kit } = window.kitchenScene, T = kit.THREE, SCENE = room.userData.SCENE, objs = room.userData.objects, R = SCENE.room;
   const TOUCH = 2, REST = 3;   // mm: less overlap than TOUCH counts as touching; a resting object's foot is within REST of what holds it
   room.updateMatrixWorld(true);
   const toRoom = room.matrixWorld.clone().invert();
   // Every closed, solid part of an object, baked to room millimetres (lines, outline hulls, depth twins and flat pictures are not parts).
+  // Parts of a front that opens (a door, a drawer) belong to that front, not to the object around it.
+  const inFront = (o, root) => { for (let p = o; p && p !== root; p = p.parent) if (p.userData.open) return true; return false; };
   const partsOf = (g) => {
     const list = [];
     g.traverse((o) => {
-      if (!o.isMesh || o.isLineSegments2 || kit.hulls.includes(o.material) || o.material === kit.depth) return;
+      if (!o.isMesh || o.isLineSegments2 || kit.hulls.includes(o.material) || o.material === kit.depth || inFront(o, g)) return;
       const geo = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone();
       geo.applyMatrix4(new T.Matrix4().multiplyMatrices(toRoom, o.matrixWorld));
       geo.computeBoundingBox();
@@ -54,13 +58,14 @@ const report = await page.evaluate(() => {
     if (m === 'on') {   // its bottom layer must sit on the top of another object's part (`inset` mm lower when it is set into it, like a hob in a worktop)
       const sink = o.inset || 0, foot = new T.Box3();
       for (const p of all) { const pos = p.geo.attributes.position; for (let k = 0; k < pos.count; k++) { v.fromBufferAttribute(pos, k); if (v.y <= box.min.y + 1) foot.expandByPoint(v); } }
-      // rays straight down from a 24 x 24 grid over that bottom layer: something must be within REST (plus the inset) under at least one of them
+      // rays straight down from a 64 x 64 grid over that bottom layer: something must be within REST (plus the inset) under at least one of them
       let held = null;
-      const down = new T.Vector3(0, -1, 0), N = 24;
+      const down = new T.Vector3(0, -1, 0), N = 64;   // fine enough to land on a 6 mm grate bar
+      const under = ids.filter((x) => x !== id).flatMap((x) => parts[x].map((q) => [x, q])).filter(([, q]) => q.box.max.y > box.min.y - REST - sink && q.box.max.y < box.min.y + sink + 1 && q.box.min.x <= foot.max.x && q.box.max.x >= foot.min.x && q.box.min.z <= foot.max.z && q.box.max.z >= foot.min.z);
       rc.far = REST + sink + 0.5;
-      for (let i = 0; i <= N && !held; i++) for (let j = 0; j <= N && !held; j++) {
+      for (let i = 0; i <= N && !held && under.length; i++) for (let j = 0; j <= N && !held; j++) {
         rc.set(new T.Vector3(foot.min.x + (foot.max.x - foot.min.x) * i / N, box.min.y + sink + 0.5, foot.min.z + (foot.max.z - foot.min.z) * j / N), down);
-        for (const other of ids) if (other !== id && !held) for (const q of parts[other]) if (q.box.max.y > box.min.y - REST && rc.intersectObject(q.mesh, false).length) { held = other; break; }
+        for (const [other, q] of under) if (rc.intersectObject(q.mesh, false).length) { held = other; break; }
       }
       rc.far = Infinity;
       if (held) o._on = held;
@@ -87,9 +92,16 @@ const report = await page.evaluate(() => {
     return votes >= 2;
   };
   const overlapBox = (a, b) => { const i = a.box.clone().intersect(b.box); if (i.isEmpty()) return null; const s = i.getSize(new T.Vector3()); return Math.min(s.x, s.y, s.z) < TOUCH ? null : i; };
-  const pokes = (a, b, i) => {   // does a vertex of a, 1 mm in from the overlap's faces, sit inside b?
+  // Does a point of a's surface (its corners, and points every 5 mm along its edges), 1 mm in from the overlap's faces, sit inside b?
+  // Edge points catch two slabs that cross like a plus sign, where no corner of either is inside the other.
+  const w = new T.Vector3(), q = new T.Vector3();
+  const pokes = (a, b, i) => {
     const p = a.geo.attributes.position, shrunk = i.clone().expandByScalar(-1);
-    for (let k = 0; k < p.count; k++) { v.fromBufferAttribute(p, k); if (shrunk.containsPoint(v) && inside(v, b)) return v.clone(); }
+    for (let k = 0; k < p.count; k++) {
+      v.fromBufferAttribute(p, k); w.fromBufferAttribute(p, k - (k % 3) + ((k + 1) % 3));
+      const n = Math.max(1, Math.ceil(v.distanceTo(w) / 5));
+      for (let j = 0; j < n; j++) { q.lerpVectors(v, w, j / n); if (shrunk.containsPoint(q) && inside(q, b)) return q.clone(); }
+    }
     return null;
   };
   for (let x = 0; x < ids.length; x++) for (let y = x + 1; y < ids.length; y++) {
@@ -104,6 +116,36 @@ const report = await page.evaluate(() => {
     if (worst && ((sa._on === B && worst.depth <= (sa.inset || 0) + 1) || (sb._on === A && worst.depth <= (sb.inset || 0) + 1))) worst = null;
     if (worst) issues.push({ rule: 'overlap', what: `${A} and ${B} pass through each other by about ${worst.depth.toFixed(0)} mm`, at: worst.at.toArray().map(Math.round) });
   }
+  // swing room: every door and drawer, opened step by step, must clear everything at rest; and each pair, both fully open, must clear each other.
+  const fronts = ids.flatMap((id) => (objs[id].userData.openables || []).map((f) => ({ f, id, o: f.userData.open })));
+  const pose = ({ f, o }, v) => { if (o.kind === 'door') f.rotation.y = o.dir * o.max * Math.PI / 180 * v; else f.position.z = o.max * v; f.updateMatrixWorld(true); };
+  const clash = (As, Bs) => {
+    let worst = 0;
+    for (const a of As) for (const b of Bs) {
+      const i = overlapBox(a, b); if (!i) continue;
+      if (a.isBox && b.isBox ? true : pokes(a, b, i) || pokes(b, a, i)) { const s = i.getSize(new T.Vector3()); worst = Math.max(worst, Math.min(s.x, s.y, s.z)); if (globalThis.DEBUG) console.log('clash', JSON.stringify(a.box), JSON.stringify(b.box)); }
+    }
+    return worst;
+  };
+  const amount = ({ o }, v) => o.kind === 'door' ? `${Math.round(o.max * v)}°` : `${Math.round(o.max * v)} mm`;
+  const still = ids.flatMap((id) => parts[id]).concat(fronts.flatMap((fr) => partsOf(fr.f).map((p) => ({ ...p, front: fr }))));
+  for (const fr of fronts) {
+    const others = still.filter((p) => p.front !== fr);
+    for (const v of [0.25, 0.5, 0.75, 1]) {
+      pose(fr, v);
+      const d = clash(partsOf(fr.f), others);
+      pose(fr, 0);
+      if (d) { issues.push({ rule: 'swing', what: `${fr.o.name} hits something at rest when opened ${amount(fr, v)} (by about ${d.toFixed(0)} mm)` }); break; }
+    }
+  }
+  for (let x = 0; x < fronts.length; x++) for (let y = x + 1; y < fronts.length; y++) {
+    const a = fronts[x], b = fronts[y];
+    pose(a, 1); pose(b, 1);
+    const d = clash(partsOf(a.f), partsOf(b.f));
+    pose(a, 0); pose(b, 0);
+    if (d) issues.push({ rule: 'swing', what: `${a.o.name} and ${b.o.name} collide when both are open (by about ${d.toFixed(0)} mm)` });
+  }
+
   const rests = ids.filter((id) => sceneOf(id)._on).map((id) => `${id} on ${sceneOf(id)._on}`);
   return { objects: ids.length, parts: ids.reduce((n, id) => n + parts[id].length, 0), issues, rests };
 });

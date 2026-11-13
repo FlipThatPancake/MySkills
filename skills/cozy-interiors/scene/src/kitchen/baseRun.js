@@ -7,6 +7,7 @@ export function baseRun(kit, { opening = true } = {}) {
   // Fronts that open (opening: true): the drawer unit's three drawers slide out, the hob unit's two doors swing open. Each is its own group, kept out of the merge,
   // with userData.open = { kind, v, target, ... }; the scene eases v toward target (0 shut, 1 open). Their units are hollow: the carcass has a notch there.
   const leaves = [];
+  const DOOR_MAX = 90;    // degrees the hinges allow (a 90° stop: at 100° the left door hit the open drawers); drawers run out `max` mm
   const leaf = (kind, px, pz, extra = {}) => { const t = kit.group(); leaves.push({ t, kind, px, pz, extra }); return t; };
 
   const D = 600, PL = 100, TOP = 860, CT = 900, FD = 18, RX = 600, RZ = 1500, MX = 3300;
@@ -81,7 +82,7 @@ export function baseRun(kit, { opening = true } = {}) {
   // Drawer unit: three equal drawers.
   const dh = (H - 6) / 3;
   for (let i = 0; i < 3; i++) {
-    const y = y0 + i * (dh + 3), p = opening ? leaf('drawer', 0, 0) : g;
+    const y = y0 + i * (dh + 3), p = opening ? leaf('drawer', 0, 0, { name: ['bottom drawer', 'middle drawer', 'top drawer'][i], max: 420 }) : g;
     front(p, 1801.5, y, 597, dh);
     hbar(p, 2100, y + dh - 45, 220);
     if (opening) {   // the drawer box behind its front: 12 mm sides, a back and a floor, 480 deep, 30 mm under the front's top
@@ -96,9 +97,12 @@ export function baseRun(kit, { opening = true } = {}) {
   hbar(g, 2850, ty + sh - 40, 320);
   front(g, 2401.5, ty, 897, sh);
   if (opening) {   // two doors on hinges at the unit's outer sides, a shelf inside and a rail under the shallow drawer
-    const dw = (900 - 9) / 2, hh = ty - 3 - y0, L = leaf('door', 2401.5, 2, { dir: -1 }), R = leaf('door', 2401.5 + 2 * dw + 3, 2, { dir: 1 });
-    front(L, 2401.5, y0, dw, hh); vbar(L, 2401.5 + dw - 30, y0 + hh - 100, 160);
-    front(R, 2401.5 + dw + 3, y0, dw, hh); vbar(R, 2401.5 + dw + 3 + 30, y0 + hh - 100, 160);
+    // A 40 mm filler strip at the left keeps the left door's hinge clear of the drawer unit: at its 90° stop its handle no longer meets the open drawers.
+    const FILL = 40, x0 = 2401.5 + FILL, dw = (900 - 9 - FILL) / 2, hh = ty - 3 - y0;
+    front(g, 2401.5, y0, FILL - 3, hh);
+    const L = leaf('door', x0, 2, { dir: -1, name: 'left hob-unit door', max: DOOR_MAX }), R = leaf('door', x0 + 2 * dw + 3, 2, { dir: 1, name: 'right hob-unit door', max: DOOR_MAX });
+    front(L, x0, y0, dw, hh); vbar(L, x0 + dw - 30, y0 + hh - 100, 160);
+    front(R, x0 + dw + 3, y0, dw, hh); vbar(R, x0 + dw + 3 + 30, y0 + hh - 100, 160);
     add(kit.box(2400 + SIDE, 420, -CR - 20, 900 - 2 * SIDE, SIDE, D - SIDE - CR - 20, { tone: 'lo' }));    // shelf, 20 mm back from the door line
     add(kit.box(2400 + SIDE, ty - 3 - SIDE, -CR, 900 - 2 * SIDE, SIDE, D - SIDE - CR, { tone: 'lo' }));     // rail under the shallow drawer
   } else twoDoors(g, 2400, 900, y0, ty - 3 - y0);

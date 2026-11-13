@@ -87,8 +87,8 @@ const moveFronts = (dt) => {
   for (const f of openables) {
     const o = f.userData.open;
     o.v += (o.target - o.v) * (1 - Math.exp(-dt * 7));
-    if (o.kind === 'door') f.rotation.y = o.dir * THREE.MathUtils.degToRad(100) * o.v;
-    else f.position.z = 420 * o.v;
+    if (o.kind === 'door') f.rotation.y = o.dir * THREE.MathUtils.degToRad(o.max) * o.v;
+    else f.position.z = o.max * o.v;
   }
 };
 

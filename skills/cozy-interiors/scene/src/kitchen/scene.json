@@ -14,7 +14,7 @@
     { "id": "fruit-bowl",    "asset": "fruitBowl",    "at": [300, 900, -330],         "mount": "on" },
     { "id": "plant",         "asset": "plant",        "at": [800, 900, -170],         "mount": "on" },
     { "id": "cutting-board", "asset": "cuttingBoard", "at": [1750, 904, -470],        "mount": "on" },
-    { "id": "pan",           "asset": "pan",          "at": [2639, 932, -418], "turn": -40, "mount": "on" },
+    { "id": "pan",           "asset": "pan",          "at": [2639, 940, -418], "turn": -40, "mount": "on" },
     { "id": "cat-scratches", "asset": "catScratches", "at": [0, 0, 0],                "mount": "lines" },
     { "id": "socket",        "asset": "socket",       "at": [2150, 1100, -600],       "mount": "wall", "detail": true },
     { "id": "light-switch",  "asset": "lightSwitch",  "at": [5230, 1150, -600],       "mount": "wall", "detail": true },
