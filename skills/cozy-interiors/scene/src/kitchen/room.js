@@ -12,7 +12,7 @@ import { pan } from './pan.js';
 import { cuttingBoard } from './cuttingBoard.js';
 import { plant } from './plant.js';
 import { catScratches } from './catScratches.js';
-import { socket, lightSwitch, fridgeFeet } from './details.js';
+import { socket, lightSwitch } from './details.js';
 import SCENE from './scene.json';
 import { cat } from './cat.js';
 import { fruitBowl } from './fruitBowl.js';
@@ -41,12 +41,14 @@ export function buildKitchen(kit) {
   const put = (g, x, y, z) => { g.position.set(x, y, z); room.add(g); return g; };
   // Every object comes from scene.json: which asset, where (`at`, mm), `turn` in degrees about the vertical, and what it stands on (`mount`, read by the checks).
   // The oven column and the hero oven take the niche worked out above; the lamp and the scratches still draw themselves in kitchen millimetres, so they sit at the origin.
-  const ASSETS = { baseRun, hob, hood, wallCabinets, counterOven, fridge, fruitBowl, pan, cuttingBoard, plant, catScratches, pendantLamp, socket, lightSwitch, fridgeFeet,
+  const ASSETS = { baseRun, hob, hood, wallCabinets, counterOven, fridge, fruitBowl, pan, cuttingBoard, plant, catScratches, pendantLamp, socket, lightSwitch,
     ovenColumn: (k) => ovenColumn(k, { x: OVEN.x + OVEN.w / 2 - 3300 - NICHE.w / 2, y: OVEN.y + OVEN.h / 2 - 100 - NICHE.h / 2, w: NICHE.w, h: NICHE.h }).group,
     builtinOven: (k) => builtinOven(k, { cx: OVEN_FACE.x, cy: OVEN_FACE.y, nicheW: NICHE.w, nicheH: NICHE.h }) };   // stand-in for the prototype's Blender oven
   const obj = {};
   for (const o of SCENE.objects) {
-    const g = ASSETS[o.asset](kit, o.params || {});
+    const params = { ...o.params };
+    if (o.asset === 'baseRun' && typeof location !== 'undefined' && new URLSearchParams(location.search).has('fixed')) params.opening = false;   // ?fixed: the old solid units, to compare
+    const g = ASSETS[o.asset](kit, params);
     g.rotation.y = (o.turn || 0) * Math.PI / 180;
     put(g, ...o.at);
     g.userData.scene = o;

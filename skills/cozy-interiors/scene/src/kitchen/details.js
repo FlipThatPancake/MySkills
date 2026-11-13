@@ -28,13 +28,3 @@ export function lightSwitch(kit) {
   g.add(kit.lines([[30, 43, D + 4.4], [56, 43, D + 4.4]]));                // its split line
   return kit.merge(g);
 }
-
-// The fridge's two front levelling feet, under the carcass corners, in front of the recessed plinth. Origin: the fridge's own origin.
-export function fridgeFeet(kit) {
-  const g = kit.group(), lo = { tone: 'lo', seg: 16 };
-  for (const x of [40, 870]) {
-    g.add(kit.cyl(x, 0, -14, 11, 6, lo));                                  // the pad on the floor
-    g.add(kit.cyl(x, 6, -14, 6, 34, lo));                                  // the threaded stem up to the carcass
-  }
-  return kit.merge(g);
-}

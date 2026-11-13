@@ -65,6 +65,33 @@ if (window.ResizeObserver) new ResizeObserver(resize).observe(canvas);
 let lastInput = performance.now(), tour = null;
 for (const ev of ['pointerdown', 'pointermove', 'wheel', 'keydown', 'touchstart']) addEventListener(ev, () => { lastInput = performance.now(); }, { capture: true, passive: true });
 
+// Opening fronts: a click (not a drag) on a drawer or door opens it, a second click shuts it. Each eases like the oven door, about 0.5 s.
+const openables = room.userData.objects['base-run'].userData.openables || [];
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+const frontAt = (e) => {
+  const r = canvas.getBoundingClientRect();
+  ndc.set((e.clientX - r.left) / r.width * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  const hit = ray.intersectObjects(room.children, true).find((h) => h.object.isMesh && !h.object.isLineSegments2);
+  for (let o = hit && hit.object; o; o = o.parent) if (o.userData.open) return o;
+  return null;
+};
+let downAt = null;
+canvas.addEventListener('pointerdown', (e) => { downAt = [e.clientX, e.clientY]; });
+canvas.addEventListener('pointerup', (e) => {
+  if (!downAt || Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 5) return;
+  const f = frontAt(e); if (f) f.userData.open.target = 1 - f.userData.open.target;
+});
+canvas.addEventListener('pointermove', (e) => { if (!e.buttons) canvas.style.cursor = frontAt(e) ? 'pointer' : ''; });
+const moveFronts = (dt) => {
+  for (const f of openables) {
+    const o = f.userData.open;
+    o.v += (o.target - o.v) * (1 - Math.exp(-dt * 7));
+    if (o.kind === 'door') f.rotation.y = o.dir * THREE.MathUtils.degToRad(100) * o.v;
+    else f.position.z = 420 * o.v;
+  }
+};
+
 let last = performance.now();
 renderer.setAnimationLoop((now) => {
   const dt = Math.max(0, Math.min(0.1, (now - last) / 1000)); last = now;
@@ -78,6 +105,7 @@ renderer.setAnimationLoop((now) => {
   } else tour = null;
   controls.update();
   room.userData.tick(dt, { butterfly: true });
+  moveFronts(dt);
   // Outside the side wall the window and its seam fade away over about 3 degrees.
   const cam = room.worldToLocal(camera.position.clone()), w3 = camera.position.distanceTo(controls.target) * Math.sin(rad(3));
   const s = Math.min(1, Math.max(0, (cam.x + 14 + w3 / 2) / w3)), side = s * s * (3 - 2 * s);
@@ -85,4 +113,4 @@ renderer.setAnimationLoop((now) => {
   room.userData.fade.set(side);
   renderer.render(scene, camera);
 });
-window.kitchenScene = { scene, camera, controls, room, kit };
+window.kitchenScene = { scene, camera, controls, room, kit, renderer };

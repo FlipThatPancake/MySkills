@@ -18,7 +18,6 @@
     { "id": "cat-scratches", "asset": "catScratches", "at": [0, 0, 0],                "mount": "lines" },
     { "id": "socket",        "asset": "socket",       "at": [2150, 1100, -600],       "mount": "wall", "detail": true },
     { "id": "light-switch",  "asset": "lightSwitch",  "at": [5230, 1150, -600],       "mount": "wall", "detail": true },
-    { "id": "fridge-feet",   "asset": "fridgeFeet",   "at": [4220, 0, 100],           "mount": "floor", "detail": true },
     { "id": "lamp",          "asset": "pendantLamp",  "at": [0, 0, 0],                "mount": "ceiling" }
   ]
 }

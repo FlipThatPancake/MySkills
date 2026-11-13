@@ -1,9 +1,13 @@
 // @js:kitchen-baseRun — L-shaped base run: main run (corner, sink, drawers, hob units) plus a return toward the camera, under one L countertop.
 // Origin: left-front-floor corner of the main run; x 0..3300, front at z = 0, wall at z = -600; the return reaches to z = +1500. Hob and oven are other elements.
-export function baseRun(kit) {
+export function baseRun(kit, { opening = true } = {}) {
   const T = kit.THREE;
   const g = kit.group();
   const add = (m, p = g) => (p.add(m), m);
+  // Fronts that open (opening: true): the drawer unit's three drawers slide out, the hob unit's two doors swing open. Each is its own group, kept out of the merge,
+  // with userData.open = { kind, v, target, ... }; the scene eases v toward target (0 shut, 1 open). Their units are hollow: the carcass has a notch there.
+  const leaves = [];
+  const leaf = (kind, px, pz, extra = {}) => { const t = kit.group(); leaves.push({ t, kind, px, pz, extra }); return t; };
 
   const D = 600, PL = 100, TOP = 860, CT = 900, FD = 18, RX = 600, RZ = 1500, MX = 3300;
   // Sink basin 500 x 400, 180 deep, in the main counter.
@@ -31,7 +35,11 @@ export function baseRun(kit) {
   // The holes in the carcass and the countertop are a few mm wider than the basin, so the basin's own walls are the only surface in the opening (no two faces in one plane).
   const GAP = 4;
   const CR = 15;   // the carcass front sits 15 mm behind the door backs, so its lines are never within a pixel of a door face at a distance
-  slab([[0, -D], [MX, -D], [MX, -CR], [RX - CR, -CR], [RX - CR, RZ], [0, RZ]], rect(BX0 - GAP, BZ0 + GAP, BX1 + GAP, BZ1 - GAP), PL, TOP - PL);
+  // A unit with fronts that open is hollow: the carcass outline steps back round it, leaving 18 mm sides and back.
+  const SIDE = 18, notch = (a, b) => [[b - SIDE, -CR], [b - SIDE, -D + SIDE], [a + SIDE, -D + SIDE], [a + SIDE, -CR]];
+  const OPEN_UNITS = opening ? [[1800, 2400], [2400, 3300]] : [];
+  slab([[0, -D], [MX, -D], [MX, -CR], ...OPEN_UNITS.slice().reverse().flatMap(([a, b]) => notch(a, b)), [RX - CR, -CR], [RX - CR, RZ], [0, RZ]], rect(BX0 - GAP, BZ0 + GAP, BX1 + GAP, BZ1 - GAP), PL, TOP - PL);
+  for (const [a, b] of OPEN_UNITS) add(kit.box(a + SIDE, PL, -CR, b - a - 2 * SIDE, SIDE, D - SIDE - CR, { tone: 'lo' }));   // the inside floor (the plinth is recessed under it)
   slab([[-10, -D], [MX + 10, -D], [MX + 10, 20], [RX + 20, 20], [RX + 20, RZ + 20], [-10, RZ + 20]],
     rect(BX0 - GAP, BZ0 + GAP, BX1 + GAP, BZ1 - GAP), TOP, CT - TOP);
 
@@ -73,15 +81,27 @@ export function baseRun(kit) {
   // Drawer unit: three equal drawers.
   const dh = (H - 6) / 3;
   for (let i = 0; i < 3; i++) {
-    const y = y0 + i * (dh + 3);
-    front(g, 1801.5, y, 597, dh);
-    hbar(g, 2100, y + dh - 45, 220);
+    const y = y0 + i * (dh + 3), p = opening ? leaf('drawer', 0, 0) : g;
+    front(p, 1801.5, y, 597, dh);
+    hbar(p, 2100, y + dh - 45, 220);
+    if (opening) {   // the drawer box behind its front: 12 mm sides, a back and a floor, 480 deep, 30 mm under the front's top
+      const bx0 = 1800 + SIDE + 4, bx1 = 2400 - SIDE - 4, by = y + 20, bh = dh - 50, bz = -16, BD = 480, lo = { tone: 'lo' };
+      add(kit.box(bx0, by, bz, 12, bh, BD, lo), p); add(kit.box(bx1 - 12, by, bz, 12, bh, BD, lo), p);
+      add(kit.box(bx0 + 12, by, bz - BD + 12, bx1 - bx0 - 24, bh, 12, lo), p);
+      add(kit.box(bx0 + 12, by, bz, bx1 - bx0 - 24, 10, BD - 12, lo), p);
+    }
   }
   // Hob unit: shallow drawer over two doors.
   const sh = 140, ty = y1 - sh;
   hbar(g, 2850, ty + sh - 40, 320);
   front(g, 2401.5, ty, 897, sh);
-  twoDoors(g, 2400, 900, y0, ty - 3 - y0);
+  if (opening) {   // two doors on hinges at the unit's outer sides, a shelf inside and a rail under the shallow drawer
+    const dw = (900 - 9) / 2, hh = ty - 3 - y0, L = leaf('door', 2401.5, 2, { dir: -1 }), R = leaf('door', 2401.5 + 2 * dw + 3, 2, { dir: 1 });
+    front(L, 2401.5, y0, dw, hh); vbar(L, 2401.5 + dw - 30, y0 + hh - 100, 160);
+    front(R, 2401.5 + dw + 3, y0, dw, hh); vbar(R, 2401.5 + dw + 3 + 30, y0 + hh - 100, 160);
+    add(kit.box(2400 + SIDE, 420, -CR - 20, 900 - 2 * SIDE, SIDE, D - SIDE - CR - 20, { tone: 'lo' }));    // shelf, 20 mm back from the door line
+    add(kit.box(2400 + SIDE, ty - 3 - SIDE, -CR, 900 - 2 * SIDE, SIDE, D - SIDE - CR, { tone: 'lo' }));     // rail under the shallow drawer
+  } else twoDoors(g, 2400, 900, y0, ty - 3 - y0);
 
   // Return: a local frame whose +z points out of the x = 600 face, local u runs from z = +1500 (0) to z = 0 (1500).
   const rg = kit.group();
@@ -123,5 +143,15 @@ export function baseRun(kit) {
   seg([TX + 12, 1090, TZ], [TX + 90, 1130, TZ], 7);
   add(kit.cyl(TX, 1078, TZ, 20, 22, { seg: 20 }));
 
-  return kit.merge(g);
+  const out = kit.merge(g);
+  // Each opening front: its parts move so the hinge (or the drawer's rest point) is the group's origin, then it is merged on its own.
+  out.userData.openables = leaves.map(({ t, kind, px, pz, extra }) => {
+    t.children.forEach((c) => { c.position.x -= px; c.position.z -= pz; });
+    const m = kit.merge(t);
+    m.position.set(px, 0, pz);
+    m.userData.open = { kind, v: 0, target: 0, ...extra };
+    out.add(m);
+    return m;
+  });
+  return out;
 }
