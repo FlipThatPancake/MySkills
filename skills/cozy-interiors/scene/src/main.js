@@ -61,7 +61,7 @@ controls.update();
 addEventListener('resize', resize);
 if (window.ResizeObserver) new ResizeObserver(resize).observe(canvas);
 
-// Idle tour (tour.js): a sway after 12 s idle, then video-style cuts to close-ups; input brings the camera home.
+// Idle tour (tour.js): a sway after 12 s idle, then video-style cuts between composed views; input brings the camera home.
 // ?cuts=<s> shortens the wait before the tour and before the cuts, to watch it quickly.
 const quick = Number(new URLSearchParams(location.search).get('cuts')) || 0;
 const home = { pos: camera.position.clone(), target: controls.target.clone() };

@@ -4,8 +4,16 @@
   "room": { "backWall": -600, "sideWall": -14, "floor": 0 },
   "camera": {
     "after": 12, "cutsAfter": 12, "cutEvery": 4,
-    "shots": ["hero-oven", "fruit-bowl", "pan", "plant", { "look": [2100, 1050, -450], "size": 1300 }, "fridge", "cutting-board",
-              { "look": [0, 1500, 750], "size": 1700, "from": [70, 10] }, "counter-oven"]
+    "shots": [
+      { "name": "down the worktop", "from": [3050, 1160, -80], "look": [500, 1020, -330], "fov": 34 },
+      { "name": "window corner", "from": [2300, 1350, 1500], "look": [200, 1250, 500], "fov": 30 },
+      { "name": "plant before the window", "from": [1950, 1180, -380], "look": [350, 1180, 520], "fov": 30 },
+      { "name": "pan and oven", "from": [1500, 1450, 1300], "look": [3250, 1000, -300], "fov": 26 },
+      { "name": "floor tiles", "from": [4900, 260, 1700], "look": [1600, 750, -300], "fov": 40 },
+      { "name": "along the run", "from": [180, 1150, 250], "look": [2900, 1000, -420], "fov": 30 },
+      { "name": "lamp and window", "from": [3000, 1150, 1900], "look": [900, 1650, 500], "fov": 32 },
+      { "name": "cozy overview", "from": [4700, 2350, 1900], "look": [1500, 950, -100], "fov": 36 }
+    ]
   },
   "objects": [
     { "id": "base-run",      "asset": "baseRun",      "at": [0, 0, 0],                "mount": "floor" },
