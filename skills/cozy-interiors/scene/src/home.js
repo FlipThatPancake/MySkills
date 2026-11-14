@@ -7,7 +7,7 @@
 //   An opening is { kind: 'window' | 'door' | 'arch', at (mm along the wall from `from`, to its middle), width, height, sill, hinge: 'l' | 'r', open (deg), to (area id: a click goes there), beyond: false (a real room lies beyond) }.
 //   Furniture faces the room as it stands: a wall's face is where an object's back sits.
 //   An object is { id, asset, at: [x, y, z], turn (deg about the vertical), mount: 'floor' | 'on' | 'wall' | 'ceiling' | 'lines', params, shadow: false, lift (mm: it stands on something this thick, like a rug) }; its contact shadow comes from the mount.
-import { halo, glow } from './sheet.js';
+import { halo } from './sheet.js';
 import { opening } from './openings.js';
 
 export const FADE = [0.15, 0.6];   // the planes thin out between these distances beyond an area's bounds, in area widths
@@ -36,7 +36,8 @@ export function buildHome(kit, home, registry) {
     feet[o.id] = sz && sz.length && sz.depth && sz.top < 1000 ? new T.Box3().setFromPoints([[0, 0, 0], [sz.length, 0, -sz.depth]].map(([x, y, z]) => new T.Vector3(x, y, z).applyMatrix4(g.matrixWorld))) : boxes[o.id];
   }
 
-  // ---- walls
+  // ---- walls: opaque planes in the page's own tone, so they hide whatever stands behind them and only the seams, frames and shadows show
+  const wallMat = new T.MeshBasicMaterial({ color: new T.Color('#f4f4f1'), toneMapped: false });
   const P = (a) => new T.Vector2(a[0], a[1]), near = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]) < 40;
   const walls = (home.walls || []).map((w, i) => {
     const len = Math.hypot(w.to[0] - w.from[0], w.to[1] - w.from[1]), d = [(w.to[0] - w.from[0]) / len, (w.to[1] - w.from[1]) / len], n = [d[1], -d[0]];
@@ -55,7 +56,7 @@ export function buildHome(kit, home, registry) {
     }
     const s = new T.Shape([[0, -4], [len, -4], [len, H], [0, H]].map(([a, y]) => new T.Vector2(a, y)));
     W.holes.forEach((h) => s.holes.push(new T.Path(h.map(([a, y]) => new T.Vector2(a, y)))));
-    const plane = new T.Mesh(new T.ShapeGeometry(s), kit.fadeFill); plane.position.z = -4;
+    const plane = new T.Mesh(new T.ShapeGeometry(s), wallMat); plane.position.z = -4;
     node.add(plane, W.frames);
     // seams: the wall meets the floor (broken where a door or arch lets the floor through), and the corner it makes with the next wall
     const seams = kit.group(); let a = 0;
@@ -77,7 +78,7 @@ export function buildHome(kit, home, registry) {
   // ---- floor and tiles
   const xs = walls.flatMap((w) => [w.from[0], w.to[0]]), zs = walls.flatMap((w) => [w.from[1], w.to[1]]);
   const bb = { x0: Math.min(...xs), x1: Math.max(...xs), z0: Math.min(...zs), z1: Math.max(...zs) };
-  const floor = new T.Mesh(new T.PlaneGeometry(bb.x1 - bb.x0 + 2 * EDGE, bb.z1 - bb.z0 + 2 * EDGE), kit.fadeFill);
+  const floor = new T.Mesh(new T.PlaneGeometry(bb.x1 - bb.x0 + 2 * EDGE, bb.z1 - bb.z0 + 2 * EDGE), wallMat);
   floor.rotation.x = -Math.PI / 2; floor.position.set((bb.x0 + bb.x1) / 2, -4, (bb.z0 + bb.z1) / 2);
   group.add(floor);
   if (home.tiles) {   // a 600 mm grid, square to the walls' own grid; it melts out 1.5 m beyond the walls
@@ -93,7 +94,7 @@ export function buildHome(kit, home, registry) {
   for (const o of home.objects || []) {
     if (o.shadow === false) continue;
     const b = feet[o.id], g = objects[o.id];
-    if (o.mount === 'ceiling') { if (o.asset === 'pendantLamp') shadows.add(glow(kit, 'floor', g.position.x, g.position.z, 1500, 1500, '255,236,200', 0.1, 1.2)); continue; }   // the lamp's pool of light, very faint
+    if (o.mount === 'ceiling') continue;   // it is daylight: a lamp casts no light and no shadow
     if (o.mount === 'floor') shadows.add(halo(kit, 'floor', b.min.x, b.max.x, b.min.z, b.max.z, (o.lift || 0) + 1.5, o.asset === 'rug' ? 0.14 : 0.26));
     else if (o.mount === 'on' && o.asset !== 'hob') shadows.add(halo(kit, 'floor', b.min.x, b.max.x, b.min.z, b.max.z, b.min.y + 1.5, 0.3));
     else if (o.mount === 'wall') {   // under a wall unit: on the wall it hangs from

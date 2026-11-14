@@ -42,8 +42,8 @@ export function createAreaScene(canvas, S) {
     return { target, az: h.az ?? 20, el: h.el ?? 15, dist: h.dist || fit(b) };
   };
   const fadeOf = (A) => {
-    const b = A.bounds, top = b.top || 2500, bx = b.x1 - b.x0, bz = b.z1 - b.z0, w = Math.max(bx, bz), r0 = 0;   // objects past the bounds thin from the edge: about 35% gone at 1 m, all gone at 2.2 m
-    return [(b.x0 + b.x1) / 2, top / 2 - 150, (b.z0 + b.z1) / 2, bx / 2, top / 2 + 300, bz / 2, FADE[0] * w, FADE[1] * w, r0, 2200];
+    const b = A.bounds, top = b.top || 2500, bx = b.x1 - b.x0, bz = b.z1 - b.z0, w = Math.max(bx, bz), r0 = 0;   // objects past the bounds thin from the edge: about 35% gone at 1 m, all gone at 2 m
+    return [(b.x0 + b.x1) / 2, top / 2 - 150, (b.z0 + b.z1) / 2, bx / 2, top / 2 + 300, bz / 2, FADE[0] * w, FADE[1] * w, r0, 2000];
   };
   const applyFade = (f) => {
     kit.setFade(new THREE.Vector3(f[0], f[1], f[2]), new THREE.Vector3(f[3], f[4], f[5]), f[6], f[7]);

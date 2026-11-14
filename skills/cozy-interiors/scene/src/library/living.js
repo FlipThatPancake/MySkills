@@ -2,7 +2,7 @@
 // Floor pieces have their origin in the middle of the footprint on the floor and their front toward +z (turn them to face a wall or each other);
 // wall pieces (picture, curtain) have it at the bottom middle, on the wall face, standing out toward +z.
 // sofa({ seats = 3, w, d = 900 }), armchair({ w = 880, d = 860 }), coffeeTable({ w = 1000, d = 600, h = 380 }), rug({ w = 2400, d = 1700, border = 70 }), shelf({ w = 800, h = 1800, d = 320, shelves = 5, seed }),
-// floorLamp({ h = 1650 }), picture({ w = 600, h = 800, seed }), sideboard({ w = 1600, h = 800, d = 420, doors = 3 }), bench({ w = 1200, d = 380, h = 450 }), curtain({ w = 1500, h = 2300, panels = 2 }).
+// floorLamp({ h = 1650 }), picture({ w = 600, h = 800, seed }), sideboard({ w = 1600, h = 800, d = 420, doors = 3 }), stool({ h = 650 }), bench({ w = 1200, d = 380, h = 450 }), curtain({ w = 1500, h = 2300, panels = 2 }).
 const rnd = (seed) => { let r = (seed || 1) * 9301 + 49297; return () => { r = (r * 9301 + 49297) % 233280; return r / 233280; }; };
 const lo = { tone: 'lo' };
 
@@ -100,6 +100,13 @@ export function bench(kit, { w = 1200, d = 380, h = 450 } = {}) {
   g.add(rb(0, h - TT, 0, w, TT, d, 8));
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) g.add(bx(sx * (w / 2 - 70), 0, sz * (d / 2 - 50), 46, h - TT, 46));
   g.add(bx(0, 120, 0, w - 200, 30, 36, lo));
+  return kit.merge(g);
+}
+export function stool(kit, { h = 650 } = {}) {   // a bar stool: round seat, four legs, a foot ring
+  const g = kit.group();
+  for (let i = 0; i < 4; i++) { const a = Math.PI / 4 + i * Math.PI / 2; g.add(kit.cyl(Math.cos(a) * 130, 0, Math.sin(a) * 130, 15, h - 40, { seg: 10, ...lo })); }
+  g.add(kit.cyl(0, 250, 0, 172, 14, { seg: 32, ...lo }));
+  g.add(kit.cyl(0, h - 40, 0, 190, 40, { seg: 32 }));
   return kit.merge(g);
 }
 export function curtain(kit, { w = 1500, h = 2300, panels = 2 } = {}) {

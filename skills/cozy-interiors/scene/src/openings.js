@@ -1,5 +1,6 @@
 // @js:openings — windows, doors and arches set into a wall, in the old kitchen's style: thick reveals, one extruded piece per frame, a view outside.
 // opening(kit, { kind: 'window' | 'door' | 'arch', width, height, sill = 0 (window), hinge: 'l' | 'r' (door), open: leaf angle in degrees })
+//   sash: 'fixed' (a window whose sashes stay shut: it can stand over a sink) | default inward-opening.
 //   -> { group, hole, openables, hit }. `openables` are the leaf / sashes (userData.open: click cycles states ajar -> wide -> shut); `hit` is a clear plane over a door or arch for a click that goes to another area (op.to). Built in the wall's own frame: the wall face is x = 0, the room is +x, z runs along the wall, y is up, the opening is centred on z = 0.
 //   `hole` is the outline [z, y] of the cut in the wall (set.js cuts it). Nothing here is a real light or a real view: the view outside and the daylight are painted.
 import { canvasOf, sheet, glow } from './sheet.js';
@@ -28,16 +29,8 @@ export function opening(kit, op, vis = null) {
   const Z0 = -w / 2, Z1 = w / 2, Y0 = op.kind === 'window' ? sill : 0, Y1 = Y0 + h;
   let hole;
 
-  // What is seen through a door or arch: the floor carries on (set.js adds the tile lines and they melt out within 1.5 m) and daylight falls off softly, warm white, no panel.
-  const beyond = (depth, wide, tall) => {
-    if (op.beyond === false) return;   // a real room lies beyond
-    const back = glow(kit, 'back', 0, 0, wide * 1.8, tall * 1.5, '255,252,242', 0.85, 0, vis);
-    back.rotation.y = Math.PI / 2; back.position.set(-depth - 300, tall * 0.45, 0);
-    g.add(back);
-    const fl = glow(kit, 'floor', 0, 0, 2600, wide * 1.7, '255,250,236', 0.8, 0, vis);   // light on the floor beyond: strongest at the opening, gone by about 1.3 m out
-    fl.position.set(-depth - 700, 1.2, 0);
-    g.add(fl);
-  };
+  // What lies beyond a door or arch is the world itself: the floor, its tiles and whatever room is there. Nothing is painted in.
+  const beyond = () => {};
   const openables = [];
   const hitPlane = () => {   // clear, but still hit by a click: a door or arch that leads to another area
     const m = new T.Mesh(new T.PlaneGeometry(w, h), new T.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }));
@@ -67,7 +60,7 @@ export function opening(kit, op, vis = null) {
     g.add(ext(rectPts(fz0, fy0, fz1, fy1), [rectPts(fz0 + FW, fy0 + FW, fz1 - FW, fy1 - FW)], XF - 45, 45));
     // two sashes meeting in the middle, 2 x 3 panes each, hinged at the outer sides and ajar inward
     const iz0 = fz0 + FW, iz1 = fz1 - FW, iy0 = fy0 + FW, iy1 = fy1 - FW, W = (iz1 - iz0) / 2 - 2, SD = 30, ST = 34, BAR = 20;
-    const cw = (W - 2 * ST - BAR) / 2, rh = (iy1 - iy0 - 2 * ST - 2 * BAR) / 3, ajar = op.open ?? 26;
+    const cw = (W - 2 * ST - BAR) / 2, rh = (iy1 - iy0 - 2 * ST - 2 * BAR) / 3, ajar = op.sash === 'fixed' ? 0 : (op.open ?? 26);
     const sash = (hinge, dir) => {
       const p = kit.group(), Zs = (u) => dir * u, panes = [];
       for (let i = 0; i < 2; i++) for (let j = 0; j < 3; j++) {
@@ -85,16 +78,8 @@ export function opening(kit, op, vis = null) {
     const sA = sash(iz0, 1), sB = sash(iz1, -1);
     sA.add(kit.rbox(SD / 2, (iy0 + iy1) / 2 - 30, W - ST / 2 - 8, 16, 60, 2.5, 4, lo));   // latch plate and lever on the free stile
     sA.add(kit.cyl(SD / 2 + 2.5, (iy0 + iy1) / 2, W - ST / 2 - 2, 3, 28, { axis: 'z', seg: 10, ...lo }));
-    for (const [sx, dir] of [[sA, 1], [sB, -1]]) { sx.userData.open = { kind: 'door', dir, max: 75, v: ajar / 75, target: ajar / 75, states: [ajar / 75, 1, 0], i: 0, pair: [sA, sB] }; openables.push(sx); }
+    if (op.sash !== 'fixed') for (const [sx, dir] of [[sA, 1], [sB, -1]]) { sx.userData.open = { kind: 'door', dir, max: 75, v: ajar / 75, target: ajar / 75, states: [ajar / 75, 1, 0], i: 0, pair: [sA, sB] }; openables.push(sx); }
     g.add(sA, sB);
-    // daylight: a soft warm patch on the floor inside, rays going +x and down at 35 degrees
-    const tan = 0.7, drift = 0.2, x0 = (Y0 - 0) / tan, x1 = Math.min((Y1 - 0) / tan, 2800), pad = 120, k = 0.1, PW = x1 - x0 + 2 * pad, PH = w + 2 * pad + drift * x1;
-    const cv = canvasOf(PW * k, PH * k), q = cv.getContext('2d');
-    q.filter = 'blur(11px)'; q.fillStyle = 'rgba(255,238,200,0.2)';
-    q.beginPath(); q.moveTo(pad * k, pad * k); q.lineTo((pad + x1 - x0) * k, (pad + drift * (x1 - x0)) * k); q.lineTo((pad + x1 - x0) * k, (pad + w + drift * (x1 - x0)) * k); q.lineTo(pad * k, (pad + w) * k); q.closePath(); q.fill();
-    const patch = sheet(kit, cv, PW, PH, vis);
-    patch.rotation.x = -Math.PI / 2; patch.position.set((x0 + x1) / 2, 1.5, drift * (x1 - x0) / 2);
-    g.add(patch);
   } else if (op.kind === 'door') {
     const DEPTH = 120, L = 16, CW = 70, hinge = op.hinge === 'l' ? -1 : 1, ajar = op.open ?? 25;
     hole = rectPts(Z0, 0, Z1, Y1);

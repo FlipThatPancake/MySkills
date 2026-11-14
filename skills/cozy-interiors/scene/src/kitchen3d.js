@@ -37,7 +37,7 @@ export function createKit() {
   // View fade: everything (fills, lines, silhouettes) thins into the backdrop colour with distance from a centre, between radii r0 and r1 (set with setViewFade).
   // The default radii are huge, so a scene that never sets them is untouched. The uniform objects are shared by every material, clones included.
   const viewFade = { uVC: { value: new THREE.Vector3() }, uVR: { value: new THREE.Vector2(1e9, 2e9) }, uVH: { value: new THREE.Vector3() } };   // uVH: half-size of a box round uVC that stays clear (zero: a sphere)
-  const BACK = new THREE.Color(BACKDROP).toArray().map((c) => c.toFixed(4)).join(',');
+  const BACK = [BACKDROP >> 16, (BACKDROP >> 8) & 255, BACKDROP & 255].map((c) => (c / 255).toFixed(4)).join(',');   // the fills' own (display) values, so a faded thing becomes exactly the page's tone, never a darker grey
   const VF_PARS = 'uniform vec3 uVC; uniform vec2 uVR; uniform vec3 uVH;';
   const VF_MIX = (col, w) => `${col} = mix(${col}, vec3(${BACK}), smoothstep(uVR.x, uVR.y, length(max(abs(${w} - uVC) - uVH, 0.0))));`;
   // The fill. `fade` makes a copy for the wall and floor that thins out with distance from a
