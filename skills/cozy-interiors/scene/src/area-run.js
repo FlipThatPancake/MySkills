@@ -42,13 +42,13 @@ export function createAreaScene(canvas, S) {
     return { target, az: h.az ?? 20, el: h.el ?? 15, dist: h.dist || fit(b) };
   };
   const fadeOf = (A) => {
-    const b = A.bounds, top = b.top || 2500, bx = b.x1 - b.x0, bz = b.z1 - b.z0, w = Math.max(bx, bz), r0 = 0.45 * Math.hypot(bx, bz);
-    return [(b.x0 + b.x1) / 2, top / 2 - 150, (b.z0 + b.z1) / 2, bx / 2, top / 2 + 300, bz / 2, FADE[0] * w, FADE[1] * w, r0, r0 + 0.35 * w];
+    const b = A.bounds, top = b.top || 2500, bx = b.x1 - b.x0, bz = b.z1 - b.z0, w = Math.max(bx, bz), r0 = 0;   // objects past the bounds thin from the edge: about 35% gone at 1 m, all gone at 2.2 m
+    return [(b.x0 + b.x1) / 2, top / 2 - 150, (b.z0 + b.z1) / 2, bx / 2, top / 2 + 300, bz / 2, FADE[0] * w, FADE[1] * w, r0, 2200];
   };
   const applyFade = (f) => {
     kit.setFade(new THREE.Vector3(f[0], f[1], f[2]), new THREE.Vector3(f[3], f[4], f[5]), f[6], f[7]);
-    const c = new THREE.Vector3(f[0], f[1], f[2]); kit.setViewFade(c, f[8], f[9]);
-    VIEW.c = c; VIEW.r0 = f[8]; VIEW.r1 = f[9];
+    const c = new THREE.Vector3(f[0], f[1], f[2]), h = new THREE.Vector3(f[3], f[4], f[5]); kit.setViewFade(c, f[8], f[9], h);
+    VIEW.c = c; VIEW.h = h; VIEW.r0 = f[8]; VIEW.r1 = f[9];
   };
   const limits = (az) => { controls.minAzimuthAngle = rad(az - SPAN); controls.maxAzimuthAngle = rad(az + SPAN); };
 

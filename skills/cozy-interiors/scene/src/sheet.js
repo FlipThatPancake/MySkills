@@ -8,7 +8,7 @@ export function canvasOf(w, h) {
   return c;
 }
 // What the view fade is doing now (home.js sets it next to kit.setViewFade): a sheet thins out with the distance of its middle from `c`, like everything else.
-export const VIEW = { c: null, r0: 1e9, r1: 2e9 };
+export const VIEW = { c: null, h: null, r0: 1e9, r1: 2e9 };
 const sm = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 // A transparent textured plane that follows the kit's opacity and the view fade and never writes depth. `vis` ({ value } 0..1) is a wall's own visibility, for things standing on that wall.
 export function sheet(kit, canvas, w, h, vis = null) {
@@ -19,7 +19,7 @@ export function sheet(kit, canvas, w, h, vis = null) {
   m.renderOrder = 1;
   m.onBeforeRender = () => {
     let f = 1;
-    if (VIEW.c) { m.getWorldPosition(mid); f = 1 - sm(VIEW.r0, VIEW.r1, mid.distanceTo(VIEW.c)); }
+    if (VIEW.c) { m.getWorldPosition(mid); mid.sub(VIEW.c); mid.set(Math.max(Math.abs(mid.x) - VIEW.h.x, 0), Math.max(Math.abs(mid.y) - VIEW.h.y, 0), Math.max(Math.abs(mid.z) - VIEW.h.z, 0)); f = 1 - sm(VIEW.r0, VIEW.r1, mid.length()); }
     mat.opacity = kit.fill.uniforms.uOpacity.value * f * (vis ? vis.value : 1);
   };
   return m;

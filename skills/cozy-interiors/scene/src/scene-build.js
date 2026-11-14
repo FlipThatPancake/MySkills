@@ -6,8 +6,8 @@ import { REGISTRY } from './library/index.js';
 // opts.assets limits the build to those asset names (node checks build only the runs: some assets need a page's canvas).
 export function buildScene(kit, S, opts = {}) {
   const root = kit.group(), objects = {};
-  const shell = roomShell(kit, S.plan);
-  for (const o of S.objects || []) {
+  const shell = S.plan ? roomShell(kit, S.plan) : kit.group();
+  for (const o of S.objects || S.home?.objects || []) {
     if (opts.assets && !opts.assets.includes(o.asset)) continue;
     const make = REGISTRY[o.asset];
     if (!make) throw new Error(`scene.json: unknown asset "${o.asset}" (object "${o.id}"); known assets: ${Object.keys(REGISTRY).join(', ')}`);

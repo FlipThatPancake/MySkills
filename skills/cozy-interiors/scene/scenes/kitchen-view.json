@@ -25,7 +25,7 @@
       "at": 1850,
       "width": 900,
       "hinge": "r",
-      "open": 25
+      "open": 22
      },
      {
       "kind": "window",
@@ -48,7 +48,7 @@
     "openings": [
      {
       "kind": "window",
-      "at": 2000,
+      "at": 1050,
       "width": 1200,
       "height": 1100,
       "sill": 1000
@@ -67,29 +67,31 @@
     "openings": [
      {
       "kind": "arch",
-      "at": 3300,
+      "at": 4000,
       "width": 1300,
-      "to": "nook",
-      "beyond": false
+      "to": "living",
+      "beyond": false,
+      "depth": 200
      }
     ]
    },
    {
     "from": [
-     7000,
+     7200,
      0
     ],
     "to": [
-     7000,
+     7200,
      3200
     ],
     "openings": [
      {
       "kind": "arch",
-      "at": 1700,
+      "at": 1000,
       "width": 1300,
       "to": "dining",
-      "beyond": false
+      "beyond": false,
+      "depth": 0
      }
     ]
    },
@@ -99,7 +101,7 @@
      0
     ],
     "to": [
-     7000,
+     7200,
      0
     ],
     "openings": [
@@ -108,7 +110,7 @@
       "at": 1200,
       "width": 1000,
       "height": 1300,
-      "sill": 800
+      "sill": 900
      }
     ]
    },
@@ -159,7 +161,8 @@
       },
       {
        "w": 600,
-       "kind": "doors"
+       "kind": "door",
+       "hinge": "l"
       }
      ]
     }
@@ -186,13 +189,13 @@
        "kind": "sink"
       },
       {
-       "w": 400,
-       "kind": "doors"
-      },
-      {
-       "w": 600,
+       "w": 500,
        "kind": "drawers",
        "n": 2
+      },
+      {
+       "w": 500,
+       "kind": "filler"
       }
      ]
     }
@@ -325,56 +328,76 @@
     "mount": "ceiling"
    },
    {
-    "id": "table",
-    "asset": "table",
+    "id": "rug-dining",
+    "asset": "rug",
     "at": [
      5700,
      0,
      2900
     ],
-    "mount": "floor"
+    "mount": "floor",
+    "params": {
+     "w": 2600,
+     "d": 1900
+    },
+    "lift": 0
+   },
+   {
+    "id": "table",
+    "asset": "table",
+    "at": [
+     5700,
+     7,
+     2900
+    ],
+    "mount": "floor",
+    "lift": 7
    },
    {
     "id": "chair-1",
     "asset": "chair",
     "at": [
      5300,
-     0,
+     7,
      2200
     ],
-    "mount": "floor"
+    "mount": "floor",
+    "lift": 7
    },
    {
     "id": "chair-2",
     "asset": "chair",
     "at": [
      6100,
-     0,
+     7,
      2200
     ],
-    "mount": "floor"
+    "mount": "floor",
+    "lift": 7
    },
    {
     "id": "chair-3",
     "asset": "chair",
     "at": [
      5300,
-     0,
+     7,
      3600
     ],
+    "mount": "floor",
     "turn": 180,
-    "mount": "floor"
+    "lift": 7
    },
    {
     "id": "chair-4",
     "asset": "chair",
     "at": [
      6100,
-     0,
+     7,
      3600
     ],
+    "mount": "floor",
     "turn": 180,
-    "mount": "floor"
+    "lift": 7
    },
    {
     "id": "dining-lamp",
@@ -387,42 +410,189 @@
     "mount": "ceiling"
    },
    {
+    "id": "sideboard",
+    "asset": "sideboard",
+    "at": [
+     6300,
+     0,
+     210
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 1100,
+     "d": 400,
+     "doors": 2
+    }
+   },
+   {
+    "id": "bench",
+    "asset": "bench",
+    "at": [
+     6810,
+     0,
+     3900
+    ],
+    "mount": "floor",
+    "turn": -90
+   },
+   {
+    "id": "picture-dining",
+    "asset": "picture",
+    "at": [
+     6996,
+     1250,
+     3900
+    ],
+    "mount": "wall",
+    "turn": -90,
+    "params": {
+     "w": 700,
+     "h": 520,
+     "seed": 4
+    },
+    "shadow": false
+   },
+   {
     "id": "floor-plant",
     "asset": "plant",
     "at": [
-     6700,
+     6600,
      0,
-     4300
+     4800
     ],
     "mount": "floor"
    },
    {
-    "id": "nook-plant",
-    "asset": "plant",
+    "id": "rug-living",
+    "asset": "rug",
     "at": [
-     9000,
+     8300,
      0,
-     500
+     1750
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 2000,
+     "d": 1500,
+     "border": 60
+    }
+   },
+   {
+    "id": "sofa",
+    "asset": "sofa",
+    "at": [
+     8200,
+     7,
+     460
+    ],
+    "mount": "floor",
+    "params": {
+     "seats": 2
+    },
+    "lift": 7
+   },
+   {
+    "id": "coffee-table",
+    "asset": "coffeeTable",
+    "at": [
+     8200,
+     7,
+     1550
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 900,
+     "d": 560
+    },
+    "lift": 7
+   },
+   {
+    "id": "armchair",
+    "asset": "armchair",
+    "at": [
+     8800,
+     7,
+     2500
+    ],
+    "mount": "floor",
+    "turn": -150,
+    "lift": 7
+   },
+   {
+    "id": "floor-lamp",
+    "asset": "floorLamp",
+    "at": [
+     7500,
+     0,
+     2050
     ],
     "mount": "floor"
    },
    {
-    "id": "nook-plant-2",
+    "id": "shelf",
+    "asset": "shelf",
+    "at": [
+     9232,
+     0,
+     800
+    ],
+    "mount": "floor",
+    "turn": -90,
+    "params": {
+     "w": 800,
+     "h": 1800,
+     "d": 320
+    }
+   },
+   {
+    "id": "curtain",
+    "asset": "curtain",
+    "at": [
+     8200,
+     0,
+     0
+    ],
+    "mount": "wall",
+    "params": {
+     "w": 1300,
+     "h": 2300
+    },
+    "shadow": false
+   },
+   {
+    "id": "picture-living",
+    "asset": "picture",
+    "at": [
+     7206,
+     1250,
+     2650
+    ],
+    "mount": "wall",
+    "turn": 90,
+    "params": {
+     "w": 600,
+     "h": 800,
+     "seed": 7
+    },
+    "shadow": false
+   },
+   {
+    "id": "living-plant",
     "asset": "plant",
     "at": [
      7500,
      0,
-     2900
+     3150
     ],
     "mount": "floor"
    },
    {
-    "id": "nook-lamp",
+    "id": "living-lamp",
     "asset": "pendantLamp",
     "at": [
      8200,
      0,
-     1700
+     1550
     ],
     "mount": "ceiling"
    }
@@ -443,7 +613,12 @@
     "home": {
      "az": 20,
      "el": 15,
-     "dist": 7400
+     "dist": 8300,
+     "target": [
+      2900,
+      950,
+      1500
+     ]
     },
     "after": 12,
     "cutsAfter": 12,
@@ -466,16 +641,16 @@
      {
       "name": "sink and window",
       "from": [
-       2600,
-       1450,
-       2000
+       2400,
+       1400,
+       2700
       ],
       "look": [
        0,
-       1200,
-       2000
+       1250,
+       1250
       ],
-      "fov": 28
+      "fov": 32
      },
      {
       "name": "kitchen corner",
@@ -512,7 +687,7 @@
    "id": "dining",
    "name": "Dining",
    "bounds": {
-    "x0": 3900,
+    "x0": 4700,
     "x1": 7000,
     "z0": 0,
     "z1": 4800,
@@ -521,7 +696,7 @@
    "camera": {
     "home": {
      "target": [
-      5650,
+      5700,
       900,
       2300
      ],
@@ -531,41 +706,69 @@
     },
     "shots": [
      {
-      "name": "the table",
+      "name": "table and sideboard",
       "from": [
-       4000,
-       1300,
-       4600
+       4300,
+       1250,
+       4500
       ],
       "look": [
-       5700,
+       6200,
        800,
-       2800
+       2000
       ],
-      "fov": 30
+      "fov": 32
      },
      {
       "name": "to the arch",
       "from": [
-       4600,
+       4900,
        1450,
-       2000
+       2900
       ],
       "look": [
        7000,
        1100,
-       1700
+       1000
       ],
       "fov": 30
+     },
+     {
+      "name": "sideboard and window",
+      "from": [
+       5000,
+       1350,
+       3700
+      ],
+      "look": [
+       6300,
+       950,
+       0
+      ],
+      "fov": 28
+     },
+     {
+      "name": "bench and picture",
+      "from": [
+       5100,
+       1150,
+       1500
+      ],
+      "look": [
+       6900,
+       700,
+       3900
+      ],
+      "fov": 36
      }
     ]
    }
   },
   {
-   "id": "nook",
-   "name": "Nook",
+   "id": "living",
+   "name": "Living",
    "bounds": {
-    "x0": 7000,
+    "x0": 7200,
     "x1": 9400,
     "z0": 0,
     "z1": 3200,
@@ -576,13 +779,70 @@
      "target": [
       8300,
       950,
-      1400
+      1500
      ],
      "az": 28,
      "el": 15,
      "dist": 6200
     },
-    "shots": []
+    "shots": [
+     {
+      "name": "the sofa",
+      "from": [
+       9250,
+       1250,
+       3000
+      ],
+      "look": [
+       8000,
+       700,
+       500
+      ],
+      "fov": 32
+     },
+     {
+      "name": "window and curtain",
+      "from": [
+       9150,
+       1250,
+       3050
+      ],
+      "look": [
+       8100,
+       1200,
+       0
+      ],
+      "fov": 28
+     },
+     {
+      "name": "reading corner",
+      "from": [
+       7300,
+       1300,
+       2800
+      ],
+      "look": [
+       9100,
+       700,
+       900
+      ],
+      "fov": 32
+     },
+     {
+      "name": "through the arch",
+      "from": [
+       9100,
+       1350,
+       2400
+      ],
+      "look": [
+       7000,
+       1100,
+       1000
+      ],
+      "fov": 34
+     }
+    ]
    }
   }
  ]

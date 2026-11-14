@@ -122,7 +122,7 @@ export function opening(kit, op, vis = null) {
     hole = archPts(w, h);
     beyond(DEPTH, w, h);
     if (op.to) { hit = hitPlane(); g.add(hit); }
-    g.add(ext(archPts(w, h), [archPts(w, h, 6)], -DEPTH, DEPTH));   // a deep reveal with a 6 mm lining
+    if (DEPTH > 0) g.add(ext(archPts(w, h), [archPts(w, h, 6)], -DEPTH, DEPTH));   // a deep reveal with a 6 mm lining (depth 0: the casing alone, where the other room's arch has the reveal)
     // a slim architrave round the arch, 10 mm proud: its outer outline is the arch grown by `ring`
     const R = w / 2 + ring, r = w / 2, arc = (rr, top) => Array.from({ length: 19 }, (_, i) => { const a = Math.PI * (1 - i / 18); return [rr * Math.cos(a), top + rr * Math.sin(a)]; });
     g.add(ext([[-R, 0], ...arc(R, h + ring - R), [R, 0], [r, 0], ...arc(r, h - r).reverse(), [-r, 0]], null, 0, 10));

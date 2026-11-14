@@ -6,7 +6,7 @@
 //   back wall right to left, left wall top to bottom, front wall left to right, right wall bottom to top). Seen from behind, a wall is not drawn.
 //   An opening is { kind: 'window' | 'door' | 'arch', at (mm along the wall from `from`, to its middle), width, height, sill, hinge: 'l' | 'r', open (deg), to (area id: a click goes there), beyond: false (a real room lies beyond) }.
 //   Furniture faces the room as it stands: a wall's face is where an object's back sits.
-//   An object is { id, asset, at: [x, y, z], turn (deg about the vertical), mount: 'floor' | 'on' | 'wall' | 'ceiling' | 'lines', params, shadow: false }; its contact shadow comes from the mount.
+//   An object is { id, asset, at: [x, y, z], turn (deg about the vertical), mount: 'floor' | 'on' | 'wall' | 'ceiling' | 'lines', params, shadow: false, lift (mm: it stands on something this thick, like a rug) }; its contact shadow comes from the mount.
 import { halo, glow } from './sheet.js';
 import { opening } from './openings.js';
 
@@ -40,7 +40,7 @@ export function buildHome(kit, home, registry) {
   const P = (a) => new T.Vector2(a[0], a[1]), near = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]) < 40;
   const walls = (home.walls || []).map((w, i) => {
     const len = Math.hypot(w.to[0] - w.from[0], w.to[1] - w.from[1]), d = [(w.to[0] - w.from[0]) / len, (w.to[1] - w.from[1]) / len], n = [d[1], -d[0]];
-    return { ...w, i, len, d, n, vis: { value: 1 }, node: kit.group(), frames: kit.group(), fa: kit.fadable(), through: [], holes: [] };
+    return { ...w, i, len, d, n, vis: { value: 1 }, node: kit.group(), frames: kit.group(), fa: kit.fadable(), through: [], holes: [], built: [] };
   });
   const walls_ = walls;
   for (const W of walls_) {
@@ -49,7 +49,7 @@ export function buildHome(kit, home, registry) {
     for (const op of W.openings || []) {
       const b = opening(kit, op, vis), xc = len - op.at;
       b.group.rotation.y = -Math.PI / 2; b.group.position.set(xc, 0, 0);
-      W.frames.add(b.group); openables.push(...b.openables); 
+      W.frames.add(b.group); W.built.push({ op, group: b.group, openables: b.openables }); openables.push(...b.openables); 
       W.holes.push(b.hole.map(([z, y]) => [xc - z, y]));
       if (op.kind !== 'window') W.through.push([xc - b.width / 2, xc + b.width / 2]);
     }
@@ -94,7 +94,7 @@ export function buildHome(kit, home, registry) {
     if (o.shadow === false) continue;
     const b = feet[o.id], g = objects[o.id];
     if (o.mount === 'ceiling') { if (o.asset === 'pendantLamp') shadows.add(glow(kit, 'floor', g.position.x, g.position.z, 1500, 1500, '255,236,200', 0.1, 1.2)); continue; }   // the lamp's pool of light, very faint
-    if (o.mount === 'floor') shadows.add(halo(kit, 'floor', b.min.x, b.max.x, b.min.z, b.max.z, 1.5, 0.26));
+    if (o.mount === 'floor') shadows.add(halo(kit, 'floor', b.min.x, b.max.x, b.min.z, b.max.z, (o.lift || 0) + 1.5, o.asset === 'rug' ? 0.14 : 0.26));
     else if (o.mount === 'on' && o.asset !== 'hob') shadows.add(halo(kit, 'floor', b.min.x, b.max.x, b.min.z, b.max.z, b.min.y + 1.5, 0.3));
     else if (o.mount === 'wall') {   // under a wall unit: on the wall it hangs from
       for (const W of walls) {

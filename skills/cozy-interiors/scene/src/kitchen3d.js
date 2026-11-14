@@ -36,10 +36,10 @@ export function createKit() {
   const uniforms = { uOpacity: { value: 1 } };
   // View fade: everything (fills, lines, silhouettes) thins into the backdrop colour with distance from a centre, between radii r0 and r1 (set with setViewFade).
   // The default radii are huge, so a scene that never sets them is untouched. The uniform objects are shared by every material, clones included.
-  const viewFade = { uVC: { value: new THREE.Vector3() }, uVR: { value: new THREE.Vector2(1e9, 2e9) } };
+  const viewFade = { uVC: { value: new THREE.Vector3() }, uVR: { value: new THREE.Vector2(1e9, 2e9) }, uVH: { value: new THREE.Vector3() } };   // uVH: half-size of a box round uVC that stays clear (zero: a sphere)
   const BACK = new THREE.Color(BACKDROP).toArray().map((c) => c.toFixed(4)).join(',');
-  const VF_PARS = 'uniform vec3 uVC; uniform vec2 uVR;';
-  const VF_MIX = (col, w) => `${col} = mix(${col}, vec3(${BACK}), smoothstep(uVR.x, uVR.y, length(${w} - uVC)));`;
+  const VF_PARS = 'uniform vec3 uVC; uniform vec2 uVR; uniform vec3 uVH;';
+  const VF_MIX = (col, w) => `${col} = mix(${col}, vec3(${BACK}), smoothstep(uVR.x, uVR.y, length(max(abs(${w} - uVC) - uVH, 0.0))));`;
   // The fill. `fade` makes a copy for the wall and floor that thins out with distance from a
   // centre (set with setFade), so the far ends of those big planes never show.
   const makeFill = (fade, tint = [1, 1, 1]) => new THREE.ShaderMaterial({
@@ -137,7 +137,7 @@ export function createKit() {
       });
     },
     // Everything thins into the backdrop colour between radii r0 and r1 (world units) round `centre`; a scene calls it each frame to keep a soft-edged cutout round the orbit target.
-    setViewFade(centre, r0, r1) { viewFade.uVC.value.copy(centre); viewFade.uVR.value.set(r0, r1); },
+    setViewFade(centre, r0, r1, half = null) { viewFade.uVC.value.copy(centre); viewFade.uVR.value.set(r0, r1); viewFade.uVH.value.copy(half || new THREE.Vector3()); },
     // Wall and floor thin out between r0 and r1 (world units) beyond the box that is `half` wide around `centre`.
     setFade(centre, half, r0, r1) { fadeFill.uniforms.uC.value.copy(centre); fadeFill.uniforms.uH.value.copy(half); fadeFill.uniforms.uR.value.set(r0, r1); },
     // The window size in CSS pixels; call it on every resize so lines stay 1 px.
