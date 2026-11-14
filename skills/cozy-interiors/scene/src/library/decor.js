@@ -1,8 +1,8 @@
 // @js:library-decor — small things that make a corner worth looking at: soft pieces, things that live, things on walls, drawn like the rest (plain solids, soft outlines, real millimetres).
 // Origins: floor pieces (sideTable, roundTable, cat, basket, pouf) have it in the middle of the footprint on the floor, front toward +z; pieces that stand on something (cushion, vase, bookStack) at the middle of their foot;
 // wall pieces (mirror, wallShelf) at the bottom middle on the wall face, standing out toward +z.
-// cushion({ w = 440, h = 420, tone }), vase({ h = 280, stems = 5, seed }), bookStack({ n = 4, seed }), mirror({ w = 700, h = 1000, shape: 'arch' | 'round' | 'pill' }), wallShelf({ w = 900, seed }),
-// sideTable({ r = 230, h = 520 }), roundTable({ r = 650, h = 750 }), cat({ pose: 'sit' | 'loaf' }), basket({ r = 230, h = 320 }), pouf({ r = 280, h = 380 }).
+// floorPlant({ h = 950 }), cushion({ w = 440, h = 420, tone }), vase({ h = 280, stems = 5, seed }), bookStack({ n = 4, seed }), mirror({ w = 700, h = 1000, shape: 'arch' | 'round' | 'pill' }), wallShelf({ w = 900, seed }),
+// sideTable({ r = 230, h = 520 }), roundTable({ r = 650, h = 750 }), cat({ pose: "sit" | "curl" | "loaf", scale = 1 }), basket({ r = 230, h = 320 }), pouf({ r = 280, h = 380 }).
 const rnd = (seed) => { let r = (seed || 1) * 9301 + 49297; return () => { r = (r * 9301 + 49297) % 233280; return r / 233280; }; };
 const lo = { tone: 'lo' };
 
@@ -65,7 +65,7 @@ export function roundTable(kit, { r = 650, h = 750 } = {}) {
   g.add(kit.cyl(0, 30, 0, 70, h - 66, { rTop: 56, seg: 24, ...lo })); g.add(kit.cyl(0, 0, 0, 280, 30, { rTop: 250, seg: 32 }));
   return kit.merge(g);
 }
-export function cat(kit, { pose = 'sit' } = {}) {   // a cat: 'sit' upright with haunches, front legs and a tail round the feet; 'curl' asleep in a ring with its head on its tail
+export function cat(kit, { pose = 'sit', scale = 1 } = {}) {   // a cat: 'sit' upright with haunches, front legs and a tail round the feet; 'curl' asleep in a ring with its head on its tail
   const T = kit.THREE, g = kit.group(), V = (x, y, z) => new T.Vector3(x, y, z);
   const sph = (rx, ry, rz, x, y, z, o = {}, rot) => { const ge = new T.SphereGeometry(1, 24, 16); ge.scale(rx, ry, rz); const m = kit.solid(ge, x, y, z, { smooth: true, ...o }); if (rot) m.rotation.set(...rot); return m; };
   const ear = (x, y, z, tilt) => { const m = kit.cyl(x, y, z, 24, 55, { rTop: 0, seg: 4, ...lo }); m.rotation.z = tilt; return m; };
@@ -82,6 +82,19 @@ export function cat(kit, { pose = 'sit' } = {}) {   // a cat: 'sit' upright with
     g.add(ear(-42, 420, 28, 0.18)); g.add(ear(42, 420, 28, -0.18));
     g.add(tube([[70, 32, -110], [175, 34, -70], [200, 36, 60], [120, 32, 150]], 24));                  // the tail curled round the feet
   }
+  const m = kit.merge(g); if (scale !== 1) m.scale.setScalar(scale); return m;
+}
+export function floorPlant(kit, { h = 950, seed = 6 } = {}) {   // a large pot with tall stems and broad leaves, about 950 mm high
+  const T = kit.THREE, g = kit.group(), R = rnd(seed), pts = [];
+  g.add(kit.cyl(0, 0, 0, 170, 380, { rTop: 215, seg: 32, ...lo })); g.add(kit.cyl(0, 380, 0, 215, 26, { seg: 32 }));
+  for (let k = 0; k < 9; k++) {
+    const a = k / 9 * Math.PI * 2 + R(), lean = 0.25 + R() * 0.45, len = h - 380 - 80 - R() * 260, sx = Math.sin(a) * Math.sin(lean), sz = Math.cos(a) * Math.sin(lean), cy = Math.cos(lean);
+    let px = 0, py = 400, pz = 0; const n = 6;
+    for (let i = 1; i <= n; i++) { const t = i / n, nx = sx * len * t * t * 0.9 + 0, nz = sz * len * t * t * 0.9, ny = 400 + cy * len * t; pts.push([px, py, pz], [nx, ny, nz]); px = nx; py = ny; pz = nz; }
+    const ge = new T.SphereGeometry(1, 16, 10); ge.scale(70 + R() * 30, 150 + R() * 50, 14);
+    const leaf = kit.solid(ge, px, py + 60, pz, { smooth: true }); leaf.rotation.set(Math.cos(a) * lean * 0.9, 0, -Math.sin(a) * lean * 0.9); g.add(leaf);
+  }
+  g.add(kit.lines(pts, 'mid'));
   return kit.merge(g);
 }
 export function basket(kit, { r = 230, h = 320 } = {}) {   // a woven basket with a blanket folded over the rim

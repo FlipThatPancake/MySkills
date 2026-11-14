@@ -1,0 +1,729 @@
+{
+ "units": "mm",
+ "seed": 28,
+ "home": {
+  "height": 2700,
+  "floor": {
+   "style": "boards"
+  },
+  "tiles": {
+   "origin": [
+    0,
+    0
+   ]
+  },
+  "walls": [
+   {
+    "id": "hallway-back",
+    "from": [
+     5400,
+     0
+    ],
+    "to": [
+     0,
+     0
+    ],
+    "openings": [
+     {
+      "kind": "arch",
+      "width": 1200,
+      "to": "living",
+      "beyond": false,
+      "depth": 200,
+      "at": 4200
+     }
+    ]
+   },
+   {
+    "id": "hallway-left",
+    "from": [
+     0,
+     0
+    ],
+    "to": [
+     -1800,
+     3117.7
+    ],
+    "openings": [
+     {
+      "kind": "window",
+      "width": 1000,
+      "height": 1200,
+      "sill": 1000,
+      "sash": "fixed",
+      "at": 1800
+     }
+    ]
+   },
+   {
+    "id": "living-back",
+    "from": [
+     13800,
+     0
+    ],
+    "to": [
+     8400,
+     0
+    ],
+    "openings": [
+     {
+      "kind": "window",
+      "width": 1500,
+      "height": 1300,
+      "sill": 800,
+      "sash": "fixed",
+      "at": 1800
+     }
+    ]
+   },
+   {
+    "id": "living-left",
+    "from": [
+     8400,
+     0
+    ],
+    "to": [
+     8400,
+     4200
+    ],
+    "openings": [
+     {
+      "kind": "arch",
+      "width": 1200,
+      "to": "hallway",
+      "beyond": false,
+      "depth": 200,
+      "at": 900
+     }
+    ]
+   },
+   {
+    "id": "office-back",
+    "from": [
+     22200,
+     0
+    ],
+    "to": [
+     16800,
+     0
+    ],
+    "openings": [
+     {
+      "kind": "window",
+      "width": 1400,
+      "height": 1100,
+      "sill": 1000,
+      "sash": "fixed",
+      "at": 2700
+     }
+    ]
+   },
+   {
+    "id": "office-right",
+    "from": [
+     24000,
+     3117.7
+    ],
+    "to": [
+     22200,
+     0
+    ],
+    "openings": [
+     {
+      "kind": "door",
+      "width": 900,
+      "hinge": "r",
+      "open": 22,
+      "at": 2400
+     }
+    ]
+   }
+  ],
+  "objects": [
+   {
+    "id": "hallway-console",
+    "asset": "console",
+    "at": [
+     3300,
+     0,
+     165
+    ],
+    "mount": "floor",
+    "group": "hallway:console",
+    "hero": true,
+    "area": "hallway"
+   },
+   {
+    "id": "hallway-mirror",
+    "asset": "mirror",
+    "at": [
+     3300,
+     1150,
+     0
+    ],
+    "mount": "wall",
+    "params": {
+     "w": 700,
+     "h": 1000,
+     "shape": "round"
+    },
+    "group": "hallway:console",
+    "area": "hallway",
+    "shadow": false
+   },
+   {
+    "id": "hallway-console-plant",
+    "asset": "plant",
+    "at": [
+     3700,
+     800,
+     165
+    ],
+    "mount": "on",
+    "group": "hallway:console",
+    "area": "hallway",
+    "off": 165
+   },
+   {
+    "id": "hallway-hooks",
+    "asset": "coatHooks",
+    "at": [
+     4700,
+     1500,
+     0
+    ],
+    "mount": "wall",
+    "group": "hallway:coat corner",
+    "area": "hallway",
+    "shadow": false
+   },
+   {
+    "id": "hallway-bench",
+    "asset": "bench",
+    "at": [
+     4700,
+     0,
+     190
+    ],
+    "mount": "floor",
+    "group": "hallway:coat corner",
+    "area": "hallway"
+   },
+   {
+    "id": "hallway-cat",
+    "asset": "cat",
+    "at": [
+     4950,
+     450,
+     190
+    ],
+    "mount": "on",
+    "params": {
+     "pose": "curl",
+     "scale": 0.65
+    },
+    "group": "hallway:coat corner",
+    "area": "hallway"
+   },
+   {
+    "id": "hallway-floor-plant",
+    "asset": "floorPlant",
+    "at": [
+     2300,
+     0,
+     240
+    ],
+    "mount": "floor",
+    "group": "hallway:console",
+    "area": "hallway",
+    "off": 240
+   },
+   {
+    "id": "hallway-rug",
+    "asset": "rug",
+    "at": [
+     3300,
+     0,
+     1500
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 2600,
+     "d": 1100
+    },
+    "group": "hallway:console",
+    "area": "hallway"
+   },
+   {
+    "id": "hallway-basket",
+    "asset": "basket",
+    "at": [
+     2200,
+     0,
+     1400
+    ],
+    "mount": "floor",
+    "group": "hallway:coat corner",
+    "area": "hallway"
+   },
+   {
+    "id": "hallway-bench-plant",
+    "asset": "plant",
+    "at": [
+     4350,
+     450,
+     190
+    ],
+    "mount": "on",
+    "group": "hallway:coat corner",
+    "area": "hallway"
+   },
+   {
+    "id": "living-curtain",
+    "asset": "curtain",
+    "at": [
+     12000,
+     0,
+     0
+    ],
+    "mount": "wall",
+    "group": "living:seating",
+    "area": "living"
+   },
+   {
+    "id": "living-rug",
+    "asset": "rug",
+    "at": [
+     11350,
+     0,
+     2000
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 3200,
+     "d": 2100
+    },
+    "group": "living:seating",
+    "area": "living"
+   },
+   {
+    "id": "living-armchair-l",
+    "asset": "armchair",
+    "at": [
+     10600,
+     7,
+     1700
+    ],
+    "turn": 25,
+    "mount": "floor",
+    "group": "living:seating",
+    "hero": true,
+    "area": "living",
+    "lift": 7
+   },
+   {
+    "id": "living-armchair-r",
+    "asset": "armchair",
+    "at": [
+     12100,
+     7,
+     1700
+    ],
+    "turn": -25,
+    "mount": "floor",
+    "group": "living:seating",
+    "area": "living",
+    "lift": 7
+   },
+   {
+    "id": "living-side-table",
+    "asset": "sideTable",
+    "at": [
+     11350,
+     7,
+     1500
+    ],
+    "mount": "floor",
+    "group": "living:seating",
+    "area": "living",
+    "lift": 7
+   },
+   {
+    "id": "living-vase",
+    "asset": "vase",
+    "at": [
+     11350,
+     527,
+     1500
+    ],
+    "mount": "on",
+    "group": "living:seating",
+    "area": "living"
+   },
+   {
+    "id": "living-cushion",
+    "asset": "cushion",
+    "at": [
+     10550,
+     470,
+     1650
+    ],
+    "turn": 25,
+    "mount": "on",
+    "params": {
+     "w": 380,
+     "h": 340
+    },
+    "group": "living:seating",
+    "area": "living"
+   },
+   {
+    "id": "living-cat",
+    "asset": "cat",
+    "at": [
+     11350,
+     7,
+     2650
+    ],
+    "turn": 160,
+    "mount": "floor",
+    "params": {
+     "pose": "sit"
+    },
+    "group": "living:seating",
+    "area": "living",
+    "lift": 7
+   },
+   {
+    "id": "living-lamp",
+    "asset": "floorLamp",
+    "at": [
+     9100,
+     0,
+     190
+    ],
+    "mount": "floor",
+    "group": "living:seating",
+    "area": "living"
+   },
+   {
+    "id": "living-floor-plant",
+    "asset": "floorPlant",
+    "at": [
+     13450,
+     0,
+     240
+    ],
+    "mount": "floor",
+    "group": "living:seating",
+    "area": "living",
+    "off": 240
+   },
+   {
+    "id": "office-desk",
+    "asset": "desk",
+    "at": [
+     19500,
+     0,
+     350
+    ],
+    "mount": "floor",
+    "group": "office:desk",
+    "hero": true,
+    "area": "office"
+   },
+   {
+    "id": "office-desk-plant",
+    "asset": "plant",
+    "at": [
+     19000,
+     740,
+     160
+    ],
+    "mount": "on",
+    "group": "office:desk",
+    "area": "office",
+    "off": 160
+   },
+   {
+    "id": "office-chair",
+    "asset": "deskChair",
+    "at": [
+     19500,
+     7,
+     1100
+    ],
+    "turn": 180,
+    "mount": "floor",
+    "group": "office:desk",
+    "area": "office",
+    "lift": 7
+   },
+   {
+    "id": "office-rug",
+    "asset": "rug",
+    "at": [
+     19500,
+     0,
+     1300
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 2200,
+     "d": 1500
+    },
+    "group": "office:desk",
+    "area": "office"
+   },
+   {
+    "id": "office-lamp",
+    "asset": "floorLamp",
+    "at": [
+     17700,
+     0,
+     190
+    ],
+    "mount": "floor",
+    "group": "office:desk",
+    "area": "office"
+   },
+   {
+    "id": "office-picture",
+    "asset": "picture",
+    "at": [
+     18100,
+     1400,
+     0
+    ],
+    "mount": "wall",
+    "group": "office:wall",
+    "area": "office",
+    "shadow": false
+   },
+   {
+    "id": "office-shelf",
+    "asset": "shelf",
+    "at": [
+     21100,
+     0,
+     160
+    ],
+    "mount": "floor",
+    "group": "office:shelf",
+    "area": "office"
+   },
+   {
+    "id": "office-shelf-plant",
+    "asset": "plant",
+    "at": [
+     21100,
+     1800,
+     160
+    ],
+    "mount": "on",
+    "group": "office:shelf",
+    "area": "office",
+    "off": 160
+   },
+   {
+    "id": "office-floor-plant",
+    "asset": "floorPlant",
+    "at": [
+     21850,
+     0,
+     240
+    ],
+    "mount": "floor",
+    "group": "office:shelf",
+    "area": "office",
+    "off": 240
+   },
+   {
+    "id": "office-mirror",
+    "asset": "mirror",
+    "at": [
+     23600,
+     800,
+     2424.9
+    ],
+    "turn": -60,
+    "mount": "wall",
+    "params": {
+     "w": 600,
+     "h": 1200,
+     "shape": "pill"
+    },
+    "group": "office:wall",
+    "area": "office",
+    "shadow": false
+   }
+  ]
+ },
+ "areas": [
+  {
+   "id": "hallway",
+   "name": "Hallway",
+   "bounds": {
+    "x0": 0,
+    "x1": 5400,
+    "z0": 0,
+    "z1": 3600,
+    "top": 2500
+   },
+   "camera": {
+    "home": {
+     "target": [
+      2800,
+      900,
+      1400
+     ],
+     "az": 12,
+     "el": 14,
+     "fit": "objects"
+    },
+    "shots": [
+     {
+      "name": "console",
+      "from": [
+       2130,
+       1585,
+       4980
+      ],
+      "look": [
+       3300,
+       1000,
+       300
+      ],
+      "fov": 60,
+      "subject": "hallway:console"
+     },
+     {
+      "name": "coat corner",
+      "from": [
+       1710,
+       1515,
+       4590
+      ],
+      "look": [
+       4700,
+       800,
+       300
+      ],
+      "fov": 60,
+      "subject": "hallway:coat corner"
+     }
+    ]
+   }
+  },
+  {
+   "id": "living",
+   "name": "Living room",
+   "bounds": {
+    "x0": 8400,
+    "x1": 13800,
+    "z0": 0,
+    "z1": 4200,
+    "top": 2500
+   },
+   "camera": {
+    "home": {
+     "target": [
+      11200,
+      800,
+      1600
+     ],
+     "az": 14,
+     "el": 16,
+     "fit": "objects"
+    },
+    "shots": [
+     {
+      "name": "armchairs",
+      "from": [
+       12200,
+       1870,
+       7100
+      ],
+      "look": [
+       11300,
+       700,
+       1700
+      ],
+      "fov": 54,
+      "subject": "living:seating"
+     },
+     {
+      "name": "window corner",
+      "from": [
+       7680,
+       1720,
+       6420
+      ],
+      "look": [
+       12000,
+       1000,
+       300
+      ],
+      "fov": 54,
+      "subject": "living:seating"
+     }
+    ]
+   }
+  },
+  {
+   "id": "office",
+   "name": "Home office",
+   "bounds": {
+    "x0": 16800,
+    "x1": 22200,
+    "z0": 0,
+    "z1": 3600,
+    "top": 2500
+   },
+   "camera": {
+    "home": {
+     "target": [
+      19500,
+      800,
+      1400
+     ],
+     "az": 14,
+     "el": 15,
+     "fit": "objects"
+    },
+    "shots": [
+     {
+      "name": "desk",
+      "from": [
+       20670,
+       1515,
+       4720
+      ],
+      "look": [
+       19500,
+       800,
+       300
+      ],
+      "fov": 60,
+      "subject": "office:desk"
+     },
+     {
+      "name": "shelf",
+      "from": [
+       19000,
+       1400,
+       3600
+      ],
+      "look": [
+       21100,
+       1000,
+       300
+      ],
+      "fov": 54,
+      "subject": "office:shelf"
+     }
+    ]
+   }
+  }
+ ]
+}

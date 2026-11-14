@@ -1,79 +1,498 @@
 {
- "floor": ["tiles", "boards", "plain"],
- "backing": [
-  { "id": "one-wall", "walls": 1, "angle": 180 },
-  { "id": "corner-left", "walls": 2, "angle": 90, "second": "left" },
-  { "id": "corner-right", "walls": 2, "angle": 90, "second": "right" },
-  { "id": "wide-angle", "walls": 2, "angle": 120, "second": "right" }
+ "floor": [
+  "tiles",
+  "boards",
+  "plain"
  ],
- "plants": [1, 2, 3],
+ "backing": [
+  {
+   "id": "one-wall",
+   "walls": 1,
+   "angle": 180
+  },
+  {
+   "id": "corner-left",
+   "walls": 2,
+   "angle": 90,
+   "second": "left"
+  },
+  {
+   "id": "corner-right",
+   "walls": 2,
+   "angle": 90,
+   "second": "right"
+  },
+  {
+   "id": "wide-angle",
+   "walls": 2,
+   "angle": 120,
+   "second": "right"
+  }
+ ],
+ "plants": [
+  1,
+  2,
+  3
+ ],
  "kitchen": {
-  "shape": ["straight", "galley", "L", "U", "peninsula", "island"],
-  "hero": ["island with stools", "range hood over the hob", "tall pantry wall", "open shelves and a dresser"],
-  "openings": [
-   [{ "kind": "window", "on": "first", "sash": "fixed" }],
-   [{ "kind": "window", "on": "first" }, { "kind": "door", "on": "second" }],
-   [{ "kind": "window", "on": "second", "sash": "fixed" }, { "kind": "arch", "on": "first" }],
-   [{ "kind": "window", "on": "first", "sash": "fixed" }, { "kind": "window", "on": "second" }]
+  "shape": [
+   "straight",
+   "galley",
+   "L",
+   "U",
+   "peninsula",
+   "island"
   ],
-  "accents": ["fruit bowl", "cutting board", "pan on the hob", "jars", "kettle", "tea towel on a rail", "herbs on the worktop", "stool", "trolley", "basket of vegetables", "wall shelf with jars"]
+  "hero": [
+   "range hood over the hob",
+   "tall pantry wall",
+   "open shelves and a dresser",
+   "window over the sink",
+   "breakfast table by the window"
+  ],
+  "openings": [
+   [
+    {
+     "kind": "window",
+     "on": "first",
+     "sash": "fixed"
+    }
+   ],
+   [
+    {
+     "kind": "window",
+     "on": "first"
+    },
+    {
+     "kind": "door",
+     "on": "second"
+    }
+   ],
+   [
+    {
+     "kind": "window",
+     "on": "second",
+     "sash": "fixed"
+    },
+    {
+     "kind": "arch",
+     "on": "first"
+    }
+   ],
+   [
+    {
+     "kind": "window",
+     "on": "first",
+     "sash": "fixed"
+    },
+    {
+     "kind": "window",
+     "on": "second"
+    }
+   ],
+   [
+    {
+     "kind": "window",
+     "on": "first",
+     "sash": "fixed"
+    },
+    {
+     "kind": "arch",
+     "on": "first"
+    }
+   ],
+   [
+    {
+     "kind": "window",
+     "on": "first"
+    },
+    {
+     "kind": "door",
+     "on": "first"
+    }
+   ]
+  ],
+  "accents": [
+   "fruit bowl",
+   "cutting board",
+   "pan on the hob",
+   "jars",
+   "kettle",
+   "tea towel on a rail",
+   "herbs on the worktop",
+   "stool",
+   "trolley",
+   "basket of vegetables",
+   "wall shelf with jars"
+  ],
+  "shapeNotes": {
+   "straight": "one run on the backing wall, nothing else",
+   "galley": "two facing runs with a 1200 mm aisle: a run on the wall and a freestanding run opposite it with a finished back and closed ends (no stools)",
+   "L": "runs on the two walls of a 90 degree corner, joined at the corner",
+   "U": "an L plus a third run facing the first leg, joined to the back run",
+   "peninsula": "a run on the wall with a run reaching out from it at right angles; stools on its far side",
+   "island": "a run on the wall and a freestanding island parallel to it, stools on its far side"
+  }
  },
  "dining": {
-  "hero": ["long table under a pendant", "round table on a rug", "sideboard with a big mirror"],
-  "openings": [
-   [{ "kind": "window", "on": "first" }],
-   [{ "kind": "window", "on": "first" }, { "kind": "arch", "on": "second" }],
-   [{ "kind": "door", "on": "second" }, { "kind": "window", "on": "first" }]
+  "hero": [
+   "long table under a pendant",
+   "round table on a rug",
+   "sideboard with a big mirror"
   ],
-  "accents": ["vase of branches", "book stack", "basket", "mirror", "wall shelf", "cushion on a chair", "floor lamp", "bench"]
+  "openings": [
+   [
+    {
+     "kind": "window",
+     "on": "first"
+    }
+   ],
+   [
+    {
+     "kind": "window",
+     "on": "first"
+    },
+    {
+     "kind": "arch",
+     "on": "second"
+    }
+   ],
+   [
+    {
+     "kind": "door",
+     "on": "second"
+    },
+    {
+     "kind": "window",
+     "on": "first"
+    }
+   ],
+   [
+    {
+     "kind": "window",
+     "on": "first"
+    },
+    {
+     "kind": "arch",
+     "on": "first"
+    }
+   ]
+  ],
+  "accents": [
+   "vase of branches",
+   "book stack",
+   "basket",
+   "mirror",
+   "wall shelf",
+   "cushion on a chair",
+   "floor lamp",
+   "bench"
+  ],
+  "pieces": [
+   "table (round or long)",
+   "chairs",
+   "rug"
+  ]
  },
  "living": {
-  "hero": ["sofa with a rug and coffee table", "shelf wall with an armchair", "two armchairs and a side table"],
-  "openings": [
-   [{ "kind": "window", "on": "first" }],
-   [{ "kind": "window", "on": "second" }, { "kind": "arch", "on": "first" }],
-   [{ "kind": "window", "on": "first" }, { "kind": "window", "on": "second" }]
+  "hero": [
+   "sofa with a rug and coffee table",
+   "shelf wall with an armchair",
+   "two armchairs and a side table"
   ],
-  "accents": ["cushion", "vase of branches", "book stack", "cat", "basket", "pouf", "mirror", "wall shelf", "floor lamp", "side table"]
+  "openings": [
+   [
+    {
+     "kind": "window",
+     "on": "first"
+    }
+   ],
+   [
+    {
+     "kind": "window",
+     "on": "second"
+    },
+    {
+     "kind": "arch",
+     "on": "first"
+    }
+   ],
+   [
+    {
+     "kind": "window",
+     "on": "first"
+    },
+    {
+     "kind": "window",
+     "on": "second"
+    }
+   ],
+   [
+    {
+     "kind": "window",
+     "on": "first"
+    },
+    {
+     "kind": "arch",
+     "on": "first"
+    }
+   ]
+  ],
+  "accents": [
+   "cushion",
+   "vase of branches",
+   "book stack",
+   "cat",
+   "basket",
+   "pouf",
+   "mirror",
+   "wall shelf",
+   "floor lamp",
+   "side table"
+  ],
+  "pieces": [
+   "curtain at a window"
+  ]
  },
  "bedroom": {
-  "hero": ["bed with a headboard on the backing wall", "bed under a window with a bedside table each side"],
-  "openings": [
-   [{ "kind": "window", "on": "first" }],
-   [{ "kind": "window", "on": "second" }, { "kind": "door", "on": "first" }],
-   [{ "kind": "window", "on": "first" }, { "kind": "door", "on": "second" }]
+  "hero": [
+   "bed with a headboard on the backing wall",
+   "bed under a window with a bedside table each side"
   ],
-  "pieces": ["bed", "bedsideTable", "wardrobe", "rug"],
-  "accents": ["cushion", "mirror", "basket", "cat", "floor lamp", "bench at the foot of the bed", "wall shelf", "picture", "book stack"]
+  "openings": [
+   [
+    {
+     "kind": "window",
+     "on": "first"
+    }
+   ],
+   [
+    {
+     "kind": "window",
+     "on": "second"
+    },
+    {
+     "kind": "door",
+     "on": "first"
+    }
+   ],
+   [
+    {
+     "kind": "window",
+     "on": "first"
+    },
+    {
+     "kind": "door",
+     "on": "second"
+    }
+   ],
+   [
+    {
+     "kind": "window",
+     "on": "first"
+    },
+    {
+     "kind": "door",
+     "on": "first"
+    }
+   ]
+  ],
+  "pieces": [
+   "bed",
+   "bedsideTable",
+   "wardrobe",
+   "rug"
+  ],
+  "accents": [
+   "cushion",
+   "mirror",
+   "basket",
+   "cat",
+   "floor lamp",
+   "bench at the foot of the bed",
+   "wall shelf",
+   "picture",
+   "book stack"
+  ]
  },
  "reading-corner": {
-  "hero": ["reading chair with a footstool and a floor lamp", "daybed under shelves"],
-  "openings": [
-   [{ "kind": "window", "on": "first" }],
-   [{ "kind": "window", "on": "second" }],
-   [{ "kind": "window", "on": "first" }, { "kind": "window", "on": "second" }]
+  "hero": [
+   "reading chair with a footstool and a floor lamp",
+   "daybed under shelves"
   ],
-  "pieces": ["readingChair", "footstool", "floorLamp", "shelf", "daybed"],
-  "accents": ["cushion", "book stack", "side table", "cat", "basket", "picture", "wall shelf", "vase of branches"]
+  "openings": [
+   [
+    {
+     "kind": "window",
+     "on": "first"
+    }
+   ],
+   [
+    {
+     "kind": "window",
+     "on": "second"
+    }
+   ],
+   [
+    {
+     "kind": "window",
+     "on": "first"
+    },
+    {
+     "kind": "window",
+     "on": "second"
+    }
+   ],
+   [
+    {
+     "kind": "window",
+     "on": "first"
+    },
+    {
+     "kind": "arch",
+     "on": "first"
+    }
+   ]
+  ],
+  "pieces": [
+   "readingChair",
+   "footstool",
+   "floorLamp",
+   "shelf",
+   "daybed",
+   "rug"
+  ],
+  "accents": [
+   "cushion",
+   "book stack",
+   "side table",
+   "cat",
+   "basket",
+   "picture",
+   "wall shelf",
+   "vase of branches"
+  ]
  },
  "hallway": {
-  "hero": ["coat hooks over a bench", "console with a mirror"],
-  "openings": [
-   [{ "kind": "door", "on": "first" }],
-   [{ "kind": "door", "on": "first" }, { "kind": "arch", "on": "second" }],
-   [{ "kind": "arch", "on": "first" }, { "kind": "window", "on": "second" }]
+  "hero": [
+   "coat hooks over a bench",
+   "console with a mirror"
   ],
-  "pieces": ["coatHooks", "bench", "console", "mirror"],
-  "accents": ["basket", "plant", "picture", "rug", "vase of branches", "floor lamp", "stool"]
+  "openings": [
+   [
+    {
+     "kind": "door",
+     "on": "first"
+    }
+   ],
+   [
+    {
+     "kind": "door",
+     "on": "first"
+    },
+    {
+     "kind": "arch",
+     "on": "second"
+    }
+   ],
+   [
+    {
+     "kind": "arch",
+     "on": "first"
+    },
+    {
+     "kind": "window",
+     "on": "second"
+    }
+   ]
+  ],
+  "pieces": [
+   "coatHooks",
+   "bench",
+   "console",
+   "mirror",
+   "rug"
+  ],
+  "accents": [
+   "basket",
+   "plant",
+   "picture",
+   "rug",
+   "vase of branches",
+   "floor lamp",
+   "stool"
+  ]
  },
  "home-office": {
-  "hero": ["desk under a window", "desk with a shelf wall"],
-  "openings": [
-   [{ "kind": "window", "on": "first" }],
-   [{ "kind": "window", "on": "first" }, { "kind": "door", "on": "second" }],
-   [{ "kind": "window", "on": "second" }, { "kind": "arch", "on": "first" }]
+  "hero": [
+   "desk under a window",
+   "desk with a shelf wall"
   ],
-  "pieces": ["desk", "deskChair", "shelf"],
-  "accents": ["book stack", "floor lamp", "basket", "picture", "wall shelf", "cushion", "mirror", "rug"]
+  "openings": [
+   [
+    {
+     "kind": "window",
+     "on": "first"
+    }
+   ],
+   [
+    {
+     "kind": "window",
+     "on": "first"
+    },
+    {
+     "kind": "door",
+     "on": "second"
+    }
+   ],
+   [
+    {
+     "kind": "window",
+     "on": "second"
+    },
+    {
+     "kind": "arch",
+     "on": "first"
+    }
+   ],
+   [
+    {
+     "kind": "window",
+     "on": "first"
+    },
+    {
+     "kind": "door",
+     "on": "first"
+    }
+   ]
+  ],
+  "pieces": [
+   "desk",
+   "deskChair",
+   "shelf",
+   "rug"
+  ],
+  "accents": [
+   "book stack",
+   "floor lamp",
+   "basket",
+   "picture",
+   "wall shelf",
+   "cushion",
+   "mirror",
+   "rug"
+  ]
+ },
+ "backingWeights": {
+  "cornerShapes": {
+   "corner-left": 1,
+   "corner-right": 1
+  },
+  "freeShapes": {
+   "one-wall": 3,
+   "wide-angle": 3,
+   "corner-left": 1,
+   "corner-right": 1
+  }
  }
 }

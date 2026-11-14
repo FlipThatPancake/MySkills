@@ -1,0 +1,812 @@
+{
+ "units": "mm",
+ "seed": 25,
+ "home": {
+  "height": 2700,
+  "floor": {
+   "style": "boards"
+  },
+  "tiles": {
+   "origin": [
+    0,
+    0
+   ]
+  },
+  "walls": [
+   {
+    "id": "kitchen-back",
+    "from": [
+     6200,
+     0
+    ],
+    "to": [
+     0,
+     0
+    ],
+    "openings": [
+     {
+      "kind": "window",
+      "width": 1300,
+      "height": 1100,
+      "sill": 1000,
+      "sash": "fixed",
+      "at": 4290
+     }
+    ]
+   },
+   {
+    "id": "kitchen-right",
+    "from": [
+     6200,
+     4200
+    ],
+    "to": [
+     6200,
+     0
+    ],
+    "openings": [
+     {
+      "kind": "door",
+      "width": 900,
+      "hinge": "l",
+      "open": 22,
+      "at": 800
+     }
+    ]
+   },
+   {
+    "id": "reading-back",
+    "from": [
+     14600,
+     0
+    ],
+    "to": [
+     9200,
+     0
+    ],
+    "openings": [
+     {
+      "kind": "window",
+      "width": 1400,
+      "height": 1200,
+      "sill": 900,
+      "sash": "fixed",
+      "at": 3900
+     },
+     {
+      "kind": "arch",
+      "width": 1200,
+      "to": "bedroom",
+      "beyond": false,
+      "depth": 200,
+      "at": 1200
+     }
+    ]
+   },
+   {
+    "id": "bedroom-back",
+    "from": [
+     23600,
+     0
+    ],
+    "to": [
+     17600,
+     0
+    ],
+    "openings": [
+     {
+      "kind": "window",
+      "width": 1400,
+      "height": 1000,
+      "sill": 1300,
+      "sash": "fixed",
+      "at": 3000
+     },
+     {
+      "kind": "door",
+      "width": 900,
+      "hinge": "r",
+      "open": 20,
+      "at": 600
+     }
+    ]
+   },
+   {
+    "id": "bedroom-left",
+    "from": [
+     17600,
+     0
+    ],
+    "to": [
+     17600,
+     4800
+    ],
+    "openings": []
+   }
+  ],
+  "objects": [
+   {
+    "id": "kitchen-fridge",
+    "asset": "fridge",
+    "at": [
+     0,
+     0,
+     700
+    ],
+    "mount": "floor",
+    "group": "kitchen:sink wall",
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-run",
+    "asset": "baseRun",
+    "at": [
+     910,
+     0,
+     600
+    ],
+    "mount": "floor",
+    "params": {
+     "modules": [
+      {
+       "w": 600,
+       "kind": "door",
+       "hinge": "r"
+      },
+      {
+       "w": 800,
+       "kind": "sink"
+      },
+      {
+       "w": 600,
+       "kind": "drawers"
+      },
+      {
+       "w": 900,
+       "kind": "hob"
+      },
+      {
+       "w": 600,
+       "kind": "doors"
+      }
+     ]
+    },
+    "group": "kitchen:sink wall",
+    "hero": true,
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-run-hob",
+    "asset": "hob",
+    "at": [
+     3360,
+     0,
+     600
+    ],
+    "mount": "on",
+    "group": "kitchen:sink wall",
+    "area": "kitchen",
+    "depth": 600
+   },
+   {
+    "id": "kitchen-run-hood1",
+    "asset": "hood",
+    "at": [
+     3360,
+     0,
+     600
+    ],
+    "mount": "wall",
+    "group": "kitchen:sink wall",
+    "area": "kitchen",
+    "depth": 600
+   },
+   {
+    "id": "kitchen-run-pan2",
+    "asset": "pan",
+    "at": [
+     3540,
+     940,
+     440
+    ],
+    "turn": -35,
+    "mount": "on",
+    "group": "kitchen:sink wall",
+    "area": "kitchen",
+    "off": 440
+   },
+   {
+    "id": "kitchen-kettle",
+    "asset": "kettle",
+    "at": [
+     4110,
+     900,
+     330
+    ],
+    "mount": "on",
+    "group": "kitchen:sink wall",
+    "area": "kitchen",
+    "off": 330
+   },
+   {
+    "id": "kitchen-jars",
+    "asset": "jars",
+    "at": [
+     2610,
+     900,
+     330
+    ],
+    "mount": "on",
+    "group": "kitchen:sink wall",
+    "area": "kitchen",
+    "off": 330
+   },
+   {
+    "id": "kitchen-towel",
+    "asset": "teaTowel",
+    "at": [
+     3350,
+     1250,
+     0
+    ],
+    "mount": "wall",
+    "group": "kitchen:sink wall",
+    "area": "kitchen",
+    "shadow": false
+   },
+   {
+    "id": "kitchen-plant",
+    "asset": "plant",
+    "at": [
+     1150,
+     900,
+     330
+    ],
+    "mount": "on",
+    "group": "kitchen:sink wall",
+    "area": "kitchen",
+    "off": 330
+   },
+   {
+    "id": "kitchen-peninsula",
+    "asset": "baseRun",
+    "at": [
+     4150,
+     0,
+     640
+    ],
+    "turn": -90,
+    "mount": "floor",
+    "params": {
+     "finishedBack": true,
+     "backOverhang": 300,
+     "modules": [
+      {
+       "w": 600,
+       "kind": "open"
+      },
+      {
+       "w": 600,
+       "kind": "drawers",
+       "n": 3
+      },
+      {
+       "w": 600,
+       "kind": "doors"
+      }
+     ]
+    },
+    "group": "kitchen:peninsula",
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-stool-1",
+    "asset": "stool",
+    "at": [
+     5300,
+     0,
+     1000
+    ],
+    "mount": "floor",
+    "group": "kitchen:peninsula",
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-stool-2",
+    "asset": "stool",
+    "at": [
+     5300,
+     0,
+     1650
+    ],
+    "mount": "floor",
+    "group": "kitchen:peninsula",
+    "area": "kitchen"
+   },
+   {
+    "id": "reading-rug",
+    "asset": "rug",
+    "at": [
+     11100,
+     0,
+     1500
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 2400,
+     "d": 1800
+    },
+    "group": "reading:reading group",
+    "area": "reading"
+   },
+   {
+    "id": "reading-chair",
+    "asset": "readingChair",
+    "at": [
+     10800,
+     7,
+     1250
+    ],
+    "turn": 20,
+    "mount": "floor",
+    "group": "reading:reading group",
+    "hero": true,
+    "area": "reading",
+    "lift": 7
+   },
+   {
+    "id": "reading-footstool",
+    "asset": "footstool",
+    "at": [
+     11150,
+     7,
+     2150
+    ],
+    "turn": 25,
+    "mount": "floor",
+    "group": "reading:reading group",
+    "area": "reading",
+    "lift": 7
+   },
+   {
+    "id": "reading-lamp",
+    "asset": "floorLamp",
+    "at": [
+     10100,
+     0,
+     1950
+    ],
+    "mount": "floor",
+    "group": "reading:reading group",
+    "area": "reading"
+   },
+   {
+    "id": "reading-side-table",
+    "asset": "sideTable",
+    "at": [
+     11950,
+     0,
+     1250
+    ],
+    "mount": "floor",
+    "group": "reading:reading group",
+    "area": "reading"
+   },
+   {
+    "id": "reading-books",
+    "asset": "bookStack",
+    "at": [
+     11950,
+     520,
+     1250
+    ],
+    "turn": 20,
+    "mount": "on",
+    "group": "reading:reading group",
+    "area": "reading"
+   },
+   {
+    "id": "reading-shelf",
+    "asset": "shelf",
+    "at": [
+     12200,
+     0,
+     160
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 800
+    },
+    "group": "reading:shelf",
+    "area": "reading"
+   },
+   {
+    "id": "reading-shelf-plant",
+    "asset": "plant",
+    "at": [
+     12200,
+     1800,
+     160
+    ],
+    "mount": "on",
+    "group": "reading:shelf",
+    "area": "reading",
+    "off": 160
+   },
+   {
+    "id": "reading-picture",
+    "asset": "picture",
+    "at": [
+     12200,
+     1950,
+     0
+    ],
+    "mount": "wall",
+    "params": {
+     "w": 600,
+     "h": 400
+    },
+    "group": "reading:shelf",
+    "area": "reading",
+    "shadow": false
+   },
+   {
+    "id": "reading-floor-plant",
+    "asset": "floorPlant",
+    "at": [
+     14250,
+     0,
+     240
+    ],
+    "mount": "floor",
+    "group": "reading:shelf",
+    "area": "reading",
+    "off": 240
+   },
+   {
+    "id": "bedroom-bed",
+    "asset": "bed",
+    "at": [
+     20600,
+     0,
+     1050
+    ],
+    "mount": "floor",
+    "group": "bedroom:bed",
+    "hero": true,
+    "area": "bedroom"
+   },
+   {
+    "id": "bedroom-bedside-l",
+    "asset": "bedsideTable",
+    "at": [
+     19500,
+     0,
+     190
+    ],
+    "mount": "floor",
+    "group": "bedroom:bed",
+    "area": "bedroom"
+   },
+   {
+    "id": "bedroom-bedside-r",
+    "asset": "bedsideTable",
+    "at": [
+     21700,
+     0,
+     190
+    ],
+    "mount": "floor",
+    "group": "bedroom:bed",
+    "area": "bedroom"
+   },
+   {
+    "id": "bedroom-bedside-books",
+    "asset": "bookStack",
+    "at": [
+     19500,
+     520,
+     190
+    ],
+    "mount": "on",
+    "params": {
+     "n": 3
+    },
+    "group": "bedroom:bed",
+    "area": "bedroom",
+    "off": 190
+   },
+   {
+    "id": "bedroom-bedside-plant",
+    "asset": "plant",
+    "at": [
+     21700,
+     520,
+     190
+    ],
+    "mount": "on",
+    "group": "bedroom:bed",
+    "area": "bedroom",
+    "off": 190
+   },
+   {
+    "id": "bedroom-cushion",
+    "asset": "cushion",
+    "at": [
+     20900,
+     600,
+     520
+    ],
+    "mount": "on",
+    "params": {
+     "w": 400,
+     "h": 340
+    },
+    "group": "bedroom:bed",
+    "area": "bedroom"
+   },
+   {
+    "id": "bedroom-rug",
+    "asset": "rug",
+    "at": [
+     20600,
+     0,
+     2300
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 2600,
+     "d": 1700
+    },
+    "group": "bedroom:bed",
+    "area": "bedroom"
+   },
+   {
+    "id": "bedroom-cat",
+    "asset": "cat",
+    "at": [
+     19900,
+     7,
+     2400
+    ],
+    "turn": 40,
+    "mount": "floor",
+    "params": {
+     "pose": "curl"
+    },
+    "group": "bedroom:bed",
+    "area": "bedroom",
+    "lift": 7
+   },
+   {
+    "id": "bedroom-wardrobe",
+    "asset": "wardrobe",
+    "at": [
+     17900,
+     0,
+     3300
+    ],
+    "turn": 90,
+    "mount": "floor",
+    "group": "bedroom:wardrobe wall",
+    "area": "bedroom"
+   },
+   {
+    "id": "bedroom-mirror",
+    "asset": "mirror",
+    "at": [
+     17600,
+     800,
+     1500
+    ],
+    "turn": 90,
+    "mount": "wall",
+    "params": {
+     "w": 600,
+     "h": 1300,
+     "shape": "pill"
+    },
+    "group": "bedroom:wardrobe wall",
+    "area": "bedroom",
+    "shadow": false
+   },
+   {
+    "id": "bedroom-picture",
+    "asset": "picture",
+    "at": [
+     18600,
+     1350,
+     0
+    ],
+    "mount": "wall",
+    "params": {
+     "w": 520,
+     "h": 700
+    },
+    "group": "bedroom:bed",
+    "area": "bedroom",
+    "shadow": false
+   },
+   {
+    "id": "bedroom-floor-plant",
+    "asset": "floorPlant",
+    "at": [
+     18200,
+     0,
+     240
+    ],
+    "mount": "floor",
+    "group": "bedroom:bed",
+    "area": "bedroom",
+    "off": 240
+   }
+  ]
+ },
+ "areas": [
+  {
+   "id": "kitchen",
+   "name": "Kitchen",
+   "bounds": {
+    "x0": 0,
+    "x1": 6200,
+    "z0": 0,
+    "z1": 4200,
+    "top": 2500
+   },
+   "camera": {
+    "home": {
+     "target": [
+      3000,
+      900,
+      1500
+     ],
+     "az": -20,
+     "el": 16,
+     "fit": "objects"
+    },
+    "shots": [
+     {
+      "name": "sink wall",
+      "from": [
+       3510,
+       1388,
+       5245
+      ],
+      "look": [
+       1900,
+       1100,
+       300
+      ],
+      "fov": 60,
+      "subject": "kitchen:sink wall"
+     },
+     {
+      "name": "peninsula",
+      "from": [
+       6360,
+       1590,
+       3915
+      ],
+      "look": [
+       3600,
+       900,
+       1500
+      ],
+      "fov": 60,
+      "subject": "kitchen:peninsula"
+     }
+    ]
+   }
+  },
+  {
+   "id": "reading",
+   "name": "Reading corner",
+   "bounds": {
+    "x0": 9200,
+    "x1": 14600,
+    "z0": 0,
+    "z1": 4000,
+    "top": 2500
+   },
+   "camera": {
+    "home": {
+     "target": [
+      11500,
+      900,
+      1400
+     ],
+     "az": 16,
+     "el": 15,
+     "fit": "objects"
+    },
+    "shots": [
+     {
+      "name": "reading chair",
+      "from": [
+       13750,
+       1550,
+       4900
+      ],
+      "look": [
+       10900,
+       800,
+       1300
+      ],
+      "fov": 54,
+      "subject": "reading:reading group"
+     },
+     {
+      "name": "shelf and picture",
+      "from": [
+       10475,
+       1445,
+       3995
+      ],
+      "look": [
+       12200,
+       1100,
+       200
+      ],
+      "fov": 60,
+      "subject": "reading:shelf"
+     }
+    ]
+   }
+  },
+  {
+   "id": "bedroom",
+   "name": "Bedroom",
+   "bounds": {
+    "x0": 17600,
+    "x1": 23600,
+    "z0": 0,
+    "z1": 4800,
+    "top": 2500
+   },
+   "camera": {
+    "home": {
+     "target": [
+      20800,
+      900,
+      1700
+     ],
+     "az": 20,
+     "el": 15,
+     "fit": "objects"
+    },
+    "shots": [
+     {
+      "name": "bed",
+      "from": [
+       23000,
+       1625,
+       6150
+      ],
+      "look": [
+       20600,
+       800,
+       900
+      ],
+      "fov": 54,
+      "subject": "bedroom:bed"
+     },
+     {
+      "name": "wardrobe wall",
+      "from": [
+       21710,
+       1460,
+       3575
+      ],
+      "look": [
+       17800,
+       1000,
+       3000
+      ],
+      "fov": 60,
+      "subject": "bedroom:wardrobe wall"
+     }
+    ]
+   }
+  }
+ ]
+}

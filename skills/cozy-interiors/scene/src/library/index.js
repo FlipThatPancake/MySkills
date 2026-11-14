@@ -11,7 +11,7 @@ import { cuttingBoard } from '../kitchen/cuttingBoard.js';
 import { socket, lightSwitch } from '../kitchen/details.js';
 import { pendantLamp, LAMP } from '../kitchen/atmosphere.js';
 import { table, chair } from './dining.js';
-import { cushion, vase, bookStack, mirror, wallShelf, sideTable, roundTable, cat, basket, pouf } from './decor.js';
+import { floorPlant, cushion, vase, bookStack, mirror, wallShelf, sideTable, roundTable, cat, basket, pouf } from './decor.js';
 import { jars, kettle, herbs, trolley, teaTowel } from './kitchenware.js';
 import { bed, bedsideTable, wardrobe, desk, deskChair, coatHooks, daybed, readingChair, footstool, console_ } from './rooms.js';
 import { sofa, armchair, coffeeTable, rug, shelf, floorLamp, picture, sideboard, bench, curtain, stool } from './living.js';
@@ -24,11 +24,11 @@ function fitted({ length, modules, ...rest }) {
 export const REGISTRY = {
   baseRun: (kit, p) => baseRun(kit, fitted(p)),
   wallRun: (kit, p) => wallRun(kit, fitted(p)),
-  cushion, vase, bookStack, mirror, wallShelf, sideTable, roundTable, cat, basket, pouf,
+  floorPlant, cushion, vase, bookStack, mirror, wallShelf, sideTable, roundTable, cat, basket, pouf,
   jars, kettle, herbs, trolley, teaTowel,
   bed, bedsideTable, wardrobe, desk, deskChair, coatHooks, daybed, readingChair, footstool, console: console_,
   table, chair, sofa, armchair, coffeeTable, rug, shelf, floorLamp, picture, sideboard, bench, curtain, stool,
   fridge, hob, hood, plant, pan, fruitBowl, cuttingBoard, socket, lightSwitch,
   // the lamp is drawn at a fixed spot in kitchen millimetres; shift it so the object's `at` is where it hangs
-  pendantLamp: (kit) => { const g = kit.group(), l = pendantLamp(kit); l.position.set(-LAMP.X, 0, -LAMP.Z); g.add(l); return g; },
+  pendantLamp: (kit, { rim = LAMP.RIM } = {}) => { const g = kit.group(), l = pendantLamp(kit); l.position.set(-LAMP.X, rim - LAMP.RIM, -LAMP.Z); g.add(l); return g; },
 };
