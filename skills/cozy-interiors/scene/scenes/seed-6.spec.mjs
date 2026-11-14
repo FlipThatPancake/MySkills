@@ -11,22 +11,25 @@ const H = new Home({ seed: 6, floor: 'boards' });
   const right = a.wall('right', [6000, 0], 90, 4200, [{ kind: 'window', x: 2200, width: 1300, height: 1200, sill: 1000, sash: 'fixed' }, { kind: 'lightSwitch' }].slice(0, 1));
   back.put('run', 'baseRun', 1650, 600, { group: 'run', params: { modules: [{ w: 600, kind: 'drawers' }, { w: 800, kind: 'sink' }, { w: 600, kind: 'drawers' }, { w: 900, kind: 'hob' }, { w: 350, kind: 'door', hinge: 'l' }] } });
   back.put('fridge', 'fridge', 4900, 700, { group: 'run' });
-  back.put('hob', 'hob', 1650 + 2000 + 450, 600, { y: 900, mount: 'on', group: 'run' });
+  back.put('hob', 'hob', 1650 + 2000 + 450, 600, { y: 0, mount: 'on', group: 'run' });
   back.put('hood', 'hood', 1650 + 2000 + 450, 600, { mount: 'wall', group: 'run' });
   back.put('pan', 'pan', 1650 + 2000 + 700, 440, { y: 940, mount: 'on', group: 'run', turn: -25 });
   back.put('wall-run', 'wallRun', 1650, 320, { mount: 'wall', group: 'run', params: { length: 1400 } });
   back.put('plant', 'plant', 2250, 330, { y: 900, mount: 'on', group: 'run' });
   back.put('socket', 'socket', 3350, 0, { y: 1100, mount: 'wall', group: 'run', shadow: false });
-  a.put('island', 'baseRun', [4950, 1750], 180, { group: 'island', hero: true, params: { finishedBack: true, backOverhang: 300, endPanels: ['end'], modules: [{ w: 600, kind: 'doors' }, { w: 600, kind: 'drawers', n: 3 }, { w: 900, kind: 'doors' }, { w: 600, kind: 'drawers', n: 3 }, { w: 300, kind: 'door', hinge: 'r' }] } });
+  a.put('island', 'baseRun', [4950, 1750], 180, { group: 'island', hero: true, params: { finishedBack: true, backOverhang: 300, modules: [{ w: 600, kind: 'doors' }, { w: 600, kind: 'drawers', n: 3 }, { w: 900, kind: 'doors' }, { w: 600, kind: 'drawers', n: 3 }, { w: 300, kind: 'door', hinge: 'r' }] } });
   a.put('fruit-bowl', 'fruitBowl', [3300, 2050], 0, { y: 900, mount: 'on', group: 'island' });
   for (const [i, x] of [2500, 3400, 4300].entries()) a.put(`stool-${i + 1}`, 'stool', [x, 2950], 0, { group: 'island' });
   right.put('bench', 'bench', 2200, 190, { group: 'window side', params: { w: 1300 } });
   right.put('basket', 'basket', 3300, 330, { group: 'window side' });
-  right.put('mirror', 'mirror', 3750, 0, { y: 900, mount: 'wall', group: 'window side', shadow: false, params: { w: 480, h: 1100, shape: 'arch' } });
+  right.put('shelf', 'wallShelf', 3600, 0, { y: 1300, mount: 'wall', group: 'window side', shadow: false, params: { w: 700 } });
+  back.put('jars', 'jars', 1900, 330, { y: 900, mount: 'on', group: 'run' });
+  back.put('kettle', 'kettle', 4750, 330, { y: 900, mount: 'on', group: 'run' });
+  back.put('towel', 'teaTowel', 2650, 0, { y: 1350, mount: 'wall', group: 'run', shadow: false });
   a.view({ target: [3200, 900, 1500], az: -20, el: 16 });
   a.shot('the island', [1400, 1350, 3800], [3800, 900, 2000], 34);
   a.shot('hob and hood', [3400, 1500, 3000], [3400, 1200, 300], 30);
-  a.shot('window and bench', [3500, 1300, 2800], [6000, 1000, 2200], 32);
+  a.shot('window and bench', [3700, 1500, 3700], [6000, 800, 2200], 40);
 }
 
 // ---------- dining: a wide angle, round table on a rug, bench and mirror on the angled wall
@@ -46,8 +49,8 @@ const H = new Home({ seed: 6, floor: 'boards' });
   back.put('plant-2', 'plant', 3500, 300, { group: 'window side' });
   a.view({ target: [3000, 900, 1800], az: -24, el: 16 });
   a.shot('table and bench', [800, 1300, 4300], [3300, 800, 1800], 32);
-  a.shot('window and plants', [2600, 1400, 3400], [2000, 1000, 0], 30);
-  a.shot('the mirror', [2600, 1400, 3200], [4800, 1000, 1200], 32);
+  a.shot('window and plants', [2300, 1500, 3900], [2300, 1000, 0], 46);
+  a.shot('the mirror', [1500, 1400, 3800], [4950, 1000, 1600], 36);
 }
 
 // ---------- living: corner on the left, turned to face the other way (psi -90): sofa under the window, rug, coffee table, armchair, lamp

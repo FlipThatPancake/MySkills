@@ -102,11 +102,14 @@ export function bench(kit, { w = 1200, d = 380, h = 450 } = {}) {
   g.add(bx(0, 120, 0, w - 200, 30, 36, lo));
   return kit.merge(g);
 }
-export function stool(kit, { h = 650 } = {}) {   // a bar stool: round seat, four legs, a foot ring
-  const g = kit.group();
-  for (let i = 0; i < 4; i++) { const a = Math.PI / 4 + i * Math.PI / 2; g.add(kit.cyl(Math.cos(a) * 130, 0, Math.sin(a) * 130, 15, h - 40, { seg: 10, ...lo })); }
-  g.add(kit.cyl(0, 250, 0, 172, 14, { seg: 32, ...lo }));
-  g.add(kit.cyl(0, h - 40, 0, 190, 40, { seg: 32 }));
+export function stool(kit, { h = 650 } = {}) {   // a bar stool: round seat, four splayed legs, one footrest ring low down
+  const T = kit.THREE, g = kit.group(), RS = 185, top = h - 40, foot = 235, R = 12;
+  const leg = (a, b) => { const A = new T.Vector3(...a), B = new T.Vector3(...b), d = B.clone().sub(A), m = kit.solid(new T.CylinderGeometry(R * 0.8, R, d.length(), 10), 0, 0, 0, { smooth: true, ...lo }); m.position.copy(A).add(B).multiplyScalar(0.5); m.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), d.normalize()); return m; };
+  const lerp = (t) => 0.62 * RS + (0.62 * RS + 70 - 0.62 * RS) * 0 + (1 - t) * 70;   // legs spread 70 mm more at the floor than at the seat
+  for (let i = 0; i < 4; i++) { const a = Math.PI / 4 + i * Math.PI / 2, c = Math.cos(a), s = Math.sin(a); g.add(leg([c * 0.62 * RS, top, s * 0.62 * RS], [c * (0.62 * RS + 75), 0, s * (0.62 * RS + 75)])); }
+  const rr = 0.62 * RS + 75 * (1 - foot / top);   // the ring touches the legs at its height
+  const ring = kit.solid(new T.TorusGeometry(rr, 9, 8, 32), 0, foot, 0, { smooth: true, ...lo }); ring.rotation.x = Math.PI / 2; g.add(ring);
+  g.add(kit.cyl(0, top, 0, RS, 40, { seg: 36 }));
   return kit.merge(g);
 }
 export function curtain(kit, { w = 1500, h = 2300, panels = 2 } = {}) {

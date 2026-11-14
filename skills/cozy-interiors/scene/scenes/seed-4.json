@@ -176,7 +176,7 @@
     "asset": "hob",
     "at": [
      4050,
-     900,
+     0,
      600
     ],
     "mount": "on",
@@ -236,33 +236,71 @@
     "area": "kitchen"
    },
    {
-    "id": "kitchen-mirror",
-    "asset": "mirror",
+    "id": "kitchen-trolley",
+    "asset": "trolley",
     "at": [
-     330,
-     900,
+     340,
+     0,
+     250
+    ],
+    "mount": "floor",
+    "group": "kitchen:corner",
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-herbs",
+    "asset": "herbs",
+    "at": [
+     340,
+     820,
+     250
+    ],
+    "mount": "on",
+    "params": {
+     "n": 2
+    },
+    "group": "kitchen:corner",
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-corner-shelf",
+    "asset": "wallShelf",
+    "at": [
+     340,
+     1300,
      0
     ],
     "mount": "wall",
     "params": {
-     "w": 500,
-     "h": 1100,
-     "shape": "pill"
+     "w": 560
     },
     "group": "kitchen:corner",
     "area": "kitchen",
     "shadow": false
    },
    {
-    "id": "kitchen-pouf",
-    "asset": "pouf",
+    "id": "kitchen-towel",
+    "asset": "teaTowel",
     "at": [
-     330,
-     0,
+     3300,
+     1250,
+     0
+    ],
+    "mount": "wall",
+    "group": "kitchen:run",
+    "area": "kitchen",
+    "shadow": false
+   },
+   {
+    "id": "kitchen-kettle",
+    "asset": "kettle",
+    "at": [
+     3100,
+     900,
      330
     ],
-    "mount": "floor",
-    "group": "kitchen:corner",
+    "mount": "on",
+    "group": "kitchen:run",
     "area": "kitchen"
    },
    {
@@ -290,10 +328,6 @@
     "params": {
      "finishedBack": true,
      "backOverhang": 300,
-     "endPanels": [
-      "start",
-      "end"
-     ],
      "modules": [
       {
        "w": 600,
@@ -608,9 +642,9 @@
     "id": "dining-cat",
     "asset": "cat",
     "at": [
-     9800,
+     9750,
      0,
-     4600
+     4300
     ],
     "turn": 240,
     "mount": "floor",
@@ -978,16 +1012,16 @@
      {
       "name": "the door",
       "from": [
-       12800,
-       1350,
-       2200
+       10300,
+       1400,
+       1800
       ],
       "look": [
        12000,
        1000,
        5600
       ],
-      "fov": 30
+      "fov": 40
      },
      {
       "name": "window and plants",
@@ -1045,30 +1079,30 @@
      {
       "name": "shelf wall",
       "from": [
-       19600,
-       1400,
-       3600
+       18800,
+       1500,
+       4300
       ],
       "look": [
-       19400,
+       19500,
        1000,
        200
       ],
-      "fov": 32
+      "fov": 42
      },
      {
       "name": "the corner",
       "from": [
-       19200,
+       19100,
        1500,
-       3000
+       4300
       ],
       "look": [
-       20500,
+       20600,
        1000,
-       0
+       100
       ],
-      "fov": 34
+      "fov": 44
      }
     ]
    }

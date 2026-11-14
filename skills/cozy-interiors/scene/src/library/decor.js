@@ -65,18 +65,23 @@ export function roundTable(kit, { r = 650, h = 750 } = {}) {
   g.add(kit.cyl(0, 30, 0, 70, h - 66, { rTop: 56, seg: 24, ...lo })); g.add(kit.cyl(0, 0, 0, 280, 30, { rTop: 250, seg: 32 }));
   return kit.merge(g);
 }
-export function cat(kit, { pose = 'sit' } = {}) {   // a sitting cat seen from the front-left: body, head, ears, a tail curled round the feet
-  const T = kit.THREE, g = kit.group(), sph = (rx, ry, rz, x, y, z, o) => { const ge = new T.SphereGeometry(1, 20, 14); ge.scale(rx, ry, rz); return kit.solid(ge, x, y, z, { smooth: true, ...o }); };
-  if (pose === 'loaf') {
-    g.add(sph(125, 100, 210, 0, 100, -20)); g.add(sph(80, 74, 78, 0, 150, 175));
-    for (const s of [-1, 1]) g.add(kit.cyl(s * 46, 200, 175, 24, 58, { rTop: 0, seg: 4, ...lo }));
-    for (const s of [-1, 1]) g.add(sph(36, 22, 60, s * 52, 22, 255, lo));
+export function cat(kit, { pose = 'sit' } = {}) {   // a cat: 'sit' upright with haunches, front legs and a tail round the feet; 'curl' asleep in a ring with its head on its tail
+  const T = kit.THREE, g = kit.group(), V = (x, y, z) => new T.Vector3(x, y, z);
+  const sph = (rx, ry, rz, x, y, z, o = {}, rot) => { const ge = new T.SphereGeometry(1, 24, 16); ge.scale(rx, ry, rz); const m = kit.solid(ge, x, y, z, { smooth: true, ...o }); if (rot) m.rotation.set(...rot); return m; };
+  const ear = (x, y, z, tilt) => { const m = kit.cyl(x, y, z, 24, 55, { rTop: 0, seg: 4, ...lo }); m.rotation.z = tilt; return m; };
+  const tube = (pts, r) => { const t = kit.group(); t.add(kit.solid(new T.TubeGeometry(new T.CatmullRomCurve3(pts.map((p) => V(...p))), 20, r, 8), 0, 0, 0, { smooth: true, ...lo })); const e = pts[pts.length - 1]; t.add(sph(r, r, r, e[0], e[1], e[2], lo)); return t; };
+  if (pose === 'curl') {
+    const body = sph(210, 95, 170, 0, 95, 0); g.add(body);                                             // the curled body
+    g.add(sph(78, 66, 80, 90, 85, 170));                                                              // the head resting forward
+    g.add(ear(48, 140, 165, 0.3)); g.add(ear(128, 140, 165, -0.3));
+    g.add(tube([[-170, 30, 60], [-120, 30, 200], [40, 28, 250], [170, 28, 210], [230, 28, 110]], 26));   // the tail round the front
   } else {
-    g.add(sph(105, 150, 125, 0, 150, -20)); g.add(sph(78, 72, 78, 0, 330, 20));
-    for (const s of [-1, 1]) { g.add(kit.cyl(s * 48, 380, 15, 24, 62, { rTop: 0, seg: 4, ...lo })); g.add(sph(34, 14, 60, s * 52, 14, 110, lo)); }
+    g.add(sph(105, 175, 125, 0, 200, -20, {}, [-0.12, 0, 0]));                                          // the chest and body, leaning back a little
+    for (const s of [-1, 1]) { g.add(sph(60, 100, 120, s * 85, 100, -45)); g.add(kit.cyl(s * 44, 0, 58, 34, 195, { rTop: 30, seg: 14 })); g.add(sph(30, 16, 48, s * 42, 16, 110, lo)); }   // haunches, front legs, paws
+    g.add(sph(78, 72, 76, 0, 375, 30));                                                                // the head
+    g.add(ear(-42, 420, 28, 0.18)); g.add(ear(42, 420, 28, -0.18));
+    g.add(tube([[70, 32, -110], [175, 34, -70], [200, 36, 60], [120, 32, 150]], 24));                  // the tail curled round the feet
   }
-  const curve = new T.CatmullRomCurve3(pose === 'loaf' ? [[0, 50, -170], [150, 40, -150], [190, 36, -40]].map((p) => new T.Vector3(...p)) : [[60, 40, -100], [170, 34, -60], [190, 32, 70], [110, 30, 130]].map((p) => new T.Vector3(...p)));
-  g.add(kit.solid(new T.TubeGeometry(curve, 14, 24, 8), 0, 0, 0, lo));
   return kit.merge(g);
 }
 export function basket(kit, { r = 230, h = 320 } = {}) {   // a woven basket with a blanket folded over the rim

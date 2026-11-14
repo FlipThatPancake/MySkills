@@ -6,6 +6,7 @@
   { "id": "corner-right", "walls": 2, "angle": 90, "second": "right" },
   { "id": "wide-angle", "walls": 2, "angle": 120, "second": "right" }
  ],
+ "plants": [1, 2, 3],
  "kitchen": {
   "shape": ["straight", "galley", "L", "U", "peninsula", "island"],
   "hero": ["island with stools", "range hood over the hob", "tall pantry wall", "open shelves and a dresser"],
@@ -15,19 +16,19 @@
    [{ "kind": "window", "on": "second", "sash": "fixed" }, { "kind": "arch", "on": "first" }],
    [{ "kind": "window", "on": "first", "sash": "fixed" }, { "kind": "window", "on": "second" }]
   ],
-  "accents": ["fruit bowl", "cutting board", "pan on the hob", "cat", "vase of branches", "book stack", "pouf", "basket", "mirror"]
+  "accents": ["fruit bowl", "cutting board", "pan on the hob", "jars", "kettle", "tea towel on a rail", "herbs on the worktop", "stool", "trolley", "basket of vegetables", "wall shelf with jars"]
  },
  "dining": {
-  "hero": ["long table under a pendant", "round-ended table on a rug", "sideboard with a big mirror"],
+  "hero": ["long table under a pendant", "round table on a rug", "sideboard with a big mirror"],
   "openings": [
    [{ "kind": "window", "on": "first" }],
    [{ "kind": "window", "on": "first" }, { "kind": "arch", "on": "second" }],
    [{ "kind": "door", "on": "second" }, { "kind": "window", "on": "first" }]
   ],
-  "accents": ["vase of branches", "book stack", "cat", "basket", "mirror", "wall shelf", "cushion", "floor lamp"]
+  "accents": ["vase of branches", "book stack", "basket", "mirror", "wall shelf", "cushion on a chair", "floor lamp", "bench"]
  },
  "living": {
-  "hero": ["sofa with a rug and coffee table", "shelf wall with an armchair", "daybed under a window"],
+  "hero": ["sofa with a rug and coffee table", "shelf wall with an armchair", "two armchairs and a side table"],
   "openings": [
    [{ "kind": "window", "on": "first" }],
    [{ "kind": "window", "on": "second" }, { "kind": "arch", "on": "first" }],
@@ -35,5 +36,44 @@
   ],
   "accents": ["cushion", "vase of branches", "book stack", "cat", "basket", "pouf", "mirror", "wall shelf", "floor lamp", "side table"]
  },
- "plants": [1, 2, 3]
+ "bedroom": {
+  "hero": ["bed with a headboard on the backing wall", "bed under a window with a bedside table each side"],
+  "openings": [
+   [{ "kind": "window", "on": "first" }],
+   [{ "kind": "window", "on": "second" }, { "kind": "door", "on": "first" }],
+   [{ "kind": "window", "on": "first" }, { "kind": "door", "on": "second" }]
+  ],
+  "pieces": ["bed", "bedsideTable", "wardrobe", "rug"],
+  "accents": ["cushion", "mirror", "basket", "cat", "floor lamp", "bench at the foot of the bed", "wall shelf", "picture", "book stack"]
+ },
+ "reading-corner": {
+  "hero": ["reading chair with a footstool and a floor lamp", "daybed under shelves"],
+  "openings": [
+   [{ "kind": "window", "on": "first" }],
+   [{ "kind": "window", "on": "second" }],
+   [{ "kind": "window", "on": "first" }, { "kind": "window", "on": "second" }]
+  ],
+  "pieces": ["readingChair", "footstool", "floorLamp", "shelf", "daybed"],
+  "accents": ["cushion", "book stack", "side table", "cat", "basket", "picture", "wall shelf", "vase of branches"]
+ },
+ "hallway": {
+  "hero": ["coat hooks over a bench", "console with a mirror"],
+  "openings": [
+   [{ "kind": "door", "on": "first" }],
+   [{ "kind": "door", "on": "first" }, { "kind": "arch", "on": "second" }],
+   [{ "kind": "arch", "on": "first" }, { "kind": "window", "on": "second" }]
+  ],
+  "pieces": ["coatHooks", "bench", "console", "mirror"],
+  "accents": ["basket", "plant", "picture", "rug", "vase of branches", "floor lamp", "stool"]
+ },
+ "home-office": {
+  "hero": ["desk under a window", "desk with a shelf wall"],
+  "openings": [
+   [{ "kind": "window", "on": "first" }],
+   [{ "kind": "window", "on": "first" }, { "kind": "door", "on": "second" }],
+   [{ "kind": "window", "on": "second" }, { "kind": "arch", "on": "first" }]
+  ],
+  "pieces": ["desk", "deskChair", "shelf"],
+  "accents": ["book stack", "floor lamp", "basket", "picture", "wall shelf", "cushion", "mirror", "rug"]
+ }
 }

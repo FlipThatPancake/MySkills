@@ -107,7 +107,7 @@ export function baseRun(kit, { modules, depth = 600, top = 900, overhang = 20, t
     : [[trimStart, -depth], [length, -depth], [length, J], [length - depth - overhang, J], [length - depth - overhang, overhang], [trimStart, overhang]];
   if (finishedBack) {   // the back faces the room: a panel over the carcass backs, and legs under the overhang
     add(kit.box(0, PL, -depth + FD, length, TOP - PL, FD));
-    if (backOverhang > 0) for (const px of [0, length - 40]) add(kit.box(px, 0, -depth - backOverhang + 60, 40, TOP, 40, { tone: 'lo' }));
+    if (backOverhang > 0) for (const px of [0, length - 40]) add(kit.box(px, 0, overhang, 40, TOP, depth + overhang + backOverhang));   // a 40 mm slab at each end under the overhang, flush with the worktop
   }
   for (const side of endPanels) add(kit.box(side === 'start' ? -FD : length, 0, overhang, FD, top, depth + overhang));   // an end panel closes a run that ends in the open
   if (ownsTop) {

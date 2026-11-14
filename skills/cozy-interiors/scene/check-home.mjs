@@ -120,6 +120,21 @@ const issues = await page.evaluate(() => {
     const xc = W.len - b.op.at, zone = { x0: xc - 500, x1: xc + 500, z0: 0, z1: 1500, y0: 0, y1: 1900 };
     for (const id of Object.keys(objs)) { if (sc(id).mount !== 'floor' || ['rug'].includes(sc(id).asset)) continue; if (hit3(toLocal(W, boxes[id]), zone, 20)) out.push({ rule: 'path', what: `${id} blocks the path in front of the ${b.op.kind} on wall ${W.i} at ${b.op.at}` }); }
   }
+  // 5. support: a thing that stands `on` something touches its top (or sits inside it, like a cushion on a seat); a thing on a wall touches that wall
+  const inside = (poly, [x, z]) => { let c = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) { const [xi, zi] = poly[i], [xj, zj] = poly[j]; if ((zi > z) !== (zj > z) && x < (xj - xi) * (z - zi) / (zj - zi) + xi) c = !c; } return c; };
+  const topOf = (id) => sc(id).asset === 'baseRun' ? (sc(id).params?.top || 900) : boxes[id].max.y;
+  for (const id of Object.keys(objs)) {
+    const m = sc(id).mount, b = boxes[id];
+    if (m === 'on') {
+      const c = b.getCenter(new T.Vector3()), under = Object.keys(objs).filter((o) => o !== id && ['floor', 'on'].includes(sc(o).mount) && !['rug'].includes(sc(o).asset) && inside(foot(o), [c.x, c.z]));
+      if (!under.length) out.push({ rule: 'support', what: `${id} stands on nothing (no piece under it)` });
+      else if (!under.some((o) => b.min.y >= 100 && b.min.y <= topOf(o) + 25 && b.min.y >= topOf(o) - 25 || b.min.y >= 100 && b.min.y < topOf(o) - 25)) out.push({ rule: 'support', what: `${id} floats ${(b.min.y - Math.max(...under.map(topOf))).toFixed(0)} mm above ${under.join(', ')}` });
+    }
+    if (m === 'wall') {
+      const near = home.walls.some((W) => { let lo = 1e9, hi = -1e9, s0 = 1e9, s1 = -1e9; for (const { x, z } of b.pts) { const dx = x - W.to[0], dz = z - W.to[1], d = dx * W.n[0] + dz * W.n[1], s = -(dx * W.d[0] + dz * W.d[1]); lo = Math.min(lo, d); hi = Math.max(hi, d); s0 = Math.min(s0, s); s1 = Math.max(s1, s); } return lo > -12 && lo < 90 && s1 > 0 && s0 < W.len; });
+      if (!near) out.push({ rule: 'support', what: `${id} hangs on no wall (its back is not against one)` });
+    }
+  }
   return out;
 });
 
@@ -132,7 +147,7 @@ const areaIssues = await page.evaluate(() => {
   const rect = (b) => { const xs = [], ys = []; for (const x of [b.min.x, b.max.x]) for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) { const p = new T.Vector3(x, y, z).project(camera); xs.push(p.x); ys.push(p.y); } return { x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys) }; };
   const ov = (a, b) => Math.max(0, Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0)) * Math.max(0, Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0)), area2 = (a) => (a.x1 - a.x0) * (a.y1 - a.y0);
   const face = (id) => { const t = objs[id].rotation.y; return new T.Vector3(Math.sin(t), 0, Math.cos(t)); };
-  const SOFT = ['rug', 'curtain', 'cushion', 'pouf', 'basket'], WALLDEC = ['picture', 'mirror', 'wallShelf', 'curtain'], LIVING = ['plant', 'cat'], LAMPS = ['pendantLamp', 'floorLamp'], MINOR = ['socket', 'lightSwitch'];
+  const SOFT = ['rug', 'curtain', 'cushion', 'pouf', 'basket', 'teaTowel'], WALLDEC = ['picture', 'mirror', 'wallShelf', 'curtain'], LIVING = ['plant', 'cat'], LAMPS = ['pendantLamp', 'floorLamp'], MINOR = ['socket', 'lightSwitch'];
   for (const A of api.areaIds) {
     const mine = ids.filter((i) => areaOf(i) === A), real = mine.filter((i) => !MINOR.includes(sc(i).asset)), as = (list) => real.filter((i) => list.includes(sc(i).asset));
     const walls = home.walls.filter((w) => w.id && w.id.startsWith(A + '-'));

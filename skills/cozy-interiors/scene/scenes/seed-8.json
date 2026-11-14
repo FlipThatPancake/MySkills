@@ -192,9 +192,6 @@
     "params": {
      "finishedBack": true,
      "backOverhang": 300,
-     "endPanels": [
-      "end"
-     ],
      "modules": [
       {
        "w": 600,
@@ -265,7 +262,7 @@
     "asset": "hob",
     "at": [
      2350,
-     900,
+     0,
      600
     ],
     "mount": "on",
@@ -338,12 +335,36 @@
     "shadow": false
    },
    {
-    "id": "kitchen-plant",
-    "asset": "plant",
+    "id": "kitchen-herbs",
+    "asset": "herbs",
     "at": [
      250,
      900,
-     800
+     1100
+    ],
+    "mount": "on",
+    "group": "kitchen:run",
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-jars",
+    "asset": "jars",
+    "at": [
+     950,
+     900,
+     330
+    ],
+    "mount": "on",
+    "group": "kitchen:run",
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-kettle",
+    "asset": "kettle",
+    "at": [
+     3100,
+     900,
+     330
     ],
     "mount": "on",
     "group": "kitchen:run",
@@ -858,16 +879,16 @@
      {
       "name": "down the peninsula",
       "from": [
-       4800,
-       1350,
-       3600
+       6200,
+       1650,
+       3900
       ],
       "look": [
-       2800,
-       1000,
-       900
+       2300,
+       950,
+       1000
       ],
-      "fov": 34
+      "fov": 36
      },
      {
       "name": "sink and window",
@@ -884,18 +905,18 @@
       "fov": 30
      },
      {
-      "name": "the pantry",
+      "name": "the pantry and arch",
       "from": [
-       4300,
-       1450,
-       3000
+       6000,
+       1500,
+       3900
       ],
       "look": [
-       4600,
+       5200,
        1100,
        300
       ],
-      "fov": 32
+      "fov": 40
      }
     ]
    }
@@ -951,18 +972,18 @@
       "fov": 30
      },
      {
-      "name": "the corner",
+      "name": "sideboard and lamp",
       "from": [
-       13500,
-       1400,
-       3600
+       14900,
+       1500,
+       3700
       ],
       "look": [
-       14700,
-       900,
+       13000,
+       950,
        200
       ],
-      "fov": 32
+      "fov": 38
      }
     ]
    }
@@ -992,30 +1013,30 @@
      {
       "name": "sofa and rug",
       "from": [
-       19500,
-       1250,
-       4200
+       19600,
+       1450,
+       4600
       ],
       "look": [
-       20700,
-       700,
-       600
+       21000,
+       650,
+       900
       ],
-      "fov": 32
+      "fov": 38
      },
      {
       "name": "shelves and armchair",
       "from": [
-       20900,
-       1400,
-       3600
+       19900,
+       1500,
+       3400
       ],
       "look": [
-       22600,
+       22500,
        1000,
        300
       ],
-      "fov": 32
+      "fov": 36
      },
      {
       "name": "window and mirror",

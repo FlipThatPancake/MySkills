@@ -183,7 +183,7 @@
     "asset": "hob",
     "at": [
      4100,
-     900,
+     0,
      600
     ],
     "mount": "on",
@@ -268,9 +268,6 @@
     "params": {
      "finishedBack": true,
      "backOverhang": 300,
-     "endPanels": [
-      "end"
-     ],
      "modules": [
       {
        "w": 600,
@@ -379,21 +376,56 @@
     "area": "kitchen"
    },
    {
-    "id": "kitchen-mirror",
-    "asset": "mirror",
+    "id": "kitchen-shelf",
+    "asset": "wallShelf",
     "at": [
      6000,
-     900,
-     3750
+     1300,
+     3600
     ],
     "turn": -90,
     "mount": "wall",
     "params": {
-     "w": 480,
-     "h": 1100,
-     "shape": "arch"
+     "w": 700
     },
     "group": "kitchen:window side",
+    "area": "kitchen",
+    "shadow": false
+   },
+   {
+    "id": "kitchen-jars",
+    "asset": "jars",
+    "at": [
+     1900,
+     900,
+     330
+    ],
+    "mount": "on",
+    "group": "kitchen:run",
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-kettle",
+    "asset": "kettle",
+    "at": [
+     4750,
+     900,
+     330
+    ],
+    "mount": "on",
+    "group": "kitchen:run",
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-towel",
+    "asset": "teaTowel",
+    "at": [
+     2650,
+     1350,
+     0
+    ],
+    "mount": "wall",
+    "group": "kitchen:run",
     "area": "kitchen",
     "shadow": false
    },
@@ -807,16 +839,16 @@
      {
       "name": "window and bench",
       "from": [
-       3500,
-       1300,
-       2800
+       3700,
+       1500,
+       3700
       ],
       "look": [
        6000,
-       1000,
+       800,
        2200
       ],
-      "fov": 32
+      "fov": 40
      }
     ]
    }
@@ -860,30 +892,30 @@
      {
       "name": "window and plants",
       "from": [
-       11600,
-       1400,
-       3400
+       11300,
+       1500,
+       3900
       ],
       "look": [
-       11000,
+       11300,
        1000,
        0
       ],
-      "fov": 30
+      "fov": 46
      },
      {
       "name": "the mirror",
       "from": [
-       11600,
+       10500,
        1400,
-       3200
+       3800
       ],
       "look": [
-       13800,
+       13950,
        1000,
-       1200
+       1600
       ],
-      "fov": 32
+      "fov": 36
      }
     ]
    }
