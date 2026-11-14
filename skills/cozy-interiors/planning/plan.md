@@ -118,15 +118,21 @@ Idle tour: a sway after 12 s, then a cut to a composed view every 4 s, picked fr
 ## 7. Views of home areas (round 3, revised 2026-11-14)
 
 The skill makes beautiful views of home areas. Layout serves the view, so an area may be larger than a real room.
-An area is one view: a back wall, an optional side wall and a floor, flat and in the backdrop's tone, shown by seams that melt away past the furniture.
-One area is in focus at a time. Areas sit in one home layout that makes sense; shifting area moves and turns the camera, and neighbours thin out toward the edge of the view.
+An area is an open space backed by one wall, or by two walls at an angle; nothing encloses it, so it feels spacious.
+Walls and floor are flat, in the backdrop's tone, and their seams melt away past the furniture.
+Each area has enough to look at to be its own scene: a main piece, objects at three heights, something living, something soft and something on the wall. A check counts these.
+Daylight lights every area, so lamps cast no light on floors or surfaces.
+One area is in focus at a time. Areas sit in one home layout that makes sense; shifting area moves and turns the camera.
+Objects outside the focus area fade out until fully invisible, and walls hide what lies behind them.
 Windows, doors and arches are features in a wall: thick frames, a leaf standing slightly open, a glimpse of what lies beyond.
 The skill ships parts: the kit, the library, the checks and an empty area.
 An area is a view into the layout: its bounds and its own camera position and direction.
 
 The corner kitchen moves out of the skill to `tests/`, as a fixture for the checks.
-Variety: dice tables in the skill (room size, shape, layout type, door and window walls, style, time of day, how lived-in).
-A small roll script picks one option from each table using a seed, which is saved in scene.json, so a room can be rebuilt exactly.
+Variety comes from dice tables in the skill: backing walls, kitchen run shape (straight, galley, L, U, peninsula, island), openings, main piece, floor, accents, time of day, how lived-in.
+A small roll script picks one option from each table using a seed, which is saved in scene.json, so an area can be rebuilt exactly.
+A fresh area starts from the dice, so two requests rarely end alike.
+A blind trial gives independent agents only the skill and compares how varied their results are.
 The agent places everything in mm by room rules, and the checks report problems.
 Kitchen rules: runs filled with cabinet widths of 300 to 900 mm plus a filler strip. Sink, hob and fridge 1.2 to 2.7 m apart, each pair (the work triangle). Walkways at least 900 mm, and 1000 to 1200 mm between facing runs.
 Other rooms' rules are added when a room type is first asked for.
@@ -134,5 +140,10 @@ Library, two kinds. Fixed products (fridge, hob, sink, oven) come from tables of
 Fitted things are generated from the scene: worktops follow the runs with cut-outs; walls, floor and tiles follow the floor plan; plinths and fillers fill the gaps; shadows follow each footprint.
 Moving life is generated too: the butterfly's flight path comes from the room's free space, and gust and drift settings come from ranges.
 When nothing fits a request, the agent writes a new generator in the kit's style; the checks test it like any object.
-New area checks: openings clear of wall units, and the work triangle.
+Placement rules, each with a check:
+Openings have at least 1200 mm of wall between them, and no swing crosses another opening.
+An inward-opening sash keeps its zone clear, and nothing tall sits on a window's centre line.
+A table stands against a wall, or free with 900 mm clear all round, centred on its lamp or rug.
+A passage keeps a clear path ahead.
+Openings stay clear of wall units, and the sink, hob and fridge keep the work triangle.
 Build order: area set, library, dice tables and roll script, kitchen moved to tests, then SKILL.md.
