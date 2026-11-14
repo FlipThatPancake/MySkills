@@ -37,7 +37,11 @@ class Area {
   get c() { return Math.cos(rad(this.psi)); } get s() { return Math.sin(rad(this.psi)); }
   P([x, z]) { return [r0(this.O[0] + x * this.c - z * this.s), r0(this.O[1] + x * this.s + z * this.c)]; }
   P3([x, y, z]) { const p = this.P([x, z]); return [p[0], y, p[1]]; }
-  worldBounds() { const [x0, z0, x1, z1] = this.rect, q = [[x0, z0], [x1, z1], [x0, z1], [x1, z0]].map((p) => this.P(p)); return { x0: Math.min(...q.map((p) => p[0])), x1: Math.max(...q.map((p) => p[0])), z0: Math.min(...q.map((p) => p[1])), z1: Math.max(...q.map((p) => p[1])) }; }
+  worldBounds() {   // the floor the area owns, grown to hold its own walls (an angled wall reaches past the rect)
+    const [x0, z0, x1, z1] = this.rect, q = [[x0, z0], [x1, z1], [x0, z1], [x1, z0]].map((p) => this.P(p));
+    for (const W of this.h.S.home.walls) if (W.id.startsWith(this.id + '-')) q.push(W.from, W.to);
+    return { x0: Math.min(...q.map((p) => p[0])), x1: Math.max(...q.map((p) => p[0])), z0: Math.min(...q.map((p) => p[1])), z1: Math.max(...q.map((p) => p[1])) };
+  }
   // ---- walls
   back(len, openings = [], at = [0, 0]) { this.backLen = len; this.backAt = at; return this.wall('back', at, 0, len, openings); }
   left(len, openings = [], angle = 90) { const k = 180 - angle, to = this.backAt || [0, 0]; return this.wall('left', [to[0] - Math.cos(rad(-k)) * len, to[1] - Math.sin(rad(-k)) * len], -k, len, openings); }
@@ -52,7 +56,7 @@ class Area {
       put(oid, asset, ox, off, o = {}) { return p.put(oid, asset, F.at(ox, off), -phi + (o.turn || 0), o); },   // low level: the object's origin at ox along, off out
       place(oid, asset, xc, o = {}) {   // by the asset's own origin and size: xc is its middle along the wall
         const { w, d, m } = sizeOf(asset, o.params), y = o.y ?? (typeof m.y === 'number' ? m.y : 0), mount = o.mount || m.mount;
-        const off = o.off ?? (m.origin === 'centre' ? d / 2 : m.origin === 'front-left' ? d : m.origin === 'front-centre' ? (o.depth ?? 600) : 0);
+        const off = o.off ?? (m.origin === 'centre' ? d / 2 : m.origin === 'front-left' ? (o.depth ?? d) : m.origin === 'front-centre' ? (o.depth ?? 600) : 0);
         const ox = m.origin === 'front-left' ? xc - w / 2 : xc;
         return F.put(oid, asset, ox, off, { ...o, y, mount });
       },
@@ -62,6 +66,7 @@ class Area {
   put(id, asset, [x, z], turn = 0, { y = 0, mount, group, hero, params, ...rest } = {}) {
     if (!ASSETS[asset]) throw new Error(`unknown asset "${asset}"; node assets.mjs lists them`);
     if (!group) throw new Error(`object "${id}" needs a group (its run, table set, seating group ...)`);
+    if (ASSETS[asset].variants && params?.form === undefined) { const c = (this.h.counts ||= {}); params = { ...(params || {}), form: (c[asset] = (c[asset] ?? this.h.S.seed % ASSETS[asset].variants) + 1) % ASSETS[asset].variants }; }
     const [wx, wz] = this.P([x, z]);
     this.h.S.home.objects.push({ id: `${this.id}-${id}`, asset, at: [wx, y, wz], ...(turn - this.psi ? { turn: r0(turn - this.psi) } : {}), mount: mount || ASSETS[asset].mount, ...(params ? { params } : {}), group: `${this.id}:${group}`, ...(hero ? { hero: true } : {}), area: this.id, ...rest });
   }
@@ -79,7 +84,7 @@ class Area {
         const m = this.mod(kind, oo.nth || 0), meta = ASSETS[asset], top = params.top || 900, wall = meta.mount === 'wall';
         const xc = m.xc + (oo.dx || 0), oid = oo.id || `${id}-${asset}${n++ || ''}`;
         const o2 = { group, ...oo, params: oo.params }; delete o2.nth; delete o2.dx; delete o2.id;
-        if (meta.origin === 'front-centre') return F.place(oid, asset, xc, { ...o2, depth });
+        if (asset === 'hob' || asset === 'hood') return F.place(oid, asset, xc, { ...o2, depth });
         if (asset === 'pan') return F.place(oid, asset, xc + m.w * 0.2, { ...o2, y: 940, off: depth - 160, turn: o2.turn ?? -35 });
         return F.place(oid, asset, xc, { ...o2, y: o2.y ?? top, off: o2.off ?? depth * 0.55, ...(wall ? { off: 0, y: o2.y ?? meta.y } : {}) });
       },
@@ -100,9 +105,6 @@ class Area {
   }
   view({ target, az = 20, el = 15, dist }) { this.cam = { target: this.P3(target), az: az - this.psi, el, fit: 'objects', ...(dist ? { dist } : {}) }; }
   shot(name, from, look, fov = 30, subject) { this.shots.push({ name, from: this.P3(from), look: this.P3(look), fov, ...(subject ? { subject: `${this.id}:${subject}` } : {}) }); }
-  out() {
-    const [x0, z0, x1, z1] = this.rect, c = [this.P([x0, z0]), this.P([x1, z1])];
-    return { id: this.id, name: this.name, bounds: { x0: Math.min(c[0][0], c[1][0]), x1: Math.max(c[0][0], c[1][0]), z0: Math.min(c[0][1], c[1][1]), z1: Math.max(c[0][1], c[1][1]), top: this.top }, camera: { home: this.cam, shots: this.shots } };
-  }
+  out() { const b = this.worldBounds(); return { id: this.id, name: this.name, O: this.O, psi: this.psi, bounds: { ...b, top: this.top }, camera: { home: this.cam, shots: this.shots } }; }
 }
 export const facing = (from, to) => deg(Math.atan2(to[0] - from[0], to[1] - from[1]));   // the turn that makes an object at `from` face `to`, in local x/z

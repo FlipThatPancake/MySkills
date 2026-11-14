@@ -7,13 +7,13 @@ export const ASSETS = {
   baseRun: A('front-left', [0, 600, 900], 'floor', 'modules [{ w, kind, ... }] or length; depth 600, top 900, joins, finishedBack, backOverhang, ownsTop, trimStart, trimEnd, endPanels', { slots: ['hob', 'sink'], note: 'kinds: doors, door (hinge l|r), drawers (n), drawerDoors, sink, hob, filler, open, tall (h), blind (dead l|r)' }),
   wallRun: A('front-left', [0, 320, 720], 'wall', 'modules or length; y0 1450, h 720, depth 320', { y: 0 }),
   fridge: A('front-left', [910, 700, 2250], 'floor', '-'),
-  hob: A('front-centre', [900, 600, 20], 'on', '-', { y: 0, slot: 'hob', note: 'sits in the worktop over a hob module: y 0' }),
-  hood: A('front-centre', [900, 500, 900], 'wall', '-', { y: 0, slot: 'hob', note: 'over a hob module: y 0' }),
+  hob: A('front-left', [900, 600, 20], 'on', '-', { y: 0, slot: 'hob', note: 'sits in the worktop over a hob module: y 0' }),
+  hood: A('front-left', [900, 500, 900], 'wall', '-', { y: 0, slot: 'hob', note: 'over a hob module: y 0' }),
   pan: A('centre', [260, 260, 60], 'on', '-', { y: 940, slot: 'hob' }),
   cuttingBoard: A('centre', [300, 40, 400], 'on', '-', { y: 904, note: 'leans against the wall' }),
   fruitBowl: A('centre', [300, 300, 120], 'on', '-', { y: 'top' }),
   plant: A('centre', [120, 120, 300], 'on', '-', { y: 'top', note: 'a pot on a surface; for the floor use floorPlant' }),
-  floorPlant: A('centre', [420, 420, 950], 'floor', 'h 950, seed'),
+  floorPlant: A('centre', [560, 560, 950], 'floor', 'h 950, seed'),
   jars: A('centre', [460, 130, 260], 'on', 'n 3', { y: 'top' }),
   kettle: A('centre', [300, 220, 260], 'on', '-', { y: 'top', note: 'on a worktop or a hob' }),
   herbs: A('centre', [360, 100, 170], 'on', 'n 3', { y: 'top' }),
@@ -56,3 +56,4 @@ export const ASSETS = {
   deskChair: A('centre', [540, 540, 850], 'floor', '-'),
   daybed: A('centre', [1900, 850, 810], 'floor', 'w 1900, d 850'),
 };
+for (const [k, n] of Object.entries({ floorPlant: 4, plant: 4, vase: 4, cushion: 4, picture: 4 })) { ASSETS[k].variants = n; ASSETS[k].params = (ASSETS[k].params === '-' ? '' : ASSETS[k].params + ', ') + `form 0-${n - 1}`; }   // compose.mjs picks a form from the seed

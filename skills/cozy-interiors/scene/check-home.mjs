@@ -164,8 +164,21 @@ const areaIssues = await page.evaluate(() => {
     // the home view
     api.setArea(A, true); camera.updateMatrixWorld(true); camera.updateProjectionMatrix();
     const R = Object.fromEntries(ids.map((i) => [i, rect(boxes[i])]));
-    for (const i of mine) { const r = R[i]; if (Math.abs(r.x0) > 0.88 || Math.abs(r.x1) > 0.88 || r.y0 < -0.88 || r.y1 > 0.88) out.push({ rule: 'frame', what: `${A}: ${i} reaches ${(Math.max(Math.abs(r.x0), Math.abs(r.x1), Math.abs(r.y0), Math.abs(r.y1)) * 100).toFixed(0)}% toward the edge of the home view (keep within 88%): the area's objects must fit the frame: remove a stray piece or bring it nearer the group` }); }
-    for (const W of home.walls) { if (!W.id || !W.id.startsWith(A + '-')) continue; for (const b of W.built) { const r = rect(box(b.group)); if (Math.abs(r.x0) > 0.88 || Math.abs(r.x1) > 0.88 || r.y0 < -0.88 || r.y1 > 0.88) out.push({ rule: 'frame', what: `${A}: the ${b.op.kind} on ${W.id} at ${b.op.at} reaches the edge of the home view (x ${r.x0.toFixed(2)} to ${r.x1.toFixed(2)}, y ${r.y0.toFixed(2)} to ${r.y1.toFixed(2)})` }); } }
+    for (const i of mine) { const r = R[i]; if (Math.abs(r.x0) > 0.88 || Math.abs(r.x1) > 0.88 || r.y0 < -0.88 || r.y1 > 0.88) out.push({ rule: 'frame', what: `${A}: ${i} reaches ${(Math.max(Math.abs(r.x0), Math.abs(r.x1), Math.abs(r.y0), Math.abs(r.y1)) * 100).toFixed(0)}% toward the edge of the home view (keep within 88%): the area's objects and back-wall openings must fit the frame: remove a stray piece or bring it nearer the group` }); }
+    for (const W of home.walls) { if (!W.id || W.id !== A + '-back') continue; for (const b of W.built) { const r = rect(box(b.group)); if (Math.abs(r.x0) > 0.88 || Math.abs(r.x1) > 0.88 || r.y0 < -0.88 || r.y1 > 0.88) out.push({ rule: 'frame', what: `${A}: the ${b.op.kind} on ${W.id} at ${b.op.at} reaches the edge of the home view (x ${r.x0.toFixed(2)} to ${r.x1.toFixed(2)}, y ${r.y0.toFixed(2)} to ${r.y1.toFixed(2)})` }); } }
+    const bd = api.areas[A].bounds;
+    // fill: the area's objects span 70 to 88 percent of the frame width
+    { const xs0 = Math.min(...mine.map((i) => R[i].x0)), xs1 = Math.max(...mine.map((i) => R[i].x1)), span = (xs1 - xs0) / 2; if (span < 0.7) out.push({ rule: 'fill', what: `${A}: its objects span ${(span * 100).toFixed(0)}% of the home view's width (want 70 to 88): pull the group forward and nearer together, or lower the view` }); }
+    // depth: three layers, floor pieces spread over at least 45 percent of the area's depth from the backing wall
+    { const bw = home.walls.find((w) => w.id === A + '-back');
+      if (bw) { const dist = (x, z) => (x - bw.to[0]) * bw.n[0] + (z - bw.to[1]) * bw.n[1], cs = [[bd.x0, bd.z0], [bd.x1, bd.z1], [bd.x0, bd.z1], [bd.x1, bd.z0]].map((c) => Math.abs(dist(...c))), D = Math.min(Math.max(...cs), 4800);
+        const ds = real.filter((i) => ['floor', 'on'].includes(sc(i).mount) && sc(i).asset !== 'rug').map((i) => { const c = boxes[i].getCenter(new T.Vector3()); return Math.abs(dist(c.x, c.z)); }), spread = Math.max(...ds) - Math.min(...ds);
+        if (spread < 0.45 * D) out.push({ rule: 'depth', what: `${A}: its pieces span ${spread.toFixed(0)} mm of the ${D.toFixed(0)} mm depth (want 45%): pull the main group 800 to 1500 mm off the wall and add a low piece in front` }); } }
+    // rugs lie under furniture, never alone
+    for (const r of real.filter((i) => sc(i).asset === 'rug')) { const rb = boxes[r]; if (!real.some((i) => i !== r && sc(i).asset !== 'rug' && ['floor'].includes(sc(i).mount) && rb.containsPoint(new T.Vector3(...boxes[i].getCenter(new T.Vector3()).toArray().map((v, k) => (k === 1 ? rb.min.y + 1 : v)))))) out.push({ rule: 'rug', what: `${r} has no furniture on it: put a group on the rug or remove it` }); }
+    // ghosts: a piece partly outside the area's bounds fades half-way at the home view
+    for (const i of mine) { const b = boxes[i]; if (b.min.x < bd.x0 - 5 || b.max.x > bd.x1 + 5 || b.min.z < bd.z0 - 5 || b.max.z > bd.z1 + 5) out.push({ rule: 'ghost', what: `${A}: ${i} reaches past the area's bounds, so it fades half-way at the home view: grow the rect or move it in` }); }
+    for (const W of home.walls) { if (!W.id || !W.id.startsWith(A + '-')) continue; for (const b of W.built) { const q = box(b.group); if (q.min.x < bd.x0 - 400 || q.max.x > bd.x1 + 400 || q.min.z < bd.z0 - 400 || q.max.z > bd.z1 + 400) out.push({ rule: 'ghost', what: `${A}: the ${b.op.kind} on ${W.id} reaches past the area's bounds and fades half-way at the home view` }); } }
     const hero = real.find((i) => sc(i).hero); if (hero) { const c = (R[hero].x0 + R[hero].x1) / 2; if (Math.abs(c) > 0.6) out.push({ rule: 'frame', what: `${A}: the hero ${hero} sits at ${(c * 50 + 50).toFixed(0)}% across the frame (keep it between 20% and 80%)` }); }
     const cp = camera.position, bnd = api.areas[A].bounds, bb = new T.Box3(new T.Vector3(bnd.x0, 0, bnd.z0), new T.Vector3(bnd.x1, bnd.top || 2500, bnd.z1));
     for (const o of ids) {   // a neighbour never stands between the camera and the area
@@ -177,16 +190,23 @@ const areaIssues = await page.evaluate(() => {
     for (const [si, sh] of shots.entries()) {
       const subj = sh.subject || (heroId && sc(heroId).group), members = real.filter((i) => sc(i).group === subj);
       if (!members.length) { out.push({ rule: 'shot', what: `${A} shot "${sh.name}": no subject group "${subj}" (name one of: ${[...new Set(real.map((i) => sc(i).group))].join(', ')})` }); continue; }
-      api.setArea(A, true); api.at(sh.from, sh.look); camera.fov = sh.fov || 30; camera.updateProjectionMatrix(); camera.updateMatrixWorld(true);
+      api.setArea(A, true); api.at(sh.from, sh.look); camera.fov = sh.fov || 30; camera.updateProjectionMatrix(); camera.updateMatrixWorld(true); const cp2 = camera.position.clone();
       let x0 = 9, x1 = -9, y0 = 9, y1 = -9; for (const i of members) { const r = rect(boxes[i]); x0 = Math.min(x0, r.x0); x1 = Math.max(x1, r.x1); y0 = Math.min(y0, r.y0); y1 = Math.max(y1, r.y1); }
       const fill = Math.max((x1 - x0) / 2, (y1 - y0) / 2);
       if (x0 < -1 || x1 > 1 || y0 < -1 || y1 > 1) out.push({ rule: 'shot', what: `${A} shot "${sh.name}": its subject "${subj}" is cut by the frame (x ${x0.toFixed(2)} to ${x1.toFixed(2)}, y ${y0.toFixed(2)} to ${y1.toFixed(2)}): back the camera off or aim at the group` });
       else if (fill < 0.25 || fill > 0.7) out.push({ rule: 'shot', what: `${A} shot "${sh.name}": its subject "${subj}" fills ${(fill * 100).toFixed(0)}% of the frame (want 25 to 70): ${fill < 0.25 ? 'move in or widen the lens' : 'back off'}` });
+      { const cx = (x0 + x1) / 2, fp = sh.from, bb2 = bnd, fovv = sh.fov || 30;
+        if (fovv < 26 || fovv > 40) out.push({ rule: 'shot', what: `${A} shot "${sh.name}": lens ${fovv} degrees (use 26 to 40)` });
+        if (fp[0] < bb2.x0 - 300 || fp[0] > bb2.x1 + 300 || fp[2] < bb2.z0 - 1 || fp[2] > bb2.z1 + 2500 || fp[1] < 1100 || fp[1] > 1500) out.push({ rule: 'shot', what: `${A} shot "${sh.name}": the camera stands outside the area (at most 2500 mm in front of its front edge) or at ${fp[1]} mm (1100 to 1500 mm high)` });
+        if (Math.abs(cx) < 0.15 || Math.abs(cx) > 0.6) out.push({ rule: 'shot', what: `${A} shot "${sh.name}": the subject is at ${(cx * 50 + 50).toFixed(0)}% across the frame (put it on a third: 20-35% or 65-80%)` });
+        const dS = Math.min(...members.map((i) => cp2.distanceTo(boxes[i].getCenter(new T.Vector3())))); const fg = real.filter((i) => !members.includes(i) && sc(i).mount !== 'wall' && sc(i).asset !== 'rug').some((i) => { const r = rect(boxes[i]), c = (r.x0 + r.x1) / 2; return Math.abs(c) > 0.55 && Math.abs(c) < 1.1 && cp2.distanceTo(boxes[i].getCenter(new T.Vector3())) < dS; });
+        if (!fg) out.push({ rule: 'shot', what: `${A} shot "${sh.name}": no foreground piece at one edge, nearer than the subject (a pouf, basket, plant, stool): add one or move the camera` }); }
     }
     camera.fov = 30; camera.updateProjectionMatrix(); api.setArea(A, true); camera.updateMatrixWorld(true);
     // lamps clear of openings and each other; one lamp unless the area is wide
     const lamps = real.filter((i) => LAMPS.includes(sc(i).asset)), wide = bnd.x1 - bnd.x0 > 5000 || bnd.z1 - bnd.z0 > 5000;
-    if (lamps.length > (wide ? 2 : 1)) out.push({ rule: 'lamps', what: `${A} has ${lamps.length} lamps (${wide ? 'two at most' : 'one'})` });
+    if (lamps.length > 1) out.push({ rule: 'lamps', what: `${A} has ${lamps.length} lamps (one: a pendant over the table or a floor lamp)` });
+    for (const l of lamps) for (const d of as(WALLDEC)) if (ov(R[l], R[d]) > 0.002 && sc(d).asset !== 'curtain') out.push({ rule: 'lamps', what: `${A}: ${l} overlaps ${d} in the home view: move the lamp or the ${sc(d).asset}` });
     for (const l of lamps) {
       for (const W of home.walls) { if (!W.id || !W.id.startsWith(A + '-')) continue; for (const b of W.built) if (ov(R[l], rect(box(b.group))) > 0.002) out.push({ rule: 'lamps', what: `${A}: ${l} overlaps the ${b.op.kind} on ${W.id} in the home view` }); }
       for (const m of lamps) if (m > l && ov(R[l], R[m]) > 0) out.push({ rule: 'lamps', what: `${A}: ${l} and ${m} overlap in the home view` });

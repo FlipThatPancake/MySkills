@@ -49,7 +49,7 @@ export function createAreaScene(canvas, S) {
     const key = A.id + '@' + aspect.toFixed(3); if (fitted[key]) return fitted[key];
     home.group.updateMatrixWorld(true);
     const pts = []; for (const g of Object.values(home.objects)) if (inArea(A, g)) { const b = solidBox(g, new THREE.Box3()); if (b.isEmpty()) continue; for (const x of [b.min.x, b.max.x]) for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) pts.push(new THREE.Vector3(x, y, z)); }
-    for (const W of home.walls) if (W.id && W.id.startsWith(A.id + '-')) for (const o of W.built) { const b = solidBox(o.group, new THREE.Box3()); if (b.isEmpty()) continue; for (const x of [b.min.x, b.max.x]) for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) pts.push(new THREE.Vector3(x, y, z)); }   // doors, arches and windows of the backing walls count too
+    for (const W of home.walls) if (W.id && W.id === A.id + '-back') for (const o of W.built) { const b = solidBox(o.group, new THREE.Box3()); if (b.isEmpty()) continue; for (const x of [b.min.x, b.max.x]) for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) pts.push(new THREE.Vector3(x, y, z)); }   // doors, arches and windows of the backing walls count too
     const cam = new THREE.PerspectiveCamera(FOV, aspect, 10, 400000), tg = new THREE.Vector3(...v.target), LIM = 0.86;
     let d = v.dist || 8000;
     const place = () => { cam.position.copy(tg).add(sph(d, v.az, v.el)); cam.lookAt(tg); cam.updateMatrixWorld(true); cam.updateProjectionMatrix(); };

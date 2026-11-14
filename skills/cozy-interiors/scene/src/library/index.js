@@ -4,17 +4,17 @@ import { baseRun, wallRun, fillWidths } from './runs.js';
 import { fridge } from '../kitchen/fridge.js';
 import { hob } from '../kitchen/hob.js';
 import { hood } from '../kitchen/hood.js';
-import { plant } from '../kitchen/plant.js';
 import { pan } from '../kitchen/pan.js';
 import { fruitBowl } from '../kitchen/fruitBowl.js';
 import { cuttingBoard } from '../kitchen/cuttingBoard.js';
 import { socket, lightSwitch } from '../kitchen/details.js';
 import { pendantLamp, LAMP } from '../kitchen/atmosphere.js';
 import { table, chair } from './dining.js';
-import { floorPlant, cushion, vase, bookStack, mirror, wallShelf, sideTable, roundTable, cat, basket, pouf } from './decor.js';
+import { bookStack, mirror, wallShelf, sideTable, roundTable, cat, basket, pouf } from './decor.js';
+import { floorPlant, plant, vase, cushion, picture } from './variants.js';
 import { jars, kettle, herbs, trolley, teaTowel } from './kitchenware.js';
 import { bed, bedsideTable, wardrobe, desk, deskChair, coatHooks, daybed, readingChair, footstool, console_ } from './rooms.js';
-import { sofa, armchair, coffeeTable, rug, shelf, floorLamp, picture, sideboard, bench, curtain, stool } from './living.js';
+import { sofa, armchair, coffeeTable, rug, shelf, floorLamp, sideboard, bench, curtain, stool } from './living.js';
 
 function fitted({ length, modules, ...rest }) {
   const given = modules || [], have = given.reduce((s, m) => s + m.w, 0);
