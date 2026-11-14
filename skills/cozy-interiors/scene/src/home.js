@@ -1,7 +1,7 @@
 // @js:home — a whole home as one world of flat walls and objects, in the old kitchen's way: every wall is a one-sided plane in the backdrop tone, so the only sign of a room is the melting seams where walls meet the floor
 // and each other, the frames of the doors, arches and windows, and the soft contact shadows. Everything is built once; areas (area-run.js) are views into it.
 // buildHome(kit, home, registry) -> { group, objects, openables, walls, bounds, update(camera, target) }.
-// home = { height, tiles, walls: [{ from: [x, z], to: [x, z], openings }], objects }, all in millimetres, x right, y up, z toward the viewer.
+// home = { height, floor: { style: 'tiles' | 'boards' | 'plain', angle, board }, tiles, walls: [{ id, from: [x, z], to: [x, z], openings }], objects }, all in millimetres, x right, y up, z toward the viewer.
 //   A wall is a flat plane facing its room, which is on the LEFT of from -> to as seen from above with x to the right and z down the page (a room's walls run counter-clockwise on that page:
 //   back wall right to left, left wall top to bottom, front wall left to right, right wall bottom to top). Seen from behind, a wall is not drawn.
 //   An opening is { kind: 'window' | 'door' | 'arch', at (mm along the wall from `from`, to its middle), width, height, sill, hinge: 'l' | 'r', open (deg), to (area id: a click goes there), beyond: false (a real room lies beyond) }.
@@ -14,7 +14,7 @@ export const FADE = [0.15, 0.6];   // the planes thin out between these distance
 const step = (t) => { t = Math.min(1, Math.max(0, t)); return t * t * (3 - 2 * t); };
 const EDGE = 30000;
 
-export function buildHome(kit, home, registry) {
+export function buildHome(kit, home, registry, areas = []) {
   const T = kit.THREE, group = kit.group(), objRoot = kit.group(), objects = {}, H = home.height || 2700;
   group.add(objRoot);
   for (const o of home.objects || []) {
@@ -61,9 +61,11 @@ export function buildHome(kit, home, registry) {
     // seams: the wall meets the floor (broken where a door or arch lets the floor through), and the corner it makes with the next wall
     const seams = kit.group(); let a = 0;
     for (const [t0, t1] of [...W.through].sort((p, q) => p[0] - q[0]).concat([[len, len]])) { if (t0 > a) seams.add(kit.meltingLine([a, -1, 3], [Math.min(t0, len), -1, 3], () => 0)); a = Math.max(a, t1); }
-    const square = (o) => Math.abs(o.d[0] * W.d[0] + o.d[1] * W.d[1]) < 0.5;   // only a real corner counts
+    const square = (o) => Math.abs(o.d[0] * W.d[0] + o.d[1] * W.d[1]) < 0.9;   // a corner, square or wide (120 degrees); two walls in a line are no corner
     W.joinedTo = walls_.some((o) => o !== W && near(o.from, W.to) && square(o)); W.joinedFrom = walls_.some((o) => o !== W && near(o.to, W.from) && square(o));
-    if (W.joinedTo) seams.add(kit.meltingLine([0, -1, 3], [0, 2900, 3], (p) => step((p[1] - 2400) / 400)));
+    // a corner, or the free end of a loose wall, gets an edge line that melts out toward the top
+    seams.add(kit.meltingLine([0, -1, 3], [0, 2900, 3], (p) => step((p[1] - (W.joinedTo ? 2400 : 2100)) / 400)));
+    if (!W.joinedFrom) seams.add(kit.meltingLine([len, -1, 3], [len, 2900, 3], (p) => step((p[1] - 2100) / 400)));
     node.add(seams); W.seams = seams;
     kit.useFade(W.frames, W.fa); kit.useFade(seams, W.fa);
     // contact shadows on this wall: where it meets the floor and the corners
@@ -76,17 +78,21 @@ export function buildHome(kit, home, registry) {
   }
 
   // ---- floor and tiles
-  const xs = walls.flatMap((w) => [w.from[0], w.to[0]]), zs = walls.flatMap((w) => [w.from[1], w.to[1]]);
+  // the floor reaches as far as the walls and every area's bounds (areas are open: their floor runs out in front of the walls)
+  const xs = [...walls.flatMap((w) => [w.from[0], w.to[0]]), ...areas.flatMap((a) => [a.bounds.x0, a.bounds.x1])], zs = [...walls.flatMap((w) => [w.from[1], w.to[1]]), ...areas.flatMap((a) => [a.bounds.z0, a.bounds.z1])];
   const bb = { x0: Math.min(...xs), x1: Math.max(...xs), z0: Math.min(...zs), z1: Math.max(...zs) };
   const floor = new T.Mesh(new T.PlaneGeometry(bb.x1 - bb.x0 + 2 * EDGE, bb.z1 - bb.z0 + 2 * EDGE), wallMat);
   floor.rotation.x = -Math.PI / 2; floor.position.set((bb.x0 + bb.x1) / 2, -4, (bb.z0 + bb.z1) / 2);
   group.add(floor);
-  if (home.tiles) {   // a 600 mm grid, square to the walls' own grid; it melts out 1.5 m beyond the walls
-    const M = 1500, org = home.tiles.origin || [bb.x0, bb.z0], cell = home.tiles.size || 600;
-    const out = (p) => Math.hypot(Math.max(bb.x0 - p[0], p[0] - bb.x1, 0), Math.max(bb.z0 - p[2], p[2] - bb.z1, 0));
-    const tone = (p) => step(out(p) / M);
+  const style = home.floor?.style || (home.tiles ? 'tiles' : 'plain'), M = 1500;
+  const out = (p) => Math.hypot(Math.max(bb.x0 - p[0], p[0] - bb.x1, 0), Math.max(bb.z0 - p[2], p[2] - bb.z1, 0)), tone = (p) => step(out(p) / M);
+  if (style === 'tiles') {   // a 600 mm grid, square to the walls' own grid; it melts out 1.5 m beyond the walls
+    const org = home.tiles?.origin || [bb.x0, bb.z0], cell = home.tiles?.size || 600;
     for (let z = org[1] + Math.ceil((bb.z0 - M - org[1]) / cell) * cell; z <= bb.z1 + M; z += cell) group.add(kit.meltingLine([bb.x0 - M, -2, z], [bb.x1 + M, -2, z], tone, 60, 'lo'));
     for (let x = org[0] + Math.ceil((bb.x0 - M - org[0]) / cell) * cell; x <= bb.x1 + M; x += cell) group.add(kit.meltingLine([x, -2, bb.z0 - M], [x, -2, bb.z1 + M], tone, 60, 'lo'));
+  } else if (style === 'boards') {   // long boards, 170 mm wide, running along x (or along home.floor.angle degrees)
+    const ang = (home.floor?.angle || 0) * Math.PI / 180, c = Math.cos(ang), sn = Math.sin(ang), cx = (bb.x0 + bb.x1) / 2, cz = (bb.z0 + bb.z1) / 2, R = Math.hypot(bb.x1 - bb.x0, bb.z1 - bb.z0) / 2 + M, W = home.floor?.board || 170;
+    for (let o = -Math.floor(R / W) * W; o <= R; o += W) group.add(kit.meltingLine([cx - c * R - sn * o, -2, cz - sn * R + c * o], [cx + c * R - sn * o, -2, cz + sn * R + c * o], tone, 80, 'lo'));
   }
 
   // ---- contact shadows, generated from each object's footprint and mount

@@ -11,6 +11,7 @@ import { cuttingBoard } from '../kitchen/cuttingBoard.js';
 import { socket, lightSwitch } from '../kitchen/details.js';
 import { pendantLamp, LAMP } from '../kitchen/atmosphere.js';
 import { table, chair } from './dining.js';
+import { cushion, vase, bookStack, mirror, wallShelf, sideTable, roundTable, cat, basket, pouf } from './decor.js';
 import { sofa, armchair, coffeeTable, rug, shelf, floorLamp, picture, sideboard, bench, curtain, stool } from './living.js';
 
 function fitted({ length, modules, ...rest }) {
@@ -21,6 +22,7 @@ function fitted({ length, modules, ...rest }) {
 export const REGISTRY = {
   baseRun: (kit, p) => baseRun(kit, fitted(p)),
   wallRun: (kit, p) => wallRun(kit, fitted(p)),
+  cushion, vase, bookStack, mirror, wallShelf, sideTable, roundTable, cat, basket, pouf,
   table, chair, sofa, armchair, coffeeTable, rug, shelf, floorLamp, picture, sideboard, bench, curtain, stool,
   fridge, hob, hood, plant, pan, fruitBowl, cuttingBoard, socket, lightSwitch,
   // the lamp is drawn at a fixed spot in kitchen millimetres; shift it so the object's `at` is where it hangs

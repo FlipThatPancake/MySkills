@@ -2,6 +2,8 @@
 // node check-home.mjs [scenes/x.json] → builds the scene (?check keeps every part) and prints the rules a `home` scene breaks.
 // Rules: openings (1200 mm of clear wall between two openings, round corners too), sash (nothing in an inward sash's sweep), table (centred on a pendant or rug, 900 mm clear or against a wall), path (a door or arch keeps 1000 x 1500 mm clear), overlap (two floor pieces, or two wall pieces, pass through each other), wall (an object straddles a wall plane), floor (below it),
 // swing (a door leaf or sash, at every angle from shut to wide open, touches an object or another opening's frame; so does an opening front of a cabinet run),
+// Per area (scenes with `areas`): enough to look at (at least 8 objects in the floor, waist and wall bands, a hero, something living, something soft, something on a wall, every object in a group of two or more, one or two backing walls),
+// and the home view at 1200 x 750 (every object inside the frame with a 6% margin, nothing of a neighbour in front, no lamp over an opening or another lamp, seating: sofa backs onto a wall, chairs face the table, no seat shows its back, the coffee table visible).
 // Needs Playwright (global) and esbuild (global).
 import { createRequire } from 'node:module';
 import { execSync } from 'node:child_process';
@@ -11,7 +13,7 @@ const here = dirname(fileURLToPath(import.meta.url)), scene = resolve(process.ar
 execSync(`node ${join(here, 'build.mjs')} ${scene}`, { stdio: 'ignore' });
 const { chromium } = createRequire(join(execSync('npm root -g', { encoding: 'utf8' }).trim(), 'x.js'))('playwright');
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
-const page = await browser.newPage(); const errors = [];
+const page = await browser.newPage({ viewport: { width: 1200, height: 750 } }); const errors = [];
 page.on('pageerror', (e) => errors.push(String(e)));
 await page.goto('file://' + scene.replace(/\.json$/, '.html') + '?check');
 await page.waitForFunction(() => window.cozyScene);
@@ -25,13 +27,28 @@ const issues = await page.evaluate(() => {
     return b;
   };
   const boxes = Object.fromEntries(Object.keys(objs).map((id) => { const b = box(objs[id]); if (sc(id).asset === 'baseRun') b.max.y = Math.min(b.max.y, 940); return [id, b]; }));   // a run's tap is not part of its body
+  // an object turned off the grid (a sofa on a wall at 60 degrees) is measured by its own box, turned with it: corners are its 8 corners in the world
+  const cornersOf = (g) => {
+    g.updateMatrixWorld(true); const inv = g.matrixWorld.clone().invert(), b = new T.Box3(), bb = new T.Box3();
+    g.traverse((o) => { if (!o.isMesh || o.isLineSegments2 || o.material.isMeshBasicMaterial || kit.hulls.includes(o.material) || o.material === kit.depth) return; o.geometry.computeBoundingBox(); b.union(bb.copy(o.geometry.boundingBox).applyMatrix4(inv.clone().multiply(o.matrixWorld))); });
+    const pts = []; for (const x of [b.min.x, b.max.x]) for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) pts.push(new T.Vector3(x, y, z).applyMatrix4(g.matrixWorld));
+    if (sc0(g) === 'baseRun') for (const p of pts) p.y = Math.min(p.y, 940);
+    return pts;
+  };
+  function sc0(g) { return g.userData.scene.asset; }
+  for (const id of Object.keys(objs)) boxes[id].pts = cornersOf(objs[id]);
+  const foot = (id) => { const p = boxes[id].pts, ys = p.map((q) => q.y), y0 = Math.min(...ys); const f = p.filter((q) => q.y < y0 + 1).map((q) => [q.x, q.z]); const cx = f.reduce((a, q) => a + q[0], 0) / f.length, cz = f.reduce((a, q) => a + q[1], 0) / f.length; return f.sort((a, b) => Math.atan2(a[1] - cz, a[0] - cx) - Math.atan2(b[1] - cz, b[0] - cx)); };
+  const sat = (A, B, tol) => {   // two convex footprints penetrate by more than tol along every edge normal
+    for (const P of [A, B]) for (let i = 0; i < P.length; i++) { const a = P[i], b = P[(i + 1) % P.length], nx = b[1] - a[1], nz = a[0] - b[0], l = Math.hypot(nx, nz) || 1; let lo1 = 1e9, hi1 = -1e9, lo2 = 1e9, hi2 = -1e9; for (const q of A) { const d = (q[0] * nx + q[1] * nz) / l; lo1 = Math.min(lo1, d); hi1 = Math.max(hi1, d); } for (const q of B) { const d = (q[0] * nx + q[1] * nz) / l; lo2 = Math.min(lo2, d); hi2 = Math.max(hi2, d); } if (Math.min(hi1, hi2) - Math.max(lo1, lo2) <= tol) return false; }
+    return true;
+  };
   const solid = Object.keys(objs).filter((id) => ['floor', 'wall'].includes(sc(id).mount) && sc(id).asset !== 'rug' && sc(id).asset !== 'curtain');
   const inter = (a, b, tol = 4) => Math.min(a.max.x, b.max.x) - Math.max(a.min.x, b.min.x) > tol && Math.min(a.max.y, b.max.y) - Math.max(a.min.y, b.min.y) > tol && Math.min(a.max.z, b.max.z) - Math.max(a.min.z, b.min.z) > tol;
   const baseRuns = (x, y) => sc(x).asset === 'baseRun' && sc(y).asset === 'baseRun';
   for (let i = 0; i < solid.length; i++) for (let j = i + 1; j < solid.length; j++) {
     const a = solid[i], b = solid[j];
     if (sc(a).mount !== sc(b).mount || baseRuns(a, b)) continue;
-    if (inter(boxes[a], boxes[b])) out.push({ rule: 'overlap', what: `${a} and ${b} pass through each other` });
+    if (Math.min(boxes[a].max.y, boxes[b].max.y) - Math.max(boxes[a].min.y, boxes[b].min.y) > 4 && sat(foot(a), foot(b), 4)) out.push({ rule: 'overlap', what: `${a} and ${b} pass through each other` });
   }
   for (const id of Object.keys(objs)) {
     const m = sc(id).mount, b = boxes[id];
@@ -39,7 +56,7 @@ const issues = await page.evaluate(() => {
     if (b.min.y < -3) out.push({ rule: 'floor', what: `${id} reaches ${b.min.y.toFixed(0)} mm below the floor` });
     for (const W of home.walls) {
       let lo = 1e9, hi = -1e9, inside = false;
-      for (const x of [b.min.x, b.max.x]) for (const z of [b.min.z, b.max.z]) { const dx = x - W.to[0], dz = z - W.to[1], d = dx * W.n[0] + dz * W.n[1], s = -(dx * W.d[0] + dz * W.d[1]); lo = Math.min(lo, d); hi = Math.max(hi, d); if (s > 0 && s < W.len) inside = true; }
+      for (const { x, z } of b.pts) { const dx = x - W.to[0], dz = z - W.to[1], d = dx * W.n[0] + dz * W.n[1], s = -(dx * W.d[0] + dz * W.d[1]); lo = Math.min(lo, d); hi = Math.max(hi, d); if (s > 0 && s < W.len) inside = true; }
       if (inside && lo < -3 && hi > 3) out.push({ rule: 'wall', what: `${id} crosses wall ${W.i} (${lo.toFixed(0)} to ${hi.toFixed(0)} mm)` });
     }
   }
@@ -62,7 +79,7 @@ const issues = await page.evaluate(() => {
     if (hit.size) out.push({ rule: 'swing', what: `${label} reaches ${[...hit].join(', ')} when it opens` });
   }
   // ---- placement rules, in each wall's own frame (x along the wall from its `to` end, z out into the room, y up)
-  const toLocal = (W, bb) => { const xs = [], zs = []; for (const x of [bb.min.x, bb.max.x]) for (const z of [bb.min.z, bb.max.z]) { const dx = x - W.to[0], dz = z - W.to[1]; xs.push(-(dx * W.d[0] + dz * W.d[1])); zs.push(dx * W.n[0] + dz * W.n[1]); } return { x0: Math.min(...xs), x1: Math.max(...xs), z0: Math.min(...zs), z1: Math.max(...zs), y0: bb.min.y, y1: bb.max.y }; };
+  const toLocal = (W, bb) => { const xs = [], zs = []; for (const { x, z } of bb.pts || [bb.min.x, bb.max.x].flatMap((x) => [bb.min.z, bb.max.z].map((z) => ({ x, z })))) { const dx = x - W.to[0], dz = z - W.to[1]; xs.push(-(dx * W.d[0] + dz * W.d[1])); zs.push(dx * W.n[0] + dz * W.n[1]); } return { x0: Math.min(...xs), x1: Math.max(...xs), z0: Math.min(...zs), z1: Math.max(...zs), y0: bb.min.y, y1: bb.max.y }; };
   const hit3 = (a, b, tol = 2) => a.x1 - b.x0 > tol && b.x1 - a.x0 > tol && a.z1 - b.z0 > tol && b.z1 - a.z0 > tol && a.y1 - b.y0 > tol && b.y1 - a.y0 > tol;
   const gap2 = (a, b) => Math.hypot(Math.max(a.min.x - b.max.x, b.min.x - a.max.x, 0), Math.max(a.min.z - b.max.z, b.min.z - a.max.z, 0));
   const GAP = 1200;
@@ -105,6 +122,61 @@ const issues = await page.evaluate(() => {
   }
   return out;
 });
+
+const areaIssues = await page.evaluate(() => {
+  const api = window.cozyScene; if (!api.areaIds) return [];
+  const { home, kit, camera } = api, T = kit.THREE, out = [], objs = home.objects, ids = Object.keys(objs), sc = (id) => objs[id].userData.scene;
+  const box = (g) => { g.updateMatrixWorld(true); const b = new T.Box3(), bb = new T.Box3(); g.traverse((o) => { if (!o.isMesh || o.isLineSegments2 || o.material.isMeshBasicMaterial || kit.hulls.includes(o.material) || o.material === kit.depth) return; o.geometry.computeBoundingBox(); b.union(bb.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld)); }); return b; };
+  const boxes = Object.fromEntries(ids.map((id) => [id, box(objs[id])]));
+  const areaOf = (id) => sc(id).area || api.areaIds.find((a) => { const b = api.areas[a].bounds, c = boxes[id].getCenter(new T.Vector3()); return c.x >= b.x0 && c.x <= b.x1 && c.z >= b.z0 && c.z <= b.z1; });
+  const rect = (b) => { const xs = [], ys = []; for (const x of [b.min.x, b.max.x]) for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) { const p = new T.Vector3(x, y, z).project(camera); xs.push(p.x); ys.push(p.y); } return { x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys) }; };
+  const ov = (a, b) => Math.max(0, Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0)) * Math.max(0, Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0)), area2 = (a) => (a.x1 - a.x0) * (a.y1 - a.y0);
+  const face = (id) => { const t = objs[id].rotation.y; return new T.Vector3(Math.sin(t), 0, Math.cos(t)); };
+  const SOFT = ['rug', 'curtain', 'cushion', 'pouf', 'basket'], WALLDEC = ['picture', 'mirror', 'wallShelf', 'curtain'], LIVING = ['plant', 'cat'], LAMPS = ['pendantLamp', 'floorLamp'], MINOR = ['socket', 'lightSwitch'];
+  for (const A of api.areaIds) {
+    const mine = ids.filter((i) => areaOf(i) === A), real = mine.filter((i) => !MINOR.includes(sc(i).asset)), as = (list) => real.filter((i) => list.includes(sc(i).asset));
+    const walls = home.walls.filter((w) => w.id && w.id.startsWith(A + '-'));
+    // enough to look at
+    if (real.length < 8) out.push({ rule: 'interest', what: `${A} has ${real.length} objects (need 8)` });
+    for (const [band, f] of [['floor', (i) => sc(i).mount === 'floor'], ['waist', (i) => sc(i).mount === 'on'], ['wall or hanging', (i) => ['wall', 'ceiling'].includes(sc(i).mount)]]) if (!real.some(f)) out.push({ rule: 'interest', what: `${A} has nothing in the ${band} band` });
+    if (!real.some((i) => sc(i).hero)) out.push({ rule: 'interest', what: `${A} has no hero piece` });
+    if (!as(LIVING).length) out.push({ rule: 'interest', what: `${A} has nothing living (a plant or a cat)` });
+    if (!as(SOFT).length) out.push({ rule: 'interest', what: `${A} has nothing soft (rug, curtain, cushion, pouf, basket)` });
+    if (!as(WALLDEC).length) out.push({ rule: 'interest', what: `${A} has nothing on a wall (picture, mirror, wall shelf, curtain)` });
+    if (walls.length < 1 || walls.length > 2) out.push({ rule: 'interest', what: `${A} has ${walls.length} backing walls (need 1 or 2)` });
+    const groups = {}; for (const i of real) (groups[sc(i).group || ''] ||= []).push(i);
+    for (const [g, m] of Object.entries(groups)) if (!g) out.push({ rule: 'group', what: `${m.join(', ')} belong to no group` }); else if (m.length < 2) out.push({ rule: 'group', what: `${m[0]} stands alone in "${g}": give it a group or remove it` });
+    // the home view
+    api.setArea(A, true); camera.updateMatrixWorld(true); camera.updateProjectionMatrix();
+    const R = Object.fromEntries(ids.map((i) => [i, rect(boxes[i])]));
+    for (const i of mine) { const r = R[i]; if (Math.abs(r.x0) > 0.88 || Math.abs(r.x1) > 0.88 || r.y0 < -0.88 || r.y1 > 0.88) out.push({ rule: 'frame', what: `${A}: ${i} reaches ${(Math.max(Math.abs(r.x0), Math.abs(r.x1), Math.abs(r.y0), Math.abs(r.y1)) * 100).toFixed(0)}% toward the edge of the home view (keep within 88%)` }); }
+    for (const W of home.walls) { if (!W.id || !W.id.startsWith(A + '-')) continue; for (const b of W.built) { const r = rect(box(b.group)); if (Math.abs(r.x0) > 0.88 || Math.abs(r.x1) > 0.88 || r.y0 < -0.88 || r.y1 > 0.88) out.push({ rule: 'frame', what: `${A}: the ${b.op.kind} on ${W.id} at ${b.op.at} reaches the edge of the home view (x ${r.x0.toFixed(2)} to ${r.x1.toFixed(2)}, y ${r.y0.toFixed(2)} to ${r.y1.toFixed(2)})` }); } }
+    const hero = real.find((i) => sc(i).hero); if (hero) { const c = (R[hero].x0 + R[hero].x1) / 2; if (Math.abs(c) > 0.6) out.push({ rule: 'frame', what: `${A}: the hero ${hero} sits at ${(c * 50 + 50).toFixed(0)}% across the frame (keep it between 20% and 80%)` }); }
+    const cp = camera.position, bnd = api.areas[A].bounds, bb = new T.Box3(new T.Vector3(bnd.x0, 0, bnd.z0), new T.Vector3(bnd.x1, bnd.top || 2500, bnd.z1));
+    for (const o of ids) {   // a neighbour never stands between the camera and the area
+      if (areaOf(o) === A || sc(o).mount === 'lines') continue; if (bb.distanceToPoint(boxes[o].getCenter(new T.Vector3())) > 2600) continue;
+      for (const i of mine) { if (cp.distanceTo(boxes[o].getCenter(new T.Vector3())) >= cp.distanceTo(boxes[i].getCenter(new T.Vector3()))) continue; if (ov(R[o], R[i]) > 0.3 * area2(R[i]) && area2(R[i]) > 1e-3) { out.push({ rule: 'front', what: `${A}: ${o} (of ${areaOf(o)}) stands in front of ${i} in the home view` }); break; } }
+    }
+    // lamps clear of openings and each other; one lamp unless the area is wide
+    const lamps = real.filter((i) => LAMPS.includes(sc(i).asset)), wide = bnd.x1 - bnd.x0 > 5000 || bnd.z1 - bnd.z0 > 5000;
+    if (lamps.length > (wide ? 2 : 1)) out.push({ rule: 'lamps', what: `${A} has ${lamps.length} lamps (${wide ? 'two at most' : 'one'})` });
+    for (const l of lamps) {
+      for (const W of home.walls) { if (!W.id || !W.id.startsWith(A + '-')) continue; for (const b of W.built) if (ov(R[l], rect(box(b.group))) > 0.002) out.push({ rule: 'lamps', what: `${A}: ${l} overlaps the ${b.op.kind} on ${W.id} in the home view` }); }
+      for (const m of lamps) if (m > l && ov(R[l], R[m]) > 0) out.push({ rule: 'lamps', what: `${A}: ${l} and ${m} overlap in the home view` });
+    }
+    // seating
+    const table = real.find((i) => sc(i).asset === 'coffeeTable'), seats = real.filter((i) => ['sofa', 'armchair'].includes(sc(i).asset));
+    for (const s of seats) {
+      const f = face(s), c = boxes[s].getCenter(new T.Vector3()), toCam = cp.clone().sub(c).setY(0).normalize();
+      if (f.dot(toCam) < -0.2) out.push({ rule: 'seating', what: `${A}: ${s} shows its back to the home camera` });
+      if (sc(s).asset === 'armchair' && table) { const tc = boxes[table].getCenter(new T.Vector3()), to = tc.clone().sub(c).setY(0).normalize(), ang = Math.acos(Math.min(1, f.dot(to))) * 180 / Math.PI; if (ang > 50) out.push({ rule: 'seating', what: `${A}: ${s} faces ${ang.toFixed(0)} degrees away from the coffee table (keep within 50)` }); }
+      if (sc(s).asset === 'sofa' && walls.length) { const back = c.clone().addScaledVector(f, -(boxes[s].max.z - boxes[s].min.z > 0 ? 0 : 0)); const d = Math.min(...walls.map((W) => { const p = new T.Vector3().copy(c).addScaledVector(f, -450); return Math.abs((p.x - W.to[0]) * W.n[0] + (p.z - W.to[1]) * W.n[1]); })); if (d > 330) out.push({ rule: 'seating', what: `${A}: the back of ${s} is ${d.toFixed(0)} mm from the nearest wall (a sofa backs onto a wall)` }); }
+    }
+    if (table) { const r = R[table], hid = mine.filter((i) => i !== table && ['floor'].includes(sc(i).mount) && !['rug', 'plant', 'cat'].includes(sc(i).asset) && cp.distanceTo(boxes[i].getCenter(new T.Vector3())) < cp.distanceTo(boxes[table].getCenter(new T.Vector3())) && ov(R[i], r) > 0.35 * area2(r)); if (hid.length) out.push({ rule: 'seating', what: `${A}: ${hid.join(', ')} hides the coffee table in the home view` }); }
+  }
+  return out;
+});
+for (const i of areaIssues) issues.push(i);
 await browser.close();
 for (const e of errors) console.log('PAGE ERROR', e);
 for (const i of issues) console.log(`[${i.rule}] ${i.what}`);

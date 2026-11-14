@@ -1,0 +1,39 @@
+{
+ "floor": ["tiles", "boards", "plain"],
+ "backing": [
+  { "id": "one-wall", "walls": 1, "angle": 180 },
+  { "id": "corner-left", "walls": 2, "angle": 90, "second": "left" },
+  { "id": "corner-right", "walls": 2, "angle": 90, "second": "right" },
+  { "id": "wide-angle", "walls": 2, "angle": 120, "second": "right" }
+ ],
+ "kitchen": {
+  "shape": ["straight", "galley", "L", "U", "peninsula", "island"],
+  "hero": ["island with stools", "range hood over the hob", "tall pantry wall", "open shelves and a dresser"],
+  "openings": [
+   [{ "kind": "window", "on": "first", "sash": "fixed" }],
+   [{ "kind": "window", "on": "first" }, { "kind": "door", "on": "second" }],
+   [{ "kind": "window", "on": "second", "sash": "fixed" }, { "kind": "arch", "on": "first" }],
+   [{ "kind": "window", "on": "first", "sash": "fixed" }, { "kind": "window", "on": "second" }]
+  ],
+  "accents": ["fruit bowl", "cutting board", "pan on the hob", "cat", "vase of branches", "book stack", "pouf", "basket", "mirror"]
+ },
+ "dining": {
+  "hero": ["long table under a pendant", "round-ended table on a rug", "sideboard with a big mirror"],
+  "openings": [
+   [{ "kind": "window", "on": "first" }],
+   [{ "kind": "window", "on": "first" }, { "kind": "arch", "on": "second" }],
+   [{ "kind": "door", "on": "second" }, { "kind": "window", "on": "first" }]
+  ],
+  "accents": ["vase of branches", "book stack", "cat", "basket", "mirror", "wall shelf", "cushion", "floor lamp"]
+ },
+ "living": {
+  "hero": ["sofa with a rug and coffee table", "shelf wall with an armchair", "daybed under a window"],
+  "openings": [
+   [{ "kind": "window", "on": "first" }],
+   [{ "kind": "window", "on": "second" }, { "kind": "arch", "on": "first" }],
+   [{ "kind": "window", "on": "first" }, { "kind": "window", "on": "second" }]
+  ],
+  "accents": ["cushion", "vase of branches", "book stack", "cat", "basket", "pouf", "mirror", "wall shelf", "floor lamp", "side table"]
+ },
+ "plants": [1, 2, 3]
+}

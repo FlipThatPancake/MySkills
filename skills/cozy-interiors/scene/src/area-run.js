@@ -2,7 +2,7 @@
 // its bounds (what stays solid; the fills, lines and objects thin out past them) and its home camera { target, az, el, dist }, with the orbit limited to about 80 degrees either side of that az.
 // cozyScene.setArea(id) glides there: camera, target and the fade box ease together over about 1.6 s, so a neighbouring area's nearest pieces pass through the edge of the frame.
 // Ways to shift: click a door or arch that names `to: <area id>`, the left/right arrow keys, the area names at the bottom of the page.
-// window.cozyScene: { scene, camera, controls, kit, home, areas, area (id), setArea(id, snap), startGlide(id, hold), glideAt(k), objects, openables, tour, look(dist, az, el, target?), at(pos, target), openAll(on), S }.
+// window.cozyScene: { scene, camera, controls, kit, home, areas, areaIds (array of ids, in order), area (id), setArea(id, snap), startGlide(id, hold), glideAt(k), objects, openables, tour, look(dist, az, el, target?), at(pos, target), openAll(on), S }.
 import * as THREE from './vendor/three/three.module.js';
 import { OrbitControls } from './vendor/three/OrbitControls.js';
 import { createKit } from './kitchen3d.js';
@@ -22,7 +22,7 @@ export function createAreaScene(canvas, S) {
   const scene = new THREE.Scene(), kit = createKit();
   kit.keepParts = q.has('check');
   const camera = new THREE.PerspectiveCamera(FOV, 1, 10, 400000);
-  const home = buildHome(kit, S.home, REGISTRY);
+  const home = buildHome(kit, S.home, REGISTRY, S.areas);
   scene.add(home.group);
   kit.setOpacity(1, 1);
   const controls = new OrbitControls(camera, canvas);
@@ -36,10 +36,38 @@ export function createAreaScene(canvas, S) {
 
   // An area's numbers: the camera's home and the fade, all in world mm.
   const fit = (b) => { const half = Math.tan(rad(FOV / 2)); return Math.max(((b.x1 - b.x0) + 1100) / (2 * half * aspect), ((b.top || 2500) + 500) / (2 * half)) * 1.1 + (b.z1 - b.z0) / 2; };
+  // `camera.home.fit: 'objects'` frames the area's own objects: the camera keeps its az and el, moves its target so the objects' outline is centred, and backs off until every
+  // object sits inside the frame with a 6% margin. (Without it, the distance comes from the bounds.)
+  const solidBox = (g, out) => {
+    g.updateMatrixWorld(true); const bb = new THREE.Box3();
+    g.traverse((o) => { if (!o.isMesh || o.isLineSegments2 || o.material.isMeshBasicMaterial || kit.hulls.includes(o.material) || o.material === kit.depth) return; o.geometry.computeBoundingBox(); out.union(bb.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld)); });
+    return out;
+  };
+  const inArea = (A, g) => g.userData.scene.area ? g.userData.scene.area === A.id : (() => { const c = new THREE.Box3().setFromObject(g).getCenter(new THREE.Vector3()), b = A.bounds; return c.x >= b.x0 && c.x <= b.x1 && c.z >= b.z0 && c.z <= b.z1; })();
+  const fitted = {};
+  const fitView = (A, v) => {
+    const key = A.id + '@' + aspect.toFixed(3); if (fitted[key]) return fitted[key];
+    home.group.updateMatrixWorld(true);
+    const pts = []; for (const g of Object.values(home.objects)) if (inArea(A, g)) { const b = solidBox(g, new THREE.Box3()); if (b.isEmpty()) continue; for (const x of [b.min.x, b.max.x]) for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) pts.push(new THREE.Vector3(x, y, z)); }
+    for (const W of home.walls) if (W.id && W.id.startsWith(A.id + '-')) for (const o of W.built) { const b = solidBox(o.group, new THREE.Box3()); if (b.isEmpty()) continue; for (const x of [b.min.x, b.max.x]) for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) pts.push(new THREE.Vector3(x, y, z)); }   // doors, arches and windows of the backing walls count too
+    const cam = new THREE.PerspectiveCamera(FOV, aspect, 10, 400000), tg = new THREE.Vector3(...v.target), LIM = 0.86;
+    let d = v.dist || 8000;
+    const place = () => { cam.position.copy(tg).add(sph(d, v.az, v.el)); cam.lookAt(tg); cam.updateMatrixWorld(true); cam.updateProjectionMatrix(); };
+    const ndc = () => pts.map((p) => p.clone().project(cam));
+    for (let it = 0; it < 14; it++) {
+      place(); const n = ndc(), x0 = Math.min(...n.map((p) => p.x)), x1 = Math.max(...n.map((p) => p.x)), y0 = Math.min(...n.map((p) => p.y)), y1 = Math.max(...n.map((p) => p.y));
+      const right = new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld, 0), up = new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld, 1), k = d * Math.tan(rad(FOV / 2));
+      tg.addScaledVector(right, (x0 + x1) / 2 * k * aspect).addScaledVector(up, (y0 + y1) / 2 * k);   // centre the outline
+      place(); const m = ndc(), w = Math.max(...m.map((p) => Math.abs(p.x))), h = Math.max(...m.map((p) => Math.abs(p.y)));
+      d *= Math.max(w, h) / LIM; if (Math.abs(Math.max(w, h) / LIM - 1) < 0.01) break;
+    }
+    return (fitted[key] = { target: tg.toArray(), az: v.az, el: v.el, dist: d });
+  };
   const viewOf = (A) => {
     const h = A.camera?.home || {}, b = A.bounds, top = b.top || 2500;
     const target = h.target || [(b.x0 + b.x1) / 2, top / 2 - 150, (b.z0 + b.z1) / 2];
-    return { target, az: h.az ?? 20, el: h.el ?? 15, dist: h.dist || fit(b) };
+    const v = { target, az: h.az ?? 20, el: h.el ?? 15, dist: h.dist || fit(b) };
+    return h.fit === 'objects' ? fitView(A, v) : v;
   };
   const fadeOf = (A) => {
     const b = A.bounds, top = b.top || 2500, bx = b.x1 - b.x0, bz = b.z1 - b.z0, w = Math.max(bx, bz), r0 = 0;   // objects past the bounds thin from the edge: about 35% gone at 1 m, all gone at 2 m
@@ -147,7 +175,7 @@ export function createAreaScene(canvas, S) {
 
   let last = performance.now();
   const api = {
-    scene, camera, controls, kit, home, areas, area: null, setArea, startGlide, glideAt, look, at, S, tour: null,
+    scene, camera, controls, kit, home, areas, areaIds: order, area: null, setArea, startGlide, glideAt, look, at, S, tour: null,
     get glide() { return glide; }, objects: home.objects, openables: home.openables,
     openAll(on) { home.openables.forEach((f) => { f.userData.open.target = on ? 1 : 0; }); moveFronts(1, true); },
   };
