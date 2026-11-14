@@ -1,8 +1,8 @@
 // @js:openings — windows, doors and arches set into a wall, in the old kitchen's style: thick reveals, one extruded piece per frame, a view outside.
 // opening(kit, { kind: 'window' | 'door' | 'arch', width, height, sill = 0 (window), hinge: 'l' | 'r' (door), open: leaf angle in degrees })
-//   -> { group, hole }. Built in the wall's own frame: the wall face is x = 0, the room is +x, z runs along the wall, y is up, the opening is centred on z = 0.
+//   -> { group, hole, openables, hit }. `openables` are the leaf / sashes (userData.open: click cycles states ajar -> wide -> shut); `hit` is a clear plane over a door or arch for a click that goes to another area (op.to). Built in the wall's own frame: the wall face is x = 0, the room is +x, z runs along the wall, y is up, the opening is centred on z = 0.
 //   `hole` is the outline [z, y] of the cut in the wall (set.js cuts it). Nothing here is a real light or a real view: the view outside and the daylight are painted.
-import { canvasOf, sheet } from './sheet.js';
+import { canvasOf, sheet, glow } from './sheet.js';
 
 const rad = (d) => d * Math.PI / 180;
 export const DEFAULTS = { window: { width: 1200, height: 1100, sill: 1000 }, door: { width: 900, height: 2050, sill: 0 }, arch: { width: 1100, height: 2250, sill: 0 } };
@@ -14,7 +14,7 @@ const archPts = (w, h, inset = 0, n = 18) => {   // rectangle with a half-round 
 };
 const rectPts = (z0, y0, z1, y1) => [[z0, y0], [z1, y0], [z1, y1], [z0, y1]];
 
-export function opening(kit, op) {
+export function opening(kit, op, vis = null) {
   const T = kit.THREE, d = DEFAULTS[op.kind], w = op.width ?? d.width, h = op.height ?? d.height, sill = op.sill ?? d.sill;
   const g = kit.group(), mid = { tone: 'mid' }, lo = { tone: 'lo' };
   // A flat outline [z, y] (with optional holes) extruded `len` mm along x from x0. Shape x is -z; a quarter turn about y puts it in world z.
@@ -28,23 +28,23 @@ export function opening(kit, op) {
   const Z0 = -w / 2, Z1 = w / 2, Y0 = op.kind === 'window' ? sill : 0, Y1 = Y0 + h;
   let hole;
 
-  // What is seen through the opening, at the back of the reveal: a pale gradient wall, and (door, arch) a floor running away behind it.
-  const beyond = (depth, wide, tall, floorFrom) => {
-    const c = canvasOf(160, 128), cg = c.getContext('2d'), gr = cg.createLinearGradient(0, 0, 0, 128);
-    gr.addColorStop(0, '#e7ebee'); gr.addColorStop(0.6, '#f4f6f7'); gr.addColorStop(1, '#fbfbfa');
-    cg.fillStyle = gr; cg.fillRect(0, 0, 160, 128);
-    const back = sheet(kit, c, wide, tall, true);
-    back.rotation.y = Math.PI / 2; back.position.set(-depth, floorFrom + tall / 2, 0);
+  // What is seen through a door or arch: the floor carries on (set.js adds the tile lines and they melt out within 1.5 m) and daylight falls off softly, warm white, no panel.
+  const beyond = (depth, wide, tall) => {
+    if (op.beyond === false) return;   // a real room lies beyond
+    const back = glow(kit, 'back', 0, 0, wide * 1.8, tall * 1.5, '255,252,242', 0.85, 0, vis);
+    back.rotation.y = Math.PI / 2; back.position.set(-depth - 300, tall * 0.45, 0);
     g.add(back);
-    if (floorFrom === 0) {   // the floor beyond: a soft white strip that melts away
-      const fc = canvasOf(128, 8), fg = fc.getContext('2d'), gr2 = fg.createLinearGradient(0, 0, 128, 0);
-      gr2.addColorStop(0, 'rgba(255,255,255,0)'); gr2.addColorStop(1, 'rgba(255,255,255,0.95)');
-      fg.fillStyle = gr2; fg.fillRect(0, 0, 128, 8);
-      const fl = sheet(kit, fc, 1800, wide, true);   // along x (out from the wall) by the opening's width; near end opaque, far end gone
-      fl.rotation.x = -Math.PI / 2; fl.position.set(-depth - 900, 1, 0);
-      g.add(fl);
-    }
+    const fl = glow(kit, 'floor', 0, 0, 2600, wide * 1.7, '255,250,236', 0.8, 0, vis);   // light on the floor beyond: strongest at the opening, gone by about 1.3 m out
+    fl.position.set(-depth - 700, 1.2, 0);
+    g.add(fl);
   };
+  const openables = [];
+  const hitPlane = () => {   // clear, but still hit by a click: a door or arch that leads to another area
+    const m = new T.Mesh(new T.PlaneGeometry(w, h), new T.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }));
+    m.rotation.y = Math.PI / 2; m.position.set(-40, h / 2, 0); m.userData.go = op.to;
+    return m;
+  };
+  let hit = null;
 
   if (op.kind === 'window') {
     const DEPTH = 120, L = 6, STOOL = Y0 + 30, XB = -DEPTH;
@@ -55,7 +55,7 @@ export function opening(kit, op) {
     cg.fillStyle = gr; cg.fillRect(0, 0, 160, 128);
     cg.fillStyle = '#e6e9e8'; cg.beginPath(); cg.moveTo(30, 100); cg.lineTo(60, 78); cg.lineTo(120, 78); cg.lineTo(135, 100); cg.fill();   // far roof
     cg.fillStyle = '#e3e9e1'; for (let i = 0; i < 14; i++) { cg.beginPath(); cg.arc(i * 12 + 4, 112 + (i % 3) * 3, 14 + (i % 4) * 3, 0, 6.3); cg.fill(); }   // hedge
-    const sky = sheet(kit, c, w, h, true);
+    const sky = sheet(kit, c, w, h, vis);
     sky.rotation.y = Math.PI / 2; sky.position.set(XB, (Y0 + Y1) / 2, 0);
     g.add(sky);
     g.add(ext(rectPts(Z0, Y0, Z1, Y1), [rectPts(Z0 + L, Y0 + L, Z1 - L, Y1 - L)], XB, DEPTH));   // the reveal: a tunnel through the wall, 6 mm linings
@@ -85,19 +85,20 @@ export function opening(kit, op) {
     const sA = sash(iz0, 1), sB = sash(iz1, -1);
     sA.add(kit.rbox(SD / 2, (iy0 + iy1) / 2 - 30, W - ST / 2 - 8, 16, 60, 2.5, 4, lo));   // latch plate and lever on the free stile
     sA.add(kit.cyl(SD / 2 + 2.5, (iy0 + iy1) / 2, W - ST / 2 - 2, 3, 28, { axis: 'z', seg: 10, ...lo }));
+    for (const [sx, dir] of [[sA, 1], [sB, -1]]) { sx.userData.open = { kind: 'door', dir, max: 75, v: ajar / 75, target: ajar / 75, states: [ajar / 75, 1, 0], i: 0, pair: [sA, sB] }; openables.push(sx); }
     g.add(sA, sB);
     // daylight: a soft warm patch on the floor inside, rays going +x and down at 35 degrees
     const tan = 0.7, drift = 0.2, x0 = (Y0 - 0) / tan, x1 = Math.min((Y1 - 0) / tan, 2800), pad = 120, k = 0.1, PW = x1 - x0 + 2 * pad, PH = w + 2 * pad + drift * x1;
     const cv = canvasOf(PW * k, PH * k), q = cv.getContext('2d');
     q.filter = 'blur(11px)'; q.fillStyle = 'rgba(255,238,200,0.2)';
     q.beginPath(); q.moveTo(pad * k, pad * k); q.lineTo((pad + x1 - x0) * k, (pad + drift * (x1 - x0)) * k); q.lineTo((pad + x1 - x0) * k, (pad + w + drift * (x1 - x0)) * k); q.lineTo(pad * k, (pad + w) * k); q.closePath(); q.fill();
-    const patch = sheet(kit, cv, PW, PH, true);
+    const patch = sheet(kit, cv, PW, PH, vis);
     patch.rotation.x = -Math.PI / 2; patch.position.set((x0 + x1) / 2, 1.5, drift * (x1 - x0) / 2);
     g.add(patch);
   } else if (op.kind === 'door') {
-    const DEPTH = 120, L = 16, CW = 70, hinge = op.hinge === 'l' ? -1 : 1, ajar = op.open ?? 28;
+    const DEPTH = 120, L = 16, CW = 70, hinge = op.hinge === 'l' ? -1 : 1, ajar = op.open ?? 25;
     hole = rectPts(Z0, 0, Z1, Y1);
-    beyond(DEPTH, w, h, 0);
+    beyond(DEPTH, w, h);
     g.add(ext(rectPts(Z0, 0, Z1, Y1), [rectPts(Z0 + L, 0, Z1 - L, Y1 - L)], -DEPTH, DEPTH));   // the reveal with a 16 mm lining and a head
     g.add(ext([[Z0 - CW, 0], [Z0 - CW, Y1 + CW], [Z1 + CW, Y1 + CW], [Z1 + CW, 0], [Z1, 0], [Z1, Y1], [Z0, Y1], [Z0, 0]], null, 0, 14));   // casing, 14 mm proud
     g.add(kit.box(-DEPTH, 0, Z1 + CW, DEPTH + 14, 14, w + 2 * CW, lo));                          // the threshold
@@ -113,15 +114,18 @@ export function opening(kit, op) {
     const pivot = kit.group(); pivot.add(leaf);
     pivot.position.set(-60, 0, sgn > 0 ? Z1 - L - 3 : Z0 + L + 3);
     pivot.rotation.y = -sgn * rad(ajar);   // tip toward +x
+    pivot.userData.open = { kind: 'door', dir: -sgn, max: 85, v: ajar / 85, target: ajar / 85, states: [ajar / 85, 1, 0], i: 0 };
+    if (op.to) { pivot.userData.go = op.to; delete pivot.userData.open; hit = hitPlane(); g.add(hit); } else openables.push(pivot);
     g.add(pivot);
   } else {   // arch
     const DEPTH = op.depth ?? 200, ring = 40;
     hole = archPts(w, h);
-    beyond(DEPTH, w, h, 0);
+    beyond(DEPTH, w, h);
+    if (op.to) { hit = hitPlane(); g.add(hit); }
     g.add(ext(archPts(w, h), [archPts(w, h, 6)], -DEPTH, DEPTH));   // a deep reveal with a 6 mm lining
     // a slim architrave round the arch, 10 mm proud: its outer outline is the arch grown by `ring`
     const R = w / 2 + ring, r = w / 2, arc = (rr, top) => Array.from({ length: 19 }, (_, i) => { const a = Math.PI * (1 - i / 18); return [rr * Math.cos(a), top + rr * Math.sin(a)]; });
     g.add(ext([[-R, 0], ...arc(R, h + ring - R), [R, 0], [r, 0], ...arc(r, h - r).reverse(), [-r, 0]], null, 0, 10));
   }
-  return { group: g, hole, width: w, height: h, sill: Y0 };
+  return { group: g, hole, width: w, height: h, sill: Y0, openables, hit, kind: op.kind };
 }
