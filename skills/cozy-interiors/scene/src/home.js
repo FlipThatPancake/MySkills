@@ -38,6 +38,21 @@ export function buildHome(kit, home, registry, areas = []) {
 
   // ---- walls: opaque planes in the page's own tone, so they hide whatever stands behind them and only the seams, frames and shadows show
   const wallMat = new T.MeshBasicMaterial({ color: new T.Color('#f4f4f1'), toneMapped: false });
+  const END = 900, endMats = {};
+  const endMat = (len, Hh, freeTo, freeFrom) => {   // wall tone with an alpha map: full inside, fading over END mm at a free end and over the top edge
+    const key = [Math.round(len), freeTo, freeFrom].join(), cv = document.createElement('canvas'); if (endMats[key]) return endMats[key];
+    cv.width = 256; cv.height = 128; const ctx = cv.getContext('2d'), im = ctx.createImageData(256, 128);
+    for (let y = 0; y < 128; y++) for (let x = 0; x < 256; x++) {
+      const px = x / 255 * len, py = (1 - y / 127) * Hh;   // canvas row 0 is the top (v = 1)
+      let a = Math.min(1, (Hh - py) / 700 * 1);
+      if (freeTo) a = Math.min(a, px / END); if (freeFrom) a = Math.min(a, (len - px) / END);
+      a = Math.max(0, Math.min(1, a)); a = a * a * (3 - 2 * a);
+      const v = Math.round(255 * Math.min(1, a * 1.0)), o = (y * 256 + x) * 4; im.data[o] = im.data[o + 1] = im.data[o + 2] = v; im.data[o + 3] = 255;
+    }
+    ctx.putImageData(im, 0, 0);
+    const tex = new T.CanvasTexture(cv); tex.flipY = true;
+    return (endMats[key] = new T.MeshBasicMaterial({ color: new T.Color('#f4f4f1'), toneMapped: false, alphaMap: tex, transparent: true }));
+  };
   const P = (a) => new T.Vector2(a[0], a[1]), near = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]) < 40;
   const walls = (home.walls || []).map((w, i) => {
     const len = Math.hypot(w.to[0] - w.from[0], w.to[1] - w.from[1]), d = [(w.to[0] - w.from[0]) / len, (w.to[1] - w.from[1]) / len], n = [d[1], -d[0]];
@@ -54,18 +69,19 @@ export function buildHome(kit, home, registry, areas = []) {
       W.holes.push(b.hole.map(([z, y]) => [xc - z, y]));
       if (op.kind !== 'window') W.through.push([xc - b.width / 2, xc + b.width / 2]);
     }
+    const square = (o) => Math.abs(o.d[0] * W.d[0] + o.d[1] * W.d[1]) < 0.9;   // a corner, square or wide (120 degrees); two walls in a line are no corner
+    W.joinedTo = walls_.some((o) => o !== W && near(o.from, W.to) && square(o)); W.joinedFrom = walls_.some((o) => o !== W && near(o.to, W.from) && square(o));
     const s = new T.Shape([[0, -4], [len, -4], [len, H], [0, H]].map(([a, y]) => new T.Vector2(a, y)));
     W.holes.forEach((h) => s.holes.push(new T.Path(h.map(([a, y]) => new T.Vector2(a, y)))));
-    const plane = new T.Mesh(new T.ShapeGeometry(s), wallMat); plane.position.z = -4;
+    const sg = new T.ShapeGeometry(s); { const ps = sg.attributes.position, uv = new Float32Array(ps.count * 2); for (let k = 0; k < ps.count; k++) { uv[2 * k] = ps.getX(k) / len; uv[2 * k + 1] = ps.getY(k) / H; } sg.setAttribute('uv', new T.BufferAttribute(uv, 2)); }
+    // a free end and the top edge melt into the backdrop over their last END mm: the plane carries an alpha map (1 inside, 0 at the very edge)
+    const plane = new T.Mesh(sg, endMat(len, H, !W.joinedTo, !W.joinedFrom)); plane.position.z = -4;
     node.add(plane, W.frames);
     // seams: the wall meets the floor (broken where a door or arch lets the floor through), and the corner it makes with the next wall
     const seams = kit.group(); let a = 0;
     for (const [t0, t1] of [...W.through].sort((p, q) => p[0] - q[0]).concat([[len, len]])) { if (t0 > a) seams.add(kit.meltingLine([a, -1, 3], [Math.min(t0, len), -1, 3], () => 0)); a = Math.max(a, t1); }
-    const square = (o) => Math.abs(o.d[0] * W.d[0] + o.d[1] * W.d[1]) < 0.9;   // a corner, square or wide (120 degrees); two walls in a line are no corner
-    W.joinedTo = walls_.some((o) => o !== W && near(o.from, W.to) && square(o)); W.joinedFrom = walls_.some((o) => o !== W && near(o.to, W.from) && square(o));
     // a corner, or the free end of a loose wall, gets an edge line that melts out toward the top
-    seams.add(kit.meltingLine([0, -1, 3], [0, 2900, 3], (p) => step((p[1] - (W.joinedTo ? 2400 : 2100)) / 400)));
-    if (!W.joinedFrom) seams.add(kit.meltingLine([len, -1, 3], [len, 2900, 3], (p) => step((p[1] - 2100) / 400)));
+    if (W.joinedTo) seams.add(kit.meltingLine([0, -1, 3], [0, 2900, 3], (p) => step((p[1] - 2400) / 400)));   // no line at a free end: the wall just thins out
     node.add(seams); W.seams = seams;
     kit.useFade(W.frames, W.fa); kit.useFade(seams, W.fa);
     // contact shadows on this wall: where it meets the floor and the corners

@@ -50,7 +50,7 @@ export function createAreaScene(canvas, S) {
     home.group.updateMatrixWorld(true);
     const pts = []; for (const g of Object.values(home.objects)) if (inArea(A, g)) { const b = solidBox(g, new THREE.Box3()); if (b.isEmpty()) continue; for (const x of [b.min.x, b.max.x]) for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) pts.push(new THREE.Vector3(x, y, z)); }
     for (const W of home.walls) if (W.id && W.id === A.id + '-back') for (const o of W.built) { const b = solidBox(o.group, new THREE.Box3()); if (b.isEmpty()) continue; for (const x of [b.min.x, b.max.x]) for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) pts.push(new THREE.Vector3(x, y, z)); }   // doors, arches and windows of the backing walls count too
-    const cam = new THREE.PerspectiveCamera(FOV, aspect, 10, 400000), tg = new THREE.Vector3(...v.target), LIM = 0.86;
+    const cam = new THREE.PerspectiveCamera(FOV, aspect, 10, 400000), tg = new THREE.Vector3(...v.target), LIM = 0.87;
     let d = v.dist || 8000;
     const place = () => { cam.position.copy(tg).add(sph(d, v.az, v.el)); cam.lookAt(tg); cam.updateMatrixWorld(true); cam.updateProjectionMatrix(); };
     const ndc = () => pts.map((p) => p.clone().project(cam));
@@ -59,7 +59,7 @@ export function createAreaScene(canvas, S) {
       const right = new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld, 0), up = new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld, 1), k = d * Math.tan(rad(FOV / 2));
       tg.addScaledVector(right, (x0 + x1) / 2 * k * aspect).addScaledVector(up, (y0 + y1) / 2 * k);   // centre the outline
       place(); const m = ndc(), w = Math.max(...m.map((p) => Math.abs(p.x))), h = Math.max(...m.map((p) => Math.abs(p.y)));
-      d *= Math.max(w, h) / LIM; if (Math.abs(Math.max(w, h) / LIM - 1) < 0.01) break;
+      const q = Math.max(w / LIM, h / 0.93); d *= q; if (Math.abs(q - 1) < 0.01) break;   // width keeps a 13% margin, height 7% (the frame is wide)
     }
     return (fitted[key] = { target: tg.toArray(), az: v.az, el: v.el, dist: d });
   };

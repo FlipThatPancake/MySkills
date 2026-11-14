@@ -56,4 +56,4 @@ export const ASSETS = {
   deskChair: A('centre', [540, 540, 850], 'floor', '-'),
   daybed: A('centre', [1900, 850, 810], 'floor', 'w 1900, d 850'),
 };
-for (const [k, n] of Object.entries({ floorPlant: 4, plant: 4, vase: 4, cushion: 4, picture: 4 })) { ASSETS[k].variants = n; ASSETS[k].params = (ASSETS[k].params === '-' ? '' : ASSETS[k].params + ', ') + `form 0-${n - 1}`; }   // compose.mjs picks a form from the seed
+for (const [k, n] of Object.entries({ floorPlant: 4, plant: 4, vase: 4, cushion: 4, picture: 4, wallRun: 3, shelf: 3 })) { ASSETS[k].variants = n; ASSETS[k].params = (ASSETS[k].params === '-' ? '' : ASSETS[k].params + ', ') + `form 0-${n - 1}`; }   // compose.mjs picks a form from the seed

@@ -36,5 +36,7 @@ export function teaTowel(kit, { w = 480 } = {}) {   // a rail on the wall with a
   g.add(kit.cyl(-w / 2, 0, 60, 10, w, { axis: 'x', seg: 14 }));
   g.add(kit.rbox(-w * 0.2, -400, 78, w * 0.4, 410, 10, 4));
   g.add(kit.rbox(-w * 0.2, -300, 66, w * 0.4, 310, 10, 4, lo));
+  const pts = []; for (const y of [-60, -120, -180, -260, -320, -380]) pts.push([-w * 0.2 + 12, y, 89], [w * 0.2 - 12, y, 89]);   // woven stripes so the cloth reads against the wall
+  g.add(kit.lines(pts, 'mid'));
   return kit.merge(g);
 }

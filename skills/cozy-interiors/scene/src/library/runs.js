@@ -136,22 +136,25 @@ function sink(kit, add, cx, depth, top) {
   return [[bx0 - G, z0 + G], [bx1 + G, z0 + G], [bx1 + G, z1 - G], [bx0 - G, z1 - G]];
 }
 
-export function wallRun(kit, { modules, y0 = 1450, h = 720, depth = 320 }) {
+export function wallRun(kit, { modules, y0 = 1450, h = 720, depth = 320, form = 0 }) {   // form 0 closed doors, 1 open shelves with jars, 2 glazed doors
   const g = kit.group(), leaves = [], { add, vbar, front, leaf } = parts(kit, g, leaves), PLINTH = 20, TRIM = 20;
   const length = modules.reduce((s, m) => s + m.w, 0), cy0 = y0 + PLINTH, cy1 = y0 + h - TRIM;
   let x = 0;
   for (const m of modules) {
-    const w = m.w;
+    const w = m.w, kind = form === 1 && m.kind !== 'filler' ? 'open' : m.kind;
     if (m.kind === 'filler') { add(kit.box(x, y0, 2, w, h, depth + 2)); x += w; continue; }
     carcass(kit, add, x, w, cy0, cy1, depth, 14);
     add(kit.box(x + 8, y0, -10, w - 16, PLINTH, depth - 20, { tone: 'lo' }));
     add(kit.box(x, cy1, 0, w, TRIM, depth));
-    if (m.kind === 'open') add(kit.box(x + SIDE, (cy0 + cy1) / 2, -14, w - 2 * SIDE, SIDE, depth - SIDE - 14, { tone: 'lo' }));
-    else {
+    if (kind === 'open') {
+      add(kit.box(x + SIDE, (cy0 + cy1) / 2, -14, w - 2 * SIDE, SIDE, depth - SIDE - 14, { tone: 'lo' }));
+      if (form === 1) { for (const [sy, k] of [[cy0 + SIDE, 3], [(cy0 + cy1) / 2 + SIDE, 2]]) for (let i = 0; i < k; i++) { const jx = x + w * (i + 0.5) / k, jh = 90 + (i * 37 % 50); add(kit.cyl(jx, sy, -depth / 2 + 20, 38, jh, { rTop: 34, seg: 16 })); } }
+    } else {
       const n = m.kind === 'doors' ? 2 : 1, dw = (w - GAP * (n + 1)) / n, dy = cy0 + GAP, dh = cy1 - cy0 - 2 * GAP;
       for (let i = 0; i < n; i++) {
         const hingeLeft = n === 2 ? i === 0 : m.hinge !== 'r', fx = x + GAP + i * (dw + GAP), L = leaf('door', hingeLeft ? fx : fx + dw, 2, { dir: hingeLeft ? -1 : 1, max: 95, len: dw, side: hingeLeft ? 1 : -1, yr: [dy, dy + dh] });
         front(L, fx, dy, dw, dh); vbar(L, hingeLeft ? fx + dw - 30 : fx + 30, dy + 90, 100);
+        if (form === 2) { const z = 2 + FD + 1, pts = []; for (let k = 1; k < 3; k++) { pts.push([fx + dw * k / 3, dy + 40, z], [fx + dw * k / 3, dy + dh - 40, z]); } pts.push([fx + 40, dy + dh / 2, z], [fx + dw - 40, dy + dh / 2, z], [fx + 40, dy + 40, z], [fx + dw - 40, dy + 40, z], [fx + 40, dy + 40, z], [fx + 40, dy + dh - 40, z], [fx + dw - 40, dy + 40, z], [fx + dw - 40, dy + dh - 40, z], [fx + 40, dy + dh - 40, z], [fx + dw - 40, dy + dh - 40, z]); L.add(kit.lines(pts, 'mid')); }
       }
     }
     x += w;

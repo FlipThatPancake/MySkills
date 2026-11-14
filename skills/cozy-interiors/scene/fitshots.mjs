@@ -27,13 +27,17 @@ const res = await page.evaluate(() => {
       const subj = sh.subject || (heroId && sc(heroId).group), mem = real.filter((i) => sc(i).group === subj); if (!mem.length) continue;
       api.setArea(A, true);
       const sb = new T.Box3(); for (const i of mem) sb.union(boxes[i]); const sc3 = sb.getCenter(new T.Vector3());
+      const SMALLFG = ['pouf', 'basket', 'floorPlant', 'plant', 'stool', 'trolley', 'bench', 'footstool', 'sideTable', 'cat'];
       const others = real.filter((i) => !mem.includes(i) && sc(i).mount !== 'wall' && sc(i).asset !== 'rug');
       const test = (from, look, fov) => {
         api.at(from, look); camera.fov = fov; camera.updateProjectionMatrix(); camera.updateMatrixWorld(true);
         let x0 = 9, x1 = -9, y0 = 9, y1 = -9; for (const i of mem) { const r = rect(boxes[i]); x0 = Math.min(x0, r.x0); x1 = Math.max(x1, r.x1); y0 = Math.min(y0, r.y0); y1 = Math.max(y1, r.y1); }
-        const fill = Math.max((x1 - x0) / 2, (y1 - y0) / 2), cx = (x0 + x1) / 2; const ov = Math.max(-0.97 - x0, x1 - 0.97, -0.97 - y0, y1 - 0.97); if (ov > 0 && (!stat.minOv || ov < stat.minOv)) { stat.minOv = +ov.toFixed(2); stat.ext = [x0, x1, y0, y1].map((v) => +v.toFixed(2)); stat.cam = [from[0] | 0, from[1] | 0, from[2] | 0, fov]; } const why = !(x0 >= -0.97 && x1 <= 0.97 && y0 >= -0.97 && y1 <= 0.97) ? 'cut' : !(fill >= 0.28 && fill <= 0.62) ? 'fill' : !(Math.abs(cx) >= 0.2 && Math.abs(cx) <= 0.55) ? 'third' : ''; if (why) { stat[why] = (stat[why] || 0) + 1; return null; }
+        const fill = Math.max((x1 - x0) / 2, (y1 - y0) / 2), cx = (x0 + x1) / 2; const ov = Math.max(-0.97 - x0, x1 - 0.97, -0.97 - y0, y1 - 0.97); if (ov > 0 && (!stat.minOv || ov < stat.minOv)) { stat.minOv = +ov.toFixed(2); stat.ext = [x0, x1, y0, y1].map((v) => +v.toFixed(2)); stat.cam = [from[0] | 0, from[1] | 0, from[2] | 0, fov]; } const why = !(x0 >= -0.97 && x1 <= 0.97 && y0 >= -0.97 && y1 <= 0.97) ? 'cut' : !(fill >= 0.28 && fill <= 0.62) ? 'fill' : !(Math.abs(cx) <= 0.33) ? 'third' : ''; if (why) { stat[why] = (stat[why] || 0) + 1; return null; }
         const cp = camera.position, dS = Math.min(...mem.map((i) => cp.distanceTo(boxes[i].getCenter(new T.Vector3()))));
-        const fg = others.some((i) => { const r = rect(boxes[i]), c = (r.x0 + r.x1) / 2; return Math.abs(c) > 0.55 && Math.abs(c) < 1.1 && cp.distanceTo(boxes[i].getCenter(new T.Vector3())) < dS; });
+        const near = others.filter((i) => cp.distanceTo(boxes[i].getCenter(new T.Vector3())) < dS), subjArea = (x1 - x0) * (y1 - y0);
+        const ovl = (r) => Math.max(0, Math.min(r.x1, x1) - Math.max(r.x0, x0)) * Math.max(0, Math.min(r.y1, y1) - Math.max(r.y0, y0));
+        for (const i of near) if (ovl(rect(boxes[i])) > 0.1 * subjArea) { stat.blocked = (stat.blocked || 0) + 1; return null; }
+        const fg = near.some((i) => { const r = rect(boxes[i]), c = (r.x0 + r.x1) / 2; return SMALLFG.includes(sc(i).asset) && Math.abs(c) > 0.5 && Math.abs(c) < 1.15 && r.y1 > -1; });
         if (!fg) { stat.fg = (stat.fg || 0) + 1; return null; } return { fill, cx };
       };
       let best = null; const stat = {};

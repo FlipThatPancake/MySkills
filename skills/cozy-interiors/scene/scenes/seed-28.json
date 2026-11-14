@@ -144,7 +144,7 @@
     "id": "hallway-console",
     "asset": "console",
     "at": [
-     3100,
+     2850,
      0,
      165
     ],
@@ -157,7 +157,7 @@
     "id": "hallway-mirror",
     "asset": "mirror",
     "at": [
-     3100,
+     2850,
      1150,
      0
     ],
@@ -175,7 +175,7 @@
     "id": "hallway-console-plant",
     "asset": "plant",
     "at": [
-     3450,
+     3200,
      800,
      165
     ],
@@ -188,96 +188,55 @@
     "off": 165
    },
    {
-    "id": "hallway-floor-plant",
-    "asset": "floorPlant",
+    "id": "hallway-bench",
+    "asset": "bench",
     "at": [
-     2150,
+     4250,
      0,
-     280
+     190
     ],
     "mount": "floor",
     "params": {
-     "form": 1
+     "w": 1000
     },
-    "group": "hallway:console",
+    "group": "hallway:bench wall",
     "area": "hallway"
    },
    {
     "id": "hallway-hooks",
     "asset": "coatHooks",
     "at": [
-     4700,
+     4250,
      1500,
      0
     ],
     "mount": "wall",
-    "group": "hallway:coat corner",
+    "group": "hallway:bench wall",
     "area": "hallway",
     "shadow": false
-   },
-   {
-    "id": "hallway-basket",
-    "asset": "basket",
-    "at": [
-     4700,
-     0,
-     500
-    ],
-    "mount": "floor",
-    "group": "hallway:coat corner",
-    "area": "hallway"
-   },
-   {
-    "id": "hallway-rug",
-    "asset": "rug",
-    "at": [
-     3400,
-     0,
-     1900
-    ],
-    "mount": "floor",
-    "params": {
-     "w": 2600,
-     "d": 1300
-    },
-    "group": "hallway:bench",
-    "area": "hallway"
-   },
-   {
-    "id": "hallway-bench",
-    "asset": "bench",
-    "at": [
-     3400,
-     7,
-     1900
-    ],
-    "mount": "floor",
-    "group": "hallway:bench",
-    "area": "hallway",
-    "lift": 7
    },
    {
     "id": "hallway-bench-plant",
     "asset": "plant",
     "at": [
-     3000,
-     457,
-     1900
+     3950,
+     450,
+     190
     ],
     "mount": "on",
     "params": {
      "form": 2
     },
-    "group": "hallway:bench",
+    "group": "hallway:bench wall",
     "area": "hallway"
    },
    {
     "id": "hallway-cat",
     "asset": "cat",
     "at": [
-     3800,
-     457,
-     1900
+     4550,
+     450,
+     190
     ],
     "turn": -15,
     "mount": "on",
@@ -285,34 +244,78 @@
      "pose": "curl",
      "scale": 0.65
     },
-    "group": "hallway:bench",
+    "group": "hallway:bench wall",
     "area": "hallway"
    },
    {
-    "id": "hallway-pouf",
-    "asset": "pouf",
+    "id": "hallway-rug",
+    "asset": "rug",
     "at": [
-     1500,
+     3300,
      0,
-     3000
+     1050
     ],
     "mount": "floor",
-    "group": "hallway:front",
+    "params": {
+     "w": 3800,
+     "d": 1000
+    },
+    "group": "hallway:bench wall",
     "area": "hallway"
    },
    {
-    "id": "hallway-front-plant",
+    "id": "hallway-basket",
+    "asset": "basket",
+    "at": [
+     4250,
+     0,
+     1050
+    ],
+    "mount": "floor",
+    "group": "hallway:bench wall",
+    "area": "hallway"
+   },
+   {
+    "id": "hallway-floor-plant",
     "asset": "floorPlant",
     "at": [
-     4950,
+     5050,
      0,
-     3050
+     280
     ],
+    "mount": "floor",
+    "params": {
+     "form": 1
+    },
+    "group": "hallway:bench wall",
+    "area": "hallway"
+   },
+   {
+    "id": "hallway-stool",
+    "asset": "stool",
+    "at": [
+     1700,
+     0,
+     2300
+    ],
+    "mount": "floor",
+    "group": "hallway:window corner",
+    "area": "hallway"
+   },
+   {
+    "id": "hallway-floor-plant-2",
+    "asset": "floorPlant",
+    "at": [
+     -907.5,
+     0,
+     2131.9
+    ],
+    "turn": 60,
     "mount": "floor",
     "params": {
      "form": 2
     },
-    "group": "hallway:front",
+    "group": "hallway:window corner",
     "area": "hallway"
    },
    {
@@ -439,7 +442,7 @@
     "id": "living-lamp",
     "asset": "floorLamp",
     "at": [
-     9100,
+     8850,
      0,
      190
     ],
@@ -459,31 +462,19 @@
     "params": {
      "form": 3
     },
-    "group": "living:window",
+    "group": "living:corner",
     "area": "living"
    },
    {
     "id": "living-pouf",
     "asset": "pouf",
     "at": [
-     13100,
+     13350,
      0,
-     3300
+     2600
     ],
     "mount": "floor",
-    "group": "living:front",
-    "area": "living"
-   },
-   {
-    "id": "living-basket",
-    "asset": "basket",
-    "at": [
-     9300,
-     0,
-     3300
-    ],
-    "mount": "floor",
-    "group": "living:front",
+    "group": "living:corner",
     "area": "living"
    },
    {
@@ -601,6 +592,9 @@
      160
     ],
     "mount": "floor",
+    "params": {
+     "form": 2
+    },
     "group": "office:shelf",
     "area": "office"
    },
@@ -639,27 +633,24 @@
     "id": "office-basket",
     "asset": "basket",
     "at": [
-     17600,
+     18550,
      0,
-     3000
+     700
     ],
     "mount": "floor",
-    "group": "office:front",
+    "group": "office:desk",
     "area": "office"
    },
    {
-    "id": "office-front-plant",
-    "asset": "floorPlant",
+    "id": "office-stool",
+    "asset": "stool",
     "at": [
      21500,
      0,
-     3000
+     2300
     ],
     "mount": "floor",
-    "params": {
-     "form": 1
-    },
-    "group": "office:front",
+    "group": "office:shelf",
     "area": "office"
    }
   ]
@@ -695,32 +686,32 @@
      {
       "name": "console",
       "from": [
-       2600,
-       1100,
-       4800
+       1700,
+       1250,
+       4500
       ],
       "look": [
-       2270,
-       500,
-       237
+       2371,
+       900,
+       38
       ],
       "fov": 38,
       "subject": "hallway:console"
      },
      {
-      "name": "bench",
+      "name": "bench wall",
       "from": [
-       -700,
-       1500,
-       3300
+       500,
+       1400,
+       5400
       ],
       "look": [
-       3181,
+       3877,
        300,
-       1258
+       1107
       ],
-      "fov": 35,
-      "subject": "hallway:bench"
+      "fov": 40,
+      "subject": "hallway:bench wall"
      }
     ]
    }
@@ -770,14 +761,14 @@
      {
       "name": "window corner",
       "from": [
-       8600,
-       1250,
-       6300
+       9200,
+       1100,
+       5700
       ],
       "look": [
-       10212,
-       1200,
-       -234
+       9954,
+       1100,
+       -37
       ],
       "fov": 40,
       "subject": "living:window"
@@ -816,28 +807,28 @@
       "name": "desk",
       "from": [
        20300,
-       1250,
+       1400,
        5400
       ],
       "look": [
-       18830,
+       19896,
        300,
-       1173
+       966
       ],
-      "fov": 35,
+      "fov": 34,
       "subject": "office:desk"
      },
      {
       "name": "shelf",
       "from": [
-       19700,
+       17300,
        1100,
-       4800
+       4200
       ],
       "look": [
-       20870,
-       1038,
-       109
+       21049,
+       900,
+       766
       ],
       "fov": 40,
       "subject": "office:shelf"

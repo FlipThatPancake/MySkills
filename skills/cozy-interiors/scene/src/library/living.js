@@ -43,7 +43,7 @@ export function rug(kit, { w = 2400, d = 1700, border = 70 } = {}) {
   g.add(kit.lines(pts, 'mid'));
   return kit.merge(g);
 }
-export function shelf(kit, { w = 800, h = 1800, d = 320, shelves = 5, seed = 3 } = {}) {
+export function shelf(kit, { w = 800, h = 1800, d = 320, shelves = 5, seed = 3, form = 0 } = {}) {   // form 0 book rows, 1 lidded boxes and flat stacks, 2 gapped book groups with a pot and a basket
   const { bx } = boxes(kit), g = kit.group(), R = rnd(seed), T = 22, P = 90;
   g.add(bx(-w / 2 + T / 2, 0, 0, T, h, d)); g.add(bx(w / 2 - T / 2, 0, 0, T, h, d));                // the sides
   g.add(bx(0, 0, -d / 2 + 6, w - 2 * T, h, 12, lo));                                                    // the back
@@ -52,7 +52,14 @@ export function shelf(kit, { w = 800, h = 1800, d = 320, shelves = 5, seed = 3 }
   g.add(bx(0, 0, 8, w - 2 * T, P, d - 30, lo));                                                          // the plinth, set back
   for (let s = 1; s < shelves; s++) {   // books on some shelves: spines of mixed heights, one leaning, a pot at the end of the third
     const y = ys[s] + T, gap = ys[s + 1] - y - T;
-    if (s % 2 === 1) {
+    if (form === 1) {   // storage boxes in a row, a flat stack of books on top of the last one
+      const nb = 2, bw2 = (w - 2 * T - 60) / nb; for (let i = 0; i < nb; i++) { const bh = Math.min(gap - 40, 150 + (s % 2) * 60); g.add(bx(-w / 2 + T + 30 + bw2 * (i + 0.5), y, 0, bw2 - 12, bh, d - 90)); g.add(bx(-w / 2 + T + 30 + bw2 * (i + 0.5), y + bh, 0, bw2 - 6, 10, d - 84, lo)); }
+      if (s % 2 === 1) for (let k = 0; k < 3; k++) g.add(bx(w / 2 - T - 130 + R() * 10, y + Math.min(gap - 40, 150) + 10 + k * 28, 0, 180, 24, 200, lo));
+    } else if (form === 2) {   // two short groups of books standing, with a gap holding a pot or a basket
+      const half = (w - 2 * T) / 2;
+      for (const x0 of [-w / 2 + T + 20, 40 + (s % 2) * 60]) { let x = x0; const end = x0 + half * 0.55; while (x < end) { const bw = 24 + R() * 22, bh = Math.min(gap - 30, 170 + R() * 90); g.add(bx(x + bw / 2, y, 0, bw, bh, d - 90, lo)); x += bw + 2; } }
+      if (s % 2 === 1) g.add(kit.cyl(-20, y, 0, 70, 130, { rTop: 80, seg: 20 })); else g.add(kit.cyl(w / 2 - T - 110, y, 0, 80, 110, { rTop: 95, seg: 24, ...lo }));
+    } else if (s % 2 === 1) {
       let x = -w / 2 + T + 20; const end = w / 2 - T - 120;
       while (x < end) { const bw = 24 + R() * 22, bh = Math.min(gap - 30, 170 + R() * 90); g.add(bx(x + bw / 2, y, 0, bw, bh, d - 90, lo)); x += bw + 2; }
     } else if (s === 2) {

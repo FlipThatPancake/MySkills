@@ -164,8 +164,8 @@ const areaIssues = await page.evaluate(() => {
     // the home view
     api.setArea(A, true); camera.updateMatrixWorld(true); camera.updateProjectionMatrix();
     const R = Object.fromEntries(ids.map((i) => [i, rect(boxes[i])]));
-    for (const i of mine) { const r = R[i]; if (Math.abs(r.x0) > 0.88 || Math.abs(r.x1) > 0.88 || r.y0 < -0.88 || r.y1 > 0.88) out.push({ rule: 'frame', what: `${A}: ${i} reaches ${(Math.max(Math.abs(r.x0), Math.abs(r.x1), Math.abs(r.y0), Math.abs(r.y1)) * 100).toFixed(0)}% toward the edge of the home view (keep within 88%): the area's objects and back-wall openings must fit the frame: remove a stray piece or bring it nearer the group` }); }
-    for (const W of home.walls) { if (!W.id || W.id !== A + '-back') continue; for (const b of W.built) { const r = rect(box(b.group)); if (Math.abs(r.x0) > 0.88 || Math.abs(r.x1) > 0.88 || r.y0 < -0.88 || r.y1 > 0.88) out.push({ rule: 'frame', what: `${A}: the ${b.op.kind} on ${W.id} at ${b.op.at} reaches the edge of the home view (x ${r.x0.toFixed(2)} to ${r.x1.toFixed(2)}, y ${r.y0.toFixed(2)} to ${r.y1.toFixed(2)})` }); } }
+    for (const i of mine) { const r = R[i]; if (Math.abs(r.x0) > 0.88 || Math.abs(r.x1) > 0.88 || r.y0 < -0.94 || r.y1 > 0.94) out.push({ rule: 'frame', what: `${A}: ${i} reaches ${(Math.max(Math.abs(r.x0), Math.abs(r.x1), Math.abs(r.y0), Math.abs(r.y1)) * 100).toFixed(0)}% toward the edge of the home view (keep within 88%): the area's objects and back-wall openings must fit the frame: remove a stray piece or bring it nearer the group` }); }
+    for (const W of home.walls) { if (!W.id || W.id !== A + '-back') continue; for (const b of W.built) { const r = rect(box(b.group)); if (Math.abs(r.x0) > 0.88 || Math.abs(r.x1) > 0.88 || r.y0 < -0.94 || r.y1 > 0.94) out.push({ rule: 'frame', what: `${A}: the ${b.op.kind} on ${W.id} at ${b.op.at} reaches the edge of the home view (x ${r.x0.toFixed(2)} to ${r.x1.toFixed(2)}, y ${r.y0.toFixed(2)} to ${r.y1.toFixed(2)})` }); } }
     const bd = api.areas[A].bounds;
     // fill: the area's objects span 70 to 88 percent of the frame width
     { const xs0 = Math.min(...mine.map((i) => R[i].x0)), xs1 = Math.max(...mine.map((i) => R[i].x1)), span = (xs1 - xs0) / 2; if (span < 0.7) out.push({ rule: 'fill', what: `${A}: its objects span ${(span * 100).toFixed(0)}% of the home view's width (want 70 to 88): pull the group forward and nearer together, or lower the view` }); }
@@ -173,6 +173,8 @@ const areaIssues = await page.evaluate(() => {
     { const bw = home.walls.find((w) => w.id === A + '-back');
       if (bw) { const dist = (x, z) => (x - bw.to[0]) * bw.n[0] + (z - bw.to[1]) * bw.n[1], cs = [[bd.x0, bd.z0], [bd.x1, bd.z1], [bd.x0, bd.z1], [bd.x1, bd.z0]].map((c) => Math.abs(dist(...c))), D = Math.min(Math.max(...cs), 4800);
         const ds = real.filter((i) => ['floor', 'on'].includes(sc(i).mount) && sc(i).asset !== 'rug').map((i) => { const c = boxes[i].getCenter(new T.Vector3()); return Math.abs(dist(c.x, c.z)); }), spread = Math.max(...ds) - Math.min(...ds);
+        { const gd = {}; for (const i of real) { const c = boxes[i].getCenter(new T.Vector3()); (gd[sc(i).group] ||= []).push(['pouf', 'basket', 'floorPlant', 'plant', 'stool', 'trolley', 'cat', 'footstool', 'sideTable', 'bookStack', 'vase'].includes(sc(i).asset) ? Math.abs(dist(c.x, c.z)) : 0); } for (const [g, v] of Object.entries(gd)) if (v.length && Math.min(...v) > 0.6 * D) out.push({ rule: 'foreground', what: `${A}: group "${g}" stands entirely in the front layer: a foreground piece belongs to a group with something in the middle layer (a stool of the island, the end of a bench, a plant beside the sofa)` }); }
+        { const poufs = real.filter((i) => sc(i).asset === 'pouf'); if (poufs.length) (window.__poufAreas ||= new Set()).add(A); }
         if (spread < 0.45 * D) out.push({ rule: 'depth', what: `${A}: its pieces span ${spread.toFixed(0)} mm of the ${D.toFixed(0)} mm depth (want 45%): pull the main group 800 to 1500 mm off the wall and add a low piece in front` }); } }
     // rugs lie under furniture, never alone
     for (const r of real.filter((i) => sc(i).asset === 'rug')) { const rb = boxes[r]; if (!real.some((i) => i !== r && sc(i).asset !== 'rug' && ['floor'].includes(sc(i).mount) && rb.containsPoint(new T.Vector3(...boxes[i].getCenter(new T.Vector3()).toArray().map((v, k) => (k === 1 ? rb.min.y + 1 : v)))))) out.push({ rule: 'rug', what: `${r} has no furniture on it: put a group on the rug or remove it` }); }
@@ -198,9 +200,13 @@ const areaIssues = await page.evaluate(() => {
       { const cx = (x0 + x1) / 2, fp = sh.from, bb2 = bnd, fovv = sh.fov || 30;
         if (fovv < 26 || fovv > 40) out.push({ rule: 'shot', what: `${A} shot "${sh.name}": lens ${fovv} degrees (use 26 to 40)` });
         if (fp[0] < bb2.x0 - 300 || fp[0] > bb2.x1 + 300 || fp[2] < bb2.z0 - 1 || fp[2] > bb2.z1 + 2500 || fp[1] < 1100 || fp[1] > 1500) out.push({ rule: 'shot', what: `${A} shot "${sh.name}": the camera stands outside the area (at most 2500 mm in front of its front edge) or at ${fp[1]} mm (1100 to 1500 mm high)` });
-        if (Math.abs(cx) < 0.15 || Math.abs(cx) > 0.6) out.push({ rule: 'shot', what: `${A} shot "${sh.name}": the subject is at ${(cx * 50 + 50).toFixed(0)}% across the frame (put it on a third: 20-35% or 65-80%)` });
-        const dS = Math.min(...members.map((i) => cp2.distanceTo(boxes[i].getCenter(new T.Vector3())))); const fg = real.filter((i) => !members.includes(i) && sc(i).mount !== 'wall' && sc(i).asset !== 'rug').some((i) => { const r = rect(boxes[i]), c = (r.x0 + r.x1) / 2; return Math.abs(c) > 0.55 && Math.abs(c) < 1.1 && cp2.distanceTo(boxes[i].getCenter(new T.Vector3())) < dS; });
-        if (!fg) out.push({ rule: 'shot', what: `${A} shot "${sh.name}": no foreground piece at one edge, nearer than the subject (a pouf, basket, plant, stool): add one or move the camera` }); }
+        if (Math.abs(cx) > 0.33) out.push({ rule: 'shot', what: `${A} shot "${sh.name}": the subject is at ${(cx * 50 + 50).toFixed(0)}% across the frame (keep it in the middle third: 33% to 67%)` });
+        const SMALLFG = ['pouf', 'basket', 'floorPlant', 'plant', 'stool', 'trolley', 'bench', 'footstool', 'sideTable', 'cat'], sx0 = x0, sx1 = x1, sy0 = y0, sy1 = y1, sArea = (sx1 - sx0) * (sy1 - sy0);
+        const nearer = real.filter((i) => !members.includes(i) && sc(i).mount !== 'wall' && sc(i).asset !== 'rug' && cp2.distanceTo(boxes[i].getCenter(new T.Vector3())) < Math.min(...members.map((m) => cp2.distanceTo(boxes[m].getCenter(new T.Vector3())))));
+        const blocked = nearer.filter((i) => { const r = rect(boxes[i]); return ov(r, { x0: sx0, x1: sx1, y0: sy0, y1: sy1 }) > 0.1 * sArea; });
+        if (blocked.length) out.push({ rule: 'shot', what: `${A} shot "${sh.name}": ${blocked.slice(0, 3).join(', ')} stands in front of the subject and hides it: move the camera or the piece` });
+        const fg = nearer.some((i) => { const r = rect(boxes[i]), c = (r.x0 + r.x1) / 2; return SMALLFG.includes(sc(i).asset) && Math.abs(c) > 0.5 && Math.abs(c) < 1.15 && r.y1 > -1; });
+        if (!fg) out.push({ rule: 'shot', what: `${A} shot "${sh.name}": no small foreground piece at a frame edge (it may be cut by one edge), nearer than the subject (a stool, basket, plant, bench end): add one or move the camera` }); }
     }
     camera.fov = 30; camera.updateProjectionMatrix(); api.setArea(A, true); camera.updateMatrixWorld(true);
     // lamps clear of openings and each other; one lamp unless the area is wide
@@ -221,6 +227,7 @@ const areaIssues = await page.evaluate(() => {
     }
     if (table) { const r = R[table], hid = mine.filter((i) => i !== table && ['floor'].includes(sc(i).mount) && !['rug', 'plant', 'cat'].includes(sc(i).asset) && cp.distanceTo(boxes[i].getCenter(new T.Vector3())) < cp.distanceTo(boxes[table].getCenter(new T.Vector3())) && ov(R[i], r) > 0.35 * area2(r)); if (hid.length) out.push({ rule: 'seating', what: `${A}: ${hid.join(', ')} hides the coffee table in the home view` }); }
   }
+  if ((window.__poufAreas || new Set()).size > 1) out.push({ rule: 'variety', what: `${[...window.__poufAreas].join(', ')} all use a pouf: one area per home at most; use a stool, bench end, basket or plant elsewhere` });
   return out;
 });
 for (const i of areaIssues) issues.push(i);

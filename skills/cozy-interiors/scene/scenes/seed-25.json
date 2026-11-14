@@ -245,8 +245,8 @@
     "id": "kitchen-towel",
     "asset": "teaTowel",
     "at": [
-     3350,
-     1250,
+     1100,
+     1350,
      0
     ],
     "mount": "wall",
@@ -341,7 +341,8 @@
        "w": 600,
        "kind": "doors"
       }
-     ]
+     ],
+     "form": 2
     },
     "group": "kitchen:cooking",
     "area": "kitchen"
@@ -449,7 +450,7 @@
      1250
     ],
     "mount": "floor",
-    "group": "reading:reading group",
+    "group": "reading:chair side",
     "area": "reading"
    },
    {
@@ -462,19 +463,7 @@
     ],
     "turn": 20,
     "mount": "on",
-    "group": "reading:reading group",
-    "area": "reading"
-   },
-   {
-    "id": "reading-pouf",
-    "asset": "pouf",
-    "at": [
-     12800,
-     0,
-     3000
-    ],
-    "mount": "floor",
-    "group": "reading:front",
+    "group": "reading:chair side",
     "area": "reading"
    },
    {
@@ -483,10 +472,10 @@
     "at": [
      9900,
      0,
-     3100
+     2500
     ],
     "mount": "floor",
-    "group": "reading:front",
+    "group": "reading:chair side",
     "area": "reading"
    },
    {
@@ -499,7 +488,8 @@
     ],
     "mount": "floor",
     "params": {
-     "w": 800
+     "w": 800,
+     "form": 2
     },
     "group": "reading:shelf",
     "area": "reading"
@@ -659,9 +649,9 @@
     "id": "bedroom-cat",
     "asset": "cat",
     "at": [
-     19900,
+     19500,
      7,
-     2400
+     2700
     ],
     "turn": 40,
     "mount": "floor",
@@ -738,16 +728,17 @@
     "area": "bedroom"
    },
    {
-    "id": "bedroom-pouf",
-    "asset": "pouf",
+    "id": "bedroom-bench",
+    "asset": "bench",
     "at": [
-     22600,
-     0,
-     3200
+     22400,
+     7,
+     2800
     ],
     "mount": "floor",
     "group": "bedroom:rug area",
-    "area": "bedroom"
+    "area": "bedroom",
+    "lift": 7
    }
   ]
  },
@@ -787,9 +778,9 @@
        5700
       ],
       "look": [
-       3428,
+       3403,
        1100,
-       198
+       195
       ],
       "fov": 40,
       "subject": "kitchen:cooking"
@@ -797,16 +788,16 @@
      {
       "name": "peninsula",
       "from": [
-       500,
-       1250,
-       2700
+       800,
+       1100,
+       3600
       ],
       "look": [
-       4918,
-       700,
-       1979
+       4422,
+       300,
+       807
       ],
-      "fov": 35,
+      "fov": 36,
       "subject": "kitchen:peninsula"
      }
     ]
@@ -842,16 +833,16 @@
      {
       "name": "reading chair",
       "from": [
-       11800,
-       1100,
+       11500,
+       1500,
        6000
       ],
       "look": [
-       11584,
+       11602,
        700,
-       1490
+       1518
       ],
-      "fov": 38,
+      "fov": 40,
       "subject": "reading:reading group"
      },
      {
@@ -907,24 +898,24 @@
        5400
       ],
       "look": [
-       21262,
+       21282,
        500,
-       883
+       878
       ],
-      "fov": 35,
+      "fov": 36,
       "subject": "bedroom:bed"
      },
      {
       "name": "wardrobe wall",
       "from": [
-       22000,
+       22900,
        1100,
-       600
+       4200
       ],
       "look": [
-       18474,
+       17570,
        1050,
-       3742
+       3568
       ],
       "fov": 40,
       "subject": "bedroom:wardrobe wall"

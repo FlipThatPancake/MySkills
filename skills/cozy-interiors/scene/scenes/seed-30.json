@@ -140,7 +140,7 @@
      700
     ],
     "mount": "floor",
-    "group": "kitchen:cooking",
+    "group": "kitchen:larder",
     "area": "kitchen"
    },
    {
@@ -254,14 +254,35 @@
     "id": "kitchen-towel",
     "asset": "teaTowel",
     "at": [
-     3650,
-     1250,
+     1200,
+     1350,
      0
     ],
     "mount": "wall",
     "group": "kitchen:cooking",
     "area": "kitchen",
     "shadow": false
+   },
+   {
+    "id": "kitchen-wall-units",
+    "asset": "wallRun",
+    "at": [
+     4100,
+     0,
+     320
+    ],
+    "mount": "wall",
+    "params": {
+     "modules": [
+      {
+       "w": 600,
+       "kind": "doors"
+      }
+     ],
+     "form": 1
+    },
+    "group": "kitchen:cooking",
+    "area": "kitchen"
    },
    {
     "id": "kitchen-wall-shelf",
@@ -368,25 +389,25 @@
     "id": "kitchen-basket",
     "asset": "basket",
     "at": [
-     5000,
+     4350,
      0,
-     3300
+     2900
     ],
     "mount": "floor",
-    "group": "kitchen:front",
+    "group": "kitchen:island",
     "area": "kitchen"
    },
    {
     "id": "kitchen-trolley",
     "asset": "trolley",
     "at": [
-     600,
+     500,
      0,
-     3950
+     3600
     ],
-    "turn": 12,
+    "turn": 8,
     "mount": "floor",
-    "group": "kitchen:front",
+    "group": "kitchen:larder",
     "area": "kitchen"
    },
    {
@@ -583,27 +604,28 @@
     "shadow": false
    },
    {
+    "id": "dining-bench",
+    "asset": "bench",
+    "at": [
+     9390,
+     0,
+     900
+    ],
+    "turn": 90,
+    "mount": "floor",
+    "group": "dining:door side",
+    "area": "dining"
+   },
+   {
     "id": "dining-basket",
     "asset": "basket",
     "at": [
      10000,
      0,
-     4500
+     4200
     ],
     "mount": "floor",
-    "group": "dining:front",
-    "area": "dining"
-   },
-   {
-    "id": "dining-pouf",
-    "asset": "pouf",
-    "at": [
-     13900,
-     0,
-     4450
-    ],
-    "mount": "floor",
-    "group": "dining:front",
+    "group": "dining:door side",
     "area": "dining"
    },
    {
@@ -728,24 +750,12 @@
     "id": "living-basket",
     "asset": "basket",
     "at": [
-     18500,
+     19400,
      0,
-     3300
+     2150
     ],
     "mount": "floor",
-    "group": "living:front",
-    "area": "living"
-   },
-   {
-    "id": "living-pouf",
-    "asset": "pouf",
-    "at": [
-     22400,
-     0,
-     3400
-    ],
-    "mount": "floor",
-    "group": "living:front",
+    "group": "living:window",
     "area": "living"
    },
    {
@@ -796,14 +806,14 @@
      {
       "name": "cooking",
       "from": [
-       5600,
+       2900,
        1100,
-       5400
+       5700
       ],
       "look": [
-       3378,
+       3283,
        1100,
-       -426
+       320
       ],
       "fov": 40,
       "subject": "kitchen:cooking"
@@ -811,16 +821,16 @@
      {
       "name": "island",
       "from": [
-       5900,
-       1250,
-       6000
+       500,
+       1500,
+       6900
       ],
       "look": [
-       2892,
-       500,
-       2655
+       2400,
+       700,
+       2921
       ],
-      "fov": 36,
+      "fov": 40,
       "subject": "kitchen:island"
      }
     ]
@@ -856,14 +866,14 @@
      {
       "name": "sideboard",
       "from": [
-       14200,
-       1100,
-       4500
+       11200,
+       1250,
+       5700
       ],
       "look": [
-       10850,
-       1100,
-       542
+       10711,
+       700,
+       193
       ],
       "fov": 40,
       "subject": "dining:sideboard"
@@ -871,12 +881,12 @@
      {
       "name": "table",
       "from": [
-       13600,
+       10600,
        1250,
        7200
       ],
       "look": [
-       12514,
+       11686,
        500,
        2852
       ],
@@ -916,14 +926,14 @@
      {
       "name": "sofa",
       "from": [
-       20200,
-       1250,
+       19000,
+       1100,
        6600
       ],
       "look": [
-       20703,
-       300,
-       1220
+       21927,
+       700,
+       1620
       ],
       "fov": 40,
       "subject": "living:sofa"
@@ -931,14 +941,14 @@
      {
       "name": "window",
       "from": [
-       18400,
+       23800,
        1100,
-       5700
+       4800
       ],
       "look": [
-       18542,
+       19584,
        1100,
-       247
+       680
       ],
       "fov": 40,
       "subject": "living:window"
