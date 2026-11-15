@@ -33,8 +33,10 @@ If several Blenders are open, confirm the file first (`bpy.data.filepath`).
 
 ## Workflow
 
-1. **Read**: `cc.comments()` lists the Drafts. Each one has `number`, `text`,
-   `stage`, `objects` (exact object names), `color`, `created` and `sent`.
+1. **Read**: `cc.comments()` returns a plain list of the Drafts (pass a stage,
+   `cc.comments("SENT")`, for others). Each one has `number`, `text`, `stage`,
+   `objects` (exact object names), `author` (`"user"` or `"agent"`), `color`,
+   `created` and `sent`. `cc.comment(n)` returns one comment the same way.
    `cc.prompt()["text"]` is the same bundle the user's Send button copies.
 2. **Look**: `cc.context(n)` adds `object_info` for each object (type, world
    location, rotation in degrees, scale, dimensions, materials, parent,
@@ -45,19 +47,40 @@ If several Blenders are open, confirm the file first (`bpy.data.filepath`).
 5. **Close**: `cc.resolve([4, 5])` when done. Use `cc.back_to_draft(n)` if the user
    should look again.
 6. **Ask**: `cc.add("Which handle: front or back?", ["Handle.001"])` leaves a Draft
-   on objects for the user to answer.
+   on objects for the user to answer. It gets `author: "agent"` and shows as a ringed
+   chip. It takes the colour of the comments already on those objects.
+   The user's answer comes back as a new Draft with `author: "user"` on the same
+   objects. Nothing links it to your question yet, so match it by objects and by
+   being newer than your question, and say which one you took as the answer.
 
 Tell the user which numbers you resolved and what changed.
 
 ## Rules the API keeps
 
-- Results are plain JSON. Errors never raise: they come back as
+- Results are plain JSON. `comments()` and `comment(n)` return a bare list or
+  record. Changes (`mark_sent`, `resolve`, `back_to_draft`, `add`) return a dict
+  with `"ok": True`. Errors never raise: they come back as
   `{"ok": False, "error": code, "message": ...}`, so check `"error" in r`.
   The codes are `not_found` (with `missing` and `known`), `bad_stage`,
   `bad_input`, `no_objects`, `no_scene` and `internal`.
 - Each change is one undo step; the user can press Ctrl+Z.
 - Stage changes are all-or-nothing: one unknown number means nothing moves.
 - `cc.api_version()` returns `{"api_version": 1, "addon_version": ...}`.
+
+## Resolve only when the work is done
+
+`resolve` changes a label, not the scene. Make the change first, check it, then
+resolve. If you cannot make the change, leave the comment Sent or send it
+`back_to_draft` and say why.
+
+## If only the chat-comments MCP is connected
+
+Chat Comments can also run its own local MCP server (tools `list_comments`,
+`get_comment`, `get_context`, `get_prompt`, `mark_sent`, `resolve`,
+`back_to_draft`, `add_comment`). It reads and updates comments only. It cannot
+change objects. With only that server you can read comments and answer them in
+words, but you cannot do the work. Tell the user that a Blender MCP is also needed,
+and do not resolve comments you have not done.
 
 ## When the import fails
 
