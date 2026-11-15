@@ -106,7 +106,7 @@ export function bench(kit, { w = 1200, d = 380, h = 450 } = {}) {
   const { bx, rb } = boxes(kit), g = kit.group(), TT = 40;
   g.add(rb(0, h - TT, 0, w, TT, d, 8));
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) g.add(bx(sx * (w / 2 - 70), 0, sz * (d / 2 - 50), 46, h - TT, 46));
-  g.add(bx(0, 120, 0, w - 200, 30, 36, lo));
+  for (const sz of [-1, 1]) g.add(bx(0, 120, sz * (d / 2 - 50), w - 140, 30, 36, lo));   // a stretcher between each pair of legs
   return kit.merge(g);
 }
 export function stool(kit, { h = 650 } = {}) {   // a bar stool: round seat, four splayed legs, one footrest ring low down

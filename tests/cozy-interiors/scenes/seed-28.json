@@ -422,6 +422,7 @@
     "params": {
      "w": 380,
      "h": 340,
+     "lean": 18,
      "form": 1
     },
     "group": "living:seating",

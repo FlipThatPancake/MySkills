@@ -36,7 +36,7 @@ const H = new Home({ seed: 28, floor: 'boards' });
   a.put('armchair-r', 'armchair', [2700, 2100], -25, { y: 7, lift: 7, group: 'seating' });
   a.put('side-table', 'sideTable', [1950, 1900], 0, { y: 7, lift: 7, group: 'seating' });
   a.put('vase', 'vase', [1950, 1900], 0, { y: 527, mount: 'on', group: 'seating' });
-  a.put('cushion', 'cushion', [1150, 2050], 25, { y: 470, mount: 'on', group: 'seating', params: { w: 380, h: 340 } });
+  a.put('cushion', 'cushion', [1150, 2050], 25, { y: 470, mount: 'on', group: 'seating', params: { w: 380, h: 340, lean: 18 } });
   a.put('cat', 'cat', [1950, 2900], 160, { y: 7, lift: 7, group: 'seating', params: { pose: 'sit' } });
   back.place('lamp', 'floorLamp', 2500, { group: 'window' });
   back.place('floor-plant', 'floorPlant', 5050, { group: 'corner' });

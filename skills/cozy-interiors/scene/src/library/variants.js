@@ -63,7 +63,10 @@ export function vase(kit, { form = 0, h = 280, stems = 5, seed = 3 } = {}) {
   return kit.merge(g);
 }
 
-export function cushion(kit, { form = 0, w = 440, h = 420, tone = 'mid' } = {}) {
+export function cushion(kit, { form = 0, w = 440, h = 420, tone = 'mid', lean = 0 } = {}) {
+  const out = cushion1(kit, { form, w, h, tone }); out.rotation.x = -lean * Math.PI / 180; return out;
+}
+function cushion1(kit, { form = 0, w = 440, h = 420, tone = 'mid' } = {}) {
   if (!form) return cushion0(kit, { w, h, tone });
   const g = kit.group(), D = 120, z = D / 2 + 1, pts = [];
   g.add(kit.rbox(-w / 2, 0, D / 2, w, h, D, 70, { tone }));

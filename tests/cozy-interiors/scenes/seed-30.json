@@ -30,7 +30,7 @@
       "height": 1100,
       "sill": 1000,
       "sash": "fixed",
-      "at": 3800
+      "at": 4600
      }
     ]
    },
@@ -266,7 +266,7 @@
     "id": "kitchen-towel",
     "asset": "teaTowel",
     "at": [
-     1200,
+     4000,
      1350,
      0
     ],
@@ -575,11 +575,14 @@
     "id": "dining-wall-shelf",
     "asset": "wallShelf",
     "at": [
-     12500,
+     12350,
      1500,
      0
     ],
     "mount": "wall",
+    "params": {
+     "w": 600
+    },
     "group": "dining:sideboard",
     "area": "dining",
     "shadow": false
@@ -798,9 +801,9 @@
        5700
       ],
       "look": [
-       2673,
+       1797,
        1100,
-       354
+       299
       ],
       "fov": 40,
       "subject": "kitchen:cooking"
@@ -853,14 +856,14 @@
      {
       "name": "sideboard",
       "from": [
-       10600,
-       1100,
-       4800
+       10900,
+       1250,
+       5100
       ],
       "look": [
-       10548,
-       1025,
-       79
+       10911,
+       1100,
+       142
       ],
       "fov": 40,
       "subject": "dining:sideboard"
@@ -933,9 +936,9 @@
        4500
       ],
       "look": [
-       19542,
+       19548,
        1100,
-       637
+       657
       ],
       "fov": 40,
       "subject": "living:window"

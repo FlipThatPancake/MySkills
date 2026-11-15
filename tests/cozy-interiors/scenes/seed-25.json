@@ -245,19 +245,6 @@
     "off": 330
    },
    {
-    "id": "kitchen-towel",
-    "asset": "teaTowel",
-    "at": [
-     1100,
-     1350,
-     0
-    ],
-    "mount": "wall",
-    "group": "kitchen:cooking",
-    "area": "kitchen",
-    "shadow": false
-   },
-   {
     "id": "kitchen-plant",
     "asset": "plant",
     "at": [
@@ -381,6 +368,32 @@
     "mount": "floor",
     "group": "kitchen:larder",
     "area": "kitchen"
+   },
+   {
+    "id": "kitchen-towel",
+    "asset": "teaTowel",
+    "at": [
+     4650,
+     1350,
+     0
+    ],
+    "mount": "wall",
+    "group": "kitchen:shelf corner",
+    "area": "kitchen",
+    "shadow": false
+   },
+   {
+    "id": "kitchen-wall-shelf",
+    "asset": "wallShelf",
+    "at": [
+     5550,
+     1300,
+     0
+    ],
+    "mount": "wall",
+    "group": "kitchen:shelf corner",
+    "area": "kitchen",
+    "shadow": false
    },
    {
     "id": "kitchen-crate",
@@ -641,6 +654,7 @@
     "params": {
      "w": 400,
      "h": 340,
+     "lean": 20,
      "form": 2
     },
     "group": "bedroom:bed",

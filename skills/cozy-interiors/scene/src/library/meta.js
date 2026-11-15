@@ -43,7 +43,7 @@ export const ASSETS = {
   wallShelf: A('wall-centre', [900, 230, 280], 'wall', 'w 900, seed', { y: 1300, note: 'books, a pot and a bowl on it' }),
   curtain: A('wall-centre', [1500, 200, 2300], 'wall', 'w 1500, h 2300, panels 2', { y: 0 }),
   coatHooks: A('wall-centre', [900, 100, 120], 'wall', 'n 4, w 900', { y: 1500, note: 'a coat and a scarf hang below it' }),
-  cushion: A('centre', [440, 120, 420], 'on', 'w 440, h 420, tone mid|lo', { y: 'the seat height' }),
+  cushion: A('centre', [440, 120, 420], 'on', 'w 440, h 420, tone mid|lo, lean 0-25 (degrees tilted back; 15 to 25 against a headboard or a sofa back)', { y: 'the seat height' }),
   vase: A('centre', [160, 160, 700], 'on', 'h 280, stems 5, seed', { y: 'top' }),
   bookStack: A('centre', [240, 170, 120], 'on', 'n 4, seed', { y: 'top' }),
   basket: A('centre', [460, 460, 320], 'floor', 'r 230, h 320'),

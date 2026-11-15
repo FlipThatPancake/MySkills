@@ -60,6 +60,14 @@ const issues = await page.evaluate(() => {
       if (inside && lo < -3 && hi > 3) out.push({ rule: 'wall', what: `${id} crosses wall ${W.id || W.i} (${lo.toFixed(0)} to ${hi.toFixed(0)} mm): stand it off the wall so its back touches rather than crosses` });
     }
   }
+  // 0. no floating parts: every solid part of an asset touches another part of it (bounding boxes within 8 mm), so the asset is one connected piece
+  { const done = new Set(); for (const id of Object.keys(objs)) { const a = sc(id).asset; if (done.has(a + JSON.stringify(sc(id).params?.form)) || ['baseRun', 'wallRun', 'curtain', 'rug', 'floorPlant', 'plant', 'vase', 'cat', 'teaTowel', 'pendantLamp', 'coatHooks', 'cushion', 'bookStack', 'picture', 'mirror', 'jars', 'herbs', 'shelf', 'wallShelf', 'fruitBowl', 'umbrellaStand', 'crate'].includes(a)) continue; done.add(a + JSON.stringify(sc(id).params?.form));
+      const parts = []; objs[id].updateMatrixWorld(true); objs[id].traverse((o) => { if (!o.isMesh || o.isLineSegments2 || o.material.isMeshBasicMaterial || kit.hulls.includes(o.material) || o.material === kit.depth) return; o.geometry.computeBoundingBox(); const b = o.geometry.boundingBox.clone().applyMatrix4(o.matrixWorld); if (b.max.x - b.min.x < 3 && b.max.y - b.min.y < 3) return; parts.push(b.expandByScalar(8)); });
+      if (parts.length < 2) continue; const comp = parts.map((_, i) => i), find = (i) => comp[i] === i ? i : (comp[i] = find(comp[i]));
+      for (let i = 0; i < parts.length; i++) for (let j = i + 1; j < parts.length; j++) if (parts[i].intersectsBox(parts[j])) comp[find(i)] = find(j);
+      const n = new Set(parts.map((_, i) => find(i))).size; if (n > 1) out.push({ rule: 'floating', what: `${a} (${id}) is ${n} loose pieces: a part touches nothing else of it (a plank above its legs, a handle off its body): fix the asset` }); } }
+  // 0b. a cushion on a bed or seat leans back (15 to 25 degrees) against the headboard or the back of the seat
+  for (const id of Object.keys(objs)) if (sc(id).asset === 'cushion' && (sc(id).params?.lean ?? 0) < 10) out.push({ rule: 'cushion', what: `${id} stands upright: give it params.lean 15 to 25 so it rests back against the headboard or the seat back` });
   // swings: every opening front, shut to wide, against every object and every other opening
   const openings = home.walls.flatMap((W) => W.built.map((b) => ({ ...b, wall: W.id || W.i })));
   const fronts = [];
@@ -105,6 +113,11 @@ const issues = await page.evaluate(() => {
     if (b.op.kind !== 'window' || b.op.sash === 'fixed') continue;
     const xc = W.len - b.op.at, w = b.op.width, y0 = b.op.sill ?? 1000, zone = { x0: xc - w / 2, x1: xc + w / 2, z0: 0, z1: w / 2 + 60, y0, y1: y0 + (b.op.height ?? 1100) };
     for (const t of things) { if (sc(t.id.split("'")[0])?.mount === 'wall' && false) continue; if (hit3(toLocal(W, t.box), zone)) out.push({ rule: 'sash', what: `${t.id} stands in the sweep of the window on ${W.id || W.i} at ${b.op.at} (make that window fixed or move it)` }); }
+  }
+  // 2b. wall pieces keep 150 mm clear of an opening and its casing (a tea towel rail or a shelf touching a window frame)
+  for (const W of home.walls) for (const b of W.built) {
+    const xc = W.len - b.op.at, w = b.op.width, y0 = b.op.kind === 'window' ? (b.op.sill ?? 1000) : 0, y1 = b.op.kind === 'window' ? y0 + (b.op.height ?? 1100) : 2400, zone = { x0: xc - w / 2 - 150, x1: xc + w / 2 + 150, z0: -50, z1: 500, y0: y0 - 150, y1: y1 + 150 };
+    for (const id of Object.keys(objs)) { if (sc(id).mount !== 'wall' || ['curtain', 'socket', 'lightSwitch'].includes(sc(id).asset)) continue; if (hit3(toLocal(W, boxes[id]), zone, 2)) out.push({ rule: 'casing', what: `${id} is within 150 mm of the ${b.op.kind} on ${W.id || W.i} at ${b.op.at}: move it along the wall to keep 150 mm clear of the casing` }); }
   }
   // 3. a table has something under its middle (a pendant or a rug), and stands against a wall or keeps 900 mm clear all round
   for (const id of Object.keys(objs).filter((i) => sc(i).asset === 'table')) {
