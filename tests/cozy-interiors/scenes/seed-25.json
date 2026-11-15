@@ -97,8 +97,8 @@
      {
       "kind": "window",
       "width": 1400,
-      "height": 1000,
-      "sill": 1300,
+      "height": 900,
+      "sill": 1500,
       "sash": "fixed",
       "at": 3000
      },
@@ -129,11 +129,14 @@
     "id": "kitchen-fridge",
     "asset": "fridge",
     "at": [
+     155,
      0,
-     0,
-     700
+     640
     ],
     "mount": "floor",
+    "params": {
+     "form": 2
+    },
     "group": "kitchen:larder",
     "area": "kitchen"
    },
@@ -311,6 +314,9 @@
      1000
     ],
     "mount": "floor",
+    "params": {
+     "form": 0
+    },
     "group": "kitchen:peninsula",
     "area": "kitchen"
    },
@@ -323,6 +329,9 @@
      1650
     ],
     "mount": "floor",
+    "params": {
+     "form": 0
+    },
     "group": "kitchen:peninsula",
     "area": "kitchen"
    },
@@ -330,7 +339,7 @@
     "id": "kitchen-wall-units",
     "asset": "wallRun",
     "at": [
-     4100,
+     3810,
      0,
      320
     ],
@@ -339,7 +348,8 @@
      "modules": [
       {
        "w": 600,
-       "kind": "doors"
+       "kind": "door",
+       "hinge": "r"
       }
      ],
      "form": 2
@@ -373,13 +383,14 @@
     "area": "kitchen"
    },
    {
-    "id": "kitchen-basket",
-    "asset": "basket",
+    "id": "kitchen-crate",
+    "asset": "crate",
     "at": [
      1250,
      0,
      2400
     ],
+    "turn": 10,
     "mount": "floor",
     "group": "kitchen:larder",
     "area": "kitchen"
@@ -475,6 +486,9 @@
      2500
     ],
     "mount": "floor",
+    "params": {
+     "form": 2
+    },
     "group": "reading:chair side",
     "area": "reading"
    },
@@ -560,7 +574,7 @@
     "id": "bedroom-bedside-l",
     "asset": "bedsideTable",
     "at": [
-     19500,
+     19150,
      0,
      190
     ],
@@ -572,7 +586,7 @@
     "id": "bedroom-bedside-r",
     "asset": "bedsideTable",
     "at": [
-     21700,
+     22050,
      0,
      190
     ],
@@ -584,7 +598,7 @@
     "id": "bedroom-bedside-books",
     "asset": "bookStack",
     "at": [
-     19500,
+     19150,
      520,
      190
     ],
@@ -600,7 +614,7 @@
     "id": "bedroom-bedside-plant",
     "asset": "plant",
     "at": [
-     21700,
+     22050,
      520,
      190
     ],
@@ -639,7 +653,7 @@
     ],
     "mount": "floor",
     "params": {
-     "w": 2600,
+     "w": 3200,
      "d": 1700
     },
     "group": "bedroom:rug area",
@@ -649,7 +663,7 @@
     "id": "bedroom-cat",
     "asset": "cat",
     "at": [
-     19500,
+     19300,
      7,
      2700
     ],
@@ -731,12 +745,12 @@
     "id": "bedroom-bench",
     "asset": "bench",
     "at": [
-     22400,
+     20600,
      7,
-     2800
+     2450
     ],
     "mount": "floor",
-    "group": "bedroom:rug area",
+    "group": "bedroom:bed",
     "area": "bedroom",
     "lift": 7
    }
@@ -773,14 +787,14 @@
      {
       "name": "cooking",
       "from": [
-       4100,
+       2900,
        1100,
        5700
       ],
       "look": [
-       3403,
+       3258,
        1100,
-       195
+       317
       ],
       "fov": 40,
       "subject": "kitchen:cooking"
@@ -793,11 +807,11 @@
        3600
       ],
       "look": [
-       4422,
+       4456,
        300,
-       807
+       874
       ],
-      "fov": 36,
+      "fov": 38,
       "subject": "kitchen:peninsula"
      }
     ]
@@ -893,16 +907,16 @@
      {
       "name": "bed",
       "from": [
-       21700,
+       20500,
        1100,
-       5400
+       6000
       ],
       "look": [
-       21282,
+       20140,
        500,
-       878
+       1310
       ],
-      "fov": 36,
+      "fov": 34,
       "subject": "bedroom:bed"
      },
      {
@@ -910,12 +924,12 @@
       "from": [
        22900,
        1100,
-       4200
+       3000
       ],
       "look": [
-       17570,
+       17854,
        1050,
-       3568
+       3132
       ],
       "fov": 40,
       "subject": "bedroom:wardrobe wall"

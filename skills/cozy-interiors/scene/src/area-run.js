@@ -71,7 +71,7 @@ export function createAreaScene(canvas, S) {
   };
   const fadeOf = (A) => {
     const b = A.bounds, top = b.top || 2500, bx = b.x1 - b.x0, bz = b.z1 - b.z0, w = Math.max(bx, bz), r0 = 0;   // objects past the bounds thin from the edge: about 35% gone at 1 m, all gone at 2 m
-    return [(b.x0 + b.x1) / 2, top / 2 - 150, (b.z0 + b.z1) / 2, bx / 2, top / 2 + 300, bz / 2, FADE[0] * w, FADE[1] * w, r0, 2000];
+    return [(b.x0 + b.x1) / 2, top / 2 - 150, (b.z0 + b.z1) / 2, bx / 2, top / 2 + 300, bz / 2, FADE[0] * w, FADE[1] * w, r0, 900];
   };
   const applyFade = (f) => {
     kit.setFade(new THREE.Vector3(f[0], f[1], f[2]), new THREE.Vector3(f[3], f[4], f[5]), f[6], f[7]);
@@ -96,8 +96,10 @@ export function createAreaScene(canvas, S) {
     tour = createTour({ THREE, camera, controls, room: home.group, home: { pos: camera.position.clone(), target: controls.target.clone() }, cfg: { after: cam.after, cutsAfter: cam.cutsAfter, cutEvery: cam.cutEvery, shots: cam.shots, ...(quick ? { after: quick, cutsAfter: quick } : {}) } });
     api.tour = tour;
   }
+  // at rest only the current area exists: other areas' walls (frames, seams, shadows) and objects are hidden outright, so no half-faded ghost of a neighbour shows in any view or tour shot; a glide shows everything
+  const only = (id) => { for (const W of home.walls) W.node.visible = id === null || (W.id || '').startsWith(id + '-'); for (const o of Object.values(home.objects)) o.visible = id === null || o.userData.scene.area === id; };
   function arrive(id) {
-    cur = id; api.area = id;
+    cur = id; api.area = id; only(id);
     const v = viewOf(areas[id]);
     controls.target.set(...v.target); camera.position.copy(controls.target).add(sph(v.dist, v.az, v.el)); camera.lookAt(controls.target);
     limits(v.az); controls.enabled = true; resize(); controls.update();
@@ -111,7 +113,7 @@ export function createAreaScene(canvas, S) {
     const from = stance(), to = viewOf(areas[id]);
     let daz = ((to.az - from.az + 540) % 360) - 180;   // the short way round
     glide = { id, from, to, daz, fade0: cur ? fadeOf(areas[cur]) : fadeOf(areas[id]), fade1: fadeOf(areas[id]), t0: performance.now(), hold, k: 0 };
-    controls.enabled = false; markLabels(id);
+    controls.enabled = false; markLabels(id); only(null);
   }
   function glideAt(k) {
     const g = glide, e = smooth(Math.min(1, Math.max(0, k))); g.k = k;

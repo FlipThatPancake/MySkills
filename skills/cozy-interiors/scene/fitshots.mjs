@@ -27,7 +27,7 @@ const res = await page.evaluate(() => {
       const subj = sh.subject || (heroId && sc(heroId).group), mem = real.filter((i) => sc(i).group === subj); if (!mem.length) continue;
       api.setArea(A, true);
       const sb = new T.Box3(); for (const i of mem) sb.union(boxes[i]); const sc3 = sb.getCenter(new T.Vector3());
-      const SMALLFG = ['pouf', 'basket', 'floorPlant', 'plant', 'stool', 'trolley', 'bench', 'footstool', 'sideTable', 'cat'];
+      const SMALLFG = ['pouf', 'basket', 'floorPlant', 'plant', 'stool', 'trolley', 'bench', 'footstool', 'sideTable', 'cat', 'crate', 'stepStool', 'wateringCan', 'umbrellaStand', 'shoes', 'wasteBin', 'fileBox'];
       const others = real.filter((i) => !mem.includes(i) && sc(i).mount !== 'wall' && sc(i).asset !== 'rug');
       const test = (from, look, fov) => {
         api.at(from, look); camera.fov = fov; camera.updateProjectionMatrix(); camera.updateMatrixWorld(true);

@@ -264,42 +264,15 @@
     "area": "hallway"
    },
    {
-    "id": "hallway-basket",
-    "asset": "basket",
+    "id": "hallway-shoes",
+    "asset": "shoes",
     "at": [
      4250,
      0,
-     1050
+     560
     ],
     "mount": "floor",
     "group": "hallway:bench wall",
-    "area": "hallway"
-   },
-   {
-    "id": "hallway-floor-plant",
-    "asset": "floorPlant",
-    "at": [
-     5050,
-     0,
-     280
-    ],
-    "mount": "floor",
-    "params": {
-     "form": 1
-    },
-    "group": "hallway:bench wall",
-    "area": "hallway"
-   },
-   {
-    "id": "hallway-stool",
-    "asset": "stool",
-    "at": [
-     1700,
-     0,
-     2300
-    ],
-    "mount": "floor",
-    "group": "hallway:window corner",
     "area": "hallway"
    },
    {
@@ -313,9 +286,36 @@
     "turn": 60,
     "mount": "floor",
     "params": {
+     "form": 1
+    },
+    "group": "hallway:left corner",
+    "area": "hallway"
+   },
+   {
+    "id": "hallway-hall-basket",
+    "asset": "basket",
+    "at": [
+     600,
+     0,
+     2000
+    ],
+    "mount": "floor",
+    "params": {
      "form": 2
     },
-    "group": "hallway:window corner",
+    "group": "hallway:left corner",
+    "area": "hallway"
+   },
+   {
+    "id": "hallway-umbrellas",
+    "asset": "umbrellaStand",
+    "at": [
+     2050,
+     0,
+     125
+    ],
+    "mount": "floor",
+    "group": "hallway:console",
     "area": "hallway"
    },
    {
@@ -460,7 +460,7 @@
     ],
     "mount": "floor",
     "params": {
-     "form": 3
+     "form": 2
     },
     "group": "living:corner",
     "area": "living"
@@ -469,9 +469,9 @@
     "id": "living-pouf",
     "asset": "pouf",
     "at": [
-     13350,
+     11950,
      0,
-     2600
+     2750
     ],
     "mount": "floor",
     "group": "living:corner",
@@ -624,30 +624,45 @@
     ],
     "mount": "floor",
     "params": {
-     "form": 0
+     "form": 3
     },
     "group": "office:shelf",
     "area": "office"
    },
    {
-    "id": "office-basket",
-    "asset": "basket",
+    "id": "office-floor-plant-3",
+    "asset": "floorPlant",
     "at": [
-     18550,
+     17900,
      0,
-     700
+     2000
+    ],
+    "mount": "floor",
+    "params": {
+     "form": 0
+    },
+    "group": "office:desk",
+    "area": "office"
+   },
+   {
+    "id": "office-bin",
+    "asset": "wasteBin",
+    "at": [
+     20450,
+     0,
+     450
     ],
     "mount": "floor",
     "group": "office:desk",
     "area": "office"
    },
    {
-    "id": "office-stool",
-    "asset": "stool",
+    "id": "office-file-box",
+    "asset": "fileBox",
     "at": [
-     21500,
+     21100,
      0,
-     2300
+     700
     ],
     "mount": "floor",
     "group": "office:shelf",
@@ -686,29 +701,29 @@
      {
       "name": "console",
       "from": [
-       1700,
-       1250,
-       4500
+       3200,
+       1100,
+       4800
       ],
       "look": [
-       2371,
+       3116,
        900,
-       38
+       106
       ],
-      "fov": 38,
+      "fov": 36,
       "subject": "hallway:console"
      },
      {
       "name": "bench wall",
       "from": [
-       500,
-       1400,
-       5400
+       -400,
+       1100,
+       4200
       ],
       "look": [
-       3877,
-       300,
-       1107
+       3700,
+       500,
+       1207
       ],
       "fov": 40,
       "subject": "hallway:bench wall"
@@ -746,14 +761,14 @@
      {
       "name": "armchairs",
       "from": [
-       12500,
-       1400,
-       6300
+       11600,
+       1100,
+       6600
       ],
       "look": [
-       10938,
+       9848,
        300,
-       1984
+       2446
       ],
       "fov": 40,
       "subject": "living:seating"
@@ -806,14 +821,14 @@
      {
       "name": "desk",
       "from": [
-       20300,
-       1400,
-       5400
+       23600,
+       1100,
+       1800
       ],
       "look": [
-       19896,
-       300,
-       966
+       19172,
+       700,
+       723
       ],
       "fov": 34,
       "subject": "office:desk"
@@ -821,14 +836,14 @@
      {
       "name": "shelf",
       "from": [
-       17300,
+       18800,
        1100,
-       4200
+       4800
       ],
       "look": [
-       21049,
+       20861,
        900,
-       766
+       149
       ],
       "fov": 40,
       "subject": "office:shelf"

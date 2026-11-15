@@ -18,14 +18,14 @@ const H = new Home({ seed: 25, floor: 'boards' });
   A.on('door', 'plant', { id: 'plant', dx: -60 });
   // peninsula: a run reaching out from the right end of the back run, stools on its far side
   a.put('peninsula', 'baseRun', [4150, 640], -90, { group: 'peninsula', params: { finishedBack: true, backOverhang: 300, modules: [{ w: 600, kind: 'open' }, { w: 600, kind: 'drawers', n: 3 }, { w: 600, kind: 'doors' }] } });
-  for (const [i, z] of [1000, 1650].entries()) a.put(`stool-${i + 1}`, 'stool', [5300, z], 0, { group: 'peninsula' });
-  back.place('wall-units', 'wallRun', 4400, { group: 'cooking', params: { modules: [{ w: 600, kind: 'doors' }] } });
+  for (const [i, z] of [1000, 1650].entries()) a.put(`stool-${i + 1}`, 'stool', [5300, z], 0, { group: 'peninsula', params: { form: 0 } });
+  back.place('wall-units', 'wallRun', 4110, { group: 'cooking', params: { modules: [{ w: 600, kind: 'door', hinge: 'r' }] } });
   a.put('fruit-bowl', 'fruitBowl', [4450, 1500], 0, { y: 900, mount: 'on', group: 'peninsula' });
   a.put('trolley', 'trolley', [455, 1750], 8, { group: 'larder' });
-  a.put('basket', 'basket', [1250, 2400], 0, { group: 'larder' });
+  a.put('crate', 'crate', [1250, 2400], 10, { group: 'larder' });
   a.view({ target: [3000, 900, 1500], az: -20, el: 11 });
-  a.shot('cooking', [4100, 1100, 5700], [3403, 1100, 195], 40, 'cooking');
-  a.shot('peninsula', [800, 1100, 3600], [4422, 300, 807], 36, 'peninsula');
+  a.shot('cooking', [2900, 1100, 5700], [3258, 1100, 317], 40, 'cooking');
+  a.shot('peninsula', [800, 1100, 3600], [4456, 300, 874], 38, 'peninsula');
 }
 { // ---------- reading corner
   const a = H.area('reading', 'Reading corner', { rect: [0, 0, 5400, 4000] });
@@ -47,23 +47,23 @@ const H = new Home({ seed: 25, floor: 'boards' });
 }
 { // ---------- bedroom
   const a = H.area('bedroom', 'Bedroom', { rect: [0, 0, 6000, 4800] });
-  const back = a.back(6000, [{ kind: 'window', x: 3000, width: 1400, height: 1000, sill: 1300, sash: 'fixed' }, { kind: 'door', x: 5400, width: 900, hinge: 'r', open: 20 }]);
+  const back = a.back(6000, [{ kind: 'window', x: 3000, width: 1400, height: 900, sill: 1500, sash: 'fixed' }, { kind: 'door', x: 5400, width: 900, hinge: 'r', open: 20 }]);
   const left = a.left(4800);
   back.place('bed', 'bed', 3000, { group: 'bed', hero: true });
-  back.place('bedside-l', 'bedsideTable', 1900, { group: 'bed' }); back.place('bedside-r', 'bedsideTable', 4100, { group: 'bed' });
-  back.place('bedside-books', 'bookStack', 1900, { y: 520, mount: 'on', group: 'bed', off: 190, params: { n: 3 } });
-  back.place('bedside-plant', 'plant', 4100, { y: 520, mount: 'on', group: 'bed', off: 190 });
+  back.place('bedside-l', 'bedsideTable', 1550, { group: 'bed' }); back.place('bedside-r', 'bedsideTable', 4450, { group: 'bed' });
+  back.place('bedside-books', 'bookStack', 1550, { y: 520, mount: 'on', group: 'bed', off: 190, params: { n: 3 } });
+  back.place('bedside-plant', 'plant', 4450, { y: 520, mount: 'on', group: 'bed', off: 190 });
   a.put('cushion', 'cushion', [3300, 520], 0, { y: 600, mount: 'on', group: 'bed', params: { w: 400, h: 340 } });
-  a.put('rug', 'rug', [3000, 2300], 0, { group: 'rug area', params: { w: 2600, d: 1700 } });
-  a.put('cat', 'cat', [1900, 2700], 40, { y: 7, lift: 7, group: 'rug area', params: { pose: 'curl' } });
+  a.put('rug', 'rug', [3000, 2300], 0, { group: 'rug area', params: { w: 3200, d: 1700 } });
+  a.put('cat', 'cat', [1700, 2700], 40, { y: 7, lift: 7, group: 'rug area', params: { pose: 'curl' } });
   left.place('wardrobe', 'wardrobe', 1500, { group: 'wardrobe wall' });
   left.place('mirror', 'mirror', 3300, { y: 800, group: 'wardrobe wall', shadow: false, params: { w: 600, h: 1300, shape: 'pill' } });
   back.place('picture', 'picture', 1000, { y: 1350, group: 'corner', shadow: false, params: { w: 520, h: 700 } });
   back.place('floor-plant', 'floorPlant', 600, { group: 'corner' });
-  a.put('bench', 'bench', [4800, 2800], 0, { y: 7, lift: 7, group: 'rug area' });
+  a.put('bench', 'bench', [3000, 2450], 0, { y: 7, lift: 7, group: 'bed' });
   a.view({ target: [3200, 900, 1700], az: 20, el: 11 });
-  a.shot('bed', [4100, 1100, 5400], [3682, 500, 878], 36, 'bed');
-  a.shot('wardrobe wall', [5300, 1100, 4200], [-30, 1050, 3568], 40, 'wardrobe wall');
+  a.shot('bed', [2900, 1100, 6000], [2540, 500, 1310], 34, 'bed');
+  a.shot('wardrobe wall', [5300, 1100, 3000], [254, 1050, 3132], 40, 'wardrobe wall');
 }
 H.write(new URL('./seed-25.json', import.meta.url).pathname, fs);
 console.log('wrote seed-25.json');

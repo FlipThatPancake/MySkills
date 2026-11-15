@@ -109,8 +109,8 @@ const issues = await page.evaluate(() => {
   // 3. a table has something under its middle (a pendant or a rug), and stands against a wall or keeps 900 mm clear all round
   for (const id of Object.keys(objs).filter((i) => sc(i).asset === 'table')) {
     const tb = boxes[id], c = tb.getCenter(new T.Vector3());
-    const centred = Object.keys(objs).some((o) => ['pendantLamp', 'rug'].includes(sc(o).asset) && Math.hypot(objs[o].position.x - c.x, objs[o].position.z - c.z) < 150);
-    if (!centred) out.push({ rule: 'table', what: `${id} has no pendant or rug centred on it` });
+    const pend = Object.keys(objs).filter((o) => sc(o).asset === 'pendantLamp'), centred = pend.length ? pend.some((o) => Math.hypot(objs[o].position.x - c.x, objs[o].position.z - c.z) < 100) : Object.keys(objs).some((o) => sc(o).asset === 'rug' && Math.hypot(objs[o].position.x - c.x, objs[o].position.z - c.z) < 150);
+    if (!centred) out.push({ rule: 'table', what: `${id} has no pendant centred on it (within 100 mm) or rug centred on it (within 150 mm)` });
     for (const W of home.walls) { const l = toLocal(W, tb); if (l.x1 > 0 && l.x0 < W.len && l.z0 >= -3 && l.z0 > 5 && l.z0 < 900) out.push({ rule: 'table', what: `${id} is ${l.z0.toFixed(0)} mm from ${W.id || W.i}: stand it against the wall or keep 900 mm` }); }
     for (const o of Object.keys(objs)) { if (o === id || ['rug', 'chair', 'curtain'].includes(sc(o).asset) || !['floor'].includes(sc(o).mount)) continue; const g = gap2(tb, boxes[o]); if (g < 900) out.push({ rule: 'table', what: `${id} is ${g.toFixed(0)} mm from ${o} (need 900)` }); }
   }
@@ -134,6 +134,21 @@ const issues = await page.evaluate(() => {
       const near = home.walls.some((W) => { let lo = 1e9, hi = -1e9, s0 = 1e9, s1 = -1e9; for (const { x, z } of b.pts) { const dx = x - W.to[0], dz = z - W.to[1], d = dx * W.n[0] + dz * W.n[1], s = -(dx * W.d[0] + dz * W.d[1]); lo = Math.min(lo, d); hi = Math.max(hi, d); s0 = Math.min(s0, s); s1 = Math.max(s1, s); } return lo > -12 && lo < 90 && s1 > 0 && s0 < W.len; });
       if (!near) out.push({ rule: 'support', what: `${id} hangs on no wall (its back is not against one)` });
     }
+  }
+  // 6. a small seat or table serves a piece: another floor piece within 600 mm (a stool alone in front of an arch is a prop on its own)
+  { const SEAT = ['stool', 'pouf', 'footstool', 'sideTable', 'stepStool'], BIG = (i) => sc(i).mount === 'floor' && !['rug', 'plant', 'floorPlant', 'cat', 'basket', 'pouf', 'stool', 'trolley', 'footstool', 'curtain', 'sideTable'].includes(sc(i).asset);
+    for (const id of Object.keys(objs).filter((i) => SEAT.includes(sc(i).asset))) { const others = Object.keys(objs).filter((o) => o !== id && BIG(o)); if (!others.some((o) => gap2(boxes[id], boxes[o]) <= 600) ) out.push({ rule: 'lone', what: `${id} stands ${others.length ? Math.min(...others.map((o) => gap2(boxes[id], boxes[o]))).toFixed(0) : 'far'} mm from anything it serves (need 600 or less): put it beside a table, desk, bench, sofa or console, or remove it` }); } }
+  // 7. nothing tall stands in front of a window's sill: a piece under or beside a window stays 150 mm below the sill
+  for (const W of home.walls) for (const b of W.built) {
+    if (b.op.kind !== 'window') continue;
+    const xc = W.len - b.op.at, w = b.op.width, y0 = b.op.sill ?? 1000, y1 = y0 + (b.op.height ?? 1100);
+    for (const id of Object.keys(objs)) { if (sc(id).mount !== 'floor' || ['rug', 'curtain', 'floorLamp', 'floorPlant', 'chair', 'deskChair', 'baseRun'].includes(sc(id).asset)) continue; const l = toLocal(W, boxes[id]); if (l.x1 > xc - w / 2 && l.x0 < xc + w / 2 && l.z0 < 300 && l.y1 > y0 - 150 && l.y0 < y1) out.push({ rule: 'sill', what: `${id} reaches ${l.y1.toFixed(0)} mm in front of the window on ${W.id || W.i} (sill ${y0}): keep it 150 mm or more below the sill, or move it off the window` }); }
+  }
+  // 8. wall units sit over base units (or flank a hood): a lone cabinet hung in the air reads as a mistake
+  for (const id of Object.keys(objs).filter((i) => sc(i).asset === 'wallRun')) {
+    const bb = boxes[id], W = home.walls.find((w) => { const l = toLocal(w, bb); return l.z0 < 60 && l.x1 > 0 && l.x0 < w.len; }); if (!W) continue; const lw = toLocal(W, bb);
+    const under = Object.keys(objs).filter((o) => sc(o).asset === 'baseRun' || sc(o).asset === 'hood' || sc(o).asset === 'fridge').some((o) => { const l = toLocal(W, boxes[o]); return Math.min(l.x1, lw.x1) - Math.max(l.x0, lw.x0) > 0.6 * (lw.x1 - lw.x0) || Math.abs(l.x1 - lw.x0) < 120 && sc(o).asset === 'hood' || Math.abs(lw.x1 - l.x0) < 120 && sc(o).asset === 'hood'; });
+    if (!under) out.push({ rule: 'units', what: `${id} hangs over no base unit and does not flank the hood: align it to the base run, pair it round the hood, or use a wallShelf` });
   }
   return out;
 });
@@ -173,7 +188,7 @@ const areaIssues = await page.evaluate(() => {
     { const bw = home.walls.find((w) => w.id === A + '-back');
       if (bw) { const dist = (x, z) => (x - bw.to[0]) * bw.n[0] + (z - bw.to[1]) * bw.n[1], cs = [[bd.x0, bd.z0], [bd.x1, bd.z1], [bd.x0, bd.z1], [bd.x1, bd.z0]].map((c) => Math.abs(dist(...c))), D = Math.min(Math.max(...cs), 4800);
         const ds = real.filter((i) => ['floor', 'on'].includes(sc(i).mount) && sc(i).asset !== 'rug').map((i) => { const c = boxes[i].getCenter(new T.Vector3()); return Math.abs(dist(c.x, c.z)); }), spread = Math.max(...ds) - Math.min(...ds);
-        { const gd = {}; for (const i of real) { const c = boxes[i].getCenter(new T.Vector3()); (gd[sc(i).group] ||= []).push(['pouf', 'basket', 'floorPlant', 'plant', 'stool', 'trolley', 'cat', 'footstool', 'sideTable', 'bookStack', 'vase'].includes(sc(i).asset) ? Math.abs(dist(c.x, c.z)) : 0); } for (const [g, v] of Object.entries(gd)) if (v.length && Math.min(...v) > 0.6 * D) out.push({ rule: 'foreground', what: `${A}: group "${g}" stands entirely in the front layer: a foreground piece belongs to a group with something in the middle layer (a stool of the island, the end of a bench, a plant beside the sofa)` }); }
+        { const gd = {}; for (const i of real) { const c = boxes[i].getCenter(new T.Vector3()); (gd[sc(i).group] ||= []).push(['pouf', 'basket', 'floorPlant', 'plant', 'stool', 'trolley', 'cat', 'footstool', 'sideTable', 'bookStack', 'vase', 'crate', 'stepStool', 'wateringCan', 'umbrellaStand', 'shoes', 'wasteBin', 'fileBox'].includes(sc(i).asset) ? Math.abs(dist(c.x, c.z)) : 0); } for (const [g, v] of Object.entries(gd)) if (v.length && Math.min(...v) > 0.6 * D) out.push({ rule: 'foreground', what: `${A}: group "${g}" stands entirely in the front layer: a foreground piece belongs to a group with something in the middle layer (a stool of the island, the end of a bench, a plant beside the sofa)` }); }
         { const poufs = real.filter((i) => sc(i).asset === 'pouf'); if (poufs.length) (window.__poufAreas ||= new Set()).add(A); }
         if (spread < 0.45 * D) out.push({ rule: 'depth', what: `${A}: its pieces span ${spread.toFixed(0)} mm of the ${D.toFixed(0)} mm depth (want 45%): pull the main group 800 to 1500 mm off the wall and add a low piece in front` }); } }
     // rugs lie under furniture, never alone
@@ -181,6 +196,8 @@ const areaIssues = await page.evaluate(() => {
     // ghosts: a piece partly outside the area's bounds fades half-way at the home view
     for (const i of mine) { const b = boxes[i]; if (b.min.x < bd.x0 - 5 || b.max.x > bd.x1 + 5 || b.min.z < bd.z0 - 5 || b.max.z > bd.z1 + 5) out.push({ rule: 'ghost', what: `${A}: ${i} reaches past the area's bounds, so it fades half-way at the home view: grow the rect or move it in` }); }
     for (const W of home.walls) { if (!W.id || !W.id.startsWith(A + '-')) continue; for (const b of W.built) { const q = box(b.group); if (q.min.x < bd.x0 - 400 || q.max.x > bd.x1 + 400 || q.min.z < bd.z0 - 400 || q.max.z > bd.z1 + 400) out.push({ rule: 'ghost', what: `${A}: the ${b.op.kind} on ${W.id} reaches past the area's bounds and fades half-way at the home view` }); } }
+    // wall pieces stay visible: a mirror or picture behind a tall piece shows nothing
+    for (const w of mine.filter((i) => ['mirror', 'picture', 'wallShelf', 'coatHooks'].includes(sc(i).asset))) for (const o of mine) { if (o === w || sc(o).mount === 'wall' || sc(o).asset === 'rug' || camera.position.distanceTo(boxes[o].getCenter(new T.Vector3())) >= camera.position.distanceTo(boxes[w].getCenter(new T.Vector3()))) continue; if (ov(R[w], R[o]) > 0.4 * area2(R[w]) && area2(R[w]) > 1e-3) { out.push({ rule: 'hidden', what: `${A}: ${w} hangs behind ${o} in the home view: move the ${sc(w).asset} to a clear stretch of wall` }); break; } }
     const hero = real.find((i) => sc(i).hero); if (hero) { const c = (R[hero].x0 + R[hero].x1) / 2; if (Math.abs(c) > 0.6) out.push({ rule: 'frame', what: `${A}: the hero ${hero} sits at ${(c * 50 + 50).toFixed(0)}% across the frame (keep it between 20% and 80%)` }); }
     const cp = camera.position, bnd = api.areas[A].bounds, bb = new T.Box3(new T.Vector3(bnd.x0, 0, bnd.z0), new T.Vector3(bnd.x1, bnd.top || 2500, bnd.z1));
     for (const o of ids) {   // a neighbour never stands between the camera and the area
@@ -201,7 +218,7 @@ const areaIssues = await page.evaluate(() => {
         if (fovv < 26 || fovv > 40) out.push({ rule: 'shot', what: `${A} shot "${sh.name}": lens ${fovv} degrees (use 26 to 40)` });
         if (fp[0] < bb2.x0 - 300 || fp[0] > bb2.x1 + 300 || fp[2] < bb2.z0 - 1 || fp[2] > bb2.z1 + 2500 || fp[1] < 1100 || fp[1] > 1500) out.push({ rule: 'shot', what: `${A} shot "${sh.name}": the camera stands outside the area (at most 2500 mm in front of its front edge) or at ${fp[1]} mm (1100 to 1500 mm high)` });
         if (Math.abs(cx) > 0.33) out.push({ rule: 'shot', what: `${A} shot "${sh.name}": the subject is at ${(cx * 50 + 50).toFixed(0)}% across the frame (keep it in the middle third: 33% to 67%)` });
-        const SMALLFG = ['pouf', 'basket', 'floorPlant', 'plant', 'stool', 'trolley', 'bench', 'footstool', 'sideTable', 'cat'], sx0 = x0, sx1 = x1, sy0 = y0, sy1 = y1, sArea = (sx1 - sx0) * (sy1 - sy0);
+        const SMALLFG = ['pouf', 'basket', 'floorPlant', 'plant', 'stool', 'trolley', 'bench', 'footstool', 'sideTable', 'cat', 'crate', 'stepStool', 'wateringCan', 'umbrellaStand', 'shoes', 'wasteBin', 'fileBox'], sx0 = x0, sx1 = x1, sy0 = y0, sy1 = y1, sArea = (sx1 - sx0) * (sy1 - sy0);
         const nearer = real.filter((i) => !members.includes(i) && sc(i).mount !== 'wall' && sc(i).asset !== 'rug' && cp2.distanceTo(boxes[i].getCenter(new T.Vector3())) < Math.min(...members.map((m) => cp2.distanceTo(boxes[m].getCenter(new T.Vector3())))));
         const blocked = nearer.filter((i) => { const r = rect(boxes[i]); return ov(r, { x0: sx0, x1: sx1, y0: sy0, y1: sy1 }) > 0.1 * sArea; });
         if (blocked.length) out.push({ rule: 'shot', what: `${A} shot "${sh.name}": ${blocked.slice(0, 3).join(', ')} stands in front of the subject and hides it: move the camera or the piece` });
@@ -227,10 +244,30 @@ const areaIssues = await page.evaluate(() => {
     }
     if (table) { const r = R[table], hid = mine.filter((i) => i !== table && ['floor'].includes(sc(i).mount) && !['rug', 'plant', 'cat'].includes(sc(i).asset) && cp.distanceTo(boxes[i].getCenter(new T.Vector3())) < cp.distanceTo(boxes[table].getCenter(new T.Vector3())) && ov(R[i], r) > 0.35 * area2(r)); if (hid.length) out.push({ rule: 'seating', what: `${A}: ${hid.join(', ')} hides the coffee table in the home view` }); }
   }
+  { const ACC = ['basket', 'pouf', 'trolley', 'stool', 'footstool', 'stepStool', 'crate'], seen = {}; for (const i of ids) { const a = sc(i).asset; if (ACC.includes(a)) (seen[a] ||= []).push(i); }
+    for (const [a, l] of Object.entries(seen)) if (l.length > (a === 'stool' ? 3 : 1) && new Set(l.map((i) => areaOf(i))).size > 1 || l.length > 3) out.push({ rule: 'variety', what: `${l.join(', ')}: ${a} used in ${new Set(l.map((i) => areaOf(i))).size} areas of one home (one accent asset per home: choose a different foreground piece for each area)` });
+    const forms = {}; for (const i of ids) { const f = sc(i).params?.form; if (f !== undefined) (forms[`${sc(i).asset}/${f}`] ||= []).push(i); }
+    for (const [k, l] of Object.entries(forms)) if (l.length > 1 && new Set(l.map((i) => areaOf(i))).size > 1) out.push({ rule: 'variety', what: `${l.join(', ')} all use the same ${k.split('/')[0]} form: give each area a different one (form: n)` }); }
   if ((window.__poufAreas || new Set()).size > 1) out.push({ rule: 'variety', what: `${[...window.__poufAreas].join(', ')} all use a pouf: one area per home at most; use a stool, bench end, basket or plant elsewhere` });
   return out;
 });
 for (const i of areaIssues) issues.push(i);
+// ghosts in tour shots: render each shot twice, once as it is and once with everything of the other areas hidden; any pixels that differ are a partly faded neighbour
+{
+  const list = await page.evaluate(() => window.cozyScene.areaIds ? window.cozyScene.areaIds.map((id) => [id, (window.cozyScene.areas[id].camera.shots || []).map((x) => x.name)]) : []);
+  for (const [id, names] of list) for (let i = 0; i < names.length; i++) {
+    const go = () => page.evaluate(([id, i]) => { const c = window.cozyScene, s = c.areas[id].camera.shots[i]; c.setArea(id, true); c.controls.minDistance = 10; c.at(s.from, s.look); c.camera.fov = s.fov || 30; c.camera.updateProjectionMatrix(); for (const g of Object.values(c.objects)) { g.userData.tick = null; g.userData.update = null; } c.tour.update = () => false; }, [id, i]);   // frozen: no sway, no butterfly, so two frames of one shot are the same
+    await go(); await page.waitForTimeout(300);
+    const snap = async () => (await page.screenshot({ clip: { x: 0, y: 0, width: 1200, height: 690 } })).toString('base64');
+    const a = await snap(), a2 = await snap();   // two untouched frames: whatever moves by itself (the butterfly, the cat's sway) is not a ghost
+    await page.evaluate((id) => { const { home } = window.cozyScene; window.__hid = []; for (const k of Object.keys(home.objects)) if (home.objects[k].userData.scene.area !== id) { home.objects[k].visible = false; window.__hid.push(home.objects[k]); } for (const W of home.walls) if (!(W.id || '').startsWith(id + '-')) { W.node.visible = false; window.__hid.push(W.node); } }, id);
+    await page.waitForTimeout(150);
+    const b = await snap();
+    await page.evaluate(() => { for (const o of window.__hid) o.visible = true; });
+    const n = await page.evaluate(async ([a, a2, b]) => { const load = (d) => new Promise((r) => { const im = new Image(); im.onload = () => r(im); im.src = 'data:image/png;base64,' + d; }), g = (im) => { const c = document.createElement('canvas'); c.width = im.width; c.height = im.height; const x = c.getContext('2d'); x.drawImage(im, 0, 0); return x.getImageData(0, 0, c.width, c.height).data; }; const A = g(await load(a)), A2 = g(await load(a2)), B = g(await load(b)), d = (P, Q, j) => Math.abs(P[j] - Q[j]) + Math.abs(P[j + 1] - Q[j + 1]) + Math.abs(P[j + 2] - Q[j + 2]); let k = 0; for (let j = 0; j < A.length; j += 4) if (d(A, B, j) > 30 && d(A, A2, j) < 10) k++; return k; }, [a, a2, b]);
+    if (n > 150) issues.push({ rule: 'ghost', what: `${id} shot "${names[i]}": ${n} pixels belong to another area, partly faded (a ghost of a neighbour): aim the camera away from the neighbouring area or move the shot` });
+  }
+}
 await browser.close();
 for (const e of errors) console.log('PAGE ERROR', e);
 for (const i of issues) console.log(`[${i.rule}] ${i.what}`);

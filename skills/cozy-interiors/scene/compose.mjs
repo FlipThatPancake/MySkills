@@ -24,11 +24,16 @@ export class Home {
   }
   write(file, fs) { this.S.areas = this.list.map((a) => a.out()); fs.writeFileSync(file, JSON.stringify(this.S, null, 1)); return this.S; }
 }
+const pickForm = (h, asset, params) => {   // the next form of an asset that has several (started from the seed); an explicit params.form stays
+  if (!ASSETS[asset].variants || params?.form !== undefined) return params;
+  const c = (h.counts ||= {}); return { ...(params || {}), form: (c[asset] = (c[asset] ?? h.S.seed % ASSETS[asset].variants) + 1) % ASSETS[asset].variants };
+};
 const sizeOf = (asset, params = {}) => {
   const m = ASSETS[asset]; if (!m) throw new Error(`unknown asset "${asset}"; node assets.mjs lists them`);
   let [w, d, h] = m.size;
   if (params.r) w = d = 2 * params.r; else { w = params.w ?? w; d = params.d ?? params.depth ?? d; }
   if (asset === 'baseRun' || asset === 'wallRun') w = params.length ?? (params.modules || []).reduce((s, x) => s + x.w, 0);
+  if (m.formSizes && params.form !== undefined) [w, d, h] = m.formSizes[params.form];
   if (asset === 'bed') { w = (params.w ?? 1600) + 60; d = params.l ?? 2100; }
   return { w, d, h, m };
 };
@@ -55,7 +60,7 @@ class Area {
       at: (ox, off = 0) => [x + Math.cos(rad(phi)) * ox - Math.sin(rad(phi)) * off, z + Math.sin(rad(phi)) * ox + Math.cos(rad(phi)) * off],   // the local point
       put(oid, asset, ox, off, o = {}) { return p.put(oid, asset, F.at(ox, off), -phi + (o.turn || 0), o); },   // low level: the object's origin at ox along, off out
       place(oid, asset, xc, o = {}) {   // by the asset's own origin and size: xc is its middle along the wall
-        const { w, d, m } = sizeOf(asset, o.params), y = o.y ?? (typeof m.y === 'number' ? m.y : 0), mount = o.mount || m.mount;
+        o = { ...o, params: pickForm(p.h, asset, o.params) }; const { w, d, m } = sizeOf(asset, o.params), y = o.y ?? (typeof m.y === 'number' ? m.y : 0), mount = o.mount || m.mount;
         const off = o.off ?? (m.origin === 'centre' ? d / 2 : m.origin === 'front-left' ? (o.depth ?? d) : m.origin === 'front-centre' ? (o.depth ?? 600) : 0);
         const ox = m.origin === 'front-left' ? xc - w / 2 : xc;
         return F.put(oid, asset, ox, off, { ...o, y, mount });
@@ -66,7 +71,7 @@ class Area {
   put(id, asset, [x, z], turn = 0, { y = 0, mount, group, hero, params, ...rest } = {}) {
     if (!ASSETS[asset]) throw new Error(`unknown asset "${asset}"; node assets.mjs lists them`);
     if (!group) throw new Error(`object "${id}" needs a group (its run, table set, seating group ...)`);
-    if (ASSETS[asset].variants && params?.form === undefined) { const c = (this.h.counts ||= {}); params = { ...(params || {}), form: (c[asset] = (c[asset] ?? this.h.S.seed % ASSETS[asset].variants) + 1) % ASSETS[asset].variants }; }
+    params = pickForm(this.h, asset, params);
     const [wx, wz] = this.P([x, z]);
     this.h.S.home.objects.push({ id: `${this.id}-${id}`, asset, at: [wx, y, wz], ...(turn - this.psi ? { turn: r0(turn - this.psi) } : {}), mount: mount || ASSETS[asset].mount, ...(params ? { params } : {}), group: `${this.id}:${group}`, ...(hero ? { hero: true } : {}), area: this.id, ...rest });
   }

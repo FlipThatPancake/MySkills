@@ -10,7 +10,7 @@
 import { halo } from './sheet.js';
 import { opening } from './openings.js';
 
-export const FADE = [0.15, 0.6];   // the planes thin out between these distances beyond an area's bounds, in area widths
+export const FADE = [0.04, 0.12];   // the planes thin out between these distances beyond an area's bounds, in area widths
 const step = (t) => { t = Math.min(1, Math.max(0, t)); return t * t * (3 - 2 * t); };
 const EDGE = 30000;
 
@@ -101,7 +101,15 @@ export function buildHome(kit, home, registry, areas = []) {
   floor.rotation.x = -Math.PI / 2; floor.position.set((bb.x0 + bb.x1) / 2, -4, (bb.z0 + bb.z1) / 2);
   group.add(floor);
   const style = home.floor?.style || (home.tiles ? 'tiles' : 'plain'), M = 1500;
-  const out = (p) => Math.hypot(Math.max(bb.x0 - p[0], p[0] - bb.x1, 0), Math.max(bb.z0 - p[2], p[2] - bb.z1, 0)), tone = (p) => step(out(p) / M);
+  const out = (p) => Math.hypot(Math.max(bb.x0 - p[0], p[0] - bb.x1, 0), Math.max(bb.z0 - p[2], p[2] - bb.z1, 0));
+  // the floor of an area stops at its backing walls (nothing lies behind them, at any angle) and runs out freely on its open sides
+  const EXT = 3000, regions = areas.map((a) => ({ b: a.bounds, ws: walls.filter((w) => w.id && w.id.startsWith(a.id + '-')) }));
+  const behind = (p) => !regions.length ? 0 : Math.min(...regions.map(({ b, ws }) => {
+    let d = Math.hypot(Math.max(b.x0 - EXT - p[0], p[0] - b.x1 - EXT, 0), Math.max(b.z0 - EXT - p[2], p[2] - b.z1 - EXT, 0));
+    for (const w of ws) { const dx = p[0] - w.to[0], dz = p[2] - w.to[1], s = -(dx * w.d[0] + dz * w.d[1]); if (s >= 0 && s <= w.len) d = Math.max(d, -(dx * w.n[0] + dz * w.n[1])); }
+    return d;
+  }));
+  const tone = (p) => Math.max(step(out(p) / M), step(behind(p) / 80));
   if (style === 'tiles') {   // a 600 mm grid, square to the walls' own grid; it melts out 1.5 m beyond the walls
     const org = home.tiles?.origin || [bb.x0, bb.z0], cell = home.tiles?.size || 600;
     for (let z = org[1] + Math.ceil((bb.z0 - M - org[1]) / cell) * cell; z <= bb.z1 + M; z += cell) group.add(kit.meltingLine([bb.x0 - M, -2, z], [bb.x1 + M, -2, z], tone, 60, 'lo'));

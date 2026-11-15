@@ -137,9 +137,12 @@
     "at": [
      0,
      0,
-     700
+     640
     ],
     "mount": "floor",
+    "params": {
+     "form": 1
+    },
     "group": "kitchen:larder",
     "area": "kitchen"
    },
@@ -147,7 +150,7 @@
     "id": "kitchen-run",
     "asset": "baseRun",
     "at": [
-     910,
+     600,
      0,
      600
     ],
@@ -181,7 +184,7 @@
     "id": "kitchen-run-hob",
     "asset": "hob",
     "at": [
-     2910,
+     2600,
      0,
      600
     ],
@@ -194,7 +197,7 @@
     "id": "kitchen-run-hood1",
     "asset": "hood",
     "at": [
-     2910,
+     2600,
      0,
      600
     ],
@@ -207,7 +210,7 @@
     "id": "kitchen-run-pan2",
     "asset": "pan",
     "at": [
-     3540,
+     3230,
      940,
      440
     ],
@@ -221,7 +224,7 @@
     "id": "kitchen-kettle",
     "asset": "kettle",
     "at": [
-     2610,
+     2300,
      900,
      330
     ],
@@ -234,7 +237,7 @@
     "id": "kitchen-plant",
     "asset": "plant",
     "at": [
-     1210,
+     900,
      900,
      330
     ],
@@ -276,7 +279,7 @@
     "id": "kitchen-island",
     "asset": "baseRun",
     "at": [
-     6000,
+     5000,
      0,
      2500
     ],
@@ -298,11 +301,6 @@
       {
        "w": 900,
        "kind": "doors"
-      },
-      {
-       "w": 600,
-       "kind": "drawers",
-       "n": 3
       }
      ]
     },
@@ -313,7 +311,7 @@
     "id": "kitchen-island-plant",
     "asset": "plant",
     "at": [
-     4500,
+     3900,
      900,
      2800
     ],
@@ -328,11 +326,14 @@
     "id": "kitchen-stool-1",
     "asset": "stool",
     "at": [
-     3900,
+     3500,
      0,
      3750
     ],
     "mount": "floor",
+    "params": {
+     "form": 0
+    },
     "group": "kitchen:island",
     "area": "kitchen"
    },
@@ -340,35 +341,39 @@
     "id": "kitchen-stool-2",
     "asset": "stool",
     "at": [
-     4700,
+     4300,
      0,
      3750
     ],
     "mount": "floor",
+    "params": {
+     "form": 0
+    },
     "group": "kitchen:island",
     "area": "kitchen"
    },
    {
-    "id": "kitchen-stool-3",
-    "asset": "stool",
+    "id": "kitchen-step-stool",
+    "asset": "stepStool",
     "at": [
-     5500,
+     330,
      0,
-     3750
+     1100
     ],
+    "turn": 10,
     "mount": "floor",
-    "group": "kitchen:island",
+    "group": "kitchen:larder",
     "area": "kitchen"
    },
    {
-    "id": "kitchen-trolley",
-    "asset": "trolley",
+    "id": "kitchen-crate",
+    "asset": "crate",
     "at": [
-     500,
+     2300,
      0,
-     3600
+     3350
     ],
-    "turn": 8,
+    "turn": 12,
     "mount": "floor",
     "group": "kitchen:larder",
     "area": "kitchen"
@@ -406,13 +411,13 @@
     "asset": "mirror",
     "at": [
      10550,
-     1050,
+     1100,
      0
     ],
     "mount": "wall",
     "params": {
-     "w": 900,
-     "h": 1300,
+     "w": 700,
+     "h": 950,
      "shape": "arch"
     },
     "group": "dining:sideboard",
@@ -580,14 +585,17 @@
     "area": "dining"
    },
    {
-    "id": "dining-basket",
-    "asset": "basket",
+    "id": "dining-dining-plant",
+    "asset": "floorPlant",
     "at": [
      10000,
      0,
-     4200
+     4300
     ],
     "mount": "floor",
+    "params": {
+     "form": 0
+    },
     "group": "dining:door side",
     "area": "dining"
    },
@@ -718,6 +726,9 @@
      2150
     ],
     "mount": "floor",
+    "params": {
+     "form": 1
+    },
     "group": "living:window",
     "area": "living"
    },
@@ -731,7 +742,7 @@
     ],
     "mount": "floor",
     "params": {
-     "form": 0
+     "form": 1
     },
     "group": "living:window",
     "area": "living"
@@ -774,9 +785,9 @@
        5700
       ],
       "look": [
-       1737,
+       2673,
        1100,
-       306
+       354
       ],
       "fov": 40,
       "subject": "kitchen:cooking"
@@ -785,15 +796,15 @@
       "name": "island",
       "from": [
        200,
-       1100,
-       6900
+       1500,
+       900
       ],
       "look": [
-       3893,
-       1100,
-       2289
+       3376,
+       300,
+       4136
       ],
-      "fov": 40,
+      "fov": 34,
       "subject": "kitchen:island"
      }
     ]
@@ -829,14 +840,14 @@
      {
       "name": "sideboard",
       "from": [
-       11200,
-       1250,
-       5700
+       10600,
+       1100,
+       4800
       ],
       "look": [
-       10711,
-       700,
-       193
+       10548,
+       1025,
+       79
       ],
       "fov": 40,
       "subject": "dining:sideboard"
@@ -904,14 +915,14 @@
      {
       "name": "window",
       "from": [
-       23800,
+       24100,
        1100,
-       4800
+       4500
       ],
       "look": [
-       19584,
+       19542,
        1100,
-       680
+       637
       ],
       "fov": 40,
       "subject": "living:window"

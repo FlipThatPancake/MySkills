@@ -1,7 +1,6 @@
 // @js:library-index — the asset registry: scene.json's `asset` name -> generator(kit, params) returning a group (origin and axes as each generator documents).
 // A run's params are { length, modules, joins, ownsTop, depth, ... }: with `length` and no `modules` the run is filled with standard widths (fillWidths); modules that fall short of `length` are topped up the same way.
 import { baseRun, wallRun, fillWidths } from './runs.js';
-import { fridge } from '../kitchen/fridge.js';
 import { hob } from '../kitchen/hob.js';
 import { hood } from '../kitchen/hood.js';
 import { pan } from '../kitchen/pan.js';
@@ -10,11 +9,12 @@ import { cuttingBoard } from '../kitchen/cuttingBoard.js';
 import { socket, lightSwitch } from '../kitchen/details.js';
 import { pendantLamp, LAMP } from '../kitchen/atmosphere.js';
 import { table, chair } from './dining.js';
-import { bookStack, mirror, wallShelf, sideTable, roundTable, cat, basket, pouf } from './decor.js';
-import { floorPlant, plant, vase, cushion, picture } from './variants.js';
+import { bookStack, mirror, wallShelf, sideTable, roundTable, cat, pouf } from './decor.js';
+import { floorPlant, plant, vase, cushion, picture, fridge, stool, basket } from './variants.js';
 import { jars, kettle, herbs, trolley, teaTowel } from './kitchenware.js';
 import { bed, bedsideTable, wardrobe, desk, deskChair, coatHooks, daybed, readingChair, footstool, console_ } from './rooms.js';
-import { sofa, armchair, coffeeTable, rug, shelf, floorLamp, sideboard, bench, curtain, stool } from './living.js';
+import { stepStool, crate, wateringCan, umbrellaStand, shoes, wasteBin, fileBox } from './small.js';
+import { sofa, armchair, coffeeTable, rug, shelf, floorLamp, sideboard, bench, curtain } from './living.js';
 
 function fitted({ length, modules, ...rest }) {
   const given = modules || [], have = given.reduce((s, m) => s + m.w, 0);
@@ -25,6 +25,7 @@ export const REGISTRY = {
   baseRun: (kit, p) => baseRun(kit, fitted(p)),
   wallRun: (kit, p) => wallRun(kit, fitted(p)),
   floorPlant, cushion, vase, bookStack, mirror, wallShelf, sideTable, roundTable, cat, basket, pouf,
+  stepStool, crate, wateringCan, umbrellaStand, shoes, wasteBin, fileBox,
   jars, kettle, herbs, trolley, teaTowel,
   bed, bedsideTable, wardrobe, desk, deskChair, coatHooks, daybed, readingChair, footstool, console: console_,
   table, chair, sofa, armchair, coffeeTable, rug, shelf, floorLamp, picture, sideboard, bench, curtain, stool,
