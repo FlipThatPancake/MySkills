@@ -1,0 +1,321 @@
+{
+ "units": "mm",
+ "seed": 3,
+ "home": {
+  "height": 2700,
+  "floor": {
+   "style": "plain",
+   "seed": 3
+  },
+  "tiles": {
+   "origin": [
+    0,
+    0
+   ]
+  },
+  "walls": [
+   {
+    "id": "sheet-back",
+    "from": [
+     11400,
+     0
+    ],
+    "to": [
+     0,
+     0
+    ],
+    "openings": []
+   }
+  ],
+  "objects": [
+   {
+    "id": "sheet-ch",
+    "asset": "chestOfDrawers",
+    "at": [
+     900,
+     0,
+     2700
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 880,
+     "h": 1030,
+     "d": 440,
+     "rows": 5,
+     "pull": "knob",
+     "legs": "block"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-ch2",
+    "asset": "chestOfDrawers",
+    "at": [
+     2100,
+     0,
+     2700
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 760,
+     "h": 900,
+     "rows": 3,
+     "pull": "bar",
+     "legs": "block",
+     "d": 490
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-bt",
+    "asset": "bedsideTable",
+    "at": [
+     3300,
+     0,
+     2700
+    ],
+    "mount": "floor",
+    "params": {},
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-lamp",
+    "asset": "bedsideLamp",
+    "at": [
+     3200,
+     520,
+     2700
+    ],
+    "mount": "on",
+    "params": {
+     "h": 410,
+     "shade": "cone"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-clk",
+    "asset": "alarmClock",
+    "at": [
+     3410,
+     520,
+     2760
+    ],
+    "turn": 20,
+    "mount": "on",
+    "params": {
+     "r": 61,
+     "kind": "analog"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-gb",
+    "asset": "glassesBook",
+    "at": [
+     3390,
+     520,
+     2640
+    ],
+    "turn": 340,
+    "mount": "on",
+    "params": {
+     "w": 143,
+     "d": 199
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-bt2",
+    "asset": "bedsideTable",
+    "at": [
+     4100,
+     0,
+     2700
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 520
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-lamp2",
+    "asset": "bedsideLamp",
+    "at": [
+     4100,
+     520,
+     2700
+    ],
+    "mount": "on",
+    "params": {
+     "shade": "globe",
+     "h": 370
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-rail",
+    "asset": "clothesRail",
+    "at": [
+     4900,
+     0,
+     2700
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 960,
+     "h": 1610,
+     "items": 5,
+     "seed": 73
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-cc",
+    "asset": "clothesChair",
+    "at": [
+     6400,
+     0,
+     2700
+    ],
+    "mount": "floor",
+    "params": {
+     "seed": 51
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-h1",
+    "asset": "hamper",
+    "at": [
+     7300,
+     0,
+     2700
+    ],
+    "mount": "floor",
+    "params": {
+     "r": 245,
+     "h": 710,
+     "form": "round",
+     "lid": "ajar",
+     "seed": 18
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-h2",
+    "asset": "hamper",
+    "at": [
+     8100,
+     0,
+     2700
+    ],
+    "mount": "floor",
+    "params": {
+     "form": "square",
+     "lid": "none",
+     "r": 190,
+     "h": 580,
+     "seed": 84
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-lm",
+    "asset": "leaningMirror",
+    "at": [
+     9200,
+     0,
+     2400
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 520,
+     "h": 1480,
+     "shape": "pill"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-sc",
+    "asset": "wallSconce",
+    "at": [
+     10400,
+     1500,
+     100
+    ],
+    "mount": "wall",
+    "params": {
+     "arm": "short",
+     "shade": "globe",
+     "h": 285
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-sc2",
+    "asset": "wallSconce",
+    "at": [
+     10900,
+     1500,
+     100
+    ],
+    "mount": "wall",
+    "params": {
+     "arm": "short",
+     "shade": "globe",
+     "h": 295
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   }
+  ]
+ },
+ "areas": [
+  {
+   "id": "sheet",
+   "name": "Sheet",
+   "O": [
+    0,
+    0
+   ],
+   "psi": 0,
+   "bounds": {
+    "x0": 0,
+    "x1": 11400,
+    "z0": 0,
+    "z1": 5600,
+    "top": 2200
+   },
+   "camera": {
+    "home": {
+     "target": [
+      5600,
+      500,
+      1500
+     ],
+     "az": 8,
+     "el": 22,
+     "fit": "none",
+     "dist": 6000
+    },
+    "shots": []
+   }
+  }
+ ]
+}

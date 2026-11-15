@@ -674,7 +674,8 @@
      "head": 550,
      "duvet": "unmade",
      "seed": 25,
-     "w": 1580
+     "w": 1580,
+     "frame": "box"
     },
     "group": "bedroom:bed",
     "hero": true,

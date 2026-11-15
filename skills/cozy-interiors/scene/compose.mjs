@@ -45,7 +45,7 @@ const sizeOf = (asset, params = {}) => {
   if (params.r) w = d = 2 * params.r; else { w = params.w ?? w; d = params.d ?? params.depth ?? d; }
   if (asset === 'baseRun' || asset === 'wallRun') w = params.length ?? (params.modules || []).reduce((s, x) => s + x.w, 0);
   if (m.formSizes && params.form !== undefined) [w, d, h] = m.formSizes[params.form];
-  if (asset === 'bed') { w = (params.w ?? 1600) + 60; d = params.l ?? 2100; }
+  if (asset === 'bed') { w = (params.w ?? 1600) + (params.frame === 'platform' ? 260 : 60); d = (params.l ?? 2100) + (params.frame === 'platform' ? 100 : 0); }
   return { w, d, h, m };
 };
 class Area {
