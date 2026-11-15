@@ -53,7 +53,7 @@ const H = new Home({ seed: 30, floor: 'plain' });
   a.put('rug', 'rug', [3600, 1700], 0, { group: 'sofa', params: { w: 3000, d: 2000 } });
   a.put('coffee', 'coffeeTable', [3600, 1750], 0, { y: 7, lift: 7, group: 'sofa' });
   a.put('books', 'bookStack', [3600, 1750], 15, { y: 387, mount: 'on', group: 'sofa' });
-  a.put('cat', 'cat', [2700, 2300], 150, { y: 7, lift: 7, group: 'sofa', params: { pose: 'sit' } });
+  a.put('cat', 'cat', [2700, 2300], 150, { y: 7, lift: 7, group: 'sofa' });
   back.place('side-table', 'sideTable', 5100, { group: 'sofa' });
   a.put('basket', 'basket', [1800, 2150], 0, { group: 'window' });
   back.place('floor-plant', 'floorPlant', 2250, { group: 'window' });

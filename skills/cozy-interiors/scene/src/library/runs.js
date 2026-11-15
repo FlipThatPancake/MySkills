@@ -1,6 +1,6 @@
 // @js:library-runs — fitted kitchen runs, generated from a list of modules. Local frame: x along the run from 0, front at z = 0, wall at z = -depth, floor y = 0.
 // baseRun(kit, { modules, depth = 600, top = 900, overhang = 20, trimStart = 0, trimEnd = 0, joins, ownsTop = true, finishedBack = false, backOverhang = 0, endPanels = [] })
-//   An island or peninsula: finishedBack: true gives it a panelled back, backOverhang: 300 a worktop reaching past it for stools; endPanels: ["start", "end"] close its ends.
+//   An island or peninsula: finishedBack: true gives it a panelled back, backOverhang: 300 a worktop reaching past it for stools; endPanels: ["start", "end"] close its ends; legEnds: ["end"] keeps the cantilever's end slab on the free end only (one plain panel).
 //   modules: [{ w, kind }] left to right; kind: doors (two), door (one, hinge 'l' or 'r'), drawers (n, default 3), drawerDoors (a shallow drawer over two doors),
 //   sink (two doors, a basin and a tap above), hob (a shallow drawer over two doors; the hob product sits on top), filler (a plain strip), open (a shelf, no front),
 //   tall (a tall unit, h default 2100, first or last: no worktop over it), blind (a corner unit: a fixed panel over the `dead` side ('l' or 'r', one depth wide) where the other run stands, and one door over the rest; w at least depth + 300).
@@ -44,7 +44,7 @@ function carcass(kit, add, x, w, y0, y1, depth, back = 0) {
   add(kit.box(x + SIDE, y0, -back, w - 2 * SIDE, SIDE, depth - SIDE - back, lo));
 }
 
-export function baseRun(kit, { modules, depth = 600, top = 900, overhang = 20, trimStart = 0, trimEnd = 0, joins = null, ownsTop = true, finishedBack = false, backOverhang = 0, endPanels = [] }) {
+export function baseRun(kit, { modules, depth = 600, top = 900, overhang = 20, trimStart = 0, trimEnd = 0, joins = null, ownsTop = true, finishedBack = false, backOverhang = 0, endPanels = [], legEnds = ['start', 'end'] }) {
   const g = kit.group(), leaves = [], P = parts(kit, g, leaves), { T, add, hbar, vbar, front, leaf } = P;
   const length = modules.reduce((s, m) => s + m.w, 0), CT = 38, TOP = top - CT, y0 = PL + 1.5, y1 = TOP - 1.5, H = y1 - y0;
   // plinth, recessed 50; round a corner it is one L-shaped piece
@@ -107,7 +107,7 @@ export function baseRun(kit, { modules, depth = 600, top = 900, overhang = 20, t
     : [[trimStart, -depth], [length, -depth], [length, J], [length - depth - overhang, J], [length - depth - overhang, overhang], [trimStart, overhang]];
   if (finishedBack) {   // the back faces the room: a panel over the carcass backs, and legs under the overhang
     add(kit.box(0, PL, -depth + FD, length, TOP - PL, FD));
-    if (backOverhang > 0) for (const px of [0, length - 40]) add(kit.box(px, 0, overhang, 40, TOP, depth + overhang + backOverhang));   // a 40 mm slab at each end under the overhang, flush with the worktop
+    if (backOverhang > 0) for (const px of [0, length - 40].filter((_, k) => legEnds.includes(k ? 'end' : 'start'))) add(kit.box(px, 0, overhang, 40, TOP, depth + overhang + backOverhang));   // a 40 mm slab at each end under the overhang, flush with the worktop
   }
   for (const side of endPanels) add(kit.box(side === 'start' ? -FD : length, 0, overhang, FD, top, depth + overhang));   // an end panel closes a run that ends in the open
   if (ownsTop) {

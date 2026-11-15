@@ -4,7 +4,7 @@
 // facing: all floor pieces face +z (turn them), a bed has its head toward -z. slot: what it goes into.
 const A = (origin, size, mount, params, extra = {}) => ({ origin, size, mount, params, ...extra });
 export const ASSETS = {
-  baseRun: A('front-left', [0, 600, 900], 'floor', 'modules [{ w, kind, ... }] or length; depth 600, top 900, joins, finishedBack, backOverhang, ownsTop, trimStart, trimEnd, endPanels', { slots: ['hob', 'sink'], note: 'kinds: doors, door (hinge l|r), drawers (n), drawerDoors, sink, hob, filler, open, tall (h), blind (dead l|r)' }),
+  baseRun: A('front-left', [0, 600, 900], 'floor', 'modules [{ w, kind, ... }] or length; depth 600, top 900, joins, finishedBack, backOverhang, legEnds ['start','end'], ownsTop, trimStart, trimEnd, endPanels', { slots: ['hob', 'sink'], note: 'kinds: doors, door (hinge l|r), drawers (n), drawerDoors, sink, hob, filler, open, tall (h), blind (dead l|r)' }),
   wallRun: A('front-left', [0, 320, 720], 'wall', 'modules or length; y0 1450, h 720, depth 320', { y: 0 }),
   fridge: A('front-left', [910, 700, 2250], 'floor', '-', { formSizes: [[910, 700, 2250], [600, 640, 1850], [600, 640, 850]], note: 'forms: 0 side-by-side, 1 tall column, 2 under-counter (a different width each)' }),
   hob: A('front-left', [900, 600, 20], 'on', '-', { y: 0, slot: 'hob', note: 'sits in the worktop over a hob module: y 0' }),
@@ -55,7 +55,7 @@ export const ASSETS = {
   wasteBin: A('centre', [260, 260, 340], 'floor', 'h 340', { note: 'office foreground' }),
   fileBox: A('centre', [300, 380, 290], 'floor', 'w 300, h 290, d 380', { note: 'office foreground' }),
   pouf: A('centre', [560, 560, 380], 'floor', 'r 280, h 380'),
-  cat: A('centre', [260, 400, 440], 'floor', "pose sit|curl, scale 1 (0.65 fits a 380 mm bench)", { y: 0, note: 'floor or lift on a rug; mount on for a seat or bench' }),
+  cat: A('centre', [260, 400, 440], 'floor', "scale 1 (0.65 fits a 380 mm bench)", { y: 0, note: 'floor or lift on a rug; mount on for a seat or bench' }),
   bed: A('centre', [1660, 2100, 1300], 'floor', 'w 1600, l 2100, head 1000 (headboard height; keep 300 + head at least 150 mm below a window sill)', { note: 'head toward -z: back it onto a wall' }),
   bedsideTable: A('centre', [450, 380, 520], 'floor', 'w 450, d 380, h 520'),
   wardrobe: A('centre', [1200, 600, 2100], 'floor', 'w 1200, h 2100, d 600'),

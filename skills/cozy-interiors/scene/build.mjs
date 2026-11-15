@@ -12,7 +12,7 @@ if (!process.argv[2]) { console.error('usage: node build.mjs <scene.json> [out.h
   const scenePath = resolve(process.argv[2]), scene = readFileSync(scenePath, 'utf8'), name = process.argv[2].replace(/^.*\//, '').replace(/\.json$/, '');
   JSON.parse(scene);
   const out = process.argv[3] ? resolve(process.argv[3]) : join(dirname(scenePath), name + '.html');
-  const js = esbuild.buildSync({ entryPoints: [join(src, 'page.js')], bundle: true, format: 'iife', minify: true, write: false, legalComments: 'none', define: { __SCENE__: scene } }).outputFiles[0].text;
+  const js = esbuild.buildSync({ entryPoints: [join(src, 'page.js')], bundle: true, format: 'iife', minify: !process.env.NOMIN, write: false, legalComments: 'none', define: { __SCENE__: scene } }).outputFiles[0].text;
   const html = readFileSync(join(src, 'page.html'), 'utf8').replace('@title', name).replace('<!-- @bundle:page.js -->', () => `<script>${js.replace(/<\/script/g, '<\\/script')}</script>`);
   writeFileSync(out, html);
   console.log(out, (html.length / 1024).toFixed(0), 'KB');

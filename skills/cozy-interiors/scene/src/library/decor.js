@@ -2,8 +2,9 @@
 // Origins: floor pieces (sideTable, roundTable, cat, basket, pouf) have it in the middle of the footprint on the floor, front toward +z; pieces that stand on something (cushion, vase, bookStack) at the middle of their foot;
 // wall pieces (mirror, wallShelf) at the bottom middle on the wall face, standing out toward +z.
 // floorPlant({ h = 950 }), cushion({ w = 440, h = 420, tone }), vase({ h = 280, stems = 5, seed }), bookStack({ n = 4, seed }), mirror({ w = 700, h = 1000, shape: 'arch' | 'round' | 'pill' }), wallShelf({ w = 900, seed }),
-// sideTable({ r = 230, h = 520 }), roundTable({ r = 650, h = 750 }), cat({ pose: "sit" | "curl" | "loaf", scale = 1 }), basket({ r = 230, h = 320 }), pouf({ r = 280, h = 380 }).
+// sideTable({ r = 230, h = 520 }), roundTable({ r = 650, h = 750 }), cat({ scale = 1 }), basket({ r = 230, h = 320 }), pouf({ r = 280, h = 380 }).
 const rnd = (seed) => { let r = (seed || 1) * 9301 + 49297; return () => { r = (r * 9301 + 49297) % 233280; return r / 233280; }; };
+import { potTop } from './pots.js';
 const lo = { tone: 'lo' };
 
 export function cushion(kit, { w = 440, h = 420, tone = 'mid', lean = 0 } = {}) {   // lean: degrees tilted back (top toward -z, the back of the seat); 15 to 25 against a headboard or a sofa back   // a square pillow standing on its edge; lean it with the scene's turn or a tilt in params
@@ -66,28 +67,22 @@ export function roundTable(kit, { r = 650, h = 750 } = {}) {
   g.add(kit.cyl(0, 30, 0, 70, h - 66, { rTop: 56, seg: 24, ...lo })); g.add(kit.cyl(0, 0, 0, 280, 30, { rTop: 250, seg: 32 }));
   return kit.merge(g);
 }
-export function cat(kit, { pose = 'sit', scale = 1 } = {}) {   // a cat: 'sit' upright with haunches, front legs and a tail round the feet; 'curl' asleep in a ring with its head on its tail
+export function cat(kit, { scale = 1 } = {}) {   // a cat asleep in a ring with its head on its tail
   const T = kit.THREE, g = kit.group(), V = (x, y, z) => new T.Vector3(x, y, z);
   const sph = (rx, ry, rz, x, y, z, o = {}, rot) => { const ge = new T.SphereGeometry(1, 24, 16); ge.scale(rx, ry, rz); const m = kit.solid(ge, x, y, z, { smooth: true, ...o }); if (rot) m.rotation.set(...rot); return m; };
   const ear = (x, y, z, tilt) => { const m = kit.cyl(x, y, z, 24, 55, { rTop: 0, seg: 4, ...lo }); m.rotation.z = tilt; return m; };
   const tube = (pts, r) => { const t = kit.group(); t.add(kit.solid(new T.TubeGeometry(new T.CatmullRomCurve3(pts.map((p) => V(...p))), 20, r, 8), 0, 0, 0, { smooth: true, ...lo })); const e = pts[pts.length - 1]; t.add(sph(r, r, r, e[0], e[1], e[2], lo)); return t; };
-  if (pose === 'curl') {
+  {
     const body = sph(210, 95, 170, 0, 95, 0); g.add(body);                                             // the curled body
     g.add(sph(78, 66, 80, 90, 85, 170));                                                              // the head resting forward
     g.add(ear(48, 140, 165, 0.3)); g.add(ear(128, 140, 165, -0.3));
     g.add(tube([[-170, 30, 60], [-120, 30, 200], [40, 28, 250], [170, 28, 210], [230, 28, 110]], 26));   // the tail round the front
-  } else {
-    g.add(sph(105, 175, 125, 0, 200, -20, {}, [-0.12, 0, 0]));                                          // the chest and body, leaning back a little
-    for (const s of [-1, 1]) { g.add(sph(60, 100, 120, s * 85, 100, -45)); g.add(kit.cyl(s * 44, 0, 58, 34, 195, { rTop: 30, seg: 14 })); g.add(sph(30, 16, 48, s * 42, 16, 110, lo)); }   // haunches, front legs, paws
-    g.add(sph(78, 72, 76, 0, 375, 30));                                                                // the head
-    g.add(ear(-42, 420, 28, 0.18)); g.add(ear(42, 420, 28, -0.18));
-    g.add(tube([[70, 32, -110], [175, 34, -70], [200, 36, 60], [120, 32, 150]], 24));                  // the tail curled round the feet
   }
   const m = kit.merge(g); if (scale !== 1) m.scale.setScalar(scale); return m;
 }
 export function floorPlant(kit, { h = 950, seed = 6 } = {}) {   // a large pot with tall stems and broad leaves, about 950 mm high
   const T = kit.THREE, g = kit.group(), R = rnd(seed), pts = [];
-  g.add(kit.cyl(0, 0, 0, 170, 380, { rTop: 215, seg: 32, ...lo })); g.add(kit.cyl(0, 380, 0, 215, 26, { seg: 32 }));
+  g.add(kit.cyl(0, 0, 0, 170, 380, { rTop: 215, seg: 32, ...lo })); { const t = potTop(kit, 215); t.position.y = 380; g.add(t); }
   for (let k = 0; k < 9; k++) {
     const a = k / 9 * Math.PI * 2 + R(), lean = 0.25 + R() * 0.45, len = h - 380 - 80 - R() * 260, sx = Math.sin(a) * Math.sin(lean), sz = Math.cos(a) * Math.sin(lean), cy = Math.cos(lean);
     let px = 0, py = 400, pz = 0; const n = 6;

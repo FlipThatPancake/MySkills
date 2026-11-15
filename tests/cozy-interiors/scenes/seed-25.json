@@ -445,7 +445,7 @@
     "at": [
      11150,
      7,
-     2150
+     2000
     ],
     "turn": 25,
     "mount": "floor",
@@ -457,7 +457,7 @@
     "id": "reading-lamp",
     "asset": "floorLamp",
     "at": [
-     10200,
+     9850,
      0,
      1650
     ],
@@ -469,7 +469,7 @@
     "id": "reading-side-table",
     "asset": "sideTable",
     "at": [
-     11950,
+     11850,
      0,
      1250
     ],

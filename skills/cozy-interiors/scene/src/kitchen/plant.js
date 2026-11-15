@@ -1,9 +1,11 @@
 // @js:kitchen-plant — a potted plant: neutral tapered pot and a fan of sage blades that bend in gusts from the window.
 // Origin: the middle of the pot's foot. userData: landing (the butterfly's perch, local), gust(), update(dt).
+import { potTop } from '../library/pots.js';
 export function plant(kit) {
   const T = kit.THREE;
   const g = kit.group(), lo = { tone: 'lo' }, cx = 0, cz = 0, cy = 0;
   g.add(kit.cyl(cx, cy, cz, 42, 95, { rTop: 58, seg: 28, ...lo }));
+  { const t = potTop(kit, 58); t.position.y = 95; g.add(t); }
   const merged = kit.merge(g);
   // @js:kitchen-plant-blades — the plant: curved blades with a damped spring each, pushed by gusts from the window
   // Blades that bend. Each is a tapered strip of 8 segments (six vertices a ring, flattened) rebuilt on the CPU whenever it moves: its centre line curves by an angle that grows

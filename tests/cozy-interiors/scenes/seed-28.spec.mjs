@@ -16,7 +16,7 @@ const H = new Home({ seed: 28, floor: 'boards' });
   right.place('bench', 'bench', 1000, { group: 'bench wall', params: { w: 1000 } });                                     // a bench with coats above it, on the side wall facing across the hall
   right.place('hooks', 'coatHooks', 1000, { group: 'bench wall', shadow: false });
   right.place('bench-plant', 'plant', 700, { y: 450, mount: 'on', group: 'bench wall', off: 190 });
-  right.place('cat', 'cat', 1350, { y: 450, mount: 'on', group: 'bench wall', off: 190, params: { pose: 'curl', scale: 0.65 } });
+  right.place('cat', 'cat', 1350, { y: 450, mount: 'on', group: 'bench wall', off: 190, params: { scale: 0.65 } });
   a.put('rug', 'rug', [1200, 1900], 0, { group: 'runner', params: { w: 1000, d: 3300 } });  // a runner from the front of the view to the arch
   right.place('shoes', 'shoes', 1000, { group: 'front corner', off: 560 });
   a.put('hall-basket', 'basket', [3000, 2700], 0, { group: 'front corner' });
@@ -37,7 +37,7 @@ const H = new Home({ seed: 28, floor: 'boards' });
   a.put('side-table', 'sideTable', [1950, 1900], 0, { y: 7, lift: 7, group: 'seating' });
   a.put('vase', 'vase', [1950, 1900], 0, { y: 527, mount: 'on', group: 'seating' });
   a.put('cushion', 'cushion', [1150, 2050], 25, { y: 470, mount: 'on', group: 'seating', params: { w: 380, h: 340, lean: 18 } });
-  a.put('cat', 'cat', [1950, 2900], 160, { y: 7, lift: 7, group: 'seating', params: { pose: 'sit' } });
+  a.put('cat', 'cat', [1950, 2900], 160, { y: 7, lift: 7, group: 'seating' });
   back.place('lamp', 'floorLamp', 2500, { group: 'window' });
   back.place('floor-plant', 'floorPlant', 5050, { group: 'corner' });
   a.put('pouf', 'pouf', [3550, 2750], 0, { group: 'corner' });
@@ -56,7 +56,7 @@ const H = new Home({ seed: 28, floor: 'boards' });
   back.place('picture', 'picture', 1500, { y: 1400, group: 'wall', shadow: false });
   a.put('rug-2', 'rug', [1500, 2100], 0, { group: 'reading', params: { w: 1900, d: 1500 } });
   a.put('reading-chair', 'readingChair', [1500, 2100], 200, { y: 7, lift: 7, group: 'reading' });
-  a.put('lamp', 'floorLamp', [700, 1700], 0, { group: 'reading' });
+  a.put('lamp', 'floorLamp', [380, 1700], 0, { group: 'reading' });
   right.place('mirror', 'mirror', 2800, { y: 800, group: 'wall', shadow: false, params: { w: 600, h: 1200, shape: 'pill' } });
   back.place('shelf', 'shelf', 4300, { group: 'shelf' });
   back.place('shelf-plant', 'plant', 4300, { y: 1800, mount: 'on', group: 'shelf', off: 160 });

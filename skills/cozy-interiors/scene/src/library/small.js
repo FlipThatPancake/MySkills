@@ -24,10 +24,18 @@ export function wateringCan(kit, { h = 260 } = {}) {   // a round can with a lon
   const hd = kit.solid(new T.TorusGeometry(h * 0.27, 9, 8, 24, Math.PI * 1.1), -r * 0.9, h * 0.52, 0, { smooth: true, ...lo }); hd.rotation.z = Math.PI * 0.4; g.add(hd);
   return kit.merge(g);
 }
-export function umbrellaStand(kit, { h = 520 } = {}) {   // a tall round bin holding two rolled umbrellas and a walking stick
-  const g = kit.group();
+export function umbrellaStand(kit, { h = 520 } = {}) {   // a tall round bin holding two furled umbrellas (one tapered form, a hooked handle, two seams) and a walking stick
+  const T = kit.THREE, g = kit.group();
   g.add(kit.cyl(0, 0, 0, 110, h, { rTop: 125, seg: 32, ...lo })); g.add(kit.cyl(0, h - 24, 0, 125, 24, { rTop: 125, seg: 32 }));
-  for (const [x, z, tx, len] of [[-40, 10, -0.16, 760], [40, -20, 0.1, 700], [0, 50, 0.04, 800]]) { g.add(bar(kit, [x, h * 0.5, z], [x + tx * len, h * 0.5 + len * 0.98, z], 22)); g.add(bar(kit, [x + tx * len, h * 0.5 + len * 0.98, z], [x + tx * len + 50, h * 0.5 + len * 0.98 + 40, z], 12, lo)); }
+  const umbrella = (x, z, tilt, len, spin) => {
+    const u = kit.group(), c = len * 0.7, n = len * 0.9;
+    u.add(kit.cyl(0, 0, 0, 8, c, { rTop: 34, seg: 16 })); u.add(kit.cyl(0, c, 0, 34, n - c, { rTop: 9, seg: 16 })); u.add(kit.cyl(0, n, 0, 5, len - n, { seg: 8 }));
+    const hook = kit.solid(new T.TorusGeometry(26, 6, 8, 16, Math.PI * 1.1), 26, len, 0, { smooth: true, ...lo }); hook.rotation.z = Math.PI * 0.95; u.add(hook);
+    u.add(kit.lines([[34 * 0.97, c, 0], [8, 0, 0], [-34 * 0.97, c, 0], [-8, 0, 0]], 'lo'));   // two seams down the furled canopy
+    u.position.set(x, h * 0.45, z); u.rotation.set(0, spin, tilt); return u;
+  };
+  g.add(umbrella(-40, 10, 0.16, 760, 0)); g.add(umbrella(45, -20, -0.1, 700, 0));
+  g.add(bar(kit, [0, h * 0.5, 50], [30, h * 0.5 + 780, 40], 12, lo));
   return kit.merge(g);
 }
 export function shoes(kit, { pairs = 2 } = {}) {   // pairs of shoes side by side, toes to the front
