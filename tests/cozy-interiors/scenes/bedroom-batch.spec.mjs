@@ -15,5 +15,5 @@ if (PART !== 'beds') {
   a.put('sc', 'wallSconce', [10600, 100], 0, { mount: 'wall', y: 1500, group: 'row' });
   put('l2', 'bedsideLamp', { base: 'tripod', shade: 'globe' }, 12500, 2700);
 }
-a.top = 2200; const tx = +(process.env.TX || 7200), dd = +(process.env.DD || 16000); a.view({ target: [tx, 500, 1500], az: 8, el: 22, dist: dd, fit: 'none' });
+a.top = 2200; const tx = +(process.env.TX || 7200), dd = +(process.env.DD || 16000); a.view({ target: [tx, +(process.env.TY || 500), PART === 'beds' ? 1500 : 2700], az: 8, el: 14, dist: dd, fit: 'none' });
 H.write(new URL('./bedroom-batch.json', import.meta.url).pathname, fs);

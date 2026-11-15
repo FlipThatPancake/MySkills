@@ -45,7 +45,7 @@ export function onFace(w, h, d, shape, pairs, cut = 14) {
 export function softBox(kit, w, h, d, o = {}) {
   const T = kit.THREE, g = kit.group(), r = Math.min(o.r ?? 40, d * 0.48, w * 0.45, h * 0.45);
   const geo = softGeometry(T, { w, h, d, r, bulge: o.bulge ?? 0, dent: o.dent ?? 0, dentAt: o.dentAt, sag: o.sag ?? 0, seg: o.seg ?? 22 });
-  g.add(kit.solid(geo, 0, 0, 0, { smooth: true, tone: o.tone, smoothShade: false }));
+  g.add(kit.solid(geo, 0, 0, 0, { smooth: true, tone: o.tone, smoothShade: false, grey: o.grey }));
   const z0 = d / 2 - r * 0.27 + (o.bulge ?? 0) * 0, ins = r * 0.27, pts = [];   // the 45-degree line of the rounded edge
   if (o.piping === 'edge' || o.piping === 'double') for (const s of [-1, 1]) pts.push(...ringPoints(w, h, d, r * 0.73, s * z0, ins));
   if (o.piping === 'double') for (const s of [-1, 1]) pts.push(...ringPoints(w, h, d, Math.max(4, r * 0.5), s * (d / 2 + (o.bulge ?? 0) * 0.02), r * 1.1 + 12));
@@ -72,7 +72,7 @@ export function pillowZ(w, h, thick, edge, dent, x, y) {
   return (edge + (thick - edge) * Math.pow(Math.max(0, (1 - u * u) * (1 - v * v)), 0.62)) / 2 - dent * Math.exp(-((u * u + v * v) / 0.28)) + 1.2;
 }
 // A cloth sheet w x h hung from its top edge (y = 0 at the line, hanging down to -h) with soft vertical folds; thickness gives it an edge. folds: number of folds across, depth: how far they stand out, flare: wider at the hem.
-export function drape(kit, w, h, { folds = 4, depth = 28, thick = 10, flare = 0.08, phase = 0.4, nx = 36, ny = 14, slope = 0, profile, tone } = {}) {
+export function drape(kit, w, h, { folds = 4, depth = 28, thick = 10, flare = 0.08, phase = 0.4, nx = 36, ny = 14, slope = 0, profile, tone, grey = false } = {}) {
   const T = kit.THREE, ix = (i, j, s) => (s * (ny + 1) + j) * (nx + 1) + i, pos = [], idx = [];
   for (const s of [0, 1]) for (let j = 0; j <= ny; j++) for (let i = 0; i <= nx; i++) {
     const u = i / nx - 0.5, t = j / ny, wide = profile ? profile(t) : 1 + flare * t, x = u * w * wide, amp = depth * (0.25 + 0.75 * smooth(t)), z = Math.sin((u * folds * 2 * Math.PI) + phase) * amp * 0.5 + (s ? -thick : 0);
@@ -85,7 +85,7 @@ export function drape(kit, w, h, { folds = 4, depth = 28, thick = 10, flare = 0.
   for (let j = 0; j < ny; j++) for (const i of [0, nx]) { const a = ix(i, j, 0), b = ix(i, j + 1, 0), c = ix(i, j, 1), d = ix(i, j + 1, 1); if (i === 0) idx.push(a, c, b, b, c, d); else idx.push(a, b, c, b, d, c); }
   for (let i = 0; i < nx; i++) { const a = ix(i, ny, 0), b = ix(i + 1, ny, 0), c = ix(i, ny, 1), d = ix(i + 1, ny, 1); idx.push(a, b, c, b, d, c); }
   const g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
-  const grp = kit.group(); grp.add(kit.solid(g, 0, 0, 0, { smooth: true, tone }));
+  const grp = kit.group(); grp.add(kit.solid(g, 0, 0, 0, { smooth: true, tone, grey }));
   const fl = []; for (let k = 1; k < folds; k++) { const i = Math.round(k / folds * nx); for (let j = 1; j < ny - 1; j += 1) { const a = j * (nx + 1) + i, b = (j + 1) * (nx + 1) + i; if (j % 3 !== 1) fl.push([pos[a * 3], pos[a * 3 + 1], pos[a * 3 + 2] + 1], [pos[b * 3], pos[b * 3 + 1], pos[b * 3 + 2] + 1]); } }
   if (fl.length) grp.add(kit.lines(fl, 'lo'));
   return grp;

@@ -56,7 +56,7 @@ export function poufBody(kit, r, h, tone) {
   return g;
 }
 // A cloth frozen in place by cloth.js: a double-skinned sheet through the grid points (area-local mm), edges closed, folds read from the shading.
-export function cloth(kit, { nx = 2, ny = 2, pts = [0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 1], thick = 6, tone = 'lo', folds = [0.3, 0.5, 0.72], linen = false } = {}) {
+export function cloth(kit, { nx = 2, ny = 2, pts = [0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 1], thick = 6, tone = 'lo', folds = [0.3, 0.5, 0.72], linen = false, grey = false } = {}) {
   const T = kit.THREE, g = kit.group(), n = nx * ny, pos = new Float32Array(n * 6), idx = [];
   const P = Float32Array.from(pts);   // relax the frozen grid a little, so a crumpled edge draws as a soft line
   for (let pass = 0; pass < 7; pass++) { const B = P.slice(); for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) { const k = (j * nx + i) * 3, nb = [[i - 1, j], [i + 1, j], [i, j - 1], [i, j + 1]].filter(([a, b]) => a >= 0 && b >= 0 && a < nx && b < ny); for (let c = 0; c < 3; c++) { let m = 0; for (const [a, b] of nb) m += B[(b * nx + a) * 3 + c]; P[k + c] = B[k + c] * 0.5 + m / nb.length * 0.5; } } }
@@ -71,7 +71,7 @@ export function cloth(kit, { nx = 2, ny = 2, pts = [0, 0, 0, 1, 0, 0, 0, 0, 1, 1
   for (let i = 0; i < nx - 1; i++) { for (const base of [0, (ny - 1) * nx]) { const a = base + i, b = a + 1; all.push(a, b, n + a, b, n + b, n + a); } }
   for (let j = 0; j < ny - 1; j++) { for (const off of [0, nx - 1]) { const a = j * nx + off, b = a + nx; all.push(a, b, n + a, b, n + b, n + a); } }
   const solid = new T.BufferGeometry(); solid.setAttribute('position', new T.BufferAttribute(pos, 3)); solid.setIndex(all); solid.computeVertexNormals();
-  g.add(kit.solid(solid, 0, 0, 0, { smooth: true, tone, crease: 100, linen }));
+  g.add(kit.solid(solid, 0, 0, 0, { smooth: true, tone, crease: 100, linen, grey }));
   const fl = []; for (const f of folds || []) { const i = Math.round((nx - 1) * f); for (let j = 2; j < ny - 3; j++) { for (const jj of [j, j + 1]) { const k = jj * nx + i; fl.push([pos[k * 3] + nrm.getX(k) * 1.5, pos[k * 3 + 1] + nrm.getY(k) * 1.5, pos[k * 3 + 2] + nrm.getZ(k) * 1.5]); } } }   // two or three fold lines along the cloth
   if (fl.length) g.add(kit.lines(fl, 'lo')); g.userData.size = { w: 1, d: 1, h: 1 };
   return g;
