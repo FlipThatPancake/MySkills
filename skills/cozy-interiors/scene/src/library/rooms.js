@@ -11,7 +11,7 @@ export function bed(kit, { w = 1600, l = 2100, head = 1000, duvet = 'made', seed
   g.add(R(0, 0, 0, w + 60, 300, l, 14));                                                    // the base
   g.add(R(0, 300, 40, w - 20, 210, l - 100, 40, lo));                                       // the mattress
   g.add(B(0, 300, -l / 2 + 25, w + 60, head, 50));                                          // the headboard
-  if (duvet === 'unmade') { const d = duvetCloth(kit, { w: w - 20, head: -560, foot: 1040, sagL: 190 + 40 * ((seed * 7) % 5) / 4, sagR: 300, sagFoot: 250, seed }); d.position.set(0, 510, 0); g.add(d); }   // thrown over unevenly: one side sags low, the foot hangs
+  if (duvet === 'unmade') { const d = duvetCloth(kit, { w: w - 20, head: -560, foot: 1040, sagL: 110 + 40 * ((seed * 7) % 5) / 4, sagR: 400, sagFoot: 250, seed }); d.position.set(0, 510, 0); g.add(d); }   // thrown over unevenly: one side sags low, the foot hangs
   else g.add(R(0, 505, 260, w - 40, 90, l - 760, 36));                                       // the duvet, folded back at the top
   for (const s of [-1, 1]) g.add(R(s * w * 0.24, 510, -l / 2 + 240, w * 0.4, 130, 330, 50, lo));   // two pillows
   return kit.merge(g);

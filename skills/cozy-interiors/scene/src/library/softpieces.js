@@ -56,7 +56,7 @@ export function poufBody(kit, r, h, tone) {
   return g;
 }
 // A cloth frozen in place by cloth.js: a double-skinned sheet through the grid points (area-local mm), edges closed, folds read from the shading.
-export function cloth(kit, { nx = 2, ny = 2, pts = [0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 1], thick = 6, tone = 'lo' } = {}) {
+export function cloth(kit, { nx = 2, ny = 2, pts = [0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 1], thick = 6, tone = 'lo', folds = [0.3, 0.5, 0.72], linen = false } = {}) {
   const T = kit.THREE, g = kit.group(), n = nx * ny, pos = new Float32Array(n * 6), idx = [];
   const P = Float32Array.from(pts);   // relax the frozen grid a little, so a crumpled edge draws as a soft line
   for (let pass = 0; pass < 7; pass++) { const B = P.slice(); for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) { const k = (j * nx + i) * 3, nb = [[i - 1, j], [i + 1, j], [i, j - 1], [i, j + 1]].filter(([a, b]) => a >= 0 && b >= 0 && a < nx && b < ny); for (let c = 0; c < 3; c++) { let m = 0; for (const [a, b] of nb) m += B[(b * nx + a) * 3 + c]; P[k + c] = B[k + c] * 0.5 + m / nb.length * 0.5; } } }
@@ -71,8 +71,8 @@ export function cloth(kit, { nx = 2, ny = 2, pts = [0, 0, 0, 1, 0, 0, 0, 0, 1, 1
   for (let i = 0; i < nx - 1; i++) { for (const base of [0, (ny - 1) * nx]) { const a = base + i, b = a + 1; all.push(a, b, n + a, b, n + b, n + a); } }
   for (let j = 0; j < ny - 1; j++) { for (const off of [0, nx - 1]) { const a = j * nx + off, b = a + nx; all.push(a, b, n + a, b, n + b, n + a); } }
   const solid = new T.BufferGeometry(); solid.setAttribute('position', new T.BufferAttribute(pos, 3)); solid.setIndex(all); solid.computeVertexNormals();
-  g.add(kit.solid(solid, 0, 0, 0, { smooth: true, tone, crease: 100 }));
-  const fl = []; for (const f of [0.3, 0.5, 0.72]) { const i = Math.round((nx - 1) * f); for (let j = 2; j < ny - 3; j++) { for (const jj of [j, j + 1]) { const k = jj * nx + i; fl.push([pos[k * 3] + nrm.getX(k) * 1.5, pos[k * 3 + 1] + nrm.getY(k) * 1.5, pos[k * 3 + 2] + nrm.getZ(k) * 1.5]); } } }   // two or three fold lines along the cloth
+  g.add(kit.solid(solid, 0, 0, 0, { smooth: true, tone, crease: 100, linen }));
+  const fl = []; for (const f of folds || []) { const i = Math.round((nx - 1) * f); for (let j = 2; j < ny - 3; j++) { for (const jj of [j, j + 1]) { const k = jj * nx + i; fl.push([pos[k * 3] + nrm.getX(k) * 1.5, pos[k * 3 + 1] + nrm.getY(k) * 1.5, pos[k * 3 + 2] + nrm.getZ(k) * 1.5]); } } }   // two or three fold lines along the cloth
   if (fl.length) g.add(kit.lines(fl, 'lo')); g.userData.size = { w: 1, d: 1, h: 1 };
   return g;
 }
@@ -108,15 +108,28 @@ export function tablecloth(kit, { w = 1600, d = 900, drop = 400, fold = 6, amp =
   const hx = w / 2, hz = d / 2, grid = hangGrid({ bx: [-hx, hx], bz: [-hz, hz], cx: [-hx - drop, hx + drop], cz: [-hz - drop, hz + drop], y: 3, fold, amp, seed, nx: Math.round((w + 2 * drop) / 40), ny: Math.round((d + 2 * drop) / 40) });
   return cloth(kit, { ...grid, thick: 5, tone });
 }
-// A table runner: a strip along the table's length, hanging over both short ends. rw: its width.
-export function tableRunner(kit, { w = 1600, d = 900, rw = 380, drop = 320, fold = 3, amp = 20, tone = 'lo', seed = 1 } = {}) {
-  const hx = w / 2, hz = rw / 2, grid = hangGrid({ bx: [-hx, hx], bz: [-hz, hz], cx: [-hx - drop, hx + drop], cz: [-hz, hz], y: 4, fold, amp, seed, nx: Math.round((w + 2 * drop) / 40), ny: Math.max(8, Math.round(rw / 30)), ripple: 3 });
-  return cloth(kit, { ...grid, thick: 4, tone });
+// A table runner: a linen strip along the table's length, thick at its edge, hanging 200-300 mm over both short ends. rw: its width.
+export function tableRunner(kit, { w = 1600, d = 900, rw = 400, drop = 280, fold = 3, amp = 26, tone = 'lo', seed = 1 } = {}) {
+  const hx = w / 2, hz = rw / 2, grid = hangGrid({ bx: [-hx, hx], bz: [-hz, hz], cx: [-hx - drop, hx + drop], cz: [-hz, hz], y: 6, fold, amp, seed, nx: Math.round((w + 2 * drop) / 40), ny: Math.max(10, Math.round(rw / 30)), ripple: 3, flare: 0.04 });
+  const g = cloth(kit, { ...grid, thick: 9, tone, folds: false, linen: true }), ln = [];
+  for (const e of [-1, 1]) for (const k of [-0.28, 0, 0.28]) { const z = k * rw, x = e * (hx + 4); ln.push([x, 5, z], [x + e * 10, -drop * 0.55, z + 8 * Math.sin(k * 9 + seed)]); }   // a few creases down the hanging ends
+  g.add(kit.lines(ln, 'lo')); return g;
 }
-// An unmade duvet over a mattress (x: -w/2..w/2, z from `head` to `foot`, the top at the surface): the sides sag by different amounts, the foot hangs, and the top is a little rumpled.
-export function duvetCloth(kit, { w = 1600, head = -700, foot = 900, sagL = 200, sagR = 330, sagFoot = 260, tone = 'lo', seed = 1 } = {}) {
-  const hx = w / 2, grid = hangGrid({ bx: [-hx, hx], bz: [head, foot], cx: [-hx - sagL, hx + sagR], cz: [head, foot + sagFoot], y: 4, fold: 4, amp: 40, ripple: 16, seed, nx: Math.round((w + sagL + sagR) / 40), ny: Math.round((foot - head + sagFoot) / 40), flare: 0.1 });
-  const g = cloth(kit, { ...grid, thick: 6, tone }), T = kit.THREE, fl = [];
-  for (let i = 0; i <= 12; i++) { const x = -hx + 60 + (w - 120) * i / 12; fl.push([x, 12 + 6 * Math.sin(i * 1.3), head + 180 + 30 * Math.sin(i * 0.7)], [x + (w - 120) / 12, 12 + 6 * Math.sin((i + 1) * 1.3), head + 180 + 30 * Math.sin((i + 1) * 0.7)]); }   // the turned-back edge, drawn as a line
-  g.add(kit.lines(fl, 'lo')); return g;
+// An unmade duvet over a mattress (x: -w/2..w/2, z from `head` to `foot`, the top at the surface): one side hangs low and the other less, the foot hangs, the top has soft lumps,
+// and the pillow-end corner on the getting-out (+x) side is turned back diagonally over the top, showing a triangle of sheet where it lay.
+export function duvetCloth(kit, { w = 1600, head = -700, foot = 900, sagL = 130, sagR = 400, sagFoot = 260, turn = 720, tone = 'lo', seed = 1 } = {}) {
+  const hx = w / 2, grid = hangGrid({ bx: [-hx, hx], bz: [head, foot], cx: [-hx - sagL, hx + sagR], cz: [head, foot + sagFoot], y: 4, fold: 4, amp: 46, ripple: 8, seed, nx: Math.round((w + sagL + sagR) / 36), ny: Math.round((foot - head + sagFoot) / 36), flare: 0.1 }), P = grid.pts;
+  const lumps = [[-hx * 0.35 + 90 * Math.sin(seed), head + 700, 190, 38], [hx * 0.25, head + 1150 + 60 * Math.cos(seed), 230, 30], [-hx * 0.1, foot - 380, 160, 20]];
+  for (let i = 0; i < P.length; i += 3) {   // lumps, and the turned-back corner (flipped across its fold line and lifted onto the top)
+    const x = P[i], z = P[i + 2]; if (Math.abs(x) <= hx && P[i + 1] > 0) for (const [lx, lz, r, h] of lumps) P[i + 1] += h * Math.exp(-((x - lx) ** 2 + (z - lz) ** 2) / (2 * r * r));
+  }
+  const sOf = (x, z) => (hx - x) + (z - head);
+  for (let i = 0; i < P.length; i += 3) { const x = P[i], z = P[i + 2], sv = sOf(x, z); if (x <= hx && z >= head && sv < turn && P[i + 1] > -1) { const t = turn - sv; P[i] = x - t; P[i + 2] = z + t; P[i + 1] += 16 + 6 * Math.sin(sv * 0.02 + seed); } }
+  const g = cloth(kit, { ...grid, thick: 7, tone, folds: false }), ln = [];
+  for (let i = 0; i <= 14; i++) { const q = i / 14, x = hx - turn * q + 4 * Math.sin(q * 9 + seed), z = head + turn * q * 0 + (turn * (1 - q)); ln.push([x, 22 + 5 * Math.sin(q * 5), z]); }   // the fold edge, a slightly bowed diagonal
+  const fl = []; for (let i = 0; i < ln.length - 1; i++) fl.push(ln[i], ln[i + 1]);
+  g.add(kit.lines(fl, 'mid'));
+  const tri = new kit.THREE.BufferGeometry(); tri.setAttribute('position', new kit.THREE.Float32BufferAttribute([hx - 6, 6, head + 4, hx - turn, 6, head + 4, hx - 6, 6, head + turn], 3)); tri.setIndex([0, 2, 1]); tri.computeVertexNormals();
+  g.add(kit.solid(tri, 0, 0, 0, { tone: 'lo', linen: true }));   // the sheet showing where the corner was
+  return g;
 }
