@@ -714,9 +714,6 @@
     ],
     "turn": 150,
     "mount": "floor",
-    "params": {
-     "pose": "sit"
-    },
     "group": "living:sofa",
     "area": "living",
     "lift": 7

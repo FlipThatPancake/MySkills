@@ -4,7 +4,7 @@
 // facing: all floor pieces face +z (turn them), a bed has its head toward -z. slot: what it goes into.
 const A = (origin, size, mount, params, extra = {}) => ({ origin, size, mount, params, ...extra });
 export const ASSETS = {
-  baseRun: A('front-left', [0, 600, 900], 'floor', 'modules [{ w, kind, ... }] or length; depth 600, top 900, joins, finishedBack, backOverhang, legEnds ['start','end'], ownsTop, trimStart, trimEnd, endPanels', { slots: ['hob', 'sink'], note: 'kinds: doors, door (hinge l|r), drawers (n), drawerDoors, sink, hob, filler, open, tall (h), blind (dead l|r)' }),
+  baseRun: A('front-left', [0, 600, 900], 'floor', 'modules [{ w, kind, ... }] or length; depth 600, top 900, joins, finishedBack, backOverhang, legEnds (start, end), ownsTop, trimStart, trimEnd, endPanels', { slots: ['hob', 'sink'], note: 'kinds: doors, door (hinge l|r), drawers (n), drawerDoors, sink, hob, filler, open, tall (h), blind (dead l|r)' }),
   wallRun: A('front-left', [0, 320, 720], 'wall', 'modules or length; y0 1450, h 720, depth 320', { y: 0 }),
   fridge: A('front-left', [910, 700, 2250], 'floor', '-', { formSizes: [[910, 700, 2250], [600, 640, 1850], [600, 640, 850]], note: 'forms: 0 side-by-side, 1 tall column, 2 under-counter (a different width each)' }),
   hob: A('front-left', [900, 600, 20], 'on', '-', { y: 0, slot: 'hob', note: 'sits in the worktop over a hob module: y 0' }),

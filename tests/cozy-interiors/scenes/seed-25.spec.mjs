@@ -16,7 +16,7 @@ const H = new Home({ seed: 25, floor: 'boards' });
   A.on('doors', 'kettle', { id: 'kettle' }); A.on('drawers', 'jars', { id: 'jars' });
   A.on('door', 'plant', { id: 'plant', dx: -60 });
   // peninsula: a run reaching out from the right end of the back run, stools on its far side
-  a.put('peninsula', 'baseRun', [4150, 640], -90, { group: 'peninsula', params: { finishedBack: true, backOverhang: 300, legEnds: ['end'], modules: [{ w: 600, kind: 'doors' }, { w: 600, kind: 'drawers', n: 3 }, { w: 600, kind: 'doors' }] } });
+  a.put('peninsula', 'baseRun', [4150, 640], -90, { group: 'peninsula', params: { finishedBack: true, backOverhang: 300, legEnds: ['end'], endPanels: ['start'], modules: [{ w: 600, kind: 'doors' }, { w: 600, kind: 'drawers', n: 3 }, { w: 600, kind: 'doors' }] } });
   for (const [i, z] of [1000, 1650].entries()) a.put(`stool-${i + 1}`, 'stool', [5300, z], 0, { group: 'peninsula', params: { form: 0 } });
   back.place('wall-units', 'wallRun', 4110, { group: 'cooking', params: { modules: [{ w: 600, kind: 'door', hinge: 'r' }] } });
   a.put('fruit-bowl', 'fruitBowl', [4450, 1500], 0, { y: 900, mount: 'on', group: 'peninsula' });

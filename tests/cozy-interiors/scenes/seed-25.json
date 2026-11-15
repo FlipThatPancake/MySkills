@@ -273,10 +273,16 @@
     "params": {
      "finishedBack": true,
      "backOverhang": 300,
+     "legEnds": [
+      "end"
+     ],
+     "endPanels": [
+      "start"
+     ],
      "modules": [
       {
        "w": 600,
-       "kind": "open"
+       "kind": "doors"
       },
       {
        "w": 600,
@@ -686,9 +692,7 @@
     ],
     "turn": 40,
     "mount": "floor",
-    "params": {
-     "pose": "curl"
-    },
+    "params": {},
     "group": "bedroom:rug area",
     "area": "bedroom",
     "lift": 7

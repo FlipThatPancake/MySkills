@@ -245,7 +245,6 @@
     "turn": -60,
     "mount": "on",
     "params": {
-     "pose": "curl",
      "scale": 0.65
     },
     "group": "hallway:bench wall",
@@ -438,9 +437,6 @@
     ],
     "turn": 160,
     "mount": "floor",
-    "params": {
-     "pose": "sit"
-    },
     "group": "living:seating",
     "area": "living",
     "lift": 7
