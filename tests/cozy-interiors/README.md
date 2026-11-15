@@ -1,8 +1,10 @@
-# cozy-interiors (work in progress)
+# cozy-interiors tests (work in progress)
 
-Notes for working on the cozy-interiors skill; the skill itself is SKILL.md.
+Working files for building the cozy-interiors skill; delete this folder once the skill is done.
 
-- `scene/`: the kitchen scene on its own page, with the oven prototype's look (title, buttons, settings panel). Build it with `node scene/build.mjs` (needs `npm i -g esbuild`); it writes `scene/kitchen-scene.html`.
-- `planning/plan.md`: the plan and the user's decisions so far. `planning/research.md`: what similar skills and tools do.
+- `kitchen-prototype/`: the original corner kitchen. `node build.mjs` writes kitchen-scene.html; `node check-scene.mjs` checks it.
+- `scenes/`: seeded test homes. `node seed-<n>.spec.mjs` writes seed-<n>.json; check and build it with the skill's scene scripts. `python3 applyshots.py <n>` writes fitted shots into a spec.
+- `check-runs.mjs`: cabinet run widths and the swing check on `scenes/l-kitchen.json`.
+- `planning/`: plan.md (decisions so far) and research.md.
 
-The PP Neue Montreal font in `scene/src/assets/fonts/` is licensed: keep this repo private until it is replaced with a free font.
+The PP Neue Montreal font in `kitchen-prototype/src/assets/fonts/` is licensed: keep this repo private until it is replaced with a free font.

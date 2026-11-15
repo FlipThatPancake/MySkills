@@ -5,24 +5,23 @@ description: Use when the user asks for a cozy interactive 3D interior as a web 
 
 # Cozy interiors
 
-A calm three.js interior on one page: paper-white fills, thin grey lines, soft shadows, small signs of life.
+Beautiful views of home areas on one page: paper-white fills, thin grey lines, soft shadows, daylight, small signs of life. Look: [look.md](references/look.md).
 
-`scene/` holds a worked example, a kitchen, with the kit, the checks and the camera tour. Reuse those and build the room the user asks for.
+## Home and areas
+- Home: one sensible layout in real mm; sizes in [scale.md](references/scale.md). An area may be larger than a real room to serve its view.
+- Area: an open, spacious space backed by one wall or two at an angle. One area in focus at a time; the page glides between areas.
+- Each area is a picture of its own: a hero piece, groups at floor, waist and wall height, something living, something soft. Every object belongs to a group and serves the area's use.
+- Openings give a wall character: windows, doors and arches with thick frames, slightly open, a view outside.
+- Each home differs in layout and object choice: follow the roll.
 
 ## Build
-- Scale and layout: [scene-format.md](references/scene-format.md). scene.json is the single source; positions in real mm.
-- Asset: `export function name(kit, params) { return group }`, origin at the left-front-floor corner, built from kit fills and lines.
-- New or imported asset: restyle to the look; keep its own look when the user asks (e.g. a hero product from Blender).
-- Look: [look.md](references/look.md).
-- Frame: a neutral page; a product frame when the project asks for one.
-
-## Check
-- `node build.mjs`, then `node check-scene.mjs` (global esbuild and Playwright). Fix each hard issue in the geometry or the mm; the checks measure true parts.
-- Door or drawer clash: 90° hinge stop first, then a filler strip.
-- Then look: a wide view and 4× close-ups of every junction. A bare face up close gets a small real part.
-
-## Camera
-[camera.md](references/camera.md).
+Run from `scene/` with Node, global esbuild and Playwright (Pillow for shots.mjs). Keep the spec, scene json and page in the user's project.
+1. `node roll.mjs <seed> <kinds...>`: this home's choices. A kind the tables lack: add it to tables.json.
+2. `node assets.mjs`: every asset with origin, size, mount, params and forms. Missing: a new generator in `src/library/` in the same style, registered in index.js and meta.js.
+3. A spec script importing compose.mjs (its header lists the calls) writes the scene json.
+4. `node check-home.mjs <scene.json>` until "No problems".
+5. Views: [camera.md](references/camera.md). `node fitshots.mjs <scene.json>` finds a camera per tour shot; put them in the spec, then steps 3–4 again.
+6. Look by eye: `node snap.mjs <scene.json> out.png all` and `node shots.mjs <scene.json> sheet.png`. Each view a still photo of a lived-in home? Fix what reads wrong.
 
 ## Deliver
-One self-contained HTML page (`build.mjs`). Say what the checks reported and what was looked at by eye.
+`node build.mjs <scene.json> <out.html>`: one self-contained page. Say what the checks reported and what was looked at by eye.
