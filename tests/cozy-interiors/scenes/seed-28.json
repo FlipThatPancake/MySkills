@@ -279,7 +279,9 @@
     ],
     "turn": -60,
     "mount": "floor",
-    "params": {},
+    "params": {
+     "kind": "sneaker"
+    },
     "group": "hallway:bench wall",
     "area": "hallway",
     "off": 560
@@ -578,8 +580,8 @@
     ],
     "mount": "floor",
     "params": {
-     "w": 2200,
-     "d": 1500
+     "w": 1400,
+     "d": 1300
     },
     "group": "office:desk",
     "area": "office"
@@ -610,8 +612,8 @@
     ],
     "mount": "floor",
     "params": {
-     "w": 1900,
-     "d": 1500
+     "w": 900,
+     "d": 1300
     },
     "group": "office:reading",
     "area": "office"

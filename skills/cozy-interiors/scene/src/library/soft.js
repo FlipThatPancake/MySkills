@@ -6,18 +6,17 @@ const smooth = (t) => t * t * (3 - 2 * t);
 
 // A rounded box w x h x d centred on the origin: r rounds every edge, bulge pushes the two big faces out in a pillow curve (0 at the edge), dent presses a soft hollow into the front face.
 export function softGeometry(T, { w, h, d, r = 40, bulge = 0, dent = 0, dentAt = [0, 0], sag = 0, seg = 22 }) {
-  const g = new T.BoxGeometry(w, h, d, seg, seg, Math.max(6, seg >> 1));
-  const a = w / 2, b = h / 2, c = d / 2, rr = Math.min(r, a * 0.9, b * 0.9, c * 0.98), P = g.attributes.position, v = new T.Vector3(), q = new T.Vector3();
+  const a = w / 2, b = h / 2, c = d / 2, rr = Math.min(r, a * 0.9, b * 0.9, c * 0.98), nz = (len) => Math.min(48, Math.max(seg >> 1, Math.round(len / Math.max(rr * 0.8, 8))));   // more rows on a long side, so a round edge stays round
+  const g = new T.BoxGeometry(w, h, d, Math.max(seg, nz(w)), Math.max(seg, nz(h)), Math.max(seg >> 1, nz(d))), P = g.attributes.position, v = new T.Vector3(), q = new T.Vector3();
   for (let i = 0; i < P.count; i++) {
     v.fromBufferAttribute(P, i);
-    const nx = v.x / a, ny = v.y / b, nz = v.z / c;
+    const nzz = v.z / c;
     q.set(clamp(v.x, -(a - rr), a - rr), clamp(v.y, -(b - rr), b - rr), clamp(v.z, -(c - rr), c - rr));
     v.sub(q); const l = v.length(); if (l > 1e-6) v.multiplyScalar(rr / l);
     v.add(q);
-    const face = Math.abs(nz) > 0.999 ? Math.sign(nz) : 0;   // on one of the two big faces
-    const fx = 1 - Math.pow(Math.abs(clamp(v.x / a, -1, 1)), 2), fy = 1 - Math.pow(Math.abs(clamp(v.y / b, -1, 1)), 2);
-    if (bulge && Math.abs(nz) > 0.5) v.z += Math.sign(nz) * bulge * Math.pow(Math.max(0, fx * fy), 0.8) * smooth(clamp((Math.abs(nz) - 0.5) * 2, 0, 1));
-    if (dent && nz > 0.5) { const dx = (v.x - dentAt[0]) / (a * 0.55), dy = (v.y - dentAt[1]) / (b * 0.55); v.z -= dent * Math.exp(-(dx * dx + dy * dy)) * smooth(clamp((nz - 0.5) * 2, 0, 1)); }
+        const fx = 1 - Math.pow(Math.abs(clamp(v.x / a, -1, 1)), 2), fy = 1 - Math.pow(Math.abs(clamp(v.y / b, -1, 1)), 2);
+    if (bulge && Math.abs(nzz) > 0.5) v.z += Math.sign(nzz) * bulge * Math.pow(Math.max(0, fx * fy), 0.8) * smooth(clamp((Math.abs(nzz) - 0.5) * 2, 0, 1));
+    if (dent && nzz > 0.5) { const dx = (v.x - dentAt[0]) / (a * 0.55), dy = (v.y - dentAt[1]) / (b * 0.55); v.z -= dent * Math.exp(-(dx * dx + dy * dy)) * smooth(clamp((nzz - 0.5) * 2, 0, 1)); }
     if (sag) v.y -= sag * (1 - Math.pow(Math.abs(v.x / a), 2)) * (v.y > 0 ? 1 : 0.3) * 0.5;
     P.setXYZ(i, v.x, v.y, v.z);
   }
@@ -73,10 +72,10 @@ export function pillowZ(w, h, thick, edge, dent, x, y) {
   return (edge + (thick - edge) * Math.pow(Math.max(0, (1 - u * u) * (1 - v * v)), 0.62)) / 2 - dent * Math.exp(-((u * u + v * v) / 0.28)) + 1.2;
 }
 // A cloth sheet w x h hung from its top edge (y = 0 at the line, hanging down to -h) with soft vertical folds; thickness gives it an edge. folds: number of folds across, depth: how far they stand out, flare: wider at the hem.
-export function drape(kit, w, h, { folds = 4, depth = 28, thick = 10, flare = 0.08, phase = 0.4, nx = 36, ny = 14, slope = 0, tone } = {}) {
+export function drape(kit, w, h, { folds = 4, depth = 28, thick = 10, flare = 0.08, phase = 0.4, nx = 36, ny = 14, slope = 0, profile, tone } = {}) {
   const T = kit.THREE, ix = (i, j, s) => (s * (ny + 1) + j) * (nx + 1) + i, pos = [], idx = [];
   for (const s of [0, 1]) for (let j = 0; j <= ny; j++) for (let i = 0; i <= nx; i++) {
-    const u = i / nx - 0.5, t = j / ny, wide = 1 + flare * t, x = u * w * wide, amp = depth * (0.25 + 0.75 * smooth(t)), z = Math.sin((u * folds * 2 * Math.PI) + phase) * amp * 0.5 + (s ? -thick : 0);
+    const u = i / nx - 0.5, t = j / ny, wide = profile ? profile(t) : 1 + flare * t, x = u * w * wide, amp = depth * (0.25 + 0.75 * smooth(t)), z = Math.sin((u * folds * 2 * Math.PI) + phase) * amp * 0.5 + (s ? -thick : 0);
     pos.push(x, -t * h - slope * Math.pow(2 * Math.abs(u), 2) * (1 - t), z * (1 - 0.15 * Math.abs(u)));
   }
   for (const s of [0, 1]) for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {

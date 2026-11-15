@@ -2,6 +2,7 @@
 // legs(kit, style, pts, top, o): one leg per [x, z] in pts, from the floor (y 0) up to `top`; styles in LEGS. o: { r half-width, tone, out: [cx, cz] the centre legs splay away from }
 // handle(kit, style, x, y, z, o): on a front facing +z at (x, y, z); styles in HANDLES. o: { w, tone }
 // arms(kit, style, o): a pair of sofa or armchair arms; styles in ARMS. o: { w, d, y0, top, armW }
+import { softBox } from './soft.js';
 export const LEGS = ['block', 'tapered', 'turned', 'hairpin', 'sled', 'splay', 'ball'];
 export const HANDLES = ['bar', 'knob', 'cup', 'cutout'];
 export const ARMS = ['track', 'rolled', 'flared', 'none'];
@@ -56,7 +57,7 @@ export function arms(kit, style, { w, d, y0, top, armW = 170, tone } = {}) {
   if (style === 'none') return g;
   for (const s of [-1, 1]) {
     const cx = s * (w / 2 - armW / 2);
-    if (style === 'track') g.add(kit.rbox(cx - armW / 2, y0, zF, armW, h, depth, 26, { tone }));
+    if (style === 'track') { const b = softBox(kit, armW, h, depth, { r: 38, tone }); b.rotation.x = 0; b.position.set(cx, y0 + h / 2, zF - depth / 2); b.rotation.y = 0; g.add(b); }
     else if (style === 'rolled') {
       g.add(kit.rbox(cx - armW / 2, y0, zF, armW, h - armW * 0.5, depth, 22, { tone }));
       g.add(kit.cyl(cx, y0 + h - armW * 0.52, zF, armW * 0.52, depth, { axis: 'z', seg: 28, tone }));

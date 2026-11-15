@@ -30,7 +30,7 @@ export function cushion(kit, { w = 440, h = 420, thick = 120, tone = 'mid', pipi
   g.add(kit.solid(pillowGeometry(T, { w, h, thick, edge, dent }), 0, h / 2, 0, { smooth: true, tone }));
   const m = Math.min(46, w * 0.1), P = [], face = (pairs, cut = 14) => { for (let i = 0; i < pairs.length; i += 2) { const [x0, y0] = pairs[i], [x1, y1] = pairs[i + 1]; let p = [x0, y0 + h / 2, pz(x0, y0)]; for (let k = 1; k <= cut; k++) { const x = x0 + (x1 - x0) * k / cut, y = y0 + (y1 - y0) * k / cut, q = [x, y + h / 2, pz(x, y)]; P.push(p, q); p = q; } } };
   const loop = (a, b, c) => [[-a, -b], [a, -b], [a, -b], [a, b], [a, b], [-a, b], [-a, b], [-a, -b]];
-  if (piping !== 'none') { const k = 0.965, zz = edge / 2 + 1, a = w / 2 * k, b = h / 2 * k; const seam = []; for (const [x, y] of loop(a, b)) seam.push([x, y + h / 2, zz]); P.push(...seam.flatMap((p, i) => (i % 2 ? [] : [p, seam[i + 1]]))); }
+  if (piping !== 'none') { const N = 20, edgeP = []; for (let e = 0; e < 4; e++) for (let k = 0; k < N; k++) { const t = k / N * 2 - 1, [u, v] = [[t, -1], [1, t], [-t, 1], [-1, -t]][e], kk = 1 - 0.07 * Math.pow(Math.abs(u * v), 2); edgeP.push([u * w / 2 * kk * 0.995, v * h / 2 * kk * 0.995 + h / 2, edge / 2 + 1.5]); } for (let i = 0; i < edgeP.length; i++) P.push(edgeP[i], edgeP[(i + 1) % edgeP.length]); }   // the seam follows the pulled-in corners
   if (piping === 'double') face(loop(w / 2 - m, h / 2 - m));
   if (pattern === 'stripes') { const yy = [-0.34, 0, 0.34].map((f) => f * h); face(yy.flatMap((y) => [[-w / 2 + m, y], [w / 2 - m, y]])); }
   else if (pattern === 'inset') face(loop(w / 2 - m * 1.4, h / 2 - m * 1.4));

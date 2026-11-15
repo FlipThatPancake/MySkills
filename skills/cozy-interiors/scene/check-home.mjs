@@ -1,16 +1,18 @@
 #!/usr/bin/env node
 // node check-home.mjs <scene.json> → builds the scene (?check keeps every part) and prints the rules a `home` scene breaks.
-// Rules: openings (1200 mm of clear wall between two openings, round corners too), sash (nothing in an inward sash's sweep), table (centred on a pendant or rug, 900 mm clear or against a wall), path (a door or arch keeps 1000 x 1500 mm clear), overlap (two floor pieces, or two wall pieces, pass through each other), wall (an object straddles a wall plane), floor (below it),
+// Rules: openings (1200 mm of clear wall between two openings, round corners too), sash (nothing in an inward sash's sweep), table (centred on a pendant or rug, 900 mm clear or against a wall), path (a door or arch keeps 1000 x 1500 mm clear), rugs (two rugs overlap), overlap (two floor pieces, or two wall pieces, pass through each other), wall (an object straddles a wall plane), floor (below it),
 // swing (a door leaf or sash, at every angle from shut to wide open, touches an object or another opening's frame; so does an opening front of a cabinet run),
 // Per area (scenes with `areas`): enough to look at (at least 8 objects in the floor, waist and wall bands, a hero, something living, something soft, something on a wall, every object in a group of two or more, one or two backing walls),
 // and the home view at 1200 x 750 (every object inside the frame with a 6% margin, nothing of a neighbour in front, no lamp over an opening or another lamp, seating: sofa backs onto a wall, chairs face the table, no seat shows its back, the coffee table visible).
 // Needs Playwright (global) and esbuild (global).
 import { createRequire } from 'node:module';
 import { execSync } from 'node:child_process';
+import { existsSync, statSync } from 'node:fs';
 import { dirname, join, resolve, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 const here = dirname(fileURLToPath(import.meta.url)), scene = process.argv[2] ? resolve(process.argv[2]) : (console.error('usage: node check-home.mjs <scene.json>   (the scene a spec wrote)'), process.exit(2));
-execSync(`node ${join(here, 'build.mjs')} ${scene}`, { stdio: 'ignore' });
+const QUICK = process.argv.includes('--quick'), REUSE = process.argv.includes('--reuse');   // --quick skips the ghost renders (the slow part: run it on the final pass only); --reuse keeps the built page when it is newer than the scene
+if (!(REUSE && existsSync(scene.replace(/\.json$/, '.html')) && statSync(scene.replace(/\.json$/, '.html')).mtimeMs > statSync(scene).mtimeMs)) execSync(`node ${join(here, 'build.mjs')} ${scene}`, { stdio: 'ignore' });
 const { chromium } = createRequire(join(execSync('npm root -g', { encoding: 'utf8' }).trim(), 'x.js'))('playwright');
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 1200, height: 750 } }); const errors = [];
@@ -51,6 +53,7 @@ const issues = await page.evaluate(() => {
     if (sc(a).mount !== sc(b).mount || baseRuns(a, b)) continue;
     if (Math.min(boxes[a].max.y, boxes[b].max.y) - Math.max(boxes[a].min.y, boxes[b].min.y) > 4 && sat(foot(a), foot(b), 4)) out.push({ rule: 'overlap', what: `${a} and ${b} pass through each other: move one, or shrink what is around it` });
   }
+  { const rugs = Object.keys(objs).filter((id) => sc(id).asset === 'rug'); for (let i = 0; i < rugs.length; i++) for (let j = i + 1; j < rugs.length; j++) if (sat(foot(rugs[i]), foot(rugs[j]), 0)) out.push({ rule: 'rugs', what: `${rugs[i]} and ${rugs[j]} overlap: size or move them so each rug lies on its own patch of floor` }); }
   for (const id of Object.keys(objs)) {
     const m = sc(id).mount, b = boxes[id];
     if (m === 'ceiling' || m === 'lines') continue;
@@ -285,7 +288,7 @@ const areaIssues = await page.evaluate(() => {
 for (const i of areaIssues) issues.push(i);
 // ghosts in tour shots: render each shot twice, once as it is and once with everything of the other areas hidden; any pixels that differ are a partly faded neighbour
 {
-  const list = await page.evaluate(() => window.cozyScene.areaIds ? window.cozyScene.areaIds.map((id) => [id, (window.cozyScene.areas[id].camera.shots || []).map((x) => x.name)]) : []);
+  const list = QUICK ? [] : await page.evaluate(() => window.cozyScene.areaIds ? window.cozyScene.areaIds.map((id) => [id, (window.cozyScene.areas[id].camera.shots || []).map((x) => x.name)]) : []);
   for (const [id, names] of list) for (let i = 0; i < names.length; i++) {
     const go = () => page.evaluate(([id, i]) => { const c = window.cozyScene, s = c.areas[id].camera.shots[i]; c.setArea(id, true); c.controls.minDistance = 10; c.at(s.from, s.look); c.camera.fov = s.fov || 30; c.camera.updateProjectionMatrix(); for (const g of Object.values(c.objects)) { g.userData.tick = null; g.userData.update = null; } c.tour.update = () => false; }, [id, i]);   // frozen: no sway, no butterfly, so two frames of one shot are the same
     await go(); await page.waitForTimeout(300);
