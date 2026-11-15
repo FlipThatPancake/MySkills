@@ -140,7 +140,7 @@ export function buildHome(kit, home, registry, areas = []) {
   return {
     group, objects, openables, walls, bounds: bb,
     // the footprint halos and wall-base shadows: kept as the fallback, hidden once the light is baked
-    useBake() { shadows.visible = false; for (const W of walls) W.shadows.visible = false; },
+    useBake(on = true) { shadows.visible = !on; for (const W of walls) W.shadows.visible = !on; },
     // Each frame: a wall's frames, window light, seams and shadows fade away once the camera is past that wall (over about 3 degrees).
     update(camera, target) {
       floorDraw?.update(camera);

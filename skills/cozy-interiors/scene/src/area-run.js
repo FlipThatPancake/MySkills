@@ -26,7 +26,6 @@ export function createAreaScene(canvas, S) {
   const home = buildHome(kit, S.home, REGISTRY, S.areas);
   scene.add(home.group);
   kit.setOpacity(1, 1);
-  if (!q.has('nobake') && !q.has('check')) { const bake = bakeLight({ THREE, renderer, scene, kit, walls: home.walls, areas: home.areas || S.areas.map((A) => ({ id: A.id, bounds: A.bounds })), group: home.group, quality: Number(q.get('bake')) || 1, debug: q.has('bakedebug'), ...(q.has('bakew') ? { wWin: Number(q.get('bakew').split(',')[0]), wSky: Number(q.get('bakew').split(',')[1]) } : {}) }); if (bake) { home.useBake(); window.cozyBake = bake; } }
   const controls = new OrbitControls(camera, canvas);
   controls.enablePan = false; controls.enableDamping = true; controls.dampingFactor = 0.08;
   controls.minPolarAngle = rad(5); controls.maxPolarAngle = rad(95);
@@ -196,5 +195,16 @@ export function createAreaScene(canvas, S) {
     renderer.render(scene, camera);
   });
   window.cozyScene = api;
+  // the light is baked after the page is up (the passes are spread over frames) and fades in; until then, and if the bake is not possible, the old halos stand in
+  window.cozyBaked = q.has('nobake') || q.has('check');
+  if (!window.cozyBaked) {
+    const withAll = (fn) => { const ws = home.walls.map((W) => W.node.visible), os = Object.values(home.objects).map((o) => o.visible); only(null); try { fn(); } finally { home.walls.forEach((W, i) => { W.node.visible = ws[i]; }); Object.values(home.objects).forEach((o, i) => { o.visible = os[i]; }); } };   // every area's pieces must stand in the light passes, though only one is shown
+    const gain = { value: 0 }, tune = (q.get('baket') || '').split(',').map(Number);   // ?baket=strength,contact,wWin,wSky
+    home.useBake(true);   // no halos while the light is baking: the page shows plain, then the soft light fades in
+    bakeLight({ THREE, renderer, scene, kit, walls: home.walls, areas: home.areas || S.areas.map((A) => ({ id: A.id, bounds: A.bounds })), group: home.group, quality: Number(q.get('bake')) || 1, debug: q.has('bakedebug'), gain, withAll, ...(tune[0] ? { strength: tune[0], contact: tune[1], wWin: tune[2], wSky: tune[3] } : {}) }).then((bake) => {
+      if (!bake) { home.useBake(false); window.cozyBaked = true; return; }
+      window.cozyBake = bake; const t0 = performance.now(), fade = (now) => { gain.value = Math.min(1, (now - t0) / 1200); if (gain.value < 1) requestAnimationFrame(fade); else window.cozyBaked = true; }; requestAnimationFrame(fade);
+    });
+  }
   return api;
 }

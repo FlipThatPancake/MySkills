@@ -12,7 +12,7 @@ const { chromium } = createRequire(join(execSync('npm root -g', { encoding: 'utf
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 1200, height: 750 } });
 await page.goto('file://' + scene.replace(/\.json$/, '.html') + '?check');
-await page.waitForFunction(() => window.cozyScene);
+await page.waitForFunction(() => window.cozyScene && window.cozyBaked, null, { timeout: 280000 });
 const res = await page.evaluate(() => {
   const api = window.cozyScene, { home, kit, camera } = api, T = kit.THREE, objs = home.objects, sc = (id) => objs[id].userData.scene, out = [];
   home.group.updateMatrixWorld(true);

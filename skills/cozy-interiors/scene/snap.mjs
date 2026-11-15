@@ -12,7 +12,7 @@ const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=sw
 const page = await browser.newPage({ viewport: { width: W, height: H } });
 page.on('pageerror', (e) => console.log('PAGE ERROR', String(e)));
 await page.goto('file://' + scene.replace(/\.json$/, '.html'));
-await page.waitForFunction(() => window.cozyScene);
+await page.waitForFunction(() => window.cozyScene && window.cozyBaked, null, { timeout: 280000 });
 const ids = which === 'all' ? await page.evaluate(() => window.cozyScene.areaIds) : [which];
 for (const id of ids) {
   await page.evaluate((i) => { window.cozyScene.setArea(i, true); }, id);

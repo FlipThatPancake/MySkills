@@ -16,7 +16,7 @@ export function sheet(kit, canvas, w, h, vis = null) {
   return sheetTex(kit, t, w, h, vis);
 }
 // the same plane from any texture (a baked render target, say)
-export function sheetTex(kit, t, w, h, vis = null) {
+export function sheetTex(kit, t, w, h, vis = null, gain = null) {   // gain: { value } 0..1, a fade a caller drives
   const T = kit.THREE, mid = new T.Vector3();
   const mat = new T.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
   const m = new T.Mesh(new T.PlaneGeometry(w, h), mat);
@@ -24,7 +24,7 @@ export function sheetTex(kit, t, w, h, vis = null) {
   m.onBeforeRender = () => {
     let f = 1;
     if (VIEW.c) { m.getWorldPosition(mid); mid.sub(VIEW.c); mid.set(Math.max(Math.abs(mid.x) - VIEW.h.x, 0), Math.max(Math.abs(mid.y) - VIEW.h.y, 0), Math.max(Math.abs(mid.z) - VIEW.h.z, 0)); f = 1 - sm(VIEW.r0, VIEW.r1, mid.length()); }
-    mat.opacity = kit.fill.uniforms.uOpacity.value * f * (vis ? vis.value : 1);
+    mat.opacity = kit.fill.uniforms.uOpacity.value * f * (vis ? vis.value : 1) * (gain ? gain.value : 1);
   };
   return m;
 }

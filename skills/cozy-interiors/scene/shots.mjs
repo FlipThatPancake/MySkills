@@ -11,7 +11,7 @@ execSync(`node ${join(here, 'build.mjs')} ${scene}`, { stdio: 'ignore' });
 const { chromium } = createRequire(join(execSync('npm root -g', { encoding: 'utf8' }).trim(), 'x.js'))('playwright');
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 1200, height: 750 } });
-await page.goto('file://' + scene.replace(/\.json$/, '.html')); await page.waitForFunction(() => window.cozyScene);
+await page.goto('file://' + scene.replace(/\.json$/, '.html')); await page.waitForFunction(() => window.cozyScene && window.cozyBaked, null, { timeout: 280000 });
 const list = await page.evaluate(() => window.cozyScene.areaIds.map((id) => [id, (window.cozyScene.areas[id].camera.shots || []).map((s) => s.name)]));
 const files = [];
 for (const [id, names] of list) for (let i = 0; i < names.length; i++) {
