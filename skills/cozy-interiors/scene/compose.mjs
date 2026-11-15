@@ -60,7 +60,7 @@ class Area {
       at: (ox, off = 0) => [x + Math.cos(rad(phi)) * ox - Math.sin(rad(phi)) * off, z + Math.sin(rad(phi)) * ox + Math.cos(rad(phi)) * off],   // the local point
       put(oid, asset, ox, off, o = {}) { return p.put(oid, asset, F.at(ox, off), -phi + (o.turn || 0), o); },   // low level: the object's origin at ox along, off out
       place(oid, asset, xc, o = {}) {   // by the asset's own origin and size: xc is its middle along the wall
-        o = { ...o, params: pickForm(p.h, asset, o.params) }; const { w, d, m } = sizeOf(asset, o.params), y = o.y ?? (typeof m.y === 'number' ? m.y : 0), mount = o.mount || m.mount;
+        o = { ...o, params: pickForm(p.h, asset, o.params) }; const { w, d, m } = sizeOf(asset, o.params), mount = o.mount || m.mount; if (o.y === undefined && m.y === 'top') throw new Error(`place('${oid}', '${asset}'): give y, the height of the surface it stands on in mm (for example y: 520 on a bedside table, 740 on a desk)`); const y = o.y ?? (typeof m.y === 'number' ? m.y : 0);
         const off = o.off ?? (m.origin === 'centre' ? d / 2 : m.origin === 'front-left' ? (o.depth ?? d) : m.origin === 'front-centre' ? (o.depth ?? 600) : 0);
         const ox = m.origin === 'front-left' ? xc - w / 2 : xc;
         return F.put(oid, asset, ox, off, { ...o, y, mount });

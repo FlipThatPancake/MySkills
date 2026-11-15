@@ -24,7 +24,7 @@ const H = new Home({ seed: 28, floor: 'boards' });
   back.place('umbrellas', 'umbrellaStand', 3700, { group: 'console' });
   a.view({ target: [2100, 1450, 1500], az: 12, el: 5 });
   a.shot('console', [4100, 1400, 4500], [3587, 900, 11], 38, 'console');
-  a.shot('bench wall', [200, 1250, 300], [4367, 837, 2259], 36, 'bench wall');
+  a.shot('bench wall', [200, 1700, 3600], [4350, 700, 794], 34, 'bench wall');
 }
 { // ---------- living
   const a = H.area('living', 'Living room', { rect: [0, 0, 5400, 4200] });
@@ -39,11 +39,11 @@ const H = new Home({ seed: 28, floor: 'boards' });
   a.put('cushion', 'cushion', [1150, 2050], 25, { y: 470, mount: 'on', group: 'seating', params: { w: 380, h: 340, lean: 18 } });
   a.put('cat', 'cat', [1950, 2900], 160, { y: 7, lift: 7, group: 'seating' });
   back.place('lamp', 'floorLamp', 2500, { group: 'window' });
-  back.place('floor-plant', 'floorPlant', 5050, { group: 'corner' });
+  a.put('floor-plant', 'floorPlant', [3650, 2000], 0, { group: 'corner' });
   a.put('pouf', 'pouf', [3550, 2750], 0, { group: 'corner' });
   a.view({ target: [2800, 800, 1600], az: 14, el: 16 });
   a.shot('armchairs', [3200, 1100, 6600], [1448, 300, 2446], 40, 'seating');
-  a.shot('window corner', [5000, 1250, 5400], [3988, 1200, 1], 40, 'window');
+  a.shot('window corner', [4700, 2100, 6000], [3992, 1200, 51], 36, 'window');
 }
 { // ---------- home office
   const a = H.area('office', 'Home office', { rect: [0, 0, 5400, 3600] });
@@ -65,8 +65,8 @@ const H = new Home({ seed: 28, floor: 'boards' });
   a.put('bin', 'wasteBin', [3650, 450], 0, { group: 'desk' });
   a.put('file-box', 'fileBox', [4300, 700], 0, { group: 'shelf' });
   a.view({ target: [2700, 1350, 1400], az: 14, el: 5 });
-  a.shot('desk', [6800, 1250, 2700], [2864, 300, 642], 34, 'desk');
-  a.shot('shelf', [2000, 1100, 4800], [4061, 900, 149], 40, 'shelf');
+  a.shot('desk', [6800, 1250, 2700], [2874, 300, 616], 36, 'desk');
+  a.shot('shelf', [2000, 1700, 5400], [4049, 900, 180], 36, 'shelf');
 }
 H.write(new URL('./seed-28.json', import.meta.url).pathname, fs);
 console.log('wrote seed-28.json');

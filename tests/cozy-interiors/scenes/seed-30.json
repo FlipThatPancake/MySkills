@@ -395,9 +395,9 @@
     "id": "kitchen-floor-plant",
     "asset": "floorPlant",
     "at": [
-     5900,
+     5700,
      0,
-     280
+     2500
     ],
     "mount": "floor",
     "params": {
@@ -604,7 +604,7 @@
     "id": "dining-dining-plant",
     "asset": "floorPlant",
     "at": [
-     10000,
+     10150,
      0,
      4300
     ],
@@ -798,9 +798,9 @@
        5700
       ],
       "look": [
-       1797,
+       1647,
        1100,
-       299
+       317
       ],
       "fov": 40,
       "subject": "kitchen:cooking"
@@ -809,15 +809,15 @@
       "name": "island",
       "from": [
        200,
-       1500,
-       900
+       2100,
+       300
       ],
       "look": [
-       3376,
+       3182,
        300,
-       4136
+       4193
       ],
-      "fov": 34,
+      "fov": 32,
       "subject": "kitchen:island"
      }
     ]
@@ -853,14 +853,14 @@
      {
       "name": "sideboard",
       "from": [
-       10900,
-       1250,
-       5100
+       10600,
+       1100,
+       4800
       ],
       "look": [
-       10911,
-       1100,
-       142
+       10538,
+       1025,
+       122
       ],
       "fov": 40,
       "subject": "dining:sideboard"
@@ -868,14 +868,14 @@
      {
       "name": "table",
       "from": [
-       10600,
-       1250,
+       9700,
+       1900,
        7200
       ],
       "look": [
-       11686,
+       11676,
        500,
-       2852
+       2758
       ],
       "fov": 34,
       "subject": "dining:table set"
@@ -913,14 +913,14 @@
      {
       "name": "sofa",
       "from": [
-       19000,
-       1100,
+       20200,
+       1250,
        6600
       ],
       "look": [
-       21927,
-       700,
-       1620
+       20550,
+       300,
+       1188
       ],
       "fov": 40,
       "subject": "living:sofa"
@@ -929,15 +929,15 @@
       "name": "window",
       "from": [
        24100,
-       1100,
-       4500
+       1700,
+       6000
       ],
       "look": [
-       19548,
+       18670,
        1100,
-       657
+       1746
       ],
-      "fov": 40,
+      "fov": 36,
       "subject": "living:window"
      }
     ]

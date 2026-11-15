@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// node fitshots.mjs scenes/x.json → for every tour shot, searches for a camera inside the area (1100-1500 mm high, lens 26-40 deg) that has the shot's subject group whole in frame, filling 25 to 60 percent, on a third, with a foreground piece nearer than the subject at one edge. Prints it in the area's own coordinates (psi 0 areas).
+// node fitshots.mjs scenes/x.json → for every tour shot, searches for a camera inside the area (eye level, high, low and tight in turn: 700-2100 mm high, lens 26-40 deg) that has the shot's subject group whole in frame, filling 25 to 60 percent, on a third, with a foreground piece nearer than the subject at one edge. Prints it in the area's own coordinates (psi 0 areas).
 import { createRequire } from 'node:module';
 import { execSync } from 'node:child_process';
 import { dirname, join, resolve } from 'node:path';
@@ -23,7 +23,8 @@ const res = await page.evaluate(() => {
   for (const A of api.areaIds) {
     const shots = api.areas[A].camera.shots || [], bd = api.areas[A].bounds, real = ids.filter((i) => areaOf(i) === A && !['socket', 'lightSwitch'].includes(sc(i).asset));
     const heroId = real.find((i) => sc(i).hero);
-    for (const sh of shots) {
+    for (const [k, sh] of shots.entries()) {
+      const ST = [{ ys: [1100, 1250, 1400], fovs: [32, 34, 36, 38, 40], fp: 36, dp: 4500 }, { ys: [1700, 1900, 2100], fovs: [30, 32, 34, 36], fp: 33, dp: 5000 }, { ys: [700, 850, 1000], fovs: [28, 30, 32, 34], fp: 31, dp: 4000 }, { ys: [1100, 1250], fovs: [26, 28, 30], fp: 28, dp: 3500 }][k % 4];   // shot 1 eye level, 2 high, 3 low, 4 tight: the tour does not look the same four times
       const subj = sh.subject || (heroId && sc(heroId).group), mem = real.filter((i) => sc(i).group === subj); if (!mem.length) continue;
       api.setArea(A, true);
       const sb = new T.Box3(); for (const i of mem) sb.union(boxes[i]); const sc3 = sb.getCenter(new T.Vector3());
@@ -37,16 +38,16 @@ const res = await page.evaluate(() => {
         const near = others.filter((i) => cp.distanceTo(boxes[i].getCenter(new T.Vector3())) < dS), subjArea = (x1 - x0) * (y1 - y0);
         const ovl = (r) => Math.max(0, Math.min(r.x1, x1) - Math.max(r.x0, x0)) * Math.max(0, Math.min(r.y1, y1) - Math.max(r.y0, y0));
         for (const i of near) if (ovl(rect(boxes[i])) > 0.1 * subjArea) { stat.blocked = (stat.blocked || 0) + 1; return null; }
-        const fg = near.some((i) => { const r = rect(boxes[i]), c = (r.x0 + r.x1) / 2; return SMALLFG.includes(sc(i).asset) && Math.abs(c) > 0.5 && Math.abs(c) < 1.15 && r.y1 > -1; });
+        const fg = near.concat(mem.length > 1 ? mem.filter((i) => ['pouf', 'basket', 'floorPlant', 'plant', 'stool', 'footstool', 'sideTable', 'crate', 'bench'].includes(sc(i).asset)) : []).some((i) => { const r = rect(boxes[i]), c = (r.x0 + r.x1) / 2; return SMALLFG.includes(sc(i).asset) && Math.abs(c) > 0.5 && Math.abs(c) < 1.15 && r.y1 > -1; });
         if (!fg) { stat.fg = (stat.fg || 0) + 1; return null; } return { fill, cx };
       };
       let best = null; const stat = {};
-      for (let x = bd.x0 + 200; x <= bd.x1 - 200; x += 300) for (let z = bd.z0 + 300; z <= bd.z1 + 2500; z += 300) for (const y of [1100, 1250, 1400, 1500]) for (const fov of [26, 28, 30, 32, 34, 36, 38, 40]) for (const t of [-0.55, -0.5, -0.45, -0.4, -0.35, -0.3, -0.25, -0.2, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55]) for (const ly of [0, 300, 500, 700, 900, 1100]) {
+      for (let x = bd.x0 + 200; x <= bd.x1 - 200; x += 300) for (let z = bd.z0 + 300; z <= bd.z1 + 2500; z += 300) for (const y of ST.ys) for (const fov of ST.fovs) for (const t of [-0.55, -0.5, -0.45, -0.4, -0.35, -0.3, -0.25, -0.2, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55]) for (const ly of [0, 300, 500, 700, 900, 1100]) {
         const from = new T.Vector3(x, y, z), dir = sc3.clone().sub(from), dist = dir.length(); if (dist < 1500) continue;
         const right = new T.Vector3().crossVectors(dir.clone().normalize(), new T.Vector3(0, 1, 0)).normalize(), half = dist * Math.tan(fov * Math.PI / 360) * (1200 / 750);
         const look = sc3.clone().addScaledVector(right, -t * half); look.y = ly || Math.min(sc3.y, 1300);
         const r = test(from.toArray(), look.toArray(), fov); if (!r) continue;
-        const cost = Math.abs(dist - 4500) + 50 * Math.abs(fov - 34) + 800 * Math.abs(r.fill - 0.45) + 0.05 * Math.hypot(x - (sh.from[0] || 0), z - (sh.from[2] || 0));
+        const cost = Math.abs(dist - ST.dp) + 50 * Math.abs(fov - ST.fp) + 800 * Math.abs(r.fill - 0.45) + 0.05 * Math.hypot(x - (sh.from[0] || 0), z - (sh.from[2] || 0));
         if (!best || cost < best.cost) best = { cost, from: from.toArray().map(Math.round), look: look.toArray().map(Math.round), fov, fill: +r.fill.toFixed(2), cx: +r.cx.toFixed(2) };
       }
       out.push({ area: A, name: sh.name, subject: subj, best, stat });

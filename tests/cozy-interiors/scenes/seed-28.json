@@ -458,9 +458,9 @@
     "id": "living-floor-plant",
     "asset": "floorPlant",
     "at": [
-     14050,
+     12650,
      0,
-     280
+     2000
     ],
     "mount": "floor",
     "params": {
@@ -751,15 +751,15 @@
       "name": "bench wall",
       "from": [
        200,
-       1250,
-       300
+       1700,
+       3600
       ],
       "look": [
-       4367,
-       837,
-       2259
+       4350,
+       700,
+       794
       ],
-      "fov": 36,
+      "fov": 34,
       "subject": "hallway:bench wall"
      }
     ]
@@ -810,16 +810,16 @@
      {
       "name": "window corner",
       "from": [
-       14000,
-       1250,
-       5400
+       13700,
+       2100,
+       6000
       ],
       "look": [
-       12988,
+       12992,
        1200,
-       1
+       51
       ],
-      "fov": 40,
+      "fov": 36,
       "subject": "living:window"
      }
     ]
@@ -860,26 +860,26 @@
        2700
       ],
       "look": [
-       20264,
+       20274,
        300,
-       642
+       616
       ],
-      "fov": 34,
+      "fov": 36,
       "subject": "office:desk"
      },
      {
       "name": "shelf",
       "from": [
        19400,
-       1100,
-       4800
+       1700,
+       5400
       ],
       "look": [
-       21461,
+       21449,
        900,
-       149
+       180
       ],
-      "fov": 40,
+      "fov": 36,
       "subject": "office:shelf"
      }
     ]

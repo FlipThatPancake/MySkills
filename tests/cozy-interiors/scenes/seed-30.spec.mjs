@@ -21,10 +21,10 @@ const H = new Home({ seed: 30, floor: 'plain' });
   for (const [i, x] of [3500, 4300].entries()) a.put(`stool-${i + 1}`, 'stool', [x, 3750], 0, { group: 'island', params: { form: 0 } });
   a.put('step-stool', 'stepStool', [330, 1100], 10, { group: 'larder' });
   a.put('crate', 'crate', [2300, 3350], 12, { group: 'larder' });
-  back.place('floor-plant', 'floorPlant', 5900, { group: 'shelf corner', params: { form: 1 } });
+  a.put('floor-plant', 'floorPlant', [5700, 2500], 0, { group: 'shelf corner', params: { form: 1 } });
   a.view({ target: [3200, 900, 1600], az: 14, el: 11 });
-  a.shot('cooking', [2000, 1100, 5700], [1797, 1100, 299], 40, 'cooking');
-  a.shot('island', [200, 1500, 900], [3376, 300, 4136], 34, 'island');
+  a.shot('cooking', [2000, 1100, 5700], [1647, 1100, 317], 40, 'cooking');
+  a.shot('island', [200, 2100, 300], [3182, 300, 4193], 32, 'island');
 }
 { // ---------- dining
   const a = H.area('dining', 'Dining', { rect: [0, 0, 5400, 4800] });
@@ -38,10 +38,10 @@ const H = new Home({ seed: 30, floor: 'plain' });
   T.over('pendantLamp', { params: { rim: 1700 }, group: 'table light' }); T.on('vase');
   back.place('wall-shelf', 'wallShelf', 3150, { y: 1500, group: 'sideboard', shadow: false, params: { w: 600 } });
   left.place('bench', 'bench', 3900, { group: 'door side' });
-  a.put('dining-plant', 'floorPlant', [800, 4300], 0, { group: 'door side' });
+  a.put('dining-plant', 'floorPlant', [950, 4300], 0, { group: 'door side' });
   a.view({ target: [2800, 900, 2000], az: 14, el: 15 });
-  a.shot('sideboard', [1700, 1250, 5100], [1711, 1100, 142], 40, 'sideboard');
-  a.shot('table', [1400, 1250, 7200], [2486, 500, 2852], 34, 'table set');
+  a.shot('sideboard', [1400, 1100, 4800], [1338, 1025, 122], 40, 'sideboard');
+  a.shot('table', [500, 1900, 7200], [2476, 500, 2758], 34, 'table set');
 }
 { // ---------- living
   const a = H.area('living', 'Living room', { rect: [0, 0, 5400, 4200] });
@@ -58,8 +58,8 @@ const H = new Home({ seed: 30, floor: 'plain' });
   a.put('basket', 'basket', [1800, 2150], 0, { group: 'window' });
   back.place('floor-plant', 'floorPlant', 2250, { group: 'window' });
   a.view({ target: [2800, 800, 1500], az: 14, el: 11 });
-  a.shot('sofa', [1400, 1100, 6600], [4327, 700, 1620], 40, 'sofa');
-  a.shot('window', [6500, 1100, 4500], [1948, 1100, 657], 40, 'window');
+  a.shot('sofa', [2600, 1250, 6600], [2950, 300, 1188], 40, 'sofa');
+  a.shot('window', [6500, 1700, 6000], [1070, 1100, 1746], 36, 'window');
 }
 H.write(new URL('./seed-30.json', import.meta.url).pathname, fs);
 console.log('wrote seed-30.json');

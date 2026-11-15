@@ -813,9 +813,9 @@
        5700
       ],
       "look": [
-       3258,
+       3283,
        1100,
-       317
+       320
       ],
       "fov": 40,
       "subject": "kitchen:cooking"
@@ -823,16 +823,16 @@
      {
       "name": "peninsula",
       "from": [
-       800,
        1100,
-       3600
+       2100,
+       4500
       ],
       "look": [
-       4456,
+       4298,
        300,
-       874
+       906
       ],
-      "fov": 38,
+      "fov": 32,
       "subject": "kitchen:peninsula"
      }
     ]
@@ -868,31 +868,31 @@
      {
       "name": "reading chair",
       "from": [
-       11500,
-       1500,
+       11200,
+       1100,
        6000
       ],
       "look": [
-       11602,
+       11403,
        700,
-       1518
+       1461
       ],
-      "fov": 40,
+      "fov": 38,
       "subject": "reading:reading group"
      },
      {
       "name": "shelf and picture",
       "from": [
-       11800,
-       1100,
-       5400
+       11500,
+       2100,
+       6000
       ],
       "look": [
-       12251,
+       12243,
        1175,
-       22
+       -3
       ],
-      "fov": 40,
+      "fov": 36,
       "subject": "reading:shelf"
      }
     ]
@@ -928,31 +928,31 @@
      {
       "name": "bed",
       "from": [
-       20500,
-       1100,
-       6000
+       20200,
+       1400,
+       5700
       ],
       "look": [
-       20140,
-       500,
-       1310
+       20135,
+       700,
+       1277
       ],
-      "fov": 34,
+      "fov": 36,
       "subject": "bedroom:bed"
      },
      {
       "name": "wardrobe wall",
       "from": [
-       22900,
-       1100,
-       3000
+       23200,
+       2100,
+       1800
       ],
       "look": [
-       17854,
+       17827,
        1050,
-       3132
+       1989
       ],
-      "fov": 40,
+      "fov": 36,
       "subject": "bedroom:wardrobe wall"
      }
     ]

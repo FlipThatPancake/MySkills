@@ -23,7 +23,8 @@ const issues = await page.evaluate(() => {
   const sc = (id) => objs[id].userData.scene;
   const box = (g) => {   // the solid parts only: painted sheets (light, shadow, sky) and lines are not things
     g.updateMatrixWorld(true); const b = new T.Box3(), bb = new T.Box3();
-    g.traverse((o) => { if (!o.isMesh || o.isLineSegments2 || o.material.isMeshBasicMaterial || kit.hulls.includes(o.material) || o.material === kit.depth) return; o.geometry.computeBoundingBox(); b.union(bb.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld)); });
+    g.traverse((o) => { if (!o.isMesh || o.isLineSegments2 || o.userData.lines || o.material.isMeshBasicMaterial || kit.hulls.includes(o.material) || o.material === kit.depth) return; o.geometry.computeBoundingBox(); b.union(bb.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld)); });
+    g.traverse((o) => { if (o.userData.landing) { const L = new T.Vector3(...o.userData.landing).applyMatrix4(o.matrixWorld), c = b.getCenter(new T.Vector3()); b.expandByPoint(L); b.expandByPoint(new T.Vector3(c.x - 130, L.y, c.z - 130)); b.expandByPoint(new T.Vector3(c.x + 130, L.y, c.z + 130)); } });   // a swaying plant is measured at rest: its blades move with the wind, so their own boxes would change the checks from run to run
     return b;
   };
   const boxes = Object.fromEntries(Object.keys(objs).map((id) => { const b = box(objs[id]); if (sc(id).asset === 'baseRun') b.max.y = Math.min(b.max.y, 940); return [id, b]; }));   // a run's tap is not part of its body
@@ -153,8 +154,9 @@ const issues = await page.evaluate(() => {
     }
   }
   // 6. a small seat or table serves a piece: another floor piece within 600 mm (a stool alone in front of an arch is a prop on its own)
-  { const SEAT = ['stool', 'pouf', 'footstool', 'sideTable', 'stepStool'], BIG = (i) => sc(i).mount === 'floor' && !['rug', 'plant', 'floorPlant', 'cat', 'basket', 'pouf', 'stool', 'trolley', 'footstool', 'curtain', 'sideTable'].includes(sc(i).asset);
-    for (const id of Object.keys(objs).filter((i) => SEAT.includes(sc(i).asset))) { const others = Object.keys(objs).filter((o) => o !== id && BIG(o)); if (!others.some((o) => gap2(boxes[id], boxes[o]) <= 600) ) out.push({ rule: 'lone', what: `${id} stands ${others.length ? Math.min(...others.map((o) => gap2(boxes[id], boxes[o]))).toFixed(0) : 'far'} mm from anything it serves (need 600 or less): put it beside a table, desk, bench, sofa or console, or remove it` }); } }
+  { const SEAT = ['stool', 'pouf', 'footstool', 'sideTable', 'stepStool', 'floorPlant'], BIG = (i) => sc(i).mount === 'floor' && !['rug', 'plant', 'floorPlant', 'cat', 'basket', 'pouf', 'stool', 'trolley', 'footstool', 'curtain', 'sideTable'].includes(sc(i).asset);
+    for (const id of Object.keys(objs).filter((i) => SEAT.includes(sc(i).asset))) { const others = Object.keys(objs).filter((o) => o !== id && (BIG(o) || (sc(id).asset === 'floorPlant' && sc(o).asset === 'rug'))); const framing = sc(id).asset === 'floorPlant' && home.walls.some((W) => W.built.some((b) => { if (b.op.kind === 'window') return false; const l = toLocal(W, boxes[id]), xc = W.len - b.op.at; return l.z0 < 400 && l.x1 > xc - b.op.width / 2 - 700 && l.x0 < xc + b.op.width / 2 + 700; }));   // a plant beside a door or arch frames it
+    if (!framing && !others.some((o) => gap2(boxes[id], boxes[o]) <= 600) ) out.push({ rule: 'lone', what: `${id} stands ${others.length ? Math.min(...others.map((o) => gap2(boxes[id], boxes[o]))).toFixed(0) : 'far'} mm from anything it serves (need 600 or less): put it beside a table, desk, bench, sofa or console, or remove it` }); } }
   // 7. nothing tall stands in front of a window's sill: a piece under or beside a window stays 150 mm below the sill
   for (const W of home.walls) for (const b of W.built) {
     if (b.op.kind !== 'window') continue;
@@ -173,7 +175,7 @@ const issues = await page.evaluate(() => {
 const areaIssues = await page.evaluate(() => {
   const api = window.cozyScene; if (!api.areaIds) return [];
   const { home, kit, camera } = api, T = kit.THREE, out = [], objs = home.objects, ids = Object.keys(objs), sc = (id) => objs[id].userData.scene;
-  const box = (g) => { g.updateMatrixWorld(true); const b = new T.Box3(), bb = new T.Box3(); g.traverse((o) => { if (!o.isMesh || o.isLineSegments2 || o.material.isMeshBasicMaterial || kit.hulls.includes(o.material) || o.material === kit.depth) return; o.geometry.computeBoundingBox(); b.union(bb.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld)); }); return b; };
+  const box = (g) => { g.updateMatrixWorld(true); const b = new T.Box3(), bb = new T.Box3(); g.traverse((o) => { if (!o.isMesh || o.isLineSegments2 || o.userData.lines || o.material.isMeshBasicMaterial || kit.hulls.includes(o.material) || o.material === kit.depth) return; o.geometry.computeBoundingBox(); b.union(bb.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld)); }); g.traverse((o) => { if (o.userData.landing) { const L = new T.Vector3(...o.userData.landing).applyMatrix4(o.matrixWorld), c = b.getCenter(new T.Vector3()); b.expandByPoint(L); b.expandByPoint(new T.Vector3(c.x - 130, L.y, c.z - 130)); b.expandByPoint(new T.Vector3(c.x + 130, L.y, c.z + 130)); } }); return b; };
   const boxes = Object.fromEntries(ids.map((id) => [id, box(objs[id])]));
   const areaOf = (id) => sc(id).area || api.areaIds.find((a) => { const b = api.areas[a].bounds, c = boxes[id].getCenter(new T.Vector3()); return c.x >= b.x0 && c.x <= b.x1 && c.z >= b.z0 && c.z <= b.z1; });
   const rect = (b) => { const xs = [], ys = []; for (const x of [b.min.x, b.max.x]) for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) { const p = new T.Vector3(x, y, z).project(camera); xs.push(p.x); ys.push(p.y); } return { x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys) }; };
@@ -241,13 +243,13 @@ const areaIssues = await page.evaluate(() => {
       else if (fill < 0.25 || fill > 0.7) out.push({ rule: 'shot', what: `${A} shot "${sh.name}": its subject "${subj}" fills ${(fill * 100).toFixed(0)}% of the frame (want 25 to 70): ${fill < 0.25 ? 'move in or widen the lens' : 'back off'}` });
       { const cx = (x0 + x1) / 2, fp = sh.from, bb2 = bnd, fovv = sh.fov || 30;
         if (fovv < 26 || fovv > 40) out.push({ rule: 'shot', what: `${A} shot "${sh.name}": lens ${fovv} degrees (use 26 to 40)` });
-        if (fp[0] < bb2.x0 - 300 || fp[0] > bb2.x1 + 300 || fp[2] < bb2.z0 - 1 || fp[2] > bb2.z1 + 2500 || fp[1] < 1100 || fp[1] > 1500) out.push({ rule: 'shot', what: `${A} shot "${sh.name}": the camera stands outside the area (at most 2500 mm in front of its front edge) or at ${fp[1]} mm (1100 to 1500 mm high)` });
+        if (fp[0] < bb2.x0 - 300 || fp[0] > bb2.x1 + 300 || fp[2] < bb2.z0 - 1 || fp[2] > bb2.z1 + 2500 || fp[1] < 650 || fp[1] > 2200) out.push({ rule: 'shot', what: `${A} shot "${sh.name}": the camera stands outside the area (at most 2500 mm in front of its front edge) or at ${fp[1]} mm (650 to 2200 mm high)` });
         if (Math.abs(cx) > 0.33) out.push({ rule: 'shot', what: `${A} shot "${sh.name}": the subject is at ${(cx * 50 + 50).toFixed(0)}% across the frame (keep it in the middle third: 33% to 67%)` });
         const SMALLFG = ['pouf', 'basket', 'floorPlant', 'plant', 'stool', 'trolley', 'bench', 'footstool', 'sideTable', 'cat', 'crate', 'stepStool', 'wateringCan', 'umbrellaStand', 'shoes', 'wasteBin', 'fileBox'], sx0 = x0, sx1 = x1, sy0 = y0, sy1 = y1, sArea = (sx1 - sx0) * (sy1 - sy0);
         const nearer = real.filter((i) => !members.includes(i) && sc(i).mount !== 'wall' && sc(i).asset !== 'rug' && cp2.distanceTo(boxes[i].getCenter(new T.Vector3())) < Math.min(...members.map((m) => cp2.distanceTo(boxes[m].getCenter(new T.Vector3())))));
         const blocked = nearer.filter((i) => { const r = rect(boxes[i]); return ov(r, { x0: sx0, x1: sx1, y0: sy0, y1: sy1 }) > 0.1 * sArea; });
         if (blocked.length) out.push({ rule: 'shot', what: `${A} shot "${sh.name}": ${blocked.slice(0, 3).join(', ')} stands in front of the subject and hides it: move the camera or the piece` });
-        const fg = nearer.some((i) => { const r = rect(boxes[i]), c = (r.x0 + r.x1) / 2; return SMALLFG.includes(sc(i).asset) && Math.abs(c) > 0.5 && Math.abs(c) < 1.15 && r.y1 > -1; });
+        const fg = nearer.concat(members.length > 1 ? members.filter((i) => ['pouf', 'basket', 'floorPlant', 'plant', 'stool', 'footstool', 'sideTable', 'crate', 'bench'].includes(sc(i).asset)) : []).some((i) => { const r = rect(boxes[i]), c = (r.x0 + r.x1) / 2; return SMALLFG.includes(sc(i).asset) && Math.abs(c) > 0.5 && Math.abs(c) < 1.15 && r.y1 > -1; });   // a small piece of the subject's own group at a frame edge counts too
         if (!fg) out.push({ rule: 'shot', what: `${A} shot "${sh.name}": no small foreground piece at a frame edge (it may be cut by one edge), nearer than the subject (a stool, basket, plant, bench end): add one or move the camera` }); }
     }
     camera.fov = 30; camera.updateProjectionMatrix(); api.setArea(A, true); camera.updateMatrixWorld(true);

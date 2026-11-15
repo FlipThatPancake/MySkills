@@ -20,6 +20,8 @@ export function roll(seed, kinds = ['kitchen', 'dining', 'living']) {
     const a = { backing: b.id, hero: pick(t.hero), openings: pick(t.openings.filter((o) => b.walls === 2 || o.every((x) => x.on === 'first'))).map((o) => ({ ...o, on: b.walls === 1 ? 'first' : o.on })), accents: some(t.accents, 3 + Math.floor(rnd() * 3)), plants: pick(T.plants) };
     if (t.pieces) a.pieces = t.pieces;
     if (shape) { a.shape = shape; a.shapeNote = t.shapeNotes[shape]; }
+    const wall = (on) => (on === 'second' ? `the ${b.second} wall` : 'the back wall'), shape2 = b.walls === 1 ? 'one backing wall' : `two backing walls at ${b.angle} degrees, the second wall on the ${b.second}`;
+    a.say = `${id}: ${a.hero}; ${shape2}; ${a.openings.map((o) => `${o.kind} on ${wall(o.on)}`).join(', ')}; accents: ${a.accents.join(', ')}; ${a.plants} plants in all (pots, floor plants or a plant on a shelf); pieces: ${(a.pieces || []).join(', ') || 'as the hero needs'}`;   // the choices in plain words
     out.areas[id] = a;
   }
   return out;
