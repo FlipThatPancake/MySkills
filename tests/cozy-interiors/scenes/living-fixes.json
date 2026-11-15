@@ -1,0 +1,301 @@
+{
+ "units": "mm",
+ "seed": 3,
+ "home": {
+  "height": 2700,
+  "floor": {
+   "style": "plain",
+   "seed": 3
+  },
+  "tiles": {
+   "origin": [
+    0,
+    0
+   ]
+  },
+  "walls": [
+   {
+    "id": "sheet-back",
+    "from": [
+     15600,
+     0
+    ],
+    "to": [
+     0,
+     0
+    ],
+    "openings": []
+   }
+  ],
+  "objects": [
+   {
+    "id": "sheet-logs",
+    "asset": "logBasket",
+    "at": [
+     700,
+     0,
+     2700
+    ],
+    "mount": "floor",
+    "params": {
+     "r": 240,
+     "h": 380,
+     "logs": 6,
+     "seed": 62,
+     "weave": "grid",
+     "lean": 0.15
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-logs2",
+    "asset": "logBasket",
+    "at": [
+     1700,
+     0,
+     2700
+    ],
+    "mount": "floor",
+    "params": {
+     "seed": 21,
+     "r": 300,
+     "logs": 8,
+     "h": 360,
+     "weave": "stave",
+     "lean": 0.12
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-stove",
+    "asset": "woodStove",
+    "at": [
+     2700,
+     0,
+     2700
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 530,
+     "d": 390,
+     "h": 580,
+     "flueH": 1530,
+     "door": "glass",
+     "legs": "feet"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-stove2",
+    "asset": "woodStove",
+    "at": [
+     4000,
+     0,
+     2700
+    ],
+    "mount": "floor",
+    "params": {
+     "door": "round",
+     "legs": "pedestal",
+     "w": 480,
+     "d": 470,
+     "h": 640,
+     "flueH": 1720
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-rec",
+    "asset": "recordPlayer",
+    "at": [
+     5300,
+     0,
+     2700
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 660,
+     "h": 520,
+     "records": 5,
+     "seed": 84,
+     "lid": "open",
+     "legs": "block"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-rec2",
+    "asset": "recordPlayer",
+    "at": [
+     6600,
+     0,
+     2700
+    ],
+    "mount": "floor",
+    "params": {
+     "lid": "half",
+     "legs": "block",
+     "records": 12,
+     "w": 720,
+     "h": 540,
+     "seed": 29
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-rec3",
+    "asset": "recordPlayer",
+    "at": [
+     7900,
+     0,
+     2700
+    ],
+    "mount": "floor",
+    "params": {
+     "lid": "closed",
+     "w": 880,
+     "h": 560,
+     "records": 8,
+     "seed": 62,
+     "legs": "splay"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-blk",
+    "asset": "coffeeTable",
+    "at": [
+     9200,
+     0,
+     2700
+    ],
+    "mount": "floor",
+    "params": {
+     "shape": "block",
+     "w": 1030,
+     "d": 540,
+     "h": 420
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-blk2",
+    "asset": "coffeeTable",
+    "at": [
+     10500,
+     0,
+     2700
+    ],
+    "mount": "floor",
+    "params": {
+     "shape": "block",
+     "w": 900,
+     "d": 560,
+     "h": 400
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-gal",
+    "asset": "galleryWall",
+    "at": [
+     2500,
+     700,
+     100
+    ],
+    "mount": "wall",
+    "params": {
+     "seed": 4,
+     "align": "centre",
+     "frame": "thick",
+     "w": 1420,
+     "h": 980,
+     "n": 8
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-gal2",
+    "asset": "galleryWall",
+    "at": [
+     5200,
+     700,
+     100
+    ],
+    "mount": "wall",
+    "params": {
+     "seed": 9,
+     "w": 1300,
+     "h": 1000,
+     "n": 5,
+     "align": "edge",
+     "frame": "thin"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-gal3",
+    "asset": "galleryWall",
+    "at": [
+     7800,
+     700,
+     100
+    ],
+    "mount": "wall",
+    "params": {
+     "seed": 14,
+     "w": 1680,
+     "h": 1030,
+     "n": 5,
+     "align": "centre",
+     "frame": "thick"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   }
+  ]
+ },
+ "areas": [
+  {
+   "id": "sheet",
+   "name": "Sheet",
+   "O": [
+    0,
+    0
+   ],
+   "psi": 0,
+   "bounds": {
+    "x0": 0,
+    "x1": 15600,
+    "z0": 0,
+    "z1": 3600,
+    "top": 2200
+   },
+   "camera": {
+    "home": {
+     "target": [
+      9900,
+      500,
+      1500
+     ],
+     "az": 8,
+     "el": 18,
+     "fit": "none",
+     "dist": 6200
+    },
+    "shots": []
+   }
+  }
+ ]
+}

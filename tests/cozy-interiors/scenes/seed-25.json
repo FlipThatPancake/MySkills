@@ -742,9 +742,9 @@
     "id": "bedroom-throw",
     "asset": "foldedThrow",
     "at": [
-     20604.6,
-     531,
-     1823.8
+     20612,
+     542,
+     1825.7
     ],
     "mount": "on",
     "params": {
