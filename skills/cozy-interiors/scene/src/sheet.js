@@ -12,8 +12,12 @@ export const VIEW = { c: null, h: null, r0: 1e9, r1: 2e9 };
 const sm = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 // A transparent textured plane that follows the kit's opacity and the view fade and never writes depth. `vis` ({ value } 0..1) is a wall's own visibility, for things standing on that wall.
 export function sheet(kit, canvas, w, h, vis = null) {
-  const T = kit.THREE, t = new T.CanvasTexture(canvas), mid = new T.Vector3();
-  t.colorSpace = T.SRGBColorSpace;
+  const t = new kit.THREE.CanvasTexture(canvas); t.colorSpace = kit.THREE.SRGBColorSpace;
+  return sheetTex(kit, t, w, h, vis);
+}
+// the same plane from any texture (a baked render target, say)
+export function sheetTex(kit, t, w, h, vis = null) {
+  const T = kit.THREE, mid = new T.Vector3();
   const mat = new T.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
   const m = new T.Mesh(new T.PlaneGeometry(w, h), mat);
   m.renderOrder = 1;

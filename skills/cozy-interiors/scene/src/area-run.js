@@ -8,6 +8,7 @@ import { OrbitControls } from './vendor/three/OrbitControls.js';
 import { createKit } from './kitchen3d.js';
 import { REGISTRY } from './library/index.js';
 import { buildHome, FADE } from './home.js';
+import { bakeLight } from './lightbake.js';
 import { VIEW } from './sheet.js';
 import { createTour } from './tour.js';
 
@@ -25,6 +26,7 @@ export function createAreaScene(canvas, S) {
   const home = buildHome(kit, S.home, REGISTRY, S.areas);
   scene.add(home.group);
   kit.setOpacity(1, 1);
+  if (!q.has('nobake') && !q.has('check')) { const bake = bakeLight({ THREE, renderer, scene, kit, walls: home.walls, areas: home.areas || S.areas.map((A) => ({ id: A.id, bounds: A.bounds })), group: home.group, quality: Number(q.get('bake')) || 1, debug: q.has('bakedebug'), ...(q.has('bakew') ? { wWin: Number(q.get('bakew').split(',')[0]), wSky: Number(q.get('bakew').split(',')[1]) } : {}) }); if (bake) { home.useBake(); window.cozyBake = bake; } }
   const controls = new OrbitControls(camera, canvas);
   controls.enablePan = false; controls.enableDamping = true; controls.dampingFactor = 0.08;
   controls.minPolarAngle = rad(5); controls.maxPolarAngle = rad(95);

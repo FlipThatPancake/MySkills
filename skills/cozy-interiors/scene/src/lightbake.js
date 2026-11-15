@@ -1,0 +1,129 @@
+// @js:lightbake — soft light baked at page load, then frozen. Replaces the footprint halos.
+// bakeLight({ THREE, renderer, scene, kit, walls, areas, group, mat }) -> { ms, passes, sheets }.
+// For each area, a lightmap on its floor and its backing walls from the real geometry: a soft area light at every window (jittered samples across the opening, shadow-mapped through the wall's real hole)
+// plus an even sky light (samples over the hemisphere). Each sample is a depth pass from the light and one pass per receiver that adds "was it lit, and how much could it have been".
+// The result is a shadow fraction per texel; it is drawn as the old halo's grey with alpha up to the old halo's strength, so only shadow shows and light is where shadow is absent.
+import { sheetTex } from './sheet.js';
+const CAST = 5, FAR = 20000, GREY = [138 / 255, 138 / 255, 128 / 255];
+const WIN_N = [5, 4], SKY_N = 24, SHADOW_A = 0.24, W_WIN = 0.35, W_SKY = 0.7;
+const rnd = (seed) => () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+
+export function bakeLight({ THREE: T, renderer, scene, kit, walls, areas, group, seed = 7, size = 1024, quality = 1, debug = false, wWin = W_WIN, wSky = W_SKY }) {
+  const gl = renderer.extensions;
+  if (!(renderer.capabilities.isWebGL2 && (gl.has('EXT_color_buffer_float') || gl.has('EXT_color_buffer_half_float')))) return null;
+  const t0 = performance.now(), R = rnd(seed), out = { passes: 0, sheets: 0 };
+  group.updateMatrixWorld(true);
+  scene.traverse((o) => {   // what blocks light: solid parts and the wall planes, never lines, painted sheets or silhouettes
+    if (!o.isMesh || o.isLineSegments2 || o.userData.lines || o.userData.nocast) return;
+    if (o.material.isMeshBasicMaterial && !o.userData.caster) return;
+    if (kit.hulls.includes(o.material) || o.material === kit.depth) return;
+    o.layers.enable(CAST); out.casters = (out.casters || 0) + 1; if (!o.visible) out.hidden = (out.hidden || 0) + 1;
+  });
+  const rtOpts = { type: T.HalfFloatType, format: T.RGBAFormat, minFilter: T.NearestFilter, magFilter: T.NearestFilter, depthBuffer: true };
+  const depthRT = new T.WebGLRenderTarget(size, size, rtOpts);
+  const depthMat = new T.ShaderMaterial({
+    side: T.DoubleSide,
+    uniforms: { uRef: { value: new T.Vector3() }, uAxis: { value: new T.Vector3() }, uOrtho: { value: 0 } },
+    vertexShader: 'varying vec3 vW; void main() { vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }',
+    fragmentShader: `uniform vec3 uRef, uAxis; uniform float uOrtho; varying vec3 vW; void main() { float d = uOrtho > 0.5 ? dot(vW - uRef, uAxis) : length(vW - uRef); gl_FragColor = vec4(d / ${FAR.toFixed(1)}, 0.0, 0.0, 1.0); }`,
+  });
+  const quad = new T.Mesh(new T.PlaneGeometry(2, 2)), ortho_cam = new T.OrthographicCamera(-1, 1, 1, -1, 0, 1), qs = new T.Scene(); qs.add(quad);
+  const accMat = new T.ShaderMaterial({
+    blending: T.CustomBlending, blendEquation: T.AddEquation, blendSrc: T.OneFactor, blendDst: T.OneFactor, transparent: true, depthTest: false, depthWrite: false,
+    uniforms: { uO: { value: new T.Vector3() }, uU: { value: new T.Vector3() }, uV: { value: new T.Vector3() }, uN: { value: new T.Vector3() }, uRef: { value: new T.Vector3() }, uAxis: { value: new T.Vector3() }, uOrtho: { value: 0 }, uDepth: { value: null }, uVP: { value: new T.Matrix4() }, uClipOut: { value: 0 } },
+    vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }',
+    fragmentShader: `uniform vec3 uO, uU, uV, uN, uRef, uAxis; uniform float uOrtho, uClipOut; uniform sampler2D uDepth; uniform mat4 uVP; varying vec2 vUv;
+      void main() {
+        vec3 P = uO + uU * vUv.x + uV * vUv.y + uN * 3.0;
+        vec3 L = uOrtho > 0.5 ? -uAxis : normalize(uRef - P);
+        float c = max(dot(uN, L), 0.0), vis = 1.0;
+        vec4 cl = uVP * vec4(P, 1.0); vec3 nd = cl.xyz / cl.w; vec2 q = nd.xy * 0.5 + 0.5;
+        if (uOrtho < 0.5 && (cl.w <= 0.0 || q.x < 0.0 || q.x > 1.0 || q.y < 0.0 || q.y > 1.0)) vis = 0.0;
+        else if (uOrtho > 0.5 && (q.x < 0.0 || q.x > 1.0 || q.y < 0.0 || q.y > 1.0)) vis = 1.0;
+        else { float d = uOrtho > 0.5 ? dot(P - uRef, uAxis) : length(P - uRef); float s = texture2D(uDepth, q).r * ${FAR.toFixed(1)}; vis = d - 14.0 > s ? 0.0 : 1.0; }
+        gl_FragColor = vec4(vis * c, c, 0.0, 1.0);
+      }`,
+  });
+  const resolveMat = new T.ShaderMaterial({
+    transparent: false, depthTest: false, depthWrite: false,
+    uniforms: { uWin: { value: null }, uSky: { value: null }, uHoles: { value: Array.from({ length: 4 }, () => new T.Vector4(0, 0, 0, 0)) }, uNH: { value: 0 }, uSize: { value: new T.Vector2(1, 1) }, uFade: { value: 0 }, uWW: { value: 0.5 }, uWS: { value: 0.5 } },
+    vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }',
+    fragmentShader: `uniform sampler2D uWin, uSky; uniform vec4 uHoles[4]; uniform int uNH; uniform vec2 uSize; uniform float uFade, uWW, uWS; varying vec2 vUv;
+      void main() {
+        vec4 w = texture2D(uWin, vUv), s = texture2D(uSky, vUv);
+        float sw = w.g > 0.001 ? 1.0 - w.r / w.g : 0.0, ss = s.g > 0.001 ? 1.0 - s.r / s.g : 0.0;
+        float a = ${SHADOW_A.toFixed(3)} * (uWW * smoothstep(0.1, 1.0, sw) + uWS * ss);
+        vec2 p = vUv * uSize;
+        for (int i = 0; i < 4; i++) if (i < uNH && p.x > uHoles[i].x && p.x < uHoles[i].z && p.y > uHoles[i].y && p.y < uHoles[i].w) a = 0.0;
+        a *= 1.0 - uFade * smoothstep(0.0, 1.0, vUv.y);
+        vec2 e = min(vUv, 1.0 - vUv) * uSize; a *= smoothstep(0.0, 40.0, min(e.x, e.y));
+        gl_FragColor = vec4(${GREY.map((v) => v.toFixed(4)).join(', ')}, a);
+      }`,
+  });
+  const oldRT = renderer.getRenderTarget(), oldAuto = renderer.autoClear, oldClear = renderer.getClearColor(new T.Color()), oldAlpha = renderer.getClearAlpha();
+  renderer.autoClear = false;   // the accumulation buffers must keep what earlier samples drew
+  const lightCam = (cam) => { cam.layers.set(CAST); cam.updateMatrixWorld(true); return new T.Matrix4().multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse); };
+  const depthPass = (cam, ref, axis, ortho) => {
+    depthMat.uniforms.uRef.value.copy(ref); depthMat.uniforms.uAxis.value.copy(axis); depthMat.uniforms.uOrtho.value = ortho ? 1 : 0;
+    renderer.setRenderTarget(depthRT); renderer.setClearColor(0xffffff, 1); renderer.clear(true, true, false);
+    scene.overrideMaterial = depthMat; renderer.render(scene, cam); scene.overrideMaterial = null; out.passes++;
+  };
+  const accum = (rec, rt, vp, ref, axis, ortho) => {
+    const u = accMat.uniforms; u.uO.value.copy(rec.O); u.uU.value.copy(rec.U); u.uV.value.copy(rec.V); u.uN.value.copy(rec.N); u.uRef.value.copy(ref); u.uAxis.value.copy(axis); u.uOrtho.value = ortho ? 1 : 0; u.uDepth.value = depthRT.texture; u.uVP.value.copy(vp);
+    quad.material = accMat; renderer.setRenderTarget(rt); renderer.render(qs, ortho_cam);
+  };
+  for (const A of areas) {
+    const b = A.bounds, ws = walls.filter((w) => w.id && w.id.startsWith(A.id + '-')), pad = 500, H = Math.min(2500, (b.top || 2500));
+    const cx = (b.x0 + b.x1) / 2, cz = (b.z0 + b.z1) / 2, bw = b.x1 - b.x0 + 2 * pad, bd = b.z1 - b.z0 + 2 * pad, px = 0.08 * quality;
+    const recs = [{ kind: 'floor', O: new T.Vector3(b.x0 - pad, 0, b.z1 + pad), U: new T.Vector3(bw, 0, 0), V: new T.Vector3(0, 0, -bd), N: new T.Vector3(0, 1, 0), w: bw, h: bd }];
+    for (const W of ws) {
+      const nd = W.node, o = nd.localToWorld(new T.Vector3(0, 0, 0)), ux = nd.localToWorld(new T.Vector3(W.len, 0, 0)), vy = nd.localToWorld(new T.Vector3(0, H, 0)), nz = nd.localToWorld(new T.Vector3(0, 0, 1)).sub(o);
+      recs.push({ kind: 'wall', W, O: o, U: ux.sub(o), V: vy.sub(o), N: nz.normalize(), w: W.len, h: H });
+    }
+    for (const r of recs) {
+      const rw = Math.max(8, Math.min(1024, Math.round(r.w * px))), rh = Math.max(8, Math.min(1024, Math.round(r.h * px)));
+      r.win = new T.WebGLRenderTarget(rw, rh, { ...rtOpts, depthBuffer: false }); r.sky = new T.WebGLRenderTarget(rw, rh, { ...rtOpts, depthBuffer: false });
+      for (const rt of [r.win, r.sky]) { renderer.setRenderTarget(rt); renderer.setClearColor(0x000000, 0); renderer.clear(true, false, false); }
+    }
+    // window lights: jittered samples across each opening, a little outside the wall so the wall's own hole frames the light
+    for (const W of ws) for (const op of W.openings || []) {
+      if (op.kind !== 'window') continue;
+      const xc = W.len - op.at, nx = Math.max(3, Math.round(WIN_N[0] * quality)), ny = Math.max(2, Math.round(WIN_N[1] * quality));
+      for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+        const x = xc + ((i + R()) / nx - 0.5) * op.width, y = (op.sill || 900) + ((j + R()) / ny) * (op.height || 1100), p = W.node.localToWorld(new T.Vector3(x, y, -80));
+        const cam = new T.PerspectiveCamera(130, 1, 30, FAR); cam.position.copy(p); cam.lookAt(cx, 300, cz); const vp = lightCam(cam);
+        depthPass(cam, p, new T.Vector3(), false);
+        for (const r of recs) accum(r, r.win, vp, p, new T.Vector3(), false);
+      }
+    }
+    // sky light: directions over the hemisphere, parallel, covering the whole area
+    const Rr = Math.hypot(bw, bd, 2700) * 0.55;
+    for (let k = 0; k < Math.round(SKY_N * quality); k++) {
+      const n = Math.round(SKY_N * quality), th = Math.acos(1 - (k + 0.5) / n * 0.92), ph = k * 2.39996 + R(), d = new T.Vector3(Math.sin(th) * Math.cos(ph), Math.cos(th), Math.sin(th) * Math.sin(ph));   // toward the light
+      const eye = new T.Vector3(cx, 900, cz).addScaledVector(d, Rr + 500), cam = new T.OrthographicCamera(-Rr, Rr, Rr, -Rr, 1, 2 * Rr + 1000); cam.position.copy(eye); cam.lookAt(cx, 900, cz);
+      const vp = lightCam(cam), axis = d.clone();   // distance along d from the receiver toward the light: smaller = nearer the light
+      depthPass(cam, eye, axis.clone().negate(), true);
+      if (debug && k === 0) { const px = new Uint16Array(size * size * 4); renderer.readRenderTargetPixels(depthRT, 0, 0, size, size, px); let mn = 9, mx = 0, cnt = 0; for (let i = 0; i < px.length; i += 4) { const v = T.DataUtils.fromHalfFloat(px[i]); if (v < 0.99) { cnt++; mn = Math.min(mn, v); mx = Math.max(mx, v); } } (out.stats ||= []).push(`sky0 depth texels<1: ${cnt} min ${mn.toFixed(3)} max ${mx.toFixed(3)} eyeDist ${(Rr + 500) / FAR}`); }
+      for (const r of recs) accum(r, r.sky, vp, eye, axis.clone().negate(), true);
+    }
+    // resolve each receiver into a grey-with-alpha texture and hang it where the halos used to be
+    for (const r of recs) {
+      const rw = r.win.width, rh = r.win.height, fin = new T.WebGLRenderTarget(rw, rh, { type: T.UnsignedByteType, format: T.RGBAFormat, minFilter: T.LinearFilter, magFilter: T.LinearFilter, depthBuffer: false });
+      const u = resolveMat.uniforms; u.uWin.value = r.win.texture; u.uSky.value = r.sky.texture; u.uSize.value.set(r.w, r.h);
+      const holes = r.kind === 'wall' ? r.W.holes.slice(0, 4).map((h) => { const xs = h.map((p) => p[0]), ys = h.map((p) => p[1]); return new T.Vector4(Math.min(...xs) - 20, Math.min(...ys) - 20, Math.max(...xs) + 20, Math.max(...ys) + 20); }) : [];
+      u.uNH.value = holes.length; holes.forEach((h, i) => u.uHoles.value[i].copy(h)); u.uFade.value = 0; u.uWW.value = wWin; u.uWS.value = wSky;
+      quad.material = resolveMat; renderer.setRenderTarget(fin); renderer.setClearColor(0x000000, 0); renderer.clear(); renderer.render(qs, ortho_cam);
+      r.win.dispose(); r.sky.dispose();
+      if (r.kind === 'floor') {
+        const m = sheetTex(kit, fin.texture, r.w, r.h, null); m.rotation.x = -Math.PI / 2; m.position.set(b.x0 - pad + bw / 2, 8, b.z1 + pad - bd / 2); group.add(m);
+      } else {
+        const m = sheetTex(kit, fin.texture, r.w, r.h, r.W.vis); m.position.set(r.W.len / 2, r.h / 2, 2.5); r.W.node.add(m);
+      }
+      out.sheets++;
+      if (debug) { const px = new Uint8Array(rw * rh * 4); renderer.readRenderTargetPixels(fin, 0, 0, rw, rh, px); let mx = 0, sum = 0; for (let i = 3; i < px.length; i += 4) { mx = Math.max(mx, px[i]); sum += px[i]; } (out.stats ||= []).push(`${A.id}:${r.kind} ${rw}x${rh} max ${mx} mean ${(sum / (rw * rh)).toFixed(1)}`); }
+    }
+  }
+  depthRT.dispose(); renderer.setRenderTarget(oldRT); renderer.autoClear = oldAuto; renderer.setClearColor(oldClear, oldAlpha);
+  out.ms = Math.round(performance.now() - t0);
+  return out;
+}

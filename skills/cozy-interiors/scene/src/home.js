@@ -76,7 +76,7 @@ export function buildHome(kit, home, registry, areas = []) {
     W.holes.forEach((h) => s.holes.push(new T.Path(h.map(([a, y]) => new T.Vector2(a, y)))));
     const sg = new T.ShapeGeometry(s); { const ps = sg.attributes.position, uv = new Float32Array(ps.count * 2); for (let k = 0; k < ps.count; k++) { uv[2 * k] = ps.getX(k) / len; uv[2 * k + 1] = ps.getY(k) / H; } sg.setAttribute('uv', new T.BufferAttribute(uv, 2)); }
     // a free end and the top edge melt into the backdrop over their last END mm: the plane carries an alpha map (1 inside, 0 at the very edge)
-    const plane = new T.Mesh(sg, endMat(len, H, !W.joinedTo, !W.joinedFrom)); plane.position.z = -4;
+    const plane = new T.Mesh(sg, endMat(len, H, !W.joinedTo, !W.joinedFrom)); plane.position.z = -4; plane.userData.caster = true;
     node.add(plane, W.frames);
     // seams: the wall meets the floor (broken where a door or arch lets the floor through), and the corner it makes with the next wall
     const seams = kit.group(); let a = 0;
@@ -139,6 +139,8 @@ export function buildHome(kit, home, registry, areas = []) {
   const w3 = 3 * Math.PI / 180;
   return {
     group, objects, openables, walls, bounds: bb,
+    // the footprint halos and wall-base shadows: kept as the fallback, hidden once the light is baked
+    useBake() { shadows.visible = false; for (const W of walls) W.shadows.visible = false; },
     // Each frame: a wall's frames, window light, seams and shadows fade away once the camera is past that wall (over about 3 degrees).
     update(camera, target) {
       floorDraw?.update(camera);
