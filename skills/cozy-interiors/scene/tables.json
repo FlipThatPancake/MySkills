@@ -492,5 +492,114 @@
    "corner-left": 1,
    "corner-right": 1
   }
- }
+ },
+ "signs": [
+  {
+   "id": "mug",
+   "say": "a mug left out",
+   "in": [
+    "kitchen",
+    "dining",
+    "living",
+    "reading-corner",
+    "bedroom",
+    "home-office"
+   ]
+  },
+  {
+   "id": "book face down",
+   "say": "a book left open face down",
+   "in": [
+    "living",
+    "reading-corner",
+    "bedroom",
+    "home-office"
+   ]
+  },
+  {
+   "id": "scuffed floor",
+   "say": "scuffs on the floor",
+   "in": [
+    "kitchen",
+    "dining",
+    "living",
+    "hallway",
+    "home-office",
+    "bedroom",
+    "reading-corner"
+   ]
+  },
+  {
+   "id": "fallen leaf",
+   "say": "a fallen leaf by a plant",
+   "in": [
+    "kitchen",
+    "dining",
+    "living",
+    "reading-corner",
+    "bedroom",
+    "hallway",
+    "home-office"
+   ]
+  },
+  {
+   "id": "height chart",
+   "say": "a height chart pencilled on a wall",
+   "in": [
+    "kitchen",
+    "hallway",
+    "dining"
+   ]
+  },
+  {
+   "id": "drawer ajar",
+   "say": "a drawer left ajar",
+   "in": [
+    "kitchen",
+    "bedroom",
+    "hallway",
+    "home-office",
+    "dining",
+    "living"
+   ]
+  },
+  {
+   "id": "pillow creased",
+   "say": "a creased pillow",
+   "in": [
+    "living",
+    "bedroom",
+    "reading-corner"
+   ]
+  },
+  {
+   "id": "folded throw",
+   "say": "a folded throw",
+   "in": [
+    "living",
+    "bedroom",
+    "reading-corner"
+   ]
+  },
+  {
+   "id": "cloth dropped",
+   "say": "a cloth dropped over something",
+   "in": [
+    "living",
+    "bedroom",
+    "reading-corner",
+    "dining"
+   ]
+  },
+  {
+   "id": "shoes askew",
+   "say": "shoes kicked off",
+   "in": [
+    "hallway",
+    "bedroom",
+    "living"
+   ]
+  }
+ ],
+ "signsNote": "roll.mjs deals 2-3 signs per area from `signs` (only those whose `in` lists the area), each at most once in a home, so a home has at most one mug. Name them in the spec with Home.sign or by placing the asset."
 }

@@ -12,16 +12,17 @@ export function roll(seed, kinds = ['kitchen', 'dining', 'living']) {
   const rnd = () => { s = (s + 0x6d2b79f5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
   const pick = (a) => a[Math.floor(rnd() * a.length)];
   const some = (a, n) => { const c = a.slice(), out = []; while (out.length < n && c.length) out.push(c.splice(Math.floor(rnd() * c.length), 1)[0]); return out; };
-  const out = { seed, floor: pick(T.floor), areas: {} };
+  const out = { seed, floor: pick(T.floor), areas: {} }, used = new Set();   // signs dealt so far: none repeats in a home
   for (const id of kinds) {
     if (!KINDS.includes(id)) throw new Error(`unknown area kind "${id}"; known: ${KINDS.join(', ')}`);
     const t = T[id], shape = id === 'kitchen' ? pick(t.shape) : null;
     const W = T.backingWeights[shape === 'L' || shape === 'U' ? 'cornerShapes' : 'freeShapes'], bag = T.backing.flatMap((x) => Array(W[x.id] || 0).fill(x)), b = pick(bag);   // weighted so the backings come up evenly overall
     const a = { backing: b.id, hero: pick(t.hero), openings: pick(t.openings.filter((o) => b.walls === 2 || o.every((x) => x.on === 'first'))).map((o) => ({ ...o, on: b.walls === 1 ? 'first' : o.on })), accents: some(t.accents, 3 + Math.floor(rnd() * 3)), plants: pick(T.plants) };
+    a.signs = some(T.signs.filter((x) => x.in.includes(id) && !used.has(x.id)), 2 + Math.floor(rnd() * 2)); a.signs.forEach((x) => used.add(x.id)); a.signs = a.signs.map((x) => x.id);
     if (t.pieces) a.pieces = t.pieces;
     if (shape) { a.shape = shape; a.shapeNote = t.shapeNotes[shape]; }
     const wall = (on) => (on === 'second' ? `the ${b.second} wall` : 'the back wall'), shape2 = b.walls === 1 ? 'one backing wall' : `two backing walls at ${b.angle} degrees, the second wall on the ${b.second}`;
-    a.say = `${id}: ${a.hero}; ${shape2}; ${a.openings.map((o) => `${o.kind} on ${wall(o.on)}`).join(', ')}; accents: ${a.accents.join(', ')}; ${a.plants} plants in all (pots, floor plants or a plant on a shelf); pieces: ${(a.pieces || []).join(', ') || 'as the hero needs'}`;   // the choices in plain words
+    a.say = `${id}: ${a.hero}; ${shape2}; ${a.openings.map((o) => `${o.kind} on ${wall(o.on)}`).join(', ')}; accents: ${a.accents.join(', ')}; ${a.plants} plants in all (pots, floor plants or a plant on a shelf); pieces: ${(a.pieces || []).join(', ') || 'as the hero needs'}; signs of life: ${a.signs.join(', ')}`;   // the choices in plain words
     out.areas[id] = a;
   }
   return out;
