@@ -4,9 +4,10 @@ import { rod } from './parts.js';
 const lo = { tone: 'lo' };
 // A coat hung by its collar at (x, y, z): one body that narrows from the slumped shoulders to the hook and flares a little at the hem, a lapel V and front opening, two sleeves hanging at the sides over the front.
 export function coat(kit, x, y, z, { w = 400, len = 900, tone = 'lo' } = {}) {
-  const g = kit.group(), sm = (t) => t * t * (3 - 2 * t), prof = (t) => (t < 0.1 ? 0.3 + 0.7 * sm(t / 0.1) : 0.98 + 0.2 * (t - 0.1) / 0.9);
+  const g = kit.group(), sm = (t) => t * t * (3 - 2 * t), prof = (t) => (t < 0.1 ? 0.3 + 0.5 * sm(t / 0.1) : 0.8 + 0.4 * (t - 0.1) / 0.9);
   const body = drape(kit, w, len, { folds: 2, depth: 40, thick: 36, phase: 0.8, ny: 30, profile: prof, tone }); body.position.set(x, y - 6, z); g.add(body);
-  for (const s of [-1, 1]) { const sl = drape(kit, 132, len * 0.68, { folds: 2, depth: 30, thick: 36, flare: 0.1, phase: s * 0.9, ny: 18, tone }); sl.position.set(x + s * (w / 2 * 0.68), y - 90, z + 46); sl.rotation.z = s * 0.1; g.add(sl); }
+  for (const s of [-1, 1]) { const sl = drape(kit, 120, len * 0.56, { folds: 2, depth: 22, thick: 30, flare: -0.12, phase: s * 0.9, ny: 18, tone }); sl.position.set(x + s * (w / 2 * 0.8 - 52), y - 70, z + 34); sl.rotation.z = -s * 0.03; g.add(sl);
+    const cy = y - 70 - len * 0.56 + 6, cx = x + s * (w / 2 * 0.8 - 52) + s * len * 0.56 * 0.03; g.add(kit.lines([[cx - 56, cy + 40, z + 56], [cx + 56, cy + 40, z + 56]], 'mid')); }
   const col = softBox(kit, 120, 34, 40, { r: 14, bulge: 4, tone }); col.position.set(x, y - 20, z + 8); g.add(col);
   g.add(kit.lines([[x - 46, y - 22, z + 26], [x, y - 190, z + 30], [x + 46, y - 22, z + 26], [x, y - 190, z + 30], [x, y - 190, z + 30], [x, y - len + 40, z + 30]], 'mid'));   // the lapel V and the front opening
   return g;
@@ -25,10 +26,10 @@ export function tote(kit, x, y, z, { w = 270, h = 340, d = 70, strap = 170, tone
 const lerpAt = (pts, s) => { for (let i = 1; i < pts.length; i++) if (s <= pts[i][0]) { const [a, ha] = pts[i - 1], [b, hb] = pts[i], t = (s - a) / (b - a), e = t * t * (3 - 2 * t); return ha + (hb - ha) * e; } return pts[pts.length - 1][1]; };
 const SIDE = { sneaker: [[0, 70], [0.06, 96], [0.15, 92], [0.26, 54], [0.36, 78], [0.46, 100], [0.64, 74], [0.82, 48], [0.95, 32], [1, 26]], boot: [[0, 150], [0.07, 168], [0.3, 160], [0.4, 128], [0.5, 96], [0.7, 66], [0.88, 44], [1, 28]] };
 export function shoe(kit, x, z, L = 270, o = {}) {
-  const g = kit.group(), T = kit.THREE, kind = o.kind === 'boot' ? 'boot' : 'sneaker', W = L * 0.37, side = SIDE[kind], sole = 16 * L / 270, NS = 34, NA = 22;
-  const fw = (s) => { const base = s < 0.66 ? 0.6 + 0.4 * Math.pow(s / 0.66, 0.8) : 1, toe = s > 0.78 ? Math.sqrt(Math.max(0, 1 - Math.pow((s - 0.78) / 0.22, 2.2))) : 1, heel = s < 0.06 ? Math.sqrt(Math.max(0, 1 - Math.pow((0.06 - s) / 0.06, 2))) : 1; return W / 2 * base * toe * heel; };
+  const g = kit.group(), T = kit.THREE, kind = o.kind === 'boot' ? 'boot' : 'sneaker', W = L * 0.37, side = SIDE[kind], sole = 16 * L / 270, NS = 48, NA = 22;
+  const fw = (s) => { const base = s < 0.66 ? 0.6 + 0.4 * Math.pow(s / 0.66, 0.8) : 1, toe = s > 0.78 ? Math.max(0.1, Math.sqrt(Math.max(0, 1 - Math.pow((s - 0.78) / 0.22, 2)))) : 1, heel = s < 0.06 ? Math.sqrt(Math.max(0, 1 - Math.pow((0.06 - s) / 0.06, 2))) : 1; return W / 2 * base * toe * heel; };
   const spring = (s) => (s > 0.68 ? 16 * Math.pow((s - 0.68) / 0.32, 2) * L / 270 : 0), sp = (c, e) => Math.sign(c) * Math.pow(Math.abs(c), e);
-  const loft = (yb, yt, wf, ex, ey) => { const pos = [], idx = []; for (let i = 0; i <= NS; i++) { const s = i / NS; for (let j = 0; j < NA; j++) { const a = j / NA * 6.2832, b = yb(s), t = yt(s); pos.push(fw(s) * wf * sp(Math.cos(a), ex), (b + t) / 2 + (t - b) / 2 * sp(Math.sin(a), ey), (s - 0.5) * L); } } for (let i = 0; i < NS; i++) for (let j = 0; j < NA; j++) { const a = i * NA + j, b = i * NA + (j + 1) % NA, c = a + NA, d = b + NA; idx.push(a, b, c, b, d, c); } const ge = new T.BufferGeometry(); ge.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); ge.setIndex(idx); ge.computeVertexNormals(); return ge; };
+  const loft = (yb, yt, wf, ex, ey) => { const pos = [], idx = []; for (let i = 0; i <= NS; i++) { const s = 1 - Math.pow(1 - i / NS, 1.6); for (let j = 0; j < NA; j++) { const a = j / NA * 6.2832, b = yb(s), t = yt(s); pos.push((i === NS ? 0 : fw(s)) * wf * sp(Math.cos(a), ex), (b + t) / 2 + (t - b) / 2 * sp(Math.sin(a), ey), (s - 0.5) * L); } } for (let i = 0; i < NS; i++) for (let j = 0; j < NA; j++) { const a = i * NA + j, b = i * NA + (j + 1) % NA, c = a + NA, d = b + NA; idx.push(a, b, c, b, d, c); } const ge = new T.BufferGeometry(); ge.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); ge.setIndex(idx); ge.computeVertexNormals(); return ge; };
   g.add(kit.solid(loft((s) => sole + spring(s), (s) => lerpAt(side, s) + spring(s) * 0.6, 0.97, 0.62, 0.5), x, 0, z, { smooth: true, tone: o.tone }));   // the upper
   g.add(kit.solid(loft((s) => spring(s), (s) => sole + spring(s), 1.03, 0.3, 0.3), x, 0, z, { smooth: true, tone: 'lo' }));   // the sole band
   const s0 = kind === 'boot' ? 0.18 : 0.255, hy = lerpAt(side, s0) + 0.6, oa = fw(s0) * 0.78, ob = L * (kind === 'boot' ? 0.12 : 0.115);

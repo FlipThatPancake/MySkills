@@ -8,6 +8,7 @@
 //   Furniture faces the room as it stands: a wall's face is where an object's back sits.
 //   An object is { id, asset, at: [x, y, z], turn (deg about the vertical), mount: 'floor' | 'on' | 'wall' | 'ceiling' | 'lines', params, shadow: false, lift (mm: it stands on something this thick, like a rug) }; its contact shadow comes from the mount.
 import { halo } from './sheet.js';
+import { floorLines } from './floor.js';
 import { opening } from './openings.js';
 
 export const FADE = [0.04, 0.12];   // the planes thin out between these distances beyond an area's bounds, in area widths
@@ -110,13 +111,11 @@ export function buildHome(kit, home, registry, areas = []) {
     return d;
   }));
   const tone = (p) => Math.max(step(out(p) / M), step(behind(p) / 80));
-  if (style === 'tiles') {   // a 600 mm grid, square to the walls' own grid; it melts out 1.5 m beyond the walls
-    const org = home.tiles?.origin || [bb.x0, bb.z0], cell = home.tiles?.size || 600;
-    for (let z = org[1] + Math.ceil((bb.z0 - M - org[1]) / cell) * cell; z <= bb.z1 + M; z += cell) group.add(kit.meltingLine([bb.x0 - M, -2, z], [bb.x1 + M, -2, z], tone, 60, 'lo'));
-    for (let x = org[0] + Math.ceil((bb.x0 - M - org[0]) / cell) * cell; x <= bb.x1 + M; x += cell) group.add(kit.meltingLine([x, -2, bb.z0 - M], [x, -2, bb.z1 + M], tone, 60, 'lo'));
-  } else if (style === 'boards') {   // long boards, 170 mm wide, running along x (or along home.floor.angle degrees)
-    const ang = (home.floor?.angle || 0) * Math.PI / 180, c = Math.cos(ang), sn = Math.sin(ang), cx = (bb.x0 + bb.x1) / 2, cz = (bb.z0 + bb.z1) / 2, R = Math.hypot(bb.x1 - bb.x0, bb.z1 - bb.z0) / 2 + M, W = home.floor?.board || 170;
-    for (let o = -Math.floor(R / W) * W; o <= R; o += W) group.add(kit.meltingLine([cx - c * R - sn * o, -2, cz - sn * R + c * o], [cx + c * R - sn * o, -2, cz + sn * R + c * o], tone, 80, 'lo'));
+  let floorDraw = null;   // pencil seams (tiles or boards): redrawn as the camera moves, so lines that bunch up fade out
+  if (style === 'tiles' || style === 'boards') {
+    const F = home.floor || {};
+    floorDraw = floorLines(kit, { style, bb, M, tone, seed: F.seed || 1, board: F.board || 120 + 20 * ((F.seed || 1) % 4), angle: (F.angle || 0) * Math.PI / 180, cell: home.tiles?.size || 600, origin: home.tiles?.origin });
+    group.add(floorDraw.object);
   }
 
   // ---- contact shadows, generated from each object's footprint and mount
@@ -142,6 +141,7 @@ export function buildHome(kit, home, registry, areas = []) {
     group, objects, openables, walls, bounds: bb,
     // Each frame: a wall's frames, window light, seams and shadows fade away once the camera is past that wall (over about 3 degrees).
     update(camera, target) {
+      floorDraw?.update(camera);
       const dist = camera.position.distanceTo(target), span = Math.max(1, dist * Math.sin(w3));
       for (const W of walls) {
         const d = (camera.position.x - W.to[0]) * W.n[0] + (camera.position.z - W.to[1]) * W.n[1], s = step((d + span / 2) / span);

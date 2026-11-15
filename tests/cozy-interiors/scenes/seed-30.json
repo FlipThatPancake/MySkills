@@ -4,7 +4,8 @@
  "home": {
   "height": 2700,
   "floor": {
-   "style": "plain"
+   "style": "plain",
+   "seed": 30
   },
   "tiles": {
    "origin": [

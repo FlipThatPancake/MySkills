@@ -18,7 +18,7 @@ import { dealParams } from './src/library/space.js';
 const rad = (d) => d * Math.PI / 180, deg = (r) => r * 180 / Math.PI, r0 = (v) => Math.round(v * 10) / 10;
 export const GAP = 3000;
 export class Home {
-  constructor({ seed, floor = 'plain', height = 2700 }) { this.S = { units: 'mm', seed, home: { height, floor: { style: floor }, tiles: { origin: [0, 0] }, walls: [], objects: [] }, areas: [] }; this.list = []; }
+  constructor({ seed, floor = 'plain', height = 2700 }) { this.S = { units: 'mm', seed, home: { height, floor: { style: floor, seed }, tiles: { origin: [0, 0] }, walls: [], objects: [] }, areas: [] }; this.list = []; }
   area(id, name, { O, psi = 0, rect }) {
     const a = new Area(this, id, name, O || [0, 0], psi, rect);
     if (!O) { const prev = this.list[this.list.length - 1], b = a.worldBounds(), x0 = prev ? prev.worldBounds().x1 + GAP : 0; a.O = [r0(x0 - b.x0), r0(-b.z0)]; }

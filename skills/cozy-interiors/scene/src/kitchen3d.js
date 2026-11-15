@@ -282,6 +282,14 @@ export function createKit() {
       return l;
     },
     loopMat,
+    // A set of pencil strokes whose colours change at run time: pos holds 6 numbers a segment; the caller writes rgb pairs into `colors`, then calls commit().
+    strokeSet(pos) {
+      const g = new LineSegmentsGeometry(), n = pos.length / 6;
+      g.setPositions(pos); g.setColors(new Float32Array(n * 6));
+      const l = new LineSegments2(g, seamLine); l.userData.kitLine = true; l.frustumCulled = false;
+      const rgb = (h) => { const c = new THREE.Color(h); return [c.r, c.g, c.b]; };
+      return { line: l, colors: g.attributes.instanceColorStart.data.array, commit() { g.attributes.instanceColorStart.data.needsUpdate = true; }, ink: rgb(TONES.lo), back: rgb(BACKDROP) };
+    },
     // A long line that melts into the backdrop: `tone(point)` is 0 (full line colour) .. 1 (backdrop).
     meltingLine(a, b, tone, parts = 240, toneName = 'mid') {
       const pos = [], col = [], c0 = new THREE.Color(TONES[toneName]), c1 = new THREE.Color(BACKDROP), c = new THREE.Color();
