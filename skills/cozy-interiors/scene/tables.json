@@ -630,6 +630,22 @@
    "in": [
     "living"
    ]
+  },
+  {
+   "id": "glasses on book",
+   "say": "glasses left on a book",
+   "in": [
+    "bedroom",
+    "reading-corner",
+    "living"
+   ]
+  },
+  {
+   "id": "clothes on chair",
+   "say": "clothes thrown over a chair",
+   "in": [
+    "bedroom"
+   ]
   }
  ],
  "signsNote": "roll.mjs deals 2-3 signs per area from `signs` (only those whose `in` lists the area), each at most once in a home, so a home has at most one mug. Name them in the spec with Home.sign or by placing the asset."

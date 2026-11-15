@@ -17,7 +17,7 @@
    {
     "id": "sheet-back",
     "from": [
-     11400,
+     13400,
      0
     ],
     "to": [
@@ -29,144 +29,10 @@
   ],
   "objects": [
    {
-    "id": "sheet-ch",
-    "asset": "chestOfDrawers",
-    "at": [
-     900,
-     0,
-     2700
-    ],
-    "mount": "floor",
-    "params": {
-     "w": 880,
-     "h": 1030,
-     "d": 440,
-     "rows": 5,
-     "pull": "knob",
-     "legs": "block"
-    },
-    "group": "sheet:row",
-    "area": "sheet"
-   },
-   {
-    "id": "sheet-ch2",
-    "asset": "chestOfDrawers",
-    "at": [
-     2100,
-     0,
-     2700
-    ],
-    "mount": "floor",
-    "params": {
-     "w": 760,
-     "h": 900,
-     "rows": 3,
-     "pull": "bar",
-     "legs": "block",
-     "d": 490
-    },
-    "group": "sheet:row",
-    "area": "sheet"
-   },
-   {
-    "id": "sheet-bt",
-    "asset": "bedsideTable",
-    "at": [
-     3300,
-     0,
-     2700
-    ],
-    "mount": "floor",
-    "params": {},
-    "group": "sheet:row",
-    "area": "sheet"
-   },
-   {
-    "id": "sheet-lamp",
-    "asset": "bedsideLamp",
-    "at": [
-     3200,
-     520,
-     2700
-    ],
-    "mount": "on",
-    "params": {
-     "h": 410,
-     "shade": "cone"
-    },
-    "group": "sheet:row",
-    "area": "sheet"
-   },
-   {
-    "id": "sheet-clk",
-    "asset": "alarmClock",
-    "at": [
-     3410,
-     520,
-     2760
-    ],
-    "turn": 20,
-    "mount": "on",
-    "params": {
-     "r": 61,
-     "kind": "analog"
-    },
-    "group": "sheet:row",
-    "area": "sheet"
-   },
-   {
-    "id": "sheet-gb",
-    "asset": "glassesBook",
-    "at": [
-     3390,
-     520,
-     2640
-    ],
-    "turn": 340,
-    "mount": "on",
-    "params": {
-     "w": 143,
-     "d": 199
-    },
-    "group": "sheet:row",
-    "area": "sheet"
-   },
-   {
-    "id": "sheet-bt2",
-    "asset": "bedsideTable",
-    "at": [
-     4100,
-     0,
-     2700
-    ],
-    "mount": "floor",
-    "params": {
-     "w": 520
-    },
-    "group": "sheet:row",
-    "area": "sheet"
-   },
-   {
-    "id": "sheet-lamp2",
-    "asset": "bedsideLamp",
-    "at": [
-     4100,
-     520,
-     2700
-    ],
-    "mount": "on",
-    "params": {
-     "shade": "globe",
-     "h": 370
-    },
-    "group": "sheet:row",
-    "area": "sheet"
-   },
-   {
     "id": "sheet-rail",
     "asset": "clothesRail",
     "at": [
-     4900,
+     1300,
      0,
      2700
     ],
@@ -175,7 +41,29 @@
      "w": 960,
      "h": 1610,
      "items": 5,
-     "seed": 73
+     "seed": 73,
+     "mix": "dresses",
+     "feet": "wheels"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-rail2",
+    "asset": "clothesRail",
+    "at": [
+     3200,
+     0,
+     2700
+    ],
+    "mount": "floor",
+    "params": {
+     "mix": "dresses",
+     "feet": "wheels",
+     "w": 900,
+     "seed": 7,
+     "h": 1520,
+     "items": 4
     },
     "group": "sheet:row",
     "area": "sheet"
@@ -184,7 +72,7 @@
     "id": "sheet-cc",
     "asset": "clothesChair",
     "at": [
-     6400,
+     4700,
      0,
      2700
     ],
@@ -199,7 +87,7 @@
     "id": "sheet-h1",
     "asset": "hamper",
     "at": [
-     7300,
+     5900,
      0,
      2700
     ],
@@ -218,17 +106,101 @@
     "id": "sheet-h2",
     "asset": "hamper",
     "at": [
-     8100,
+     6800,
      0,
      2700
     ],
     "mount": "floor",
     "params": {
      "form": "square",
-     "lid": "none",
      "r": 190,
      "h": 580,
+     "lid": "none",
      "seed": 84
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-ch",
+    "asset": "chestOfDrawers",
+    "at": [
+     8000,
+     0,
+     2700
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 760,
+     "h": 900,
+     "rows": 3,
+     "pull": "bar",
+     "legs": "block",
+     "d": 440
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-bt",
+    "asset": "bedsideTable",
+    "at": [
+     9300,
+     0,
+     2700
+    ],
+    "mount": "floor",
+    "params": {},
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-lamp",
+    "asset": "bedsideLamp",
+    "at": [
+     9200,
+     520,
+     2700
+    ],
+    "mount": "on",
+    "params": {
+     "base": "stack",
+     "shade": "cone",
+     "h": 410
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-clk",
+    "asset": "alarmClock",
+    "at": [
+     9420,
+     520,
+     2760
+    ],
+    "turn": 20,
+    "mount": "on",
+    "params": {
+     "r": 61,
+     "kind": "analog"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-gb",
+    "asset": "glassesBook",
+    "at": [
+     9350,
+     520,
+     2640
+    ],
+    "turn": 340,
+    "mount": "on",
+    "params": {
+     "w": 143,
+     "d": 199
     },
     "group": "sheet:row",
     "area": "sheet"
@@ -237,15 +209,36 @@
     "id": "sheet-lm",
     "asset": "leaningMirror",
     "at": [
-     9200,
+     10600,
      0,
      2400
     ],
     "mount": "floor",
     "params": {
+     "foot": "block",
      "w": 520,
      "h": 1480,
-     "shape": "pill"
+     "shape": "pill",
+     "lean": 9
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-lm2",
+    "asset": "leaningMirror",
+    "at": [
+     11500,
+     0,
+     2400
+    ],
+    "mount": "floor",
+    "params": {
+     "shape": "pill",
+     "foot": "rail",
+     "lean": 11,
+     "w": 570,
+     "h": 1730
     },
     "group": "sheet:row",
     "area": "sheet"
@@ -254,7 +247,7 @@
     "id": "sheet-sc",
     "asset": "wallSconce",
     "at": [
-     10400,
+     10600,
      1500,
      100
     ],
@@ -268,18 +261,18 @@
     "area": "sheet"
    },
    {
-    "id": "sheet-sc2",
-    "asset": "wallSconce",
+    "id": "sheet-l2",
+    "asset": "bedsideLamp",
     "at": [
-     10900,
-     1500,
-     100
+     12500,
+     0,
+     2700
     ],
-    "mount": "wall",
+    "mount": "on",
     "params": {
-     "arm": "short",
+     "base": "tripod",
      "shade": "globe",
-     "h": 295
+     "h": 370
     },
     "group": "sheet:row",
     "area": "sheet"
@@ -297,7 +290,7 @@
    "psi": 0,
    "bounds": {
     "x0": 0,
-    "x1": 11400,
+    "x1": 13400,
     "z0": 0,
     "z1": 5600,
     "top": 2200
@@ -305,14 +298,14 @@
    "camera": {
     "home": {
      "target": [
-      5600,
+      11000,
       500,
       1500
      ],
      "az": 8,
      "el": 22,
      "fit": "none",
-     "dist": 6000
+     "dist": 5200
     },
     "shots": []
    }

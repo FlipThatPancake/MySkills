@@ -2,7 +2,7 @@
 // bedFrame(kit, frame, o) (the bed's base and headboard, in rooms.js bed), bedsideLamp, alarmClock, glassesBook, chestOfDrawers, clothesRail, clothesChair, hamper, leaningMirror, wallSconce.
 import { softBox, drape, vessel } from './soft.js';
 import { rod, legs as legParts, handle } from './parts.js';
-import { coat } from './softpieces.js';
+import { cloth, hangGrid } from './softpieces.js';
 import { chair as diningChair } from './dining.js';
 import { mirror } from './decor.js';
 const lo = { tone: 'lo' }, DEG = Math.PI / 180;
@@ -34,15 +34,18 @@ export function bedFrame(kit, frame, { w, l, head, tone = 'mid' }) {
 }
 
 // ---- small things on the bedside ------------------------------------------------------------------------------------------------------------------
-export function bedsideLamp(kit, { h = 430, shade = 'drum', seed = 1 } = {}) {
-  const g = kit.group(), br = h * 0.075, baseH = h * 0.5;
-  g.add(vessel(kit, [[br * 0.6, 0], [br, baseH * 0.12], [br * 1.5, baseH * 0.55], [br * 1.1, baseH * 0.9], [br * 0.5, baseH]], { contents: 'none', rim: false, tone: 'lo' }));
+export function bedsideLamp(kit, { h = 430, shade = 'drum', base = 'gourd', seed = 1 } = {}) {
+  const g = kit.group(), br = h * 0.075, T = kit.THREE; let baseH = h * 0.5;
+  if (base === 'cylinder') { baseH = h * 0.46; g.add(vessel(kit, [[br * 1.1, 0], [br * 1.2, baseH * 0.05], [br * 1.2, baseH * 0.95], [br * 0.9, baseH]], { contents: 'none', rim: false, tone: 'lo' })); }
+  else if (base === 'stack') { baseH = h * 0.52; g.add(kit.solid(new T.SphereGeometry(br * 1.5, 20, 14), 0, br * 1.5, 0, { smooth: true, tone: 'lo' })); g.add(kit.solid(new T.SphereGeometry(br * 1.05, 18, 12), 0, br * 3.4, 0, { smooth: true, tone: 'lo' })); g.add(kit.cyl(0, br * 4.3, 0, br * 0.5, baseH - br * 4.3, { seg: 12, tone: 'lo' })); }
+  else if (base === 'tripod') { baseH = h * 0.5; for (let k = 0; k < 3; k++) { const a = k * 2.0944 + 0.4; g.add(rod(kit, [Math.cos(a) * br * 2.2, 0, Math.sin(a) * br * 2.2], [0, baseH, 0], 7, 5, 'mid')); } g.add(kit.cyl(0, baseH * 0.4, 0, br * 0.7, 12, { seg: 10, tone: 'lo' })); }
+  else g.add(vessel(kit, [[br * 0.6, 0], [br, baseH * 0.12], [br * 1.5, baseH * 0.55], [br * 1.1, baseH * 0.9], [br * 0.5, baseH]], { contents: 'none', rim: false, tone: 'lo' }));
   g.add(kit.cyl(0, baseH, 0, 9, h * 0.12, { seg: 10, tone: 'lo' }));
   const sy = baseH + h * 0.1;
   if (shade === 'cone') g.add(kit.cyl(0, sy, 0, h * 0.2, h * 0.34, { rTop: h * 0.11, seg: 36 }));
-  else if (shade === 'globe') g.add(kit.solid(new kit.THREE.SphereGeometry(h * 0.19, 24, 16), 0, sy + h * 0.18, 0, { smooth: true }));
+  else if (shade === 'globe') g.add(kit.solid(new T.SphereGeometry(h * 0.19, 24, 16), 0, sy + h * 0.18, 0, { smooth: true }));
   else g.add(kit.cyl(0, sy, 0, h * 0.18, h * 0.3, { rTop: h * 0.17, seg: 36 }));
-  g.add(kit.lines([[0, baseH + 8, 0], [br * 1.8, baseH * 0.4, 0]], 'lo'));
+  if (base !== 'tripod') g.add(kit.lines([[0, baseH + 8, 0], [br * 1.8, baseH * 0.4, 0]], 'lo'));
   return kit.merge(g);
 }
 export function alarmClock(kit, { r = 55, kind = 'analog' } = {}) {
@@ -81,19 +84,42 @@ export function chestOfDrawers(kit, { w = 900, h = 1000, d = 480, rows = 4, pull
   g.add(kit.lines(pts, 'lo'));
   return kit.merge(g);
 }
-export function clothesRail(kit, { w = 1100, h = 1650, items = 4, seed = 3 } = {}) {   // a free-standing rail on two A-frames with coats on hangers
-  const g = kit.group(), R = rnd(seed), d = 420;
-  for (const s of [-1, 1]) { const x = s * (w / 2 - 20); g.add(rod(kit, [x, h, 0], [x, 0, d / 2], 13, 11, 'mid')); g.add(rod(kit, [x, h, 0], [x, 0, -d / 2], 13, 11, 'mid')); g.add(rod(kit, [x, 10, d / 2], [x, 10, -d / 2], 11, 11, 'mid')); }
+// one garment on a hanger, hook at the origin (hung from a rail), the garment in the x-y plane: kind shirt | jumper | coat | dress
+function garment(kit, kind, { tone = 'mid', R }) {
+  const g = kit.group(), sh = { shirt: [400, 700, 230], jumper: [440, 580, 470], coat: [470, 1180, 640], dress: [320, 1060, 0] }[kind], [w, len, sl] = sh;
+  g.add(rod(kit, [0, 0, 0], [0, 48, 0], 3.5, 3.5, 'lo')); g.add(rod(kit, [0, 48, 0], [26, 68, 0], 3.5, 3.5, 'lo'));   // the hook
+  for (const s of [-1, 1]) g.add(rod(kit, [0, -14, 0], [s * (w / 2 - 20), -62, 0], 4.5, 4.5, 'lo'));   // the hanger's arms
+  const body = drape(kit, w, len, { folds: 2, depth: kind === 'coat' ? 34 : 24, thick: kind === 'coat' ? 34 : 26, phase: R() * 3, ny: 24, flare: kind === 'dress' ? 0.55 : kind === 'coat' ? 0.12 : 0.04, tone }); body.position.set(0, -34, 0); g.add(body);
+  if (sl) for (const s of [-1, 1]) { const sw = kind === 'shirt' ? 120 : 150, p = drape(kit, sw, sl, { folds: 1, depth: 12, thick: 24, ny: 8, flare: kind === 'jumper' ? -0.1 : 0.12, tone, phase: R() * 3 }); p.position.set(s * (w / 2 + 6), -46, -8); p.rotation.z = s * (kind === 'jumper' ? 0.04 : 0.16); g.add(p); }   // sleeves as flat panels at the shoulders
+  if (kind === 'dress') g.add(kit.lines([[-w * 0.3, -50, 18], [0, -120, 22], [w * 0.3, -50, 18], [0, -120, 22], [-w * 0.28, -len * 0.42, 20], [w * 0.28, -len * 0.42, 20]], 'mid'));
+  else if (kind === 'shirt') g.add(kit.lines([[-40, -50, 20], [0, -120, 24], [40, -50, 20], [0, -120, 24], [0, -120, 24], [0, -len + 60, 26]], 'mid'));
+  else if (kind === 'jumper') g.add(kit.lines([[-w * 0.2, -46, 20], [w * 0.2, -46, 20], [-w * 0.4, -len + 70, 22], [w * 0.4, -len + 70, 22]], 'faint'));
+  else g.add(kit.lines([[-46, -50, 26], [0, -200, 30], [46, -50, 26], [0, -200, 30], [0, -200, 30], [0, -len + 60, 30]], 'mid'));
+  return g;
+}
+export function clothesRail(kit, { w = 1100, h = 1650, items = 4, mix = 'mixed', feet = 'bars', seed = 3 } = {}) {   // a free-standing rail on two A-frames, garments on hangers spaced along it
+  const g = kit.group(), R = rnd(seed), d = 420, KINDS = { shirts: ['shirt', 'jumper'], coats: ['coat', 'coat', 'jumper'], dresses: ['dress', 'shirt', 'dress'], mixed: ['shirt', 'coat', 'jumper', 'dress'] }[mix] || ['shirt', 'coat'];
+  for (const s of [-1, 1]) {
+    const x = s * (w / 2 - 20); g.add(rod(kit, [x, h, 0], [x, 30, d / 2 - 20], 13, 11, 'mid')); g.add(rod(kit, [x, h, 0], [x, 30, -d / 2 + 20], 13, 11, 'mid'));
+    if (feet === 'wheels') { g.add(rod(kit, [x, 30, d / 2 - 20], [x, 30, -d / 2 + 20], 12, 12, 'mid')); for (const z of [-1, 1]) g.add(kit.cyl(x, 24, z * (d / 2 - 20), 24, 20, { axis: 'x', seg: 14, tone: 'lo' })); }
+    else { g.add(rod(kit, [x, 20, d / 2 + 30], [x, 20, -d / 2 - 30], 16, 16, 'mid')); for (const z of [-1, 1]) g.add(kit.solid(new kit.THREE.SphereGeometry(16, 12, 8), x, 20, z * (d / 2 + 30), { smooth: true, tone: 'mid' })); }
+  }
   g.add(rod(kit, [-w / 2 - 20, h, 0], [w / 2 + 20, h, 0], 14, 14, 'mid'));
-  let x = -w / 2 + 130; for (let i = 0; i < items && x < w / 2 - 90; i++) { const cw = 330 + R() * 120, len = 650 + R() * 380; const c = coat(kit, x + cw / 2 - 130 + 40, h - 10, 0, { w: cw, len, tone: R() < 0.5 ? 'lo' : 'mid' }); g.add(c); x += cw * 0.55 + 40; }
+  let x = -w / 2 + 80; for (let i = 0; i < items && x < w / 2 - 70; i++) {
+    const k = KINDS[(i + Math.floor(R() * 4)) % KINDS.length], q = garment(kit, k, { tone: R() < 0.5 ? 'lo' : 'mid', R });
+    q.position.set(x, h - 8, 0); q.rotation.y = i === 0 || R() < 0.25 ? (R() - 0.5) * 1.1 : (R() < 0.5 ? 1 : -1) * (1.15 + R() * 0.3); g.add(q);   // most hang edge-on to the rail, a few turned to show their front
+    x += 70 + R() * 55 + (Math.abs(q.rotation.y) < 0.7 ? 150 : 0);
+  }
   return kit.merge(g);
 }
-export function clothesChair(kit, { seed = 2 } = {}) {   // a dining-style chair with a jacket over its back and a jumper on the seat
+export function clothesChair(kit, { seed = 2 } = {}) {   // a dining-style chair with a jacket hung over its back (a sleeve falling down the side) and a folded jumper on the seat
   const g = kit.group(), R = rnd(seed); g.add(diningChair(kit));
-  const j = drape(kit, 420, 520, { folds: 3, depth: 38, thick: 30, phase: R() * 3, ny: 20, tone: 'lo' }); j.position.set(0, 815, -190); g.add(j);
-  const sl = drape(kit, 120, 420, { folds: 1, depth: 24, thick: 22, ny: 10, tone: 'lo' }); sl.position.set(190, 790, -176); sl.rotation.z = 0.08; g.add(sl);
-  const sw = softBox(kit, 380, 300, 80, { r: 36, bulge: 12, tone: 'mid' }); sw.rotation.x = -Math.PI / 2; sw.position.set(0, 465, 30); sw.rotation.y = (R() - 0.5) * 0.4; g.add(sw);
-  g.add(kit.lines([[-90, 470, 70], [60, 480, 20], [-120, 475, 10], [70, 482, 90]], 'lo'));
+  const S = 430, y = 815, zr = -S / 2 + 22 + 18, grid = hangGrid({ bx: [-S / 2 + 20, S / 2 - 20], bz: [zr - 16, zr + 16], cx: [-S / 2 + 20, S / 2 - 20], cz: [zr - 16 - 470, zr + 16 + 230], y, fold: 3, amp: 22, seed: seed + 5, nx: 22, ny: 40, flare: 0.02 });
+  g.add(cloth(kit, { ...grid, thick: 22, tone: 'mid', folds: [0.3, 0.55, 0.78] }));   // the jacket's body over the rail: a long fall behind, a short one in front
+  const sl = drape(kit, 130, 480, { folds: 1, depth: 22, thick: 30, ny: 12, flare: 0.05, tone: 'lo', phase: R() * 2 }); sl.position.set(S / 2 - 6, y - 14, zr - 80); sl.rotation.z = 0.05; sl.rotation.y = 1.45; g.add(sl);   // a sleeve falling down the side
+  const j1 = softBox(kit, 360, 270, 70, { r: 34, bulge: 12, tone: 'mid' }); j1.rotation.x = -Math.PI / 2; j1.position.set(0, 415 + 36 + 37, 40); j1.rotation.y = (R() - 0.5) * 0.3; g.add(j1);   // a folded jumper: two layers
+  const j2 = softBox(kit, 330, 240, 56, { r: 28, bulge: 10, tone: 'lo' }); j2.rotation.x = -Math.PI / 2; j2.position.set(10, 415 + 36 + 74 + 26, 36); j2.rotation.y = (R() - 0.5) * 0.4 + 0.1; g.add(j2);
+  g.add(kit.lines([[-120, 415 + 36 + 76, 150], [80, 415 + 36 + 80, 150]], 'faint'));
   return kit.merge(g);
 }
 export function hamper(kit, { r = 215, h = 640, form = 'round', lid = 'ajar', seed = 1 } = {}) {
@@ -101,17 +127,19 @@ export function hamper(kit, { r = 215, h = 640, form = 'round', lid = 'ajar', se
   if (form === 'square') { g.add(kit.rbox(-r, 0, r, 2 * r, h, 2 * r, 40, lo)); for (const f of [0.15, 0.33, 0.5, 0.67, 0.84]) pts.push([-r, h * f, r + 1], [r, h * f, r + 1]); }
   else { g.add(kit.cyl(0, 0, 0, r * 0.92, h, { rTop: r, seg: 36, ...lo })); for (const f of [0.15, 0.33, 0.5, 0.67, 0.84]) pts.push(...ring(r * (0.92 + 0.08 * f) + 1, 36, (x, z) => [x, h * f, z])); }
   g.add(kit.lines(pts, 'mid'));
-  if (lid !== 'none') {   // a lid pushed aside, a sleeve of cloth hanging over the rim
-    const lidG = form === 'square' ? kit.rbox(-r - 8, h, r + 8, 2 * r + 16, 40, 2 * r + 16, 14) : kit.cyl(0, h, 0, r + 8, 40, { seg: 36 });
-    lidG.position.x += r * 0.35; lidG.rotation.z = -0.25; lidG.position.y += 30; g.add(lidG);
-    const cl = drape(kit, 240, 360, { folds: 2, depth: 40, thick: 30, ny: 16, tone: 'lo' }); cl.position.set(-r * 0.3, h + 36, r * 0.85); g.add(cl);
+  { const sc = drape(kit, 190, 300, { folds: 2, depth: 18, thick: 14, ny: 12, flare: 0.04, tone: 'lo' }); sc.position.set(r * 0.1, h + 8, r * (form === 'square' ? 1 : 0.93) + 12); g.add(sc); }   // a towel hung over the front rim
+  if (lid !== 'none') {   // the lid rests on the rim at the left and tilts up from there
+    const pv = kit.group(), lidG = form === 'square' ? kit.rbox(0, 0, r + 8, 2 * r + 16, 36, 2 * r + 16, 14) : kit.cyl(r + 8, 0, 0, r + 8, 36, { seg: 36 });
+    pv.add(lidG); pv.position.set(-r - 8, h + 2, 0); pv.rotation.z = 0.32; g.add(pv);
   }
   return kit.merge(g);
 }
 // a tall mirror leaning on the wall: origin the middle of its footprint on the floor, the top meeting the wall at z -depth/2 (back the footprint onto the wall)
-export function leaningMirror(kit, { w = 520, h = 1650, shape = 'arch' } = {}) {
-  const g = kit.group(), ang = 8 * DEG, dep = Math.sin(ang) * h + 40, m = mirror(kit, { w, h, shape }); m.rotation.x = -ang; m.position.set(0, 0, dep / 2 - 30); g.add(m);
-  g.add(kit.lines([[-w * 0.35, 4, dep / 2 + 10], [w * 0.35, 4, dep / 2 + 10]], 'lo'));
+export function leaningMirror(kit, { w = 520, h = 1650, shape = 'arch', lean = 8, foot = 'none' } = {}) {
+  const g = kit.group(), ang = lean * DEG, dep = Math.sin(ang) * h + 40, m = mirror(kit, { w, h, shape }); m.rotation.x = -ang; m.position.set(0, foot === 'block' ? 40 : 0, dep / 2 - 30); g.add(m);
+  if (foot === 'block') g.add(kit.box(-w * 0.42, 0, dep / 2 + 70, w * 0.84, 40, 150, lo));   // a wooden foot block it stands on
+  else if (foot === 'rail') { g.add(kit.cyl(-w * 0.5, 14, dep / 2 + 34, 14, w, { axis: 'x', seg: 12, tone: 'lo' })); }
+  else g.add(kit.lines([[-w * 0.35, 4, dep / 2 + 10], [w * 0.35, 4, dep / 2 + 10]], 'lo'));
   return g;
 }
 export function wallSconce(kit, { arm = 'swing', shade = 'cone', h = 260 } = {}) {   // origin bottom middle on the wall face; y is the height of its backplate's foot
