@@ -85,13 +85,14 @@ export function chestOfDrawers(kit, { w = 900, h = 1000, d = 480, rows = 4, pull
   return kit.merge(g);
 }
 // one garment on a hanger, hook at the origin (hung from a rail): kind shirt | jumper | coat | dress. front: facing the viewer, built by the hallway coat generator; otherwise edge-on, a soft slab 60 mm thick with rounded shoulders and a fold line
-function garment(kit, kind, { tone = 'mid', R, front = false, grey = false }) {
+function garment(kit, kind, { tone = 'mid', R, front = false, grey = false }) {   // grey: the soft-grey fill, put on one front-facing coat
   const g = kit.group(), [w, len] = { shirt: [380, 700], jumper: [420, 560], coat: [470, 1100], dress: [340, 1050] }[kind];
-  if (front) { g.add(coatGen(kit, 0, 0, 0, { w, len, tone })); return g; }
+  if (front) { g.add(coatGen(kit, 0, 0, 0, { w, len, tone, grey })); return g; }
   g.add(rod(kit, [0, 0, 0], [0, 48, 0], 3.5, 3.5, 'lo')); g.add(rod(kit, [0, 48, 0], [26, 68, 0], 3.5, 3.5, 'lo'));
   for (const s of [-1, 1]) g.add(rod(kit, [0, -14, 0], [s * 70, -40, 0], 4.5, 4.5, 'lo'));
-  const th = 50 + R() * 20, sb = softBox(kit, w * 0.9, len, th, { r: 24, bulge: 10, tone, grey }); sb.rotation.y = 0; sb.position.set(0, -len / 2 - 40, 0); g.add(sb);
-  g.add(kit.lines([[-w * 0.1, -60, th / 2 + 1], [-w * 0.1 + 10, -len * 0.5, th / 2 + 2], [-w * 0.1 + 10, -len * 0.5, th / 2 + 2], [-w * 0.1 + 4, -len + 30, th / 2 + 1]], 'mid'));
+  const T = kit.THREE, th = 50 + R() * 16, hw = w * 0.5, sh = new T.Shape([new T.Vector2(-w * 0.1, 0), new T.Vector2(-hw, -70), new T.Vector2(-hw, -len), new T.Vector2(hw, -len), new T.Vector2(hw, -70), new T.Vector2(w * 0.1, 0)]);   // a flat-sided slab with sloped shoulders, edges rounded
+  g.add(kit.solid(new T.ExtrudeGeometry(sh, { depth: th - 12, bevelEnabled: true, bevelThickness: 6, bevelSize: 6, bevelSegments: 2 }), 0, -36, -(th - 12) / 2, { tone }));
+  g.add(kit.lines([[-w * 0.1, -50, th / 2 + 1], [-w * 0.1 + 10, -len * 0.5, th / 2 + 2], [-w * 0.1 + 10, -len * 0.5, th / 2 + 2], [-w * 0.1 + 4, -len + 30, th / 2 + 1]], 'mid'));
   return g;
 }
 export function clothesRail(kit, { w = 1100, h = 1650, items = 4, mix = 'mixed', feet = 'bars', seed = 3 } = {}) {   // a free-standing rail on two A-frames, garments on hangers spaced along it
@@ -102,24 +103,18 @@ export function clothesRail(kit, { w = 1100, h = 1650, items = 4, mix = 'mixed',
     else { g.add(rod(kit, [x, 20, d / 2 + 30], [x, 20, -d / 2 - 30], 16, 16, 'mid')); for (const z of [-1, 1]) g.add(kit.solid(new kit.THREE.SphereGeometry(16, 12, 8), x, 20, z * (d / 2 + 30), { smooth: true, tone: 'mid' })); }
   }
   g.add(rod(kit, [-w / 2 - 20, h, 0], [w / 2 + 20, h, 0], 14, 14, 'mid'));
-  let x = -w / 2 + 80; for (let i = 0; i < items && x < w / 2 - 70; i++) {
-    const k = KINDS[(i + Math.floor(R() * 4)) % KINDS.length], ry = i === 0 || R() < 0.25 ? (R() - 0.5) * 1.1 : (R() < 0.5 ? 1 : -1) * (1.15 + R() * 0.3), q = garment(kit, k, { tone: 'mid', R, front: Math.abs(ry) < 0.7, grey: i === 1 });
+  let gotGrey = false, x = -w / 2 + 80; for (let i = 0; i < items && x < w / 2 - 70; i++) {
+    const k = KINDS[(i + Math.floor(R() * 4)) % KINDS.length], ry = i === 0 || R() < 0.25 ? (R() - 0.5) * 1.1 : (R() < 0.5 ? 1 : -1) * (1.15 + R() * 0.3), q = garment(kit, k, { tone: 'mid', R, front: Math.abs(ry) < 0.7, grey: Math.abs(ry) < 0.7 && !gotGrey && (gotGrey = true) });
     q.position.set(x, h - 8, 0); q.rotation.y = ry; g.add(q);   // most hang edge-on to the rail, a few turned to show their front
     x += 70 + R() * 55 + (Math.abs(q.rotation.y) < 0.7 ? 150 : 0);
   }
   return kit.merge(g);
 }
-export function clothesChair(kit, { seed = 2 } = {}) {   // a dining-style chair with a jacket hung over its back (a sleeve falling down the side) and a folded jumper on the seat
+export function clothesChair(kit, { seed = 2 } = {}) {   // a dining-style chair with a folded jumper on the seat; throw a jacket over its back with a.drapeOver
   const g = kit.group(), R = rnd(seed); g.add(diningChair(kit));
-  const S = 430, y = 815, zr = -S / 2 + 22 + 18, grid = hangGrid({ bx: [-S / 2 + 20, S / 2 - 20], bz: [zr - 16, zr + 16], cx: [-S / 2 + 20, S / 2 - 20], cz: [zr - 16 - 470, zr + 16 + 260], y, fold: 3, amp: 18, seed: seed + 5, nx: 22, ny: 40, flare: 0.02 });
-  g.add(cloth(kit, { ...grid, thick: 22, tone: 'mid', folds: [0.3, 0.55, 0.78] }));   // the jacket's body over the rail: a long fall behind, a short one in front, in paper
-  const T = kit.THREE, zf = zr + 16 + 40;   // a lapel V at the top with grey lining showing inside the folded lapels
-  for (const s of [-1, 1]) { const shp = new T.Shape([new T.Vector2(s * 150, 0), new T.Vector2(s * 12, 0), new T.Vector2(s * 12, -150)]); const lp = kit.solid(new T.ExtrudeGeometry(shp, { depth: 5, bevelEnabled: false }), 0, y - 4, zf, { grey: true, tone: 'lo' }); g.add(lp); }
-  g.add(kit.lines([[-150, y - 4, zf + 7], [-12, y - 154, zf + 7], [150, y - 4, zf + 7], [12, y - 154, zf + 7], [0, y - 170, zf + 7], [0, y - 270, zf + 7]], 'mid'));
-  g.add(kit.box(-S / 2 + 24, y - 262, zf + 10, S - 48, 12, 8, { grey: true, tone: 'lo' }));   // the lining along the hem
-  g.add(rod(kit, [S / 2 + 4, y - 10, zr - 20], [S / 2 + 18, 300, zr + 40], 44, 34, 'mid')); g.add(kit.cyl(S / 2 + 18, 290, zr + 40, 36, 28, { seg: 16, grey: true, tone: 'lo' }));   // one sleeve down the outer side, to below the seat, a grey lined cuff
-  const j1 = softBox(kit, 360, 270, 70, { r: 34, bulge: 12, tone: 'mid' }); j1.rotation.x = -Math.PI / 2; j1.position.set(0, 415 + 36 + 37, 40); j1.rotation.y = (R() - 0.5) * 0.3; g.add(j1);   // a folded jumper: two layers
-  const j2 = softBox(kit, 330, 240, 56, { r: 28, bulge: 10, tone: 'lo' }); j2.rotation.x = -Math.PI / 2; j2.position.set(10, 415 + 36 + 74 + 26, 36); j2.rotation.y = (R() - 0.5) * 0.4 + 0.1; g.add(j2);
+  const S = 430;   // the jacket is a cloth dropped over the back at spec time: a.drapeOver('jacket', id, { w: 700, d: 900, dz: -150, spin: -20 })
+  const j1 = softBox(kit, 360, 270, 70, { r: 34, bulge: 12, tone: 'mid' }); j1.rotation.x = -Math.PI / 2; j1.position.set(0, 415 + 36 + 37, 70); j1.rotation.y = (R() - 0.5) * 0.3; g.add(j1);   // a folded jumper: two layers
+  const j2 = softBox(kit, 330, 240, 56, { r: 28, bulge: 10, tone: 'lo' }); j2.rotation.x = -Math.PI / 2; j2.position.set(10, 415 + 36 + 74 + 26, 66); j2.rotation.y = (R() - 0.5) * 0.4 + 0.1; g.add(j2);
   g.add(kit.lines([[-120, 415 + 36 + 76, 150], [80, 415 + 36 + 80, 150]], 'faint'));
   return kit.merge(g);
 }

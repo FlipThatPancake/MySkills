@@ -3,9 +3,9 @@ import { softBox, drape } from './soft.js';
 import { rod } from './parts.js';
 const lo = { tone: 'lo' };
 // A coat hung by its collar at (x, y, z): one body that narrows from the slumped shoulders to the hook and flares a little at the hem, a lapel V and front opening, two sleeves hanging at the sides over the front.
-export function coat(kit, x, y, z, { w = 400, len = 900, tone = 'lo' } = {}) {
+export function coat(kit, x, y, z, { w = 400, len = 900, tone = 'lo', grey = false } = {}) {
   const g = kit.group(), sm = (t) => t * t * (3 - 2 * t), prof = (t) => (t < 0.1 ? 0.3 + 0.5 * sm(t / 0.1) : 0.8 + 0.4 * (t - 0.1) / 0.9);
-  const body = drape(kit, w, len, { folds: 2, depth: 40, thick: 36, phase: 0.8, ny: 30, profile: prof, tone }); body.position.set(x, y - 6, z); g.add(body);
+  const body = drape(kit, w, len, { folds: 2, depth: 40, thick: 36, phase: 0.8, ny: 30, profile: prof, tone, grey }); body.position.set(x, y - 6, z); g.add(body);
   for (const s of [-1, 1]) {   // a sleeve: a tapered tube from the shoulder point, hanging behind the body's side edge, a sliver and the cuff showing below it
     const a = [x + s * w * 0.4, y - 60, z - 36], b = [x + s * (w * 0.5 + 8), y - 60 - len * 0.56, z - 34];
     g.add(rod(kit, a, b, 58, 44, tone)); g.add(rod(kit, [b[0], b[1] + 18, b[2]], [b[0], b[1] - 4, b[2]], 46, 46, 'mid'));

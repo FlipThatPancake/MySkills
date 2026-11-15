@@ -41,7 +41,7 @@ export function breadBasket(kit, { r = 150, h = 95, bread = 'loaf', seed = 3, cl
   if (rim === 'rolled') g.add(kit.cyl(0, h - 6, 0, r + 4, 14, { seg: 32, tone: 'lo' }));
   if (bread === 'rolls') for (let i = 0; i < 4; i++) { const a = i * 1.57 + R(); g.add(kit.solid(new T.SphereGeometry(48, 14, 10), Math.cos(a) * 62, 70, Math.sin(a) * 62, { smooth: true, tone: 'lo', linen: false })); }
   else if (bread === 'baguette') for (const o of [-34, 20]) { const m = kit.cyl(0, 0, 0, 30, r * 2.1, { axis: 'x', seg: 14, tone: 'lo' }); m.position.set(-r * 1.05, h * 0.65, o); m.rotation.y = (o > 0 ? 1 : -1) * 0.12; g.add(m); }
-  else { const lf = kit.solid(new T.SphereGeometry(r * 0.72, 18, 12), 0, h * 0.5, 0, { smooth: true, tone: 'lo' }); lf.scale.set(1, 0.55, 0.7); g.add(lf); g.add(kit.lines([[-r * 0.3, h * 0.5 + r * 0.3, r * 0.2], [-r * 0.1, h * 0.5 + r * 0.38, r * 0.25], [r * 0.1, h * 0.5 + r * 0.38, r * 0.25], [r * 0.3, h * 0.5 + r * 0.3, r * 0.2]], 'lo')); }
+  else { const lf = kit.solid(new T.SphereGeometry(r * 0.78, 20, 14), 0, h * 0.55, 0, { smooth: true, tone: 'lo' }); lf.scale.set(1.15, 0.6, 0.68); g.add(lf); const sl = []; for (let i = -1; i <= 1; i++) { const x = i * r * 0.3; sl.push([x - 22, h * 0.55 + r * 0.46 - Math.abs(i) * 8, r * 0.2], [x + 22, h * 0.55 + r * 0.5 - Math.abs(i) * 8, r * 0.05]); } g.add(kit.lines(sl, 'mid')); }   // a loaf with three scoring slashes
   return kit.merge(g);
 }
 
@@ -55,7 +55,7 @@ export function placeSetting(kit, { r = 140, glass: gl = true, napkin: nk = true
   for (const i of [-1, 0, 1]) pts.push([-kx - 9 + i * 7, 5.6, -150], [-kx - 9 + i * 7, 5.6, -80]);
   pts.push([kx + 10, 5.6, -150], [kx + 10, 5.6, 150]);
   if (glass) g.add(kit.solid(new T.LatheGeometry([[0.01, 0], [34, 0], [34, 3], [6, 8], [5, 70], [48, 100], [50, 160], [44, 164], [43, 102], [4, 74], [0.01, 10]].map(([a, b]) => new T.Vector2(a, b)), 22), kx + 90, 0, -r * 0.8, { smooth: true, tone: 'lo' }));
-  if (napkin) { const nb = kit.rbox(-r * 0.4 - kx - 130, 0, 90, 90, 14, 180, 4, { linen: true }); g.add(nb); }
+  if (napkin) { const sh = new T.Shape([new T.Vector2(0, 0), new T.Vector2(150, 0), new T.Vector2(0, 150)]), ng = new T.ExtrudeGeometry(sh, { depth: 10, bevelEnabled: true, bevelThickness: 3, bevelSize: 3, bevelSegments: 2 }); ng.rotateX(-Math.PI / 2); const nb = kit.solid(ng, -kx - 190, 5, 40, { linen: true, smooth: false }); nb.rotation.y = 0.3; g.add(nb); pts.push([-kx - 190, 16, 50], [-kx - 60, 16, 50]); }   // a folded triangle
   g.add(kit.lines(pts, 'lo'));
   return kit.merge(g);
 }

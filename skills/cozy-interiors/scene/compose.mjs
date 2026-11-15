@@ -98,12 +98,25 @@ class Area {
       for (let t = 0, n = ix ? ix.count : p.count; t < n; t += 3) { const [a, b, cc] = ix ? [ix.getX(t), ix.getX(t + 1), ix.getX(t + 2)] : [t, t + 1, t + 2]; va.fromBufferAttribute(p, a).applyMatrix4(m); vb.fromBufferAttribute(p, b).applyMatrix4(m); vc.fromBufferAttribute(p, cc).applyMatrix4(m); tris.push([va.x, va.y, va.z, vb.x, vb.y, vb.z, vc.x, vc.y, vc.z]); all.expandByPoint(va).expandByPoint(vb).expandByPoint(vc); } });
     return { T, tris, all };
   }
-  // a cloth dropped onto a placed thing and frozen (verlet, at spec time): a.drapeOver('throw', 'sofa', { w: 1300, d: 900, at: [x, z] (area frame) or dx/dz from the target's middle, spin (deg), tone, group })
-  drapeOver(id, targetId, { w = 1200, d = 900, at, dx = 0, dz = 0, spin = 0, tone = 'lo', group, thick = 6, seed, nx = 26, ny = 26, mount = 'on', y = 0 } = {}) {
-    const { T, tris, all } = this.targetTris('drapeOver', targetId);
-    const c = all.getCenter(new T.Vector3()), res = dropCloth({ height: heightField(tris), at: at || [c.x + dx, c.z + dz], w, d, nx, ny, spin: rad(spin), seed: seed ?? this.h.S.seed + id.length });
-    { const hh = res.pts.filter((_, i) => i % 3 === 1); if (hh.filter((v) => v > 150).length < hh.length * 0.5) throw new Error(`drapeOver('${id}'): the cloth slid off '${targetId}' onto the floor: put it nearer the middle of the seat or bed (dx/dz), or make it larger`); }
-    { const hf = res.pts.filter((_, i) => i % 3 === 1), tops = heightField(tris); if (Math.max(...hf) > tops.top + 40) throw new Error(`drapeOver('${id}'): the cloth rests ${Math.round(Math.max(...hf) - tops.top)} mm above the top of '${targetId}': move it (at or dx/dz) onto the seat, arm or bed, not the back`); }
+  // a cloth dropped onto a placed thing and frozen (verlet, at spec time): a.drapeOver('throw', 'sofa', { w: 1300, d: 900, at: [x, z] (area frame) or dx/dz from the target's middle, spin (deg), tone, group, rear (mm hung behind the ridge of the thing: a coat over a chair back; use d about twice that, wave 0, bridge 440), wave (mm of start ripple; 0 keeps the cloth its full size, the default 40 lets it bunch), bridge (mm: the cloth spans gaps this narrow, e.g. 440 for a slatted chair back) })
+  drapeOver(id, targetId, { w = 1200, d = 900, at, dx = 0, dz = 0, spin = 0, tone = 'lo', group, thick = 6, seed, nx = 26, ny = 26, mount = 'on', y = 0, bridge = 0, wave, rear } = {}) {
+    const { T, tris, all } = this.targetTris('drapeOver', targetId), hf0 = heightField(tris, 20, bridge);
+    const c = all.getCenter(new T.Vector3());
+    let hang = {};   // rear: the cloth is hung over the highest ridge of the thing (a chair back): `rear` mm hang behind it, the rest falls toward the middle
+    if (rear) {
+      const top = hf0.top, hb = new T.Box3(); for (const t of tris) if (Math.max(t[1], t[4], t[7]) >= top - 60) for (let k = 0; k < 9; k += 3) hb.expandByPoint(new T.Vector3(t[k], t[k + 1], t[k + 2]));
+      const rc = hb.getCenter(new T.Vector3()); let ux = rc.x - c.x, uz = rc.z - c.z; const ul = Math.hypot(ux, uz) || 1; ux /= ul; uz /= ul;
+      const out = Math.abs(ux) * (all.max.x - all.min.x) / 2 + Math.abs(uz) * (all.max.z - all.min.z) / 2 + 14 - ((rc.x - c.x) * ux + (rc.z - c.z) * uz);   // from the ridge to just clear of the whole thing
+      hang = { boxes: [[hb.min.x, Math.max(0, hb.min.y), hb.min.z, hb.max.x, hb.max.y, hb.max.z]], at: [rc.x, rc.z], init: (u, v) => {
+        const t = (v + d / 2) - rear;
+        if (t < 0) { const e = out * Math.min(1, -t / 60); return [rc.x + ux * e - uz * u, top + 8 + t, rc.z + uz * e + ux * u]; }
+        const px = rc.x - ux * (10 + t * 0.6) - uz * u, pz = rc.z - uz * (10 + t * 0.6) + ux * u;
+        return [px, Math.max(hf0(px, pz) + 12, top + 8 - t * 1.2), pz];
+      } };
+    }
+    const res = dropCloth({ height: hf0, at: at || [c.x + dx, c.z + dz], w, d, nx, ny, ...hang, ...(wave === undefined ? {} : { wave }), spin: rad(spin), seed: seed ?? this.h.S.seed + id.length });
+    { const hh = res.pts.filter((_, i) => i % 3 === 1); if (!rear && hh.filter((v) => v > 150).length < hh.length * 0.5) throw new Error(`drapeOver('${id}'): the cloth slid off '${targetId}' onto the floor: put it nearer the middle of the seat or bed (dx/dz), or make it larger`); }
+    { const hf = res.pts.filter((_, i) => i % 3 === 1), tops = hf0; if (Math.max(...hf) > tops.top + 40) throw new Error(`drapeOver('${id}'): the cloth rests ${Math.round(Math.max(...hf) - tops.top)} mm above the top of '${targetId}': move it (at or dx/dz) onto the seat, arm or bed, not the back`); }
     this.put(id, 'cloth', [0, 0], 0, { group, y, mount, params: { nx, ny, pts: res.pts, thick, tone } });
   }
   // a folded throw laid across a placed thing: layers stacked like a folded blanket, resting on the highest point under it. a.bandOn('throw', 'bed', { w: 1500, d: 380, at: [x, z] or dx/dz, layers: 3, tone, group })

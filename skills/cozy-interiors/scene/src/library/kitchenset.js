@@ -91,7 +91,7 @@ export function potRail(kit, { w = 900, n = 4, seed = 4, mix = 'mixed' } = {}) {
     if (k === 'ladle') { g.add(rod(kit, [x, yR - 40, z], [x, yR - 290, z + 6], 6, 6, 'lo')); g.add(kit.cyl(x, yR - 330, z + 18, 46, 20, { axis: 'z', seg: 24, tone: 'lo' })); g.add(kit.cyl(x, yR - 330, z + 20, 34, 6, { axis: 'z', seg: 22 })); g.add(kit.lines(ringXY(x, yR - 330, 30, z + 21, 20), 'lo')); x += 150; }   // a ladle: a round bowl facing out
     else if (k === 'skillet') { const r = 105 + R() * 25; g.add(rod(kit, [x, yR - 40, z], [x, yR - 160, z], 7, 7, 'lo')); g.add(kit.cyl(x, yR - 160 - r, z + 8, r, 22, { axis: 'z', seg: 30, tone: 'lo' })); g.add(kit.lines(ringXY(x, yR - 160 - r, r * 0.78, z + 9, 26), 'mid')); x += r * 2 + 40; }
     else if (k === 'saucepan') { const r = 80; g.add(rod(kit, [x, yR - 40, z], [x, yR - 130, z], 7, 7, 'lo')); g.add(kit.cyl(x, yR - 130 - r * 1.5, z + 6, r, 70, { axis: 'z', seg: 28 })); g.add(kit.lines(ringXY(x, yR - 130 - r * 1.5, r * 0.8, z + 7, 24), 'mid')); x += r * 2 + 50; }
-    else { const r = 70; g.add(rod(kit, [x, yR - 40, z], [x, yR - 110, z], 5, 5, 'lo')); g.add(kit.cyl(x, yR - 110 - r, z + 6, r, 26, { axis: 'z', seg: 26, tone: 'lo' })); const m = []; for (let j = -3; j <= 3; j++) m.push([x + j * 18, yR - 110 - r - 55, z + 7], [x + j * 18, yR - 110 - r + 55, z + 7]); g.add(kit.lines(m, 'faint')); x += r * 2 + 40; }
+    else { const r = 70; g.add(rod(kit, [x, yR - 40, z], [x, yR - 110, z], 5, 5, 'lo')); g.add(kit.cyl(x, yR - 110 - r, z + 6, r, 26, { axis: 'z', seg: 26, tone: 'lo' })); g.add(kit.lines(ringXY(x, yR - 110 - r, r * 0.8, z + 7, 26), 'lo')); x += r * 2 + 40; }   // a sieve: a plain disc with a rim line
   }
   return kit.merge(g);
 }

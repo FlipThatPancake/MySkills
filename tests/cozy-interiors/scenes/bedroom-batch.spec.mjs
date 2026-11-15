@@ -8,7 +8,7 @@ let x = 1100; if (PART === 'beds') for (const [i, f] of ['box', 'legs', 'upholst
 if (PART !== 'beds') {
   const put = (id, asset, params, x, z, o = {}) => a.put(id, asset, [x, z], o.turn || 0, { group: 'row', params, ...o.m });
   put('rail', 'clothesRail', {}, 1300, 2700); put('rail2', 'clothesRail', { mix: 'dresses', feet: 'wheels', w: 900, seed: 7 }, 3200, 2700);
-  put('cc', 'clothesChair', {}, 4700, 2700); put('h1', 'hamper', {}, 5900, 2700); put('h2', 'hamper', { form: 'square', r: 190 }, 6800, 2700);
+  put('cc', 'clothesChair', {}, 4700, 2700); a.drapeOver('jacket', 'cc', { group: 'row', w: 560, d: 900, rear: 340, wave: 0, bridge: 440, nx: 28, ny: 44, tone: 'mid' }); put('h1', 'hamper', {}, 5900, 2700); put('h2', 'hamper', { form: 'square', r: 190 }, 6800, 2700);
   put('ch', 'chestOfDrawers', { w: 760, h: 900, rows: 3, pull: 'bar', legs: 'block' }, 8000, 2700);
   put('bt', 'bedsideTable', {}, 9300, 2700); a.put('lamp', 'bedsideLamp', [9200, 2700], 0, { y: 520, group: 'row', params: { base: 'stack', shade: 'cone' } }); a.put('clk', 'alarmClock', [9420, 2760], 20, { y: 520, group: 'row' }); a.put('gb', 'glassesBook', [9350, 2640], 340, { y: 520, group: 'row' });
   put('lm', 'leaningMirror', { foot: 'block' }, 10600, 2400); put('lm2', 'leaningMirror', { shape: 'pill', foot: 'rail', lean: 11 }, 11500, 2400);
