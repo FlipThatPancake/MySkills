@@ -124,12 +124,12 @@ export function duvetCloth(kit, { w = 1600, head = -700, foot = 900, sagL = 130,
     const x = P[i], z = P[i + 2]; if (Math.abs(x) <= hx && P[i + 1] > 0) for (const [lx, lz, r, h] of lumps) P[i + 1] += h * Math.exp(-((x - lx) ** 2 + (z - lz) ** 2) / (2 * r * r));
   }
   const sOf = (x, z) => (hx - x) + (z - head);
-  for (let i = 0; i < P.length; i += 3) { const x = P[i], z = P[i + 2], sv = sOf(x, z); if (x <= hx && z >= head && sv < turn && P[i + 1] > -1) { const t = turn - sv; P[i] = x - t; P[i + 2] = z + t; P[i + 1] += 16 + 6 * Math.sin(sv * 0.02 + seed); } }
-  const g = cloth(kit, { ...grid, thick: 7, tone, folds: false }), ln = [];
-  for (let i = 0; i <= 14; i++) { const q = i / 14, x = hx - turn * q + 4 * Math.sin(q * 9 + seed), z = head + turn * q * 0 + (turn * (1 - q)); ln.push([x, 22 + 5 * Math.sin(q * 5), z]); }   // the fold edge, a slightly bowed diagonal
-  const fl = []; for (let i = 0; i < ln.length - 1; i++) fl.push(ln[i], ln[i + 1]);
-  g.add(kit.lines(fl, 'mid'));
-  const tri = new kit.THREE.BufferGeometry(); tri.setAttribute('position', new kit.THREE.Float32BufferAttribute([hx - 6, 6, head + 4, hx - turn, 6, head + 4, hx - 6, 6, head + turn], 3)); tri.setIndex([0, 2, 1]); tri.computeVertexNormals();
-  g.add(kit.solid(tri, 0, 0, 0, { tone: 'lo', linen: true }));   // the sheet showing where the corner was
+  for (let i = 0; i < P.length; i += 3) { const x = P[i], z = P[i + 2]; if (x <= hx + 1 && z >= head - 1 && sOf(x, z) < turn - 8 && P[i + 1] > -1) P[i + 1] = 2; }   // the corner's own spot: bare sheet
+  const g = cloth(kit, { ...grid, thick: 7, tone, folds: false }), T = kit.THREE;
+  // the flap: a triangle folded back over the top along the diagonal, its wrong side (linen) up, a soft roll along the fold
+  const topY = 10 + 6, sh = new T.Shape([new T.Vector2(hx - turn + 12, head + 10), new T.Vector2(hx - 14, head + turn - 4), new T.Vector2(hx - turn + 12, head + turn - 14)]);
+  const fg = new T.ExtrudeGeometry(sh, { depth: 14, bevelEnabled: true, bevelThickness: 5, bevelSize: 6, bevelSegments: 3, curveSegments: 4 }); fg.rotateX(Math.PI / 2);
+  g.add(kit.solid(fg, 0, topY + 14, 0, { smooth: true, tone: 'lo', linen: true }));
+  g.add(rod(kit, [hx - turn + 10, topY + 12, head + 8], [hx - 10, topY + 12, head + turn - 6], 22, 22, tone));
   return g;
 }

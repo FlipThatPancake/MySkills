@@ -1,0 +1,257 @@
+{
+ "units": "mm",
+ "seed": 7,
+ "home": {
+  "height": 2700,
+  "floor": {
+   "style": "plain",
+   "seed": 7
+  },
+  "tiles": {
+   "origin": [
+    0,
+    0
+   ]
+  },
+  "walls": [
+   {
+    "id": "sheet-back",
+    "from": [
+     5520,
+     0
+    ],
+    "to": [
+     0,
+     0
+    ],
+    "openings": []
+   }
+  ],
+  "objects": [
+   {
+    "id": "sheet-v0",
+    "asset": "armchair",
+    "at": [
+     690,
+     0,
+     2060
+    ],
+    "mount": "floor",
+    "params": {
+     "shape": "cane",
+     "w": 970,
+     "d": 890,
+     "legs": "hairpin",
+     "arms": "rolled",
+     "legH": 153,
+     "backH": 870,
+     "back": "loose",
+     "piping": "none",
+     "tone": "lo"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-v1",
+    "asset": "armchair",
+    "at": [
+     2070,
+     0,
+     2060
+    ],
+    "mount": "floor",
+    "params": {
+     "shape": "wing",
+     "w": 800,
+     "d": 850,
+     "legs": "tapered",
+     "arms": "none",
+     "legH": 142,
+     "backH": 910,
+     "back": "tight",
+     "piping": "edge",
+     "tone": "mid"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-v2",
+    "asset": "armchair",
+    "at": [
+     3450,
+     0,
+     2060
+    ],
+    "mount": "floor",
+    "params": {
+     "shape": "upholstered",
+     "w": 940,
+     "d": 820,
+     "legs": "block",
+     "arms": "flared",
+     "legH": 97,
+     "backH": 890,
+     "back": "loose",
+     "piping": "none",
+     "tone": "lo"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-v3",
+    "asset": "armchair",
+    "at": [
+     4830,
+     0,
+     2060
+    ],
+    "mount": "floor",
+    "params": {
+     "shape": "upholstered",
+     "w": 830,
+     "d": 830,
+     "legs": "sled",
+     "arms": "track",
+     "legH": 164,
+     "backH": 830,
+     "back": "tight",
+     "piping": "edge",
+     "tone": "mid"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-v4",
+    "asset": "armchair",
+    "at": [
+     690,
+     0,
+     500
+    ],
+    "mount": "floor",
+    "params": {
+     "shape": "sling",
+     "w": 860,
+     "d": 790,
+     "legs": "turned",
+     "arms": "rolled",
+     "legH": 108,
+     "backH": 850,
+     "back": "loose",
+     "piping": "edge",
+     "tone": "lo"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-v5",
+    "asset": "armchair",
+    "at": [
+     2070,
+     0,
+     500
+    ],
+    "mount": "floor",
+    "params": {
+     "shape": "cane",
+     "w": 880,
+     "d": 860,
+     "legs": "tapered",
+     "arms": "track",
+     "legH": 119,
+     "backH": 810,
+     "back": "tight",
+     "piping": "none",
+     "tone": "mid"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-v6",
+    "asset": "armchair",
+    "at": [
+     3450,
+     0,
+     500
+    ],
+    "mount": "floor",
+    "params": {
+     "shape": "wing",
+     "w": 770,
+     "d": 800,
+     "legs": "block",
+     "arms": "none",
+     "legH": 86,
+     "backH": 790,
+     "back": "tight",
+     "piping": "edge",
+     "tone": "lo"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-v7",
+    "asset": "armchair",
+    "at": [
+     4830,
+     0,
+     500
+    ],
+    "mount": "floor",
+    "params": {
+     "shape": "upholstered",
+     "w": 910,
+     "d": 880,
+     "legs": "turned",
+     "arms": "flared",
+     "legH": 131,
+     "backH": 770,
+     "back": "loose",
+     "piping": "none",
+     "tone": "mid"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   }
+  ]
+ },
+ "areas": [
+  {
+   "id": "sheet",
+   "name": "Sheet",
+   "O": [
+    0,
+    0
+   ],
+   "psi": 0,
+   "bounds": {
+    "x0": 0,
+    "x1": 5520,
+    "z0": 0,
+    "z1": 3720,
+    "top": 984
+   },
+   "camera": {
+    "home": {
+     "target": [
+      2760,
+      369,
+      1326
+     ],
+     "az": 0,
+     "el": 22,
+     "fit": "none",
+     "dist": 6210
+    },
+    "shots": []
+   }
+  }
+ ]
+}
