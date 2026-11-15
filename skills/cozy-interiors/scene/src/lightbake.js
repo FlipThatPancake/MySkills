@@ -30,9 +30,9 @@ export async function bakeLight({ THREE: T, renderer, scene, kit, walls, areas, 
   const quad = new T.Mesh(new T.PlaneGeometry(2, 2)), ortho_cam = new T.OrthographicCamera(-1, 1, 1, -1, 0, 1), qs = new T.Scene(); qs.add(quad);
   const accMat = new T.ShaderMaterial({
     blending: T.CustomBlending, blendEquation: T.AddEquation, blendSrc: T.OneFactor, blendDst: T.OneFactor, transparent: true, depthTest: false, depthWrite: false,
-    uniforms: { uO: { value: new T.Vector3() }, uU: { value: new T.Vector3() }, uV: { value: new T.Vector3() }, uN: { value: new T.Vector3() }, uRef: { value: new T.Vector3() }, uAxis: { value: new T.Vector3() }, uOrtho: { value: 0 }, uDepth: { value: null }, uVP: { value: new T.Matrix4() }, uClipOut: { value: 0 } },
+    uniforms: { uO: { value: new T.Vector3() }, uU: { value: new T.Vector3() }, uV: { value: new T.Vector3() }, uN: { value: new T.Vector3() }, uRef: { value: new T.Vector3() }, uAxis: { value: new T.Vector3() }, uOrtho: { value: 0 }, uDepth: { value: null }, uVP: { value: new T.Matrix4() }, uClipOut: { value: 0 }, uWallR: { value: 0 }, uWA: { value: Array.from({ length: 4 }, () => new T.Vector4()) }, uWB: { value: Array.from({ length: 4 }, () => new T.Vector4()) }, uNW: { value: 0 } },
     vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }',
-    fragmentShader: `uniform vec3 uO, uU, uV, uN, uRef, uAxis; uniform float uOrtho, uClipOut; uniform sampler2D uDepth; uniform mat4 uVP; varying vec2 vUv;
+    fragmentShader: `uniform vec3 uO, uU, uV, uN, uRef, uAxis; uniform float uOrtho, uClipOut; uniform sampler2D uDepth; uniform mat4 uVP; uniform float uWallR, uNW; uniform vec4 uWA[4], uWB[4]; varying vec2 vUv;
       void main() {
         vec3 P = uO + uU * vUv.x + uV * vUv.y + uN * 20.0;   // clear of a rug's 7 mm and of the wall's own face
         vec3 L = uOrtho > 0.5 ? -uAxis : normalize(uRef - P);
@@ -40,7 +40,12 @@ export async function bakeLight({ THREE: T, renderer, scene, kit, walls, areas, 
         vec4 cl = uVP * vec4(P, 1.0); vec3 nd = cl.xyz / cl.w; vec2 q = nd.xy * 0.5 + 0.5;
         if (uOrtho < 0.5 && (cl.w <= 0.0 || q.x < 0.0 || q.x > 1.0 || q.y < 0.0 || q.y > 1.0)) vis = 0.0;
         else if (uOrtho > 0.5 && (q.x < 0.0 || q.x > 1.0 || q.y < 0.0 || q.y > 1.0)) vis = 1.0;
-        else { float d = uOrtho > 0.5 ? dot(P - uRef, uAxis) : length(P - uRef); float s = texture2D(uDepth, q).r * ${FAR.toFixed(1)}; float dd = d - s, bias = 14.0 + 14.0 / max(c, 0.1); vis = dd > bias ? 0.0 : 1.0; near = dd > bias && dd < ${REACH.toFixed(1)} ? 1.0 : 0.0; }
+        else { float d = uOrtho > 0.5 ? dot(P - uRef, uAxis) : length(P - uRef); float s = texture2D(uDepth, q).r * ${FAR.toFixed(1)}; float dd = d - s, bias = 14.0 + 14.0 / max(c, 0.1); vis = dd > bias ? 0.0 : 1.0; near = dd > bias && dd < ${REACH.toFixed(1)} ? 1.0 : 0.0;
+          if (dd > bias) {
+            vec3 B = P + L * dd;
+            if (uWallR > 0.5) { if (dot(B - uO, uN) < (uOrtho > 0.5 ? 90.0 : 230.0)) { vis = 1.0; near = 0.0; } }   // what hangs on a wall (a shelf, a frame) leaves no blob on it: only a thin line from its own thickness
+            else if (uOrtho > 0.5) for (int i = 0; i < 4; i++) if (float(i) < uNW) { vec2 rel = B.xz - uWA[i].xy; float al = dot(rel, uWA[i].zw), di = dot(rel, uWB[i].xy); if (abs(di) < 30.0 && al > -30.0 && al < uWB[i].z + 30.0) near = 0.0; }   // the floor takes no contact shade from the wall's own face
+          } }
         gl_FragColor = vec4(vis * c, c, near * c, 1.0);
       }`,
   });
@@ -74,8 +79,9 @@ export async function bakeLight({ THREE: T, renderer, scene, kit, walls, areas, 
     renderer.setRenderTarget(depthRT); renderer.setClearColor(0xffffff, 1); renderer.clear(true, true, false);
     scene.overrideMaterial = depthMat; withAll(() => renderer.render(scene, cam)); scene.overrideMaterial = null; out.passes++;
   };
+  let wallsOf = [];
   const accum = (rec, rt, vp, ref, axis, ortho) => {
-    const u = accMat.uniforms; u.uO.value.copy(rec.O); u.uU.value.copy(rec.U); u.uV.value.copy(rec.V); u.uN.value.copy(rec.N); u.uRef.value.copy(ref); u.uAxis.value.copy(axis); u.uOrtho.value = ortho ? 1 : 0; u.uDepth.value = depthRT.texture; u.uVP.value.copy(vp);
+    const u = accMat.uniforms; u.uO.value.copy(rec.O); u.uU.value.copy(rec.U); u.uV.value.copy(rec.V); u.uN.value.copy(rec.N); u.uRef.value.copy(ref); u.uAxis.value.copy(axis); u.uOrtho.value = ortho ? 1 : 0; u.uDepth.value = depthRT.texture; u.uVP.value.copy(vp); u.uWallR.value = rec.kind === 'wall' ? 1 : 0; u.uNW.value = wallsOf.length; wallsOf.forEach((r, i) => { u.uWA.value[i].set(r.O.x, r.O.z, r.U.x / r.w, r.U.z / r.w); u.uWB.value[i].set(r.N.x, r.N.z, r.w, 0); });
     quad.material = accMat; renderer.setRenderTarget(rt); renderer.render(qs, ortho_cam);
   };
   for (const A of areas) {
@@ -86,6 +92,7 @@ export async function bakeLight({ THREE: T, renderer, scene, kit, walls, areas, 
       const nd = W.node, o = nd.localToWorld(new T.Vector3(0, 0, 0)), ux = nd.localToWorld(new T.Vector3(W.len, 0, 0)), vy = nd.localToWorld(new T.Vector3(0, H, 0)), nz = nd.localToWorld(new T.Vector3(0, 0, 1)).sub(o);
       recs.push({ kind: 'wall', W, O: o, U: ux.sub(o), V: vy.sub(o), N: nz.normalize(), w: W.len, h: H });
     }
+    wallsOf = recs.filter((r) => r.kind === 'wall').slice(0, 4);
     for (const r of recs) {
       const rw = Math.max(8, Math.min(1024, Math.round(r.w * px))), rh = Math.max(8, Math.min(1024, Math.round(r.h * px)));
       r.win = new T.WebGLRenderTarget(rw, rh, { ...rtOpts, depthBuffer: false }); r.sky = new T.WebGLRenderTarget(rw, rh, { ...rtOpts, depthBuffer: false });
