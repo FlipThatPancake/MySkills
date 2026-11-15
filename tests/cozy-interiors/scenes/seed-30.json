@@ -380,16 +380,13 @@
    },
    {
     "id": "kitchen-floor-plant",
-    "asset": "floorPlant",
+    "asset": "wateringCan",
     "at": [
      5900,
      0,
-     280
+     90
     ],
     "mount": "floor",
-    "params": {
-     "form": 3
-    },
     "group": "kitchen:shelf corner",
     "area": "kitchen"
    },
@@ -594,7 +591,7 @@
     ],
     "mount": "floor",
     "params": {
-     "form": 0
+     "form": 3
     },
     "group": "dining:door side",
     "area": "dining"
@@ -742,7 +739,7 @@
     ],
     "mount": "floor",
     "params": {
-     "form": 1
+     "form": 0
     },
     "group": "living:window",
     "area": "living"

@@ -97,8 +97,8 @@
      {
       "kind": "window",
       "width": 1400,
-      "height": 900,
-      "sill": 1500,
+      "height": 1100,
+      "sill": 1000,
       "sash": "fixed",
       "at": 3000
      },
@@ -566,6 +566,9 @@
      1050
     ],
     "mount": "floor",
+    "params": {
+     "head": 550
+    },
     "group": "bedroom:bed",
     "hero": true,
     "area": "bedroom"
@@ -896,11 +899,11 @@
     "home": {
      "target": [
       20800,
-      900,
+      1450,
       1700
      ],
      "az": 20,
-     "el": 11,
+     "el": 5,
      "fit": "objects"
     },
     "shots": [

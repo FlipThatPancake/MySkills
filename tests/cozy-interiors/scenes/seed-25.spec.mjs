@@ -47,9 +47,9 @@ const H = new Home({ seed: 25, floor: 'boards' });
 }
 { // ---------- bedroom
   const a = H.area('bedroom', 'Bedroom', { rect: [0, 0, 6000, 4800] });
-  const back = a.back(6000, [{ kind: 'window', x: 3000, width: 1400, height: 900, sill: 1500, sash: 'fixed' }, { kind: 'door', x: 5400, width: 900, hinge: 'r', open: 20 }]);
+  const back = a.back(6000, [{ kind: 'window', x: 3000, width: 1400, height: 1100, sill: 1000, sash: 'fixed' }, { kind: 'door', x: 5400, width: 900, hinge: 'r', open: 20 }]);
   const left = a.left(4800);
-  back.place('bed', 'bed', 3000, { group: 'bed', hero: true });
+  back.place('bed', 'bed', 3000, { group: 'bed', hero: true, params: { head: 550 } });
   back.place('bedside-l', 'bedsideTable', 1550, { group: 'bed' }); back.place('bedside-r', 'bedsideTable', 4450, { group: 'bed' });
   back.place('bedside-books', 'bookStack', 1550, { y: 520, mount: 'on', group: 'bed', off: 190, params: { n: 3 } });
   back.place('bedside-plant', 'plant', 4450, { y: 520, mount: 'on', group: 'bed', off: 190 });
@@ -61,7 +61,7 @@ const H = new Home({ seed: 25, floor: 'boards' });
   back.place('picture', 'picture', 1000, { y: 1350, group: 'corner', shadow: false, params: { w: 520, h: 700 } });
   back.place('floor-plant', 'floorPlant', 600, { group: 'corner' });
   a.put('bench', 'bench', [3000, 2450], 0, { y: 7, lift: 7, group: 'bed' });
-  a.view({ target: [3200, 900, 1700], az: 20, el: 11 });
+  a.view({ target: [3200, 1450, 1700], az: 20, el: 5 });
   a.shot('bed', [2900, 1100, 6000], [2540, 500, 1310], 34, 'bed');
   a.shot('wardrobe wall', [5300, 1100, 3000], [254, 1050, 3132], 40, 'wardrobe wall');
 }

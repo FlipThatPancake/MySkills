@@ -56,7 +56,7 @@ export const ASSETS = {
   fileBox: A('centre', [300, 380, 290], 'floor', 'w 300, h 290, d 380', { note: 'office foreground' }),
   pouf: A('centre', [560, 560, 380], 'floor', 'r 280, h 380'),
   cat: A('centre', [260, 400, 440], 'floor', "pose sit|curl, scale 1 (0.65 fits a 380 mm bench)", { y: 0, note: 'floor or lift on a rug; mount on for a seat or bench' }),
-  bed: A('centre', [1660, 2100, 1300], 'floor', 'w 1600, l 2100', { note: 'head toward -z: back it onto a wall' }),
+  bed: A('centre', [1660, 2100, 1300], 'floor', 'w 1600, l 2100, head 1000 (headboard height; keep 300 + head at least 150 mm below a window sill)', { note: 'head toward -z: back it onto a wall' }),
   bedsideTable: A('centre', [450, 380, 520], 'floor', 'w 450, d 380, h 520'),
   wardrobe: A('centre', [1200, 600, 2100], 'floor', 'w 1200, h 2100, d 600'),
   desk: A('centre', [1400, 700, 740], 'floor', 'w 1400, d 700, h 740'),

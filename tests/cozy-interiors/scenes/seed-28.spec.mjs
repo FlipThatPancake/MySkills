@@ -22,7 +22,7 @@ const H = new Home({ seed: 28, floor: 'boards' });
   left.place('floor-plant-2', 'floorPlant', 1300, { group: 'left corner' });
   a.put('hall-basket', 'basket', [600, 2000], 0, { group: 'left corner' });
   back.place('umbrellas', 'umbrellaStand', 2050, { group: 'console' });
-  a.view({ target: [2800, 900, 1500], az: 12, el: 11 });
+  a.view({ target: [2800, 1450, 1500], az: 12, el: 5 });
   a.shot('console', [3200, 1100, 4800], [3116, 900, 106], 36, 'console');
   a.shot('bench wall', [-400, 1100, 4200], [3700, 500, 1207], 40, 'bench wall');
 }
@@ -62,7 +62,7 @@ const H = new Home({ seed: 28, floor: 'boards' });
   a.put('floor-plant-3', 'floorPlant', [1100, 2000], 0, { group: 'desk' });
   a.put('bin', 'wasteBin', [3650, 450], 0, { group: 'desk' });
   a.put('file-box', 'fileBox', [4300, 700], 0, { group: 'shelf' });
-  a.view({ target: [2700, 800, 1400], az: 14, el: 11 });
+  a.view({ target: [2700, 1350, 1400], az: 14, el: 5 });
   a.shot('desk', [6800, 1100, 1800], [2372, 700, 723], 34, 'desk');
   a.shot('shelf', [2000, 1100, 4800], [4061, 900, 149], 40, 'shelf');
 }

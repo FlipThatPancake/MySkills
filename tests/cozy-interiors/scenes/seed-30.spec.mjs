@@ -21,7 +21,7 @@ const H = new Home({ seed: 30, floor: 'plain' });
   for (const [i, x] of [3500, 4300].entries()) a.put(`stool-${i + 1}`, 'stool', [x, 3750], 0, { group: 'island', params: { form: 0 } });
   a.put('step-stool', 'stepStool', [330, 1100], 10, { group: 'larder' });
   a.put('crate', 'crate', [2300, 3350], 12, { group: 'larder' });
-  back.place('floor-plant', 'floorPlant', 5900, { group: 'shelf corner' });
+  back.place('floor-plant', 'wateringCan', 5900, { group: 'shelf corner' });
   a.view({ target: [3200, 900, 1600], az: 14, el: 11 });
   a.shot('cooking', [2000, 1100, 5700], [2673, 1100, 354], 40, 'cooking');
   a.shot('island', [200, 1500, 900], [3376, 300, 4136], 34, 'island');
