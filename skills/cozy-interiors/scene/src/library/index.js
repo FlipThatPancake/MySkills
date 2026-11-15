@@ -1,6 +1,7 @@
 import { scuff, leaf, heightChart } from './signs.js';
 import { candlesticks, jug, breadBasket, placeSetting, glazedCabinet, benchCushion, wallPlates, pendantForm } from './diningset.js';
 import { dishRack, utensilCrock, breadBin, toaster, mokaPot, potRail, openShelf, spiceRack, ovenGlove, wallClock, cookbookStand } from './kitchenset.js';
+import { windowSeat, readingLamp, floorBooks, teaSet, readShelf } from './readset.js';
 import { taskLamp, monitor, notebook, pinboard, binders, deskOrganiser, printer, globe, wallCalendar } from './officeset.js';
 import { shoeRack, keyBowl, coatStand, hungHat, hungBag, boots, runner, letterTray } from './hallset.js';
 import { bedsideLamp, alarmClock, glassesBook, chestOfDrawers, clothesRail, clothesChair, hamper, leaningMirror, wallSconce } from './bedset.js';
@@ -39,6 +40,7 @@ export const REGISTRY = {
   bed, bedsideTable, wardrobe, desk, deskChair, coatHooks, daybed, readingChair, footstool, console: console_,
   candlesticks, jug, breadBasket, placeSetting, glazedCabinet, benchCushion, wallPlates, pendantForm,
   dishRack, utensilCrock, breadBin, toaster, mokaPot, potRail, openShelf, spiceRack, ovenGlove, wallClock, cookbookStand,
+  windowSeat, readingLamp, floorBooks, teaSet, readShelf,
   taskLamp, monitor, notebook, pinboard, binders, deskOrganiser, printer, globe, wallCalendar,
   shoeRack, keyBowl, coatStand, hungHat, hungBag, boots, runner, letterTray,
   bedsideLamp, alarmClock, glassesBook, chestOfDrawers, clothesRail, clothesChair, hamper, leaningMirror, wallSconce,

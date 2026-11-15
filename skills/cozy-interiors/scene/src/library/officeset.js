@@ -50,7 +50,8 @@ export function taskLamp(kit, { form = 'arm', shade = 'cone', a1 = 62, a2 = -28,
 
 export function monitor(kit, { w = 560, stand = 'foot', kb = 'yes', seed = 1 } = {}) {   // a flat screen on a stand, dark glass, with an optional keyboard and mouse in front
   const T = kit.THREE, g = kit.group(), R = rb(kit), h = w * 0.56, y0 = stand === 'arm' ? 160 : 100, z = -60;
-  g.add(R(0, y0, z, w, h, 20, 8, { tone: 'lo' })); g.add(R(0, y0 + 14, z + 11, w - 28, h - 28, 4, 3, { grey: true }));
+  g.add(R(0, y0, z, w, h, 20, 8, { tone: 'lo' })); g.add(R(0, y0 + 14, z + 11, w - 28, h - 28, 4, 3, lo)); { const zz = z + 14, cx = 0, cy = y0 + h * 0.5, sw = w - 28, sh = h - 28, ln = [[cx - sw * 0.3, cy + sh * 0.3, zz], [cx - sw * 0.08, cy + sh * 0.42, zz], [cx - sw * 0.34, cy + sh * 0.18, zz], [cx - sw * 0.18, cy + sh * 0.3, zz]];   // the window glint, and two faint window frames
+    const rc = (x0, y0b, x1, y1) => [[x0, y0b, zz], [x1, y0b, zz], [x1, y0b, zz], [x1, y1, zz], [x1, y1, zz], [x0, y1, zz], [x0, y1, zz], [x0, y0b, zz]]; g.add(kit.lines(ln, 'mid')); g.add(kit.lines([...rc(cx - sw * 0.1, cy - sh * 0.3, cx + sw * 0.4, cy + sh * 0.3), [cx - sw * 0.1, cy + sh * 0.2, zz], [cx + sw * 0.4, cy + sh * 0.2, zz]], 'faint')); }
   if (stand === 'bar') { g.add(R(0, 0, z - 10, w * 0.42, 14, 220, 6, lo)); g.add(kit.cyl(0, 14, z - 6, 20, y0 - 8, { seg: 14, ...lo })); }
   else if (stand === 'arm') { g.add(kit.cyl(0, 0, -95, 60, 10, { seg: 24, ...lo })); g.add(rod(kit, [0, 10, -95], [0, y0 + h * 0.5, -95], 12, 12, 'lo')); g.add(rod(kit, [0, y0 + h * 0.5, -95], [0, y0 + h * 0.5, z - 6], 10, 10, 'lo')); }
   else { g.add(R(0, 0, 40, 260, 14, 220, 8, lo)); g.add(kit.cyl(0, 14, z - 4, 22, y0 - 12, { rTop: 16, seg: 14, ...lo })); }
@@ -100,7 +101,7 @@ export function deskOrganiser(kit, { form = 'cups', n = 3, tall = 1, pens = 3, t
   const cnt = Math.max(2, Math.min(4, n)), base = [[44, 110], [38, 140], [50, 90], [40, 120]].slice(0, cnt);
   base.forEach(([r, h0], i) => { const h = h0 * tall, x = (i - (cnt - 1) / 2) * 112, tn = i % 2 ? lt : {};
     if (form === 'pots') { g.add(Rb(x, 0, 0, r * 1.9, h, r * 1.9, 6, tn)); g.add(Rb(x, h - 3, 0, r * 1.5, 3, r * 1.5, 2, { linen: true })); } else { g.add(kit.cyl(x, 0, 0, r, h, { rTop: r * 1.05, seg: 24, ...(i % 2 ? lt : {}) })); g.add(kit.cyl(x, h - 3, 0, r * 0.82, 3, { seg: 20, linen: true })); }
-    for (let k = 0; k < Math.max(1, Math.round(pens * (0.6 + 0.3 * (i % 2)))); k++) { const a = R() * 6.28, tl = 0.08 + R() * 0.2, L = 150 + R() * 40; g.add(rod(kit, [x + Math.cos(a) * 6, h - 20, Math.sin(a) * 6], [x + Math.cos(a) * (6 + L * tl), h - 20 + L, Math.sin(a) * (6 + L * tl)], 4.5, 4.5, 'lo')); } });
+    for (let k = 0; k < Math.max(1, Math.round(pens * (0.6 + 0.3 * (i % 2)))); k++) { const a = R() * 6.28, tl = 0.08 + R() * 0.2, L = 150 + R() * 40; const out = 50 + R() * 40, lat = (r - 10) * 0.3 + out * tl; g.add(rod(kit, [x + Math.cos(a) * 6, h - 110, Math.sin(a) * 6], [x + Math.cos(a) * lat, h + out, Math.sin(a) * lat], 4.5, 4.5, 'lo')); } });
   g.add(Rb(0, 0, 90, cnt * 112 - 12, 10, 70, 3, lo));   // a little tray in front
   return kit.merge(g);
 }

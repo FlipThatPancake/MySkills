@@ -318,7 +318,8 @@
  "reading-corner": {
   "hero": [
    "reading chair with a footstool and a floor lamp",
-   "daybed under shelves"
+   "daybed under shelves",
+   "window seat with pillows and a reading lamp"
   ],
   "openings": [
    [
@@ -360,6 +361,8 @@
    "floorLamp",
    "shelf",
    "daybed",
+   "windowSeat",
+   "readingLamp",
    "rug"
   ],
   "accents": [
@@ -370,13 +373,18 @@
    "basket",
    "picture",
    "wall shelf",
-   "vase of branches"
+   "vase of branches",
+   "floor books",
+   "tea set",
+   "small wall shelf (readShelf)"
   ]
  },
  "hallway": {
   "hero": [
    "coat hooks over a bench",
-   "console with a mirror"
+   "console with a mirror",
+   "shoe rack by the door",
+   "coat stand and a runner"
   ],
   "openings": [
    [
@@ -411,7 +419,10 @@
    "bench",
    "console",
    "mirror",
-   "rug"
+   "rug",
+   "shoeRack",
+   "coatStand",
+   "runner"
   ],
   "accents": [
    "basket",
@@ -419,13 +430,20 @@
    "picture",
    "vase of branches",
    "floor lamp",
-   "stool"
+   "stool",
+   "key bowl (keyBowl)",
+   "letter tray (letterTray)",
+   "boots",
+   "hat on a hook (hungHat)",
+   "bag on a hook (hungBag)"
   ]
  },
  "home-office": {
   "hero": [
    "desk under a window",
-   "desk with a shelf wall"
+   "desk with a shelf wall",
+   "trestle desk with a pinboard above",
+   "writing desk in a corner"
   ],
   "openings": [
    [
@@ -478,7 +496,16 @@
    "picture",
    "wall shelf",
    "cushion",
-   "mirror"
+   "mirror",
+   "task lamp (taskLamp)",
+   "monitor",
+   "notebook and pens (notebook)",
+   "pinboard",
+   "binders",
+   "desk organiser (deskOrganiser)",
+   "printer",
+   "globe",
+   "wall calendar (wallCalendar)"
   ]
  },
  "backingWeights": {

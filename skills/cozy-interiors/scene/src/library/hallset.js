@@ -43,7 +43,7 @@ export function shoeRack(kit, { w = 760, tiers = 3, form = 'slat', fill = 'most'
 }
 
 // the pale lining of a bowl: the profile pulled in 3 mm and turned so its faces look inward
-const inner = (kit, P) => kit.solid(new kit.THREE.LatheGeometry(P.map(([a, b]) => new kit.THREE.Vector2(Math.max(0.01, a - 3), b + 3)).reverse(), 36), 0, 0, 0, { smooth: true, linen: true });
+export const inner = (kit, P) => kit.solid(new kit.THREE.LatheGeometry(P.map(([a, b]) => new kit.THREE.Vector2(Math.max(0.01, a - 3), b + 3)).reverse(), 36), 0, 0, 0, { smooth: true, linen: true });
 function key(kit, x, y, z, ang, R) {   // a flat key: a round bow with a hole, a shaft with two teeth
   const g = kit.group(), L = 52 + R() * 12; g.scale.setScalar(1.15);
   g.add(kit.cyl(0, 0, 0, 11, 3, { seg: 16, tone: 'lo' })); g.add(rx(kit.solid(new kit.THREE.TorusGeometry(11, 1.6, 6, 18), 0, 3.4, 0, { smooth: true }), Math.PI / 2));
