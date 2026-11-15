@@ -29,7 +29,7 @@ export function tote(kit, x, y, z, { w = 270, h = 340, d = 70, strap = 170, tone
 const lerpAt = (pts, s) => { for (let i = 1; i < pts.length; i++) if (s <= pts[i][0]) { const [a, ha] = pts[i - 1], [b, hb] = pts[i], t = (s - a) / (b - a), e = t * t * (3 - 2 * t); return ha + (hb - ha) * e; } return pts[pts.length - 1][1]; };
 const SIDE = { sneaker: [[0, 62], [0.05, 70], [0.3, 74], [0.46, 100], [0.64, 76], [0.82, 48], [0.95, 32], [1, 26]], boot: [[0, 150], [0.07, 168], [0.3, 160], [0.4, 128], [0.5, 96], [0.7, 66], [0.88, 44], [1, 28]] };
 export function shoe(kit, x, z, L = 270, o = {}) {
-  const g = kit.group(), T = kit.THREE, kind = o.kind === 'boot' ? 'boot' : 'sneaker', W = L * 0.37, side = SIDE[kind], sole = 16 * L / 270, NS = 56, NA = 36;
+  const g = kit.group(), T = kit.THREE, kind = o.kind === 'boot' ? 'boot' : 'sneaker', W = L * 0.37, side = SIDE[kind], sole = 16 * L / 270, NS = 84, NA = 60;
   const fw = (s) => { const base = s < 0.66 ? 0.6 + 0.4 * Math.pow(s / 0.66, 0.8) : 1, toe = s > 0.78 ? Math.max(0.1, Math.sqrt(Math.max(0, 1 - Math.pow((s - 0.78) / 0.22, 2)))) : 1, heel = s < 0.06 ? Math.sqrt(Math.max(0, 1 - Math.pow((0.06 - s) / 0.06, 2))) : 1; return W / 2 * base * toe * heel; };
   const spring = (s) => (s > 0.68 ? 16 * Math.pow((s - 0.68) / 0.32, 2) * L / 270 : 0), sp = (c, e) => Math.sign(c) * Math.pow(Math.abs(c), e);
   const loft = (yb, yt, wf, ex, ey, hole) => { const pos = [], idx = []; for (let i = 0; i <= NS; i++) { const s = 1 - Math.pow(1 - i / NS, 1.6); for (let j = 0; j < NA; j++) { const a = j / NA * 6.2832, b = yb(s), t = yt(s); let yy = (b + t) / 2 + (t - b) / 2 * sp(Math.sin(a), ey); if (hole && Math.sin(a) > 0.2 && Math.pow(Math.cos(a) / 0.72, 2) + Math.pow((s - hole.s) / hole.ds, 2) < 1) yy = Math.min(yy, hole.y); pos.push((i === NS ? 0 : fw(s)) * wf * sp(Math.cos(a), ex), yy, (s - 0.5) * L); } } for (let i = 0; i < NS; i++) for (let j = 0; j < NA; j++) { const a = i * NA + j, b = i * NA + (j + 1) % NA, c = a + NA, d = b + NA; idx.push(a, b, c, b, d, c); } const ge = new T.BufferGeometry(); ge.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); ge.setIndex(idx); ge.computeVertexNormals(); return ge; };
@@ -59,7 +59,7 @@ export function poufBody(kit, r, h, tone) {
 export function cloth(kit, { nx = 2, ny = 2, pts = [0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 1], thick = 6, tone = 'lo' } = {}) {
   const T = kit.THREE, g = kit.group(), n = nx * ny, pos = new Float32Array(n * 6), idx = [];
   const P = Float32Array.from(pts);   // relax the frozen grid a little, so a crumpled edge draws as a soft line
-  for (let pass = 0; pass < 3; pass++) { const B = P.slice(); for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) { const k = (j * nx + i) * 3, nb = [[i - 1, j], [i + 1, j], [i, j - 1], [i, j + 1]].filter(([a, b]) => a >= 0 && b >= 0 && a < nx && b < ny); for (let c = 0; c < 3; c++) { let m = 0; for (const [a, b] of nb) m += B[(b * nx + a) * 3 + c]; P[k + c] = B[k + c] * 0.5 + m / nb.length * 0.5; } } }
+  for (let pass = 0; pass < 7; pass++) { const B = P.slice(); for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) { const k = (j * nx + i) * 3, nb = [[i - 1, j], [i + 1, j], [i, j - 1], [i, j + 1]].filter(([a, b]) => a >= 0 && b >= 0 && a < nx && b < ny); for (let c = 0; c < 3; c++) { let m = 0; for (const [a, b] of nb) m += B[(b * nx + a) * 3 + c]; P[k + c] = B[k + c] * 0.5 + m / nb.length * 0.5; } } }
   for (let i = 0; i < n * 3; i++) pos[i] = P[i];
   const geo = new T.BufferGeometry(); geo.setAttribute('position', new T.BufferAttribute(pos, 3));
   for (let j = 0; j < ny - 1; j++) for (let i = 0; i < nx - 1; i++) { const a = j * nx + i, b = a + 1, c = a + nx, d = c + 1; idx.push(a, c, b, b, c, d); }
@@ -71,6 +71,15 @@ export function cloth(kit, { nx = 2, ny = 2, pts = [0, 0, 0, 1, 0, 0, 0, 0, 1, 1
   for (let i = 0; i < nx - 1; i++) { for (const base of [0, (ny - 1) * nx]) { const a = base + i, b = a + 1; all.push(a, b, n + a, b, n + b, n + a); } }
   for (let j = 0; j < ny - 1; j++) { for (const off of [0, nx - 1]) { const a = j * nx + off, b = a + nx; all.push(a, b, n + a, b, n + b, n + a); } }
   const solid = new T.BufferGeometry(); solid.setAttribute('position', new T.BufferAttribute(pos, 3)); solid.setIndex(all); solid.computeVertexNormals();
-  g.add(kit.solid(solid, 0, 0, 0, { smooth: true, tone, crease: 55 })); g.userData.size = { w: 1, d: 1, h: 1 };
+  g.add(kit.solid(solid, 0, 0, 0, { smooth: true, tone, crease: 100 }));
+  const fl = []; for (const f of [0.3, 0.5, 0.72]) { const i = Math.round((nx - 1) * f); for (let j = 2; j < ny - 3; j++) { for (const jj of [j, j + 1]) { const k = jj * nx + i; fl.push([pos[k * 3] + nrm.getX(k) * 1.5, pos[k * 3 + 1] + nrm.getY(k) * 1.5, pos[k * 3 + 2] + nrm.getZ(k) * 1.5]); } } }   // two or three fold lines along the cloth
+  if (fl.length) g.add(kit.lines(fl, 'lo')); g.userData.size = { w: 1, d: 1, h: 1 };
+  return g;
+}
+
+// A folded throw lying on a surface: three or so layers of soft cloth, each a little narrower than the one below, origin the middle of its footprint at the surface.
+export function foldedThrow(kit, { w = 1400, d = 380, layers = 3, tone = 'lo' } = {}) {
+  const g = kit.group(); let y = 0;
+  for (let i = 0; i < layers; i++) { const h = 24 + (i % 2) * 4, b = softBox(kit, w - i * 36, h, d - i * 18, { r: 10, bulge: 3, tone }); b.position.set(i * 6 - 6, y + h / 2, (i % 2 ? 5 : -4)); g.add(b); y += h - 3; }
   return g;
 }

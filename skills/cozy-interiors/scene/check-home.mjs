@@ -27,6 +27,7 @@ const issues = await page.evaluate(() => {
     g.updateMatrixWorld(true); const b = new T.Box3(), bb = new T.Box3();
     g.traverse((o) => { if (!o.isMesh || o.isLineSegments2 || o.userData.lines || o.material.isMeshBasicMaterial || kit.hulls.includes(o.material) || o.material === kit.depth) return; o.geometry.computeBoundingBox(); b.union(bb.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld)); });
     g.traverse((o) => { if (o.userData.landing) { const L = new T.Vector3(...o.userData.landing).applyMatrix4(o.matrixWorld), c = b.getCenter(new T.Vector3()); b.expandByPoint(L); b.expandByPoint(new T.Vector3(c.x - 130, L.y, c.z - 130)); b.expandByPoint(new T.Vector3(c.x + 130, L.y, c.z + 130)); } });   // a swaying plant is measured at rest: its blades move with the wind, so their own boxes would change the checks from run to run
+    if (b.isEmpty()) b.expandByPoint(new T.Vector3().setFromMatrixPosition(g.matrixWorld));   // a mark drawn only in lines has no solid parts: it counts as a point
     return b;
   };
   const boxes = Object.fromEntries(Object.keys(objs).map((id) => { const b = box(objs[id]); if (sc(id).asset === 'baseRun') b.max.y = Math.min(b.max.y, 940); return [id, b]; }));   // a run's tap is not part of its body
@@ -34,6 +35,7 @@ const issues = await page.evaluate(() => {
   const cornersOf = (g) => {
     g.updateMatrixWorld(true); const inv = g.matrixWorld.clone().invert(), b = new T.Box3(), bb = new T.Box3();
     g.traverse((o) => { if (!o.isMesh || o.isLineSegments2 || o.material.isMeshBasicMaterial || kit.hulls.includes(o.material) || o.material === kit.depth) return; o.geometry.computeBoundingBox(); b.union(bb.copy(o.geometry.boundingBox).applyMatrix4(inv.clone().multiply(o.matrixWorld))); });
+    if (b.isEmpty()) b.expandByPoint(new T.Vector3().setFromMatrixPosition(g.matrixWorld));
     const pts = []; for (const x of [b.min.x, b.max.x]) for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) pts.push(new T.Vector3(x, y, z).applyMatrix4(g.matrixWorld));
     if (sc0(g) === 'baseRun') for (const p of pts) p.y = Math.min(p.y, 940);
     return pts;

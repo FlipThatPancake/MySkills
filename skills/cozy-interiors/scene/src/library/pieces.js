@@ -6,7 +6,7 @@ import { legs as legParts, handle, rod } from './parts.js';
 import { vessel, PROFILES, pillowGeometry, pillowZ } from './soft.js';
 const rnd = (seed) => { let r = (seed || 1) * 9301 + 49297; return () => { r = (r * 9301 + 49297) % 233280; return r / 233280; }; };
 
-export function sideTable(kit, { r = 230, h = 520, top = 'round', legs = 'splay', shelf = 'low', drawer = 'none', tone } = {}) {
+export function sideTable(kit, { r = 230, h = 520, top = 'round', legs = 'splay', shelf = 'low', drawer = 'none', ajar = 0, tone } = {}) {
   const g = kit.group(), T = 30, round = top === 'round', lr = r * 0.62, pts = [];
   const props = { tone };
   if (round) g.add(kit.cyl(0, h - T, 0, r, T, { rTop: r - 5, seg: 40, ...props }));
@@ -17,10 +17,11 @@ export function sideTable(kit, { r = 230, h = 520, top = 'round', legs = 'splay'
   const ls = Math.min(170, h * 0.32);
   if (shelf === 'low' && legs !== 'sled') { if (round) g.add(kit.cyl(0, ls, 0, lr + 40, 18, { seg: 36, tone: 'lo' })); else g.add(kit.rbox(-r + 22, ls, r - 22, 2 * r - 44, 18, 2 * r - 44, 6, { tone: 'lo' })); }
   if (drawer !== 'none' && !round) {
-    const a = r - 26, dh = Math.min(110, h * 0.2);
-    g.add(kit.rbox(-a, h - T - dh, a, 2 * a, dh, 2 * a, 6, { tone: 'lo' }));
-    g.add(kit.lines([[-a + 8, h - T - dh + 8, a + 1], [a - 8, h - T - dh + 8, a + 1], [a - 8, h - T - 8, a + 1], [-a + 8, h - T - 8, a + 1], [-a + 8, h - T - 8, a + 1], [-a + 8, h - T - dh + 8, a + 1], [a - 8, h - T - 8, a + 1], [a - 8, h - T - dh + 8, a + 1]], 'lo'));
-    g.add(handle(kit, drawer, 0, h - T - dh / 2, a, { w: Math.min(90, a) }));
+    const dr = kit.group(), a = r - 26, dh = Math.min(110, h * 0.2);
+    dr.add(kit.rbox(-a, h - T - dh, a, 2 * a, dh, 2 * a, 6, { tone: 'lo' }));
+    dr.add(kit.lines([[-a + 8, h - T - dh + 8, a + 1], [a - 8, h - T - dh + 8, a + 1], [a - 8, h - T - 8, a + 1], [-a + 8, h - T - 8, a + 1], [-a + 8, h - T - 8, a + 1], [-a + 8, h - T - dh + 8, a + 1], [a - 8, h - T - 8, a + 1], [a - 8, h - T - dh + 8, a + 1]], 'lo'));
+    dr.add(handle(kit, drawer, 0, h - T - dh / 2, a, { w: Math.min(90, a) }));
+    dr.position.z = ajar; g.add(dr);   // ajar: how far the drawer is pulled out, in mm
   }
   return kit.merge(g);
 }

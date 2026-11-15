@@ -239,6 +239,33 @@
     "off": 330
    },
    {
+    "id": "kitchen-mug",
+    "asset": "mug",
+    "at": [
+     2110,
+     900,
+     330
+    ],
+    "mount": "on",
+    "params": {},
+    "group": "kitchen:cooking",
+    "area": "kitchen",
+    "off": 330
+   },
+   {
+    "id": "kitchen-scuff",
+    "asset": "scuff",
+    "at": [
+     3300,
+     0,
+     2300
+    ],
+    "mount": "lines",
+    "params": {},
+    "group": "kitchen:island",
+    "area": "kitchen"
+   },
+   {
     "id": "kitchen-can",
     "asset": "wateringCan",
     "at": [
@@ -628,6 +655,35 @@
     "params": {
      "form": 3
     },
+    "group": "dining:door side",
+    "area": "dining"
+   },
+   {
+    "id": "dining-leaf",
+    "asset": "leaf",
+    "at": [
+     10400,
+     0,
+     4430
+    ],
+    "mount": "lines",
+    "params": {
+     "turn": 2.2
+    },
+    "group": "dining:door side",
+    "area": "dining"
+   },
+   {
+    "id": "dining-scuff",
+    "asset": "scuff",
+    "at": [
+     9580,
+     0,
+     2000
+    ],
+    "turn": 90,
+    "mount": "lines",
+    "params": {},
     "group": "dining:door side",
     "area": "dining"
    },
@@ -2819,12 +2875,13 @@
     ],
     "mount": "floor",
     "params": {
+     "top": "square",
+     "drawer": "knob",
+     "ajar": 55,
      "r": 218,
      "h": 560,
-     "top": "round",
      "legs": "ball",
      "shelf": "none",
-     "drawer": "cup",
      "tone": "mid"
     },
     "group": "living:sofa",

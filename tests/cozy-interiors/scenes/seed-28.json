@@ -174,6 +174,33 @@
     "shadow": false
    },
    {
+    "id": "hallway-mug",
+    "asset": "mug",
+    "at": [
+     2350,
+     800,
+     165
+    ],
+    "mount": "on",
+    "params": {},
+    "group": "hallway:console",
+    "area": "hallway",
+    "off": 165
+   },
+   {
+    "id": "hallway-scuff",
+    "asset": "scuff",
+    "at": [
+     2200,
+     0,
+     800
+    ],
+    "mount": "lines",
+    "params": {},
+    "group": "hallway:console",
+    "area": "hallway"
+   },
+   {
     "id": "hallway-console-plant",
     "asset": "plant",
     "at": [
@@ -2523,12 +2550,12 @@
      "w": 380,
      "h": 340,
      "lean": 18,
+     "crease": "soft",
+     "skew": 0.16,
      "thick": 113,
      "piping": "none",
      "pattern": "tufted",
-     "tone": "mid",
-     "skew": 0.24,
-     "crease": "soft"
+     "tone": "mid"
     },
     "group": "living:seating",
     "area": "living"
@@ -2601,6 +2628,34 @@
     "params": {},
     "group": "office:desk",
     "hero": true,
+    "area": "office"
+   },
+   {
+    "id": "office-desk-book",
+    "asset": "openBook",
+    "at": [
+     20350,
+     740,
+     300
+    ],
+    "mount": "on",
+    "params": {},
+    "group": "office:desk",
+    "area": "office",
+    "off": 300
+   },
+   {
+    "id": "office-chart",
+    "asset": "heightChart",
+    "at": [
+     23663.3,
+     0,
+     1499.2
+    ],
+    "turn": -60,
+    "mount": "lines",
+    "params": {},
+    "group": "office:desk",
     "area": "office"
    },
    {

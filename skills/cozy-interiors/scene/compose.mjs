@@ -27,7 +27,8 @@ export class Home {
     if (!O) { const prev = this.list[this.list.length - 1], b = a.worldBounds(), x0 = prev ? prev.worldBounds().x1 + GAP : 0; a.O = [r0(x0 - b.x0), r0(-b.z0)]; }
     this.list.push(a); return a;
   }
-  write(file, fs) { this.S.areas = this.list.map((a) => a.out()); fs.writeFileSync(file, JSON.stringify(this.S, null, 1)); return this.S; }
+  sign(areaId, kind) { (this.signs ||= {})[areaId] = [...(this.signs[areaId] || []), kind]; }
+  write(file, fs) { this.S.areas = this.list.map((a) => a.out()); if (this.signs) for (const [a, k] of Object.entries(this.signs)) console.log(`signs ${a}: ${k.join(', ')}`); fs.writeFileSync(file, JSON.stringify(this.S, null, 1)); return this.S; }
 }
 const pickForm = (h, asset, params) => {   // the next form of an asset that has several (started from the seed); an explicit params.form stays
   if (!ASSETS[asset].variants || params?.form !== undefined) return params;
@@ -82,22 +83,34 @@ class Area {
     if (!ASSETS[asset]) throw new Error(`unknown asset "${asset}"; node assets.mjs lists them`);
     if (!group) throw new Error(`object "${id}" needs a group (its run, table set, seating group ...)`);
     params = vary(this.h, asset, params, this.id);
+    const SIGN = { mug: 'mug', openBook: 'book face down', scuff: 'scuffed floor', leaf: 'fallen leaf', heightChart: 'height chart', foldedThrow: 'folded throw', cloth: 'cloth dropped', shoes: 'shoes askew' };
+    if (SIGN[asset]) this.h.sign(this.id, SIGN[asset]); if (params?.ajar) this.h.sign(this.id, 'drawer ajar'); if (asset === 'cushion' && params?.crease === 'soft') this.h.sign(this.id, 'pillow creased');
     const [wx, wz] = this.P([x, z]);
     this.h.S.home.objects.push({ id: `${this.id}-${id}`, asset, at: [wx, y, wz], ...(turn - this.psi ? { turn: r0(turn - this.psi) } : {}), mount: mount || ASSETS[asset].mount, ...(params ? { params } : {}), group: `${this.id}:${group}`, ...(hero ? { hero: true } : {}), area: this.id, ...rest });
   }
-  // a cloth dropped onto a placed thing and frozen (verlet, at spec time): a.drapeOver('throw', 'sofa', { w: 1300, d: 900, at: [x, z] (area frame) or dx/dz from the target's middle, spin (deg), tone, group })
-  drapeOver(id, targetId, { w = 1200, d = 900, at, dx = 0, dz = 0, spin = 0, tone = 'lo', group, thick = 6, seed, nx = 26, ny = 26, mount = 'on', y = 0 } = {}) {
+  targetTris(label, targetId) {   // the triangles of a placed thing in this area's frame, for resting things on it
     const T = (this.h.kit ||= createKit()).THREE, tgt = this.h.S.home.objects.find((q) => q.id === `${this.id}-${targetId}`);
-    if (!tgt) throw new Error(`drapeOver('${id}', '${targetId}'): place the target first`);
+    if (!tgt) throw new Error(`${label}('${targetId}'): place the target first`);
     const mk = (o, rot) => { const g = REGISTRY[o.asset](this.h.kit, { ...(o.params || {}) }); g.rotation.y = rot * Math.PI / 180; g.position.set(...o.at); g.updateMatrixWorld(true); return g; };
     const tg = mk(tgt, tgt.turn || 0), cm = new T.Matrix4().compose(new T.Vector3(...this.P([0, 0]).flatMap((v, i) => i ? [0, v] : [v])), new T.Quaternion().setFromAxisAngle(new T.Vector3(0, 1, 0), -rad(this.psi)), new T.Vector3(1, 1, 1)), inv = cm.clone().invert(), boxes = [], bb = new T.Box3();
     const tris = [], va = new T.Vector3(), vb = new T.Vector3(), vc = new T.Vector3(), all = new T.Box3();
     tg.traverse((o) => { if (!o.isMesh || o.isLineSegments2 || o.userData.lines || o.material.isMeshBasicMaterial || this.h.kit.hulls.includes(o.material) || o.material === this.h.kit.depth) return; const m = new T.Matrix4().multiplyMatrices(inv, o.matrixWorld), g = o.geometry, p = g.attributes.position, ix = g.index;
       for (let t = 0, n = ix ? ix.count : p.count; t < n; t += 3) { const [a, b, cc] = ix ? [ix.getX(t), ix.getX(t + 1), ix.getX(t + 2)] : [t, t + 1, t + 2]; va.fromBufferAttribute(p, a).applyMatrix4(m); vb.fromBufferAttribute(p, b).applyMatrix4(m); vc.fromBufferAttribute(p, cc).applyMatrix4(m); tris.push([va.x, va.y, va.z, vb.x, vb.y, vb.z, vc.x, vc.y, vc.z]); all.expandByPoint(va).expandByPoint(vb).expandByPoint(vc); } });
+    return { T, tris, all };
+  }
+  // a cloth dropped onto a placed thing and frozen (verlet, at spec time): a.drapeOver('throw', 'sofa', { w: 1300, d: 900, at: [x, z] (area frame) or dx/dz from the target's middle, spin (deg), tone, group })
+  drapeOver(id, targetId, { w = 1200, d = 900, at, dx = 0, dz = 0, spin = 0, tone = 'lo', group, thick = 6, seed, nx = 26, ny = 26, mount = 'on', y = 0 } = {}) {
+    const { T, tris, all } = this.targetTris('drapeOver', targetId);
     const c = all.getCenter(new T.Vector3()), res = dropCloth({ height: heightField(tris), at: at || [c.x + dx, c.z + dz], w, d, nx, ny, spin: rad(spin), seed: seed ?? this.h.S.seed + id.length });
     { const hh = res.pts.filter((_, i) => i % 3 === 1); if (hh.filter((v) => v > 150).length < hh.length * 0.5) throw new Error(`drapeOver('${id}'): the cloth slid off '${targetId}' onto the floor: put it nearer the middle of the seat or bed (dx/dz), or make it larger`); }
     { const hf = res.pts.filter((_, i) => i % 3 === 1), tops = heightField(tris); if (Math.max(...hf) > tops.top + 40) throw new Error(`drapeOver('${id}'): the cloth rests ${Math.round(Math.max(...hf) - tops.top)} mm above the top of '${targetId}': move it (at or dx/dz) onto the seat, arm or bed, not the back`); }
     this.put(id, 'cloth', [0, 0], 0, { group, y, mount, params: { nx, ny, pts: res.pts, thick, tone } });
+  }
+  // a folded throw laid across a placed thing: layers stacked like a folded blanket, resting on the highest point under it. a.bandOn('throw', 'bed', { w: 1500, d: 380, at: [x, z] or dx/dz, layers: 3, tone, group })
+  bandOn(id, targetId, { w = 1400, d = 380, at, dx = 0, dz = 0, layers = 3, tone = 'lo', group, spin = 0 } = {}) {
+    const { tris, all, T } = this.targetTris('bandOn', targetId), f = heightField(tris), c = all.getCenter(new T.Vector3()), p = at || [c.x + dx, c.z + dz];
+    let top = 0; for (let a = -w / 2; a <= w / 2; a += 40) for (let b = -d / 2; b <= d / 2; b += 40) top = Math.max(top, f(p[0] + a, p[1] + b));
+    this.put(id, 'foldedThrow', p, spin, { group, y: Math.round(top), mount: 'on', params: { w, d, layers, tone } });
   }
   // ---- a cabinet run with slots: R.on('hob', 'pan') puts a pan on the middle of the first hob module
   run(F, id, left, modules, o = {}) {
