@@ -187,6 +187,7 @@
      600
     ],
     "mount": "on",
+    "params": {},
     "group": "kitchen:cooking",
     "area": "kitchen",
     "depth": 600
@@ -200,6 +201,7 @@
      600
     ],
     "mount": "wall",
+    "params": {},
     "group": "kitchen:cooking",
     "area": "kitchen",
     "depth": 600
@@ -214,6 +216,7 @@
     ],
     "turn": -35,
     "mount": "on",
+    "params": {},
     "group": "kitchen:cooking",
     "area": "kitchen",
     "off": 440
@@ -227,6 +230,7 @@
      330
     ],
     "mount": "on",
+    "params": {},
     "group": "kitchen:cooking",
     "area": "kitchen",
     "off": 330
@@ -240,6 +244,7 @@
      330
     ],
     "mount": "on",
+    "params": {},
     "group": "kitchen:cooking",
     "area": "kitchen",
     "off": 330
@@ -359,6 +364,7 @@
      1500
     ],
     "mount": "on",
+    "params": {},
     "group": "kitchen:peninsula",
     "area": "kitchen"
    },
@@ -372,6 +378,7 @@
     ],
     "turn": 8,
     "mount": "floor",
+    "params": {},
     "group": "kitchen:larder",
     "area": "kitchen"
    },
@@ -384,6 +391,7 @@
      0
     ],
     "mount": "wall",
+    "params": {},
     "group": "kitchen:shelf corner",
     "area": "kitchen",
     "shadow": false
@@ -397,6 +405,7 @@
      0
     ],
     "mount": "wall",
+    "params": {},
     "group": "kitchen:shelf corner",
     "area": "kitchen",
     "shadow": false
@@ -411,6 +420,7 @@
     ],
     "turn": 10,
     "mount": "floor",
+    "params": {},
     "group": "kitchen:larder",
     "area": "kitchen"
    },
@@ -440,6 +450,7 @@
     ],
     "turn": 20,
     "mount": "floor",
+    "params": {},
     "group": "reading:reading group",
     "hero": true,
     "area": "reading",
@@ -455,6 +466,7 @@
     ],
     "turn": 25,
     "mount": "floor",
+    "params": {},
     "group": "reading:reading group",
     "area": "reading",
     "lift": 7
@@ -468,6 +480,7 @@
      1650
     ],
     "mount": "floor",
+    "params": {},
     "group": "reading:reading group",
     "area": "reading"
    },
@@ -480,6 +493,15 @@
      1250
     ],
     "mount": "floor",
+    "params": {
+     "r": 229,
+     "h": 470,
+     "top": "square",
+     "legs": "splay",
+     "shelf": "none",
+     "drawer": "bar",
+     "tone": "lo"
+    },
     "group": "reading:chair side",
     "area": "reading"
    },
@@ -488,11 +510,12 @@
     "asset": "bookStack",
     "at": [
      11950,
-     520,
+     470,
      1250
     ],
     "turn": 20,
     "mount": "on",
+    "params": {},
     "group": "reading:chair side",
     "area": "reading"
    },
@@ -517,12 +540,17 @@
     "at": [
      12200,
      0,
-     160
+     185
     ],
     "mount": "floor",
     "params": {
      "w": 800,
-     "form": 2
+     "h": 1800,
+     "d": 370,
+     "shelves": 5,
+     "base": "plinth",
+     "back": "open",
+     "fill": "mixed"
     },
     "group": "reading:shelf",
     "area": "reading"
@@ -601,6 +629,7 @@
      190
     ],
     "mount": "floor",
+    "params": {},
     "group": "bedroom:bed",
     "area": "bedroom"
    },
@@ -613,6 +642,7 @@
      190
     ],
     "mount": "floor",
+    "params": {},
     "group": "bedroom:bed",
     "area": "bedroom"
    },
@@ -661,7 +691,10 @@
      "w": 400,
      "h": 340,
      "lean": 20,
-     "form": 2
+     "thick": 113,
+     "piping": "none",
+     "pattern": "stripes",
+     "tone": "lo"
     },
     "group": "bedroom:bed",
     "area": "bedroom"
@@ -707,6 +740,7 @@
     ],
     "turn": 90,
     "mount": "floor",
+    "params": {},
     "group": "bedroom:wardrobe wall",
     "area": "bedroom"
    },
@@ -771,6 +805,7 @@
      2450
     ],
     "mount": "floor",
+    "params": {},
     "group": "bedroom:bed",
     "area": "bedroom",
     "lift": 7

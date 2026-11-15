@@ -298,6 +298,12 @@ for (const i of areaIssues) issues.push(i);
     if (n > 150) issues.push({ rule: 'ghost', what: `${id} shot "${names[i]}": ${n} pixels belong to another area, partly faded (a ghost of a neighbour): aim the camera away from the neighbouring area or move the shot` });
   }
 }
+// variety by parameter distance: two areas may share a base asset when its variants clearly differ (distance 2 or more: two style choices, or the same in sizes), see library/space.js
+{
+  const { readFileSync } = await import('node:fs'), { distance } = await import('./src/library/space.js'), { SPACE } = await import('./src/library/meta.js');
+  const objs = JSON.parse(readFileSync(scene, 'utf8')).home.objects.filter((o) => SPACE[o.asset] && !['cushion'].includes(o.asset));
+  for (let i = 0; i < objs.length; i++) for (let j = i + 1; j < objs.length; j++) { const a = objs[i], b = objs[j]; if (a.asset === b.asset && a.area !== b.area && distance(a.asset, a.params, b.params) < 2) issues.push({ rule: 'variety', what: `${a.id} and ${b.id} are the same ${a.asset} (parameter distance ${distance(a.asset, a.params, b.params).toFixed(1)}, needs 2): change two style choices or sizes` }); }
+}
 await browser.close();
 for (const e of errors) console.log('PAGE ERROR', e);
 for (const i of issues) console.log(`[${i.rule}] ${i.what}`);

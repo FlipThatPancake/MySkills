@@ -63,5 +63,19 @@ export const ASSETS = {
   desk: A('centre', [1400, 700, 740], 'floor', 'w 1400, d 700, h 740'),
   deskChair: A('centre', [540, 540, 850], 'floor', '-'),
   daybed: A('centre', [1900, 850, 810], 'floor', 'w 1900, d 850'),
+  pot: A('centre', [200, 200, 220], 'on', 'see the parameter space', { y: 'top', note: 'an empty plant pot with rim, dip and soil, a sprig or bush in it; on a surface or the floor (mount floor, y 0)' }),
 };
-for (const [k, n] of Object.entries({ floorPlant: 4, plant: 4, vase: 4, cushion: 4, picture: 4, wallRun: 3, shelf: 3, fridge: 3, stool: 3, basket: 3 })) { ASSETS[k].variants = n; ASSETS[k].params = (ASSETS[k].params === '-' ? '' : ASSETS[k].params + ', ') + `form 0-${n - 1}`; }   // compose.mjs picks a form from the seed
+for (const [k, n] of Object.entries({ floorPlant: 4, plant: 4, vase: 4, picture: 4, wallRun: 3, fridge: 3, stool: 3, basket: 3 })) { ASSETS[k].variants = n; ASSETS[k].params = (ASSETS[k].params === '-' ? '' : ASSETS[k].params + ', ') + `form 0-${n - 1}`; }   // compose.mjs picks a form from the seed
+
+// ---- parameter spaces: what a variant of a base asset may be. A range [lo, hi] is a size or proportion (mm unless noted); a list is a style choice. compose.mjs deals unset ones from the home's seed (each value used before the deck runs out
+// of new ones, so two instances differ); named presets are points in the space. A variant = asset + seed + overrides; assets.mjs prints this, the asset sheet shows 8 of them.
+const LEGS = ['block', 'tapered', 'turned', 'hairpin', 'sled', 'splay', 'ball'];
+export const SPACE = {
+  armchair: { w: [760, 980], d: [780, 900], legs: LEGS.slice(0, 5), arms: ['track', 'rolled', 'flared', 'none'], legH: [80, 170], backH: [760, 920], back: ['loose', 'tight'], piping: ['none', 'edge'], tone: ['mid', 'lo'] },
+  sofa: { d: [820, 960], legs: LEGS.slice(0, 5), arms: ['track', 'rolled', 'flared', 'none'], legH: [80, 170], backH: [740, 880], back: ['loose', 'tight'], piping: ['none', 'edge'], tone: ['mid', 'lo'] },
+  sideTable: { r: [190, 280], h: [440, 620], top: ['round', 'square', 'rounded'], legs: ['tapered', 'turned', 'hairpin', 'splay', 'ball', 'block'], shelf: ['low', 'none'], drawer: ['none', 'bar', 'knob', 'cup', 'cutout'], tone: ['mid', 'lo'] },
+  shelf: { w: [600, 1000], h: [1200, 2100], d: [260, 380], shelves: [3, 6], base: ['plinth', 'legs', 'feet'], back: ['closed', 'open'], fill: ['books', 'boxes', 'mixed'] },
+  pot: { r: [60, 220], tall: [0.8, 1.9], profile: ['straight', 'tapered', 'belly', 'tulip', 'urn'], saucer: ['yes', 'no'], plant: ['sprig', 'bush', 'none'], tone: ['mid', 'lo'] },
+  cushion: { w: [360, 560], h: [300, 560], thick: [100, 170], piping: ['none', 'edge', 'double'], pattern: ['plain', 'stripes', 'inset', 'diamond', 'tufted'], tone: ['mid', 'lo'] },
+};
+for (const [k, sp] of Object.entries(SPACE)) ASSETS[k].space = sp;

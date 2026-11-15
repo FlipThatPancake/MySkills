@@ -1,6 +1,6 @@
 // @js:library-variants — more than one form for the things that repeat in every room (plants, vases, cushions, pictures), so two views never show the same one.
 // Each asset takes `form` (0 to N-1; compose.mjs picks it from the seed) on top of its usual params; form 0 is the original drawing.
-import { floorPlant as floorPlant0, vase as vase0, cushion as cushion0 } from './decor.js';
+import { floorPlant as floorPlant0, vase as vase0 } from './decor.js';
 import { picture as picture0 } from './living.js';
 import { plant as plant0 } from '../kitchen/plant.js';
 import { fridge as fridge0 } from '../kitchen/fridge.js';
@@ -12,7 +12,7 @@ const rnd = (seed) => { let r = (seed || 1) * 9301 + 49297; return () => { r = (
 const lo = { tone: 'lo' };
 const leafAt = (kit, x, y, z, sx, sy, rx, rz) => { const T = kit.THREE, ge = new T.SphereGeometry(1, 14, 8); ge.scale(sx, sy, 12); const l = kit.solid(ge, x, y, z, { smooth: true, leaf: true }); l.rotation.set(rx, 0, rz); return l; };
 
-export const FORMS = { floorPlant: 4, plant: 4, vase: 4, cushion: 4, picture: 4, fridge: 3, stool: 3, basket: 3 };
+export const FORMS = { floorPlant: 4, plant: 4, vase: 4, picture: 4, fridge: 3, stool: 3, basket: 3 };
 
 export function floorPlant(kit, { form = 0, h = 950, seed = 6 } = {}) {
   if (!form) return floorPlant0(kit, { h, seed });
@@ -62,20 +62,6 @@ export function vase(kit, { form = 0, h = 280, stems = 5, seed = 3 } = {}) {
     for (let s = 0; s < 5; s++) { const a = (s - 2) * 0.3, len = 260 + R() * 150, x = Math.sin(a) * len, y = h * 0.55 + Math.cos(a) * len; pts.push([0, h * 0.55, 0], [x, y, 0]); g.add(leafAt(kit, x, y, 0, 38, 38, 0, 0)); }
   }
   g.add(kit.lines(pts, 'mid'));
-  return kit.merge(g);
-}
-
-export function cushion(kit, { form = 0, w = 440, h = 420, tone = 'mid', lean = 0 } = {}) {
-  const out = cushion1(kit, { form, w, h, tone }); out.rotation.x = -lean * Math.PI / 180; return out;
-}
-function cushion1(kit, { form = 0, w = 440, h = 420, tone = 'mid' } = {}) {
-  if (!form) return cushion0(kit, { w, h, tone });
-  const g = kit.group(), D = 120, z = D / 2 + 1, pts = [];
-  g.add(kit.rbox(-w / 2, 0, D / 2, w, h, D, 70, { tone }));
-  if (form === 1) for (let i = 1; i < 6; i++) pts.push([-w / 2 + 40, h * i / 6, z], [w / 2 - 40, h * i / 6, z]);   // stripes
-  else if (form === 2) { const m = 44; pts.push([-w / 2 + m, m, z], [w / 2 - m, m, z], [w / 2 - m, m, z], [w / 2 - m, h - m, z], [w / 2 - m, h - m, z], [-w / 2 + m, h - m, z], [-w / 2 + m, h - m, z], [-w / 2 + m, m, z]); }   // an inset piped border
-  else pts.push([-w / 2 + 50, h / 2, z], [0, h - 50, z], [0, h - 50, z], [w / 2 - 50, h / 2, z], [w / 2 - 50, h / 2, z], [0, 50, z], [0, 50, z], [-w / 2 + 50, h / 2, z]);   // a diamond
-  g.add(kit.lines(pts, 'lo'));
   return kit.merge(g);
 }
 

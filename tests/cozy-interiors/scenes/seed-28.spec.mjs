@@ -59,7 +59,7 @@ const H = new Home({ seed: 28, floor: 'boards' });
   a.put('lamp', 'floorLamp', [380, 1700], 0, { group: 'reading' });
   right.place('mirror', 'mirror', 2800, { y: 800, group: 'wall', shadow: false, params: { w: 600, h: 1200, shape: 'pill' } });
   back.place('shelf', 'shelf', 4300, { group: 'shelf' });
-  back.place('shelf-plant', 'plant', 4300, { y: 1800, mount: 'on', group: 'shelf', off: 160 });
+  back.place('shelf-plant', 'plant', 4300, { y: a.topOf('shelf'), mount: 'on', group: 'shelf', off: 160 });
   back.place('floor-plant', 'floorPlant', 5050, { group: 'shelf' });
   a.put('floor-plant-3', 'floorPlant', [300, 2900], 0, { group: 'reading' });
   a.put('bin', 'wasteBin', [3650, 450], 0, { group: 'desk' });

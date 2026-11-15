@@ -189,6 +189,7 @@
      600
     ],
     "mount": "on",
+    "params": {},
     "group": "kitchen:cooking",
     "area": "kitchen",
     "depth": 600
@@ -202,6 +203,7 @@
      600
     ],
     "mount": "wall",
+    "params": {},
     "group": "kitchen:cooking",
     "area": "kitchen",
     "depth": 600
@@ -216,6 +218,7 @@
     ],
     "turn": -35,
     "mount": "on",
+    "params": {},
     "group": "kitchen:cooking",
     "area": "kitchen",
     "off": 440
@@ -229,6 +232,7 @@
      330
     ],
     "mount": "on",
+    "params": {},
     "group": "kitchen:cooking",
     "area": "kitchen",
     "off": 330
@@ -242,6 +246,7 @@
      330
     ],
     "mount": "on",
+    "params": {},
     "group": "kitchen:cooking",
     "area": "kitchen",
     "off": 330
@@ -271,6 +276,7 @@
      0
     ],
     "mount": "wall",
+    "params": {},
     "group": "kitchen:cooking",
     "area": "kitchen",
     "shadow": false
@@ -284,6 +290,7 @@
      0
     ],
     "mount": "wall",
+    "params": {},
     "group": "kitchen:shelf corner",
     "area": "kitchen",
     "shadow": false
@@ -375,6 +382,7 @@
     ],
     "turn": 10,
     "mount": "floor",
+    "params": {},
     "group": "kitchen:larder",
     "area": "kitchen"
    },
@@ -388,6 +396,7 @@
     ],
     "turn": 12,
     "mount": "floor",
+    "params": {},
     "group": "kitchen:larder",
     "area": "kitchen"
    },
@@ -415,6 +424,7 @@
      210
     ],
     "mount": "floor",
+    "params": {},
     "group": "dining:sideboard",
     "hero": true,
     "area": "dining"
@@ -480,6 +490,7 @@
      2240
     ],
     "mount": "floor",
+    "params": {},
     "group": "dining:table set",
     "area": "dining",
     "lift": 7
@@ -494,6 +505,7 @@
     ],
     "turn": 180,
     "mount": "floor",
+    "params": {},
     "group": "dining:table set",
     "area": "dining",
     "lift": 7
@@ -507,6 +519,7 @@
      2240
     ],
     "mount": "floor",
+    "params": {},
     "group": "dining:table set",
     "area": "dining",
     "lift": 7
@@ -521,6 +534,7 @@
     ],
     "turn": 180,
     "mount": "floor",
+    "params": {},
     "group": "dining:table set",
     "area": "dining",
     "lift": 7
@@ -597,6 +611,7 @@
     ],
     "turn": 90,
     "mount": "floor",
+    "params": {},
     "group": "dining:door side",
     "area": "dining"
    },
@@ -624,6 +639,7 @@
      0
     ],
     "mount": "wall",
+    "params": {},
     "group": "living:window",
     "area": "living"
    },
@@ -633,11 +649,19 @@
     "at": [
      21200,
      7,
-     450
+     425
     ],
     "mount": "floor",
     "params": {
-     "seats": 3
+     "seats": 3,
+     "d": 850,
+     "legs": "turned",
+     "arms": "rolled",
+     "legH": 142,
+     "backH": 750,
+     "back": "tight",
+     "piping": "edge",
+     "tone": "lo"
     },
     "group": "living:sofa",
     "hero": true,
@@ -687,6 +711,7 @@
      1750
     ],
     "mount": "floor",
+    "params": {},
     "group": "living:sofa",
     "area": "living",
     "lift": 7
@@ -701,6 +726,7 @@
     ],
     "turn": 15,
     "mount": "on",
+    "params": {},
     "group": "living:sofa",
     "area": "living"
    },
@@ -714,6 +740,7 @@
     ],
     "turn": 150,
     "mount": "floor",
+    "params": {},
     "group": "living:sofa",
     "area": "living",
     "lift": 7
@@ -724,9 +751,18 @@
     "at": [
      22700,
      0,
-     230
+     218
     ],
     "mount": "floor",
+    "params": {
+     "r": 218,
+     "h": 560,
+     "top": "round",
+     "legs": "ball",
+     "shelf": "none",
+     "drawer": "cup",
+     "tone": "mid"
+    },
     "group": "living:sofa",
     "area": "living"
    },

@@ -7,12 +7,6 @@ const rnd = (seed) => { let r = (seed || 1) * 9301 + 49297; return () => { r = (
 import { potTop } from './pots.js';
 const lo = { tone: 'lo' };
 
-export function cushion(kit, { w = 440, h = 420, tone = 'mid', lean = 0 } = {}) {   // lean: degrees tilted back (top toward -z, the back of the seat); 15 to 25 against a headboard or a sofa back   // a square pillow standing on its edge; lean it with the scene's turn or a tilt in params
-  const g = kit.group(), D = 120;
-  g.add(kit.rbox(-w / 2, 0, D / 2, w, h, D, 70, { tone }));
-  g.add(kit.lines([[-w / 2 + 40, 18, D / 2 + 1], [w / 2 - 40, h - 18, D / 2 + 1], [w / 2 - 40, 18, D / 2 + 1], [-w / 2 + 40, h - 18, D / 2 + 1]], 'lo'));
-  return kit.merge(g);
-}
 export function vase(kit, { h = 280, stems = 5, seed = 3 } = {}) {   // a bottle vase with branches: thin curved lines with a few leaves
   const g = kit.group(), R = rnd(seed), pts = [];
   g.add(kit.cyl(0, 0, 0, 70, h * 0.62, { rTop: 80, seg: 24 })); g.add(kit.cyl(0, h * 0.62, 0, 80, h * 0.38, { rTop: 30, seg: 24 }));
@@ -51,14 +45,6 @@ export function wallShelf(kit, { w = 900, seed = 4 } = {}) {   // a floating boa
   let x = -w / 2 + 40; const end = -w / 2 + w * 0.5;
   while (x < end) { const bw = 26 + R() * 20, bh = 150 + R() * 100; g.add(kit.box(x, T, D - 40, bw, bh, D - 80, lo)); x += bw + 2; }
   g.add(kit.cyl(w * 0.2, T, D / 2, 52, 110, { rTop: 66, seg: 20, ...lo })); g.add(kit.cyl(w * 0.38, T, D / 2, 70, 56, { rTop: 84, seg: 24 }));
-  return kit.merge(g);
-}
-export function sideTable(kit, { r = 230, h = 520 } = {}) {   // a round top on a rim, three slim splayed legs, a lower shelf resting on the legs
-  const g = kit.group(), top = 30, lr0 = r * 0.6, lr1 = r * 0.78, ls = 165;
-  g.add(kit.cyl(0, h - top, 0, r, top, { rTop: r - 6, seg: 40 }));
-  for (let i = 0; i < 3; i++) { const a = i * Math.PI * 2 / 3 + 0.5, c = Math.cos(a), s = Math.sin(a), T = kit.THREE, A = new T.Vector3(c * lr0, h - top, s * lr0), B = new T.Vector3(c * lr1, 0, s * lr1), d = A.clone().sub(B), m = kit.solid(new T.CylinderGeometry(11, 14, d.length(), 10), 0, 0, 0, { smooth: true, ...lo }); m.position.copy(A).add(B).multiplyScalar(0.5); m.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), d.normalize()); g.add(m); }
-  const rs = lr1 + (lr0 - lr1) * ls / (h - top) + 22;   // the shelf reaches just past the legs at its height
-  g.add(kit.cyl(0, ls, 0, rs, 18, { seg: 36, ...lo }));
   return kit.merge(g);
 }
 export function roundTable(kit, { r = 650, h = 750 } = {}) {

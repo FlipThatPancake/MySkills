@@ -35,7 +35,7 @@
      0,
      2400
     ],
-    "mount": "floor",
+    "mount": "on",
     "group": "sheet:row",
     "area": "sheet"
    },
@@ -47,7 +47,7 @@
      0,
      2400
     ],
-    "mount": "floor",
+    "mount": "on",
     "group": "sheet:row",
     "area": "sheet"
    },
@@ -59,7 +59,7 @@
      0,
      2400
     ],
-    "mount": "floor",
+    "mount": "on",
     "group": "sheet:row",
     "area": "sheet"
    },
@@ -72,6 +72,9 @@
      2400
     ],
     "mount": "floor",
+    "params": {
+     "form": 1
+    },
     "group": "sheet:row",
     "area": "sheet"
    },
@@ -128,7 +131,10 @@
      0,
      2400
     ],
-    "mount": "floor",
+    "mount": "on",
+    "params": {
+     "form": 1
+    },
     "group": "sheet:row",
     "area": "sheet"
    },
@@ -140,7 +146,7 @@
      0,
      2400
     ],
-    "mount": "floor",
+    "mount": "on",
     "group": "sheet:row",
     "area": "sheet"
    },
@@ -306,6 +312,11 @@
   {
    "id": "sheet",
    "name": "Sheet",
+   "O": [
+    0,
+    0
+   ],
+   "psi": 0,
    "bounds": {
     "x0": 0,
     "x1": 9000,

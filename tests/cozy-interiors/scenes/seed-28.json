@@ -149,6 +149,7 @@
      165
     ],
     "mount": "floor",
+    "params": {},
     "group": "hallway:console",
     "hero": true,
     "area": "hallway"
@@ -213,6 +214,7 @@
     ],
     "turn": -60,
     "mount": "wall",
+    "params": {},
     "group": "hallway:bench wall",
     "area": "hallway",
     "shadow": false
@@ -277,6 +279,7 @@
     ],
     "turn": -60,
     "mount": "floor",
+    "params": {},
     "group": "hallway:bench wall",
     "area": "hallway",
     "off": 560
@@ -321,6 +324,7 @@
      125
     ],
     "mount": "floor",
+    "params": {},
     "group": "hallway:console",
     "area": "hallway"
    },
@@ -333,6 +337,7 @@
      0
     ],
     "mount": "wall",
+    "params": {},
     "group": "living:window",
     "area": "living"
    },
@@ -362,6 +367,17 @@
     ],
     "turn": 25,
     "mount": "floor",
+    "params": {
+     "w": 860,
+     "d": 800,
+     "legs": "turned",
+     "arms": "flared",
+     "legH": 97,
+     "backH": 870,
+     "back": "loose",
+     "piping": "edge",
+     "tone": "mid"
+    },
     "group": "living:seating",
     "hero": true,
     "area": "living",
@@ -377,6 +393,17 @@
     ],
     "turn": -25,
     "mount": "floor",
+    "params": {
+     "w": 910,
+     "d": 850,
+     "legs": "tapered",
+     "arms": "track",
+     "legH": 142,
+     "backH": 910,
+     "back": "tight",
+     "piping": "none",
+     "tone": "lo"
+    },
     "group": "living:seating",
     "area": "living",
     "lift": 7
@@ -390,6 +417,15 @@
      1900
     ],
     "mount": "floor",
+    "params": {
+     "r": 218,
+     "h": 590,
+     "top": "rounded",
+     "legs": "ball",
+     "shelf": "low",
+     "drawer": "knob",
+     "tone": "mid"
+    },
     "group": "living:seating",
     "area": "living",
     "lift": 7
@@ -423,7 +459,10 @@
      "w": 380,
      "h": 340,
      "lean": 18,
-     "form": 1
+     "thick": 113,
+     "piping": "none",
+     "pattern": "tufted",
+     "tone": "mid"
     },
     "group": "living:seating",
     "area": "living"
@@ -438,6 +477,7 @@
     ],
     "turn": 160,
     "mount": "floor",
+    "params": {},
     "group": "living:seating",
     "area": "living",
     "lift": 7
@@ -451,6 +491,7 @@
      190
     ],
     "mount": "floor",
+    "params": {},
     "group": "living:window",
     "area": "living"
    },
@@ -478,6 +519,7 @@
      2750
     ],
     "mount": "floor",
+    "params": {},
     "group": "living:corner",
     "area": "living"
    },
@@ -490,6 +532,7 @@
      350
     ],
     "mount": "floor",
+    "params": {},
     "group": "office:desk",
     "hero": true,
     "area": "office"
@@ -520,6 +563,7 @@
     ],
     "turn": 180,
     "mount": "floor",
+    "params": {},
     "group": "office:desk",
     "area": "office",
     "lift": 7
@@ -582,6 +626,7 @@
     ],
     "turn": 200,
     "mount": "floor",
+    "params": {},
     "group": "office:reading",
     "area": "office",
     "lift": 7
@@ -595,6 +640,7 @@
      1700
     ],
     "mount": "floor",
+    "params": {},
     "group": "office:reading",
     "area": "office"
    },
@@ -623,11 +669,17 @@
     "at": [
      21700,
      0,
-     160
+     135
     ],
     "mount": "floor",
     "params": {
-     "form": 2
+     "w": 930,
+     "h": 1930,
+     "d": 270,
+     "shelves": 6,
+     "base": "feet",
+     "back": "closed",
+     "fill": "books"
     },
     "group": "office:shelf",
     "area": "office"
@@ -637,7 +689,7 @@
     "asset": "plant",
     "at": [
      21700,
-     1800,
+     1930,
      160
     ],
     "mount": "on",
@@ -687,6 +739,7 @@
      450
     ],
     "mount": "floor",
+    "params": {},
     "group": "office:desk",
     "area": "office"
    },
@@ -699,6 +752,7 @@
      700
     ],
     "mount": "floor",
+    "params": {},
     "group": "office:shelf",
     "area": "office"
    }

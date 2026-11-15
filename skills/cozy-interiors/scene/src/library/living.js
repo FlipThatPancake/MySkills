@@ -12,21 +12,9 @@ function boxes(kit) {   // boxes by their middle (x, z) and bottom (y), not by a
     rb: (cx, y, cz, w, h, d, r, o) => kit.rbox(cx - w / 2, y, cz + d / 2, w, h, d, r, o),
   };
 }
-function seat(kit, { seats, w, d, arm = 200, backTop = 800 }) {
-  const { bx, rb } = boxes(kit), g = kit.group(), inner = w - 2 * arm, cw = inner / seats;
-  for (const sx of [-1, 1]) for (const sz of [-1, 1]) g.add(kit.cyl(sx * (w / 2 - 70), 0, sz * (d / 2 - 70), 24, 110, { seg: 14, ...lo }));   // feet
-  g.add(rb(0, 110, 0, w, 150, d, 12));                                                                                                           // the base
-  for (const sx of [-1, 1]) g.add(rb(sx * (w / 2 - arm / 2), 110, 0, arm, 500, d, 36));                                                          // the arms
-  g.add(rb(0, 260, -d / 2 + 110, inner, backTop - 260, 220, 40));                                                                                // the back
-  for (let i = 0; i < seats; i++) {
-    const cx = -inner / 2 + cw * (i + 0.5);
-    g.add(rb(cx, 260, 110, cw - 6, 170, d - 220, 26));                                                                                           // seat cushion
-    g.add(rb(cx, 430, -d / 2 + 245, cw - 20, 330, 160, 34, lo));                                                                                 // back cushion
-  }
-  return kit.merge(g);
-}
-export const sofa = (kit, { seats = 3, w, d = 900 } = {}) => seat(kit, { seats, w: w || (seats === 2 ? 1650 : 2100), d });
-export const armchair = (kit, { w = 880, d = 860 } = {}) => seat(kit, { seats: 1, w, d, arm: 170, backTop: 820 });
+import { sofa, armchair } from './seating.js';
+import { legs as legParts } from './parts.js';
+export { sofa, armchair };
 
 export function coffeeTable(kit, { w = 1000, d = 600, h = 380 } = {}) {
   const { bx, rb } = boxes(kit), g = kit.group(), TT = 30;
@@ -43,13 +31,15 @@ export function rug(kit, { w = 2400, d = 1700, border = 70 } = {}) {
   g.add(kit.lines(pts, 'mid'));
   return kit.merge(g);
 }
-export function shelf(kit, { w = 800, h = 1800, d = 320, shelves = 5, seed = 3, form = 0 } = {}) {   // form 0 book rows, 1 lidded boxes and flat stacks, 2 gapped book groups with a pot and a basket
-  const { bx } = boxes(kit), g = kit.group(), R = rnd(seed), T = 22, P = 90;
+export function shelf(kit, { w = 800, h = 1800, d = 320, shelves = 5, seed = 3, form: form0 = 0, fill, base = 'plinth', back = 'closed' } = {}) {   // space: meta.js SPACE.shelf; fill books|boxes|mixed (form 0|1|2 still works)
+  const form = fill ? ['books', 'boxes', 'mixed'].indexOf(fill) : form0;   // form 0 book rows, 1 lidded boxes and flat stacks, 2 gapped book groups with a pot and a basket
+  const { bx } = boxes(kit), g = kit.group(), R = rnd(seed), T = 22, P = base === 'plinth' ? 90 : base === 'legs' ? 150 : 60;
   g.add(bx(-w / 2 + T / 2, 0, 0, T, h, d)); g.add(bx(w / 2 - T / 2, 0, 0, T, h, d));                // the sides
-  g.add(bx(0, 0, -d / 2 + 6, w - 2 * T, h, 12, lo));                                                    // the back
+  if (back === 'open') { for (const y of [h * 0.3, h - 140]) g.add(bx(0, y, -d / 2 + 6, w - 2 * T, 40, 12, lo)); } else g.add(bx(0, 0, -d / 2 + 6, w - 2 * T, h, 12, lo));   // the back: closed, or two rails
   const ys = []; for (let i = 0; i <= shelves; i++) ys.push(P + (h - P - T) * i / shelves);
   ys.forEach((y) => g.add(bx(0, y, 0, w - 2 * T, T, d - 4)));
-  g.add(bx(0, 0, 8, w - 2 * T, P, d - 30, lo));                                                          // the plinth, set back
+  if (base === 'plinth') g.add(bx(0, 0, 8, w - 2 * T, P, d - 30, lo));   // the plinth, set back
+  else { const pts = []; for (const sx of [-1, 1]) for (const sz of [-1, 1]) pts.push([sx * (w / 2 - 50), sz * (d / 2 - 40)]); g.add(legParts(kit, base === 'legs' ? 'tapered' : 'block', pts, P + 2, { r: base === 'legs' ? 24 : 30, out: [0, 0] })); }
   for (let s = 1; s < shelves; s++) {   // books on some shelves: spines of mixed heights, one leaning, a pot at the end of the third
     const y = ys[s] + T, gap = ys[s + 1] - y - T;
     if (form === 1) {   // storage boxes in a row, a flat stack of books on top of the last one
