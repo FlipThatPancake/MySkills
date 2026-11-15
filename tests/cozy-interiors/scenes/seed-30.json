@@ -234,10 +234,23 @@
     "off": 330
    },
    {
+    "id": "kitchen-can",
+    "asset": "wateringCan",
+    "at": [
+     900,
+     900,
+     330
+    ],
+    "mount": "on",
+    "group": "kitchen:cooking",
+    "area": "kitchen",
+    "off": 330
+   },
+   {
     "id": "kitchen-plant",
     "asset": "plant",
     "at": [
-     900,
+     1850,
      900,
      330
     ],
@@ -380,13 +393,16 @@
    },
    {
     "id": "kitchen-floor-plant",
-    "asset": "wateringCan",
+    "asset": "floorPlant",
     "at": [
      5900,
      0,
-     90
+     280
     ],
     "mount": "floor",
+    "params": {
+     "form": 1
+    },
     "group": "kitchen:shelf corner",
     "area": "kitchen"
    },

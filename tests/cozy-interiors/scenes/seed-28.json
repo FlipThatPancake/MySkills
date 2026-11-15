@@ -35,14 +35,14 @@
     ]
    },
    {
-    "id": "hallway-left",
+    "id": "hallway-right",
     "from": [
-     0,
-     0
+     7200,
+     3117.7
     ],
     "to": [
-     -1800,
-     3117.7
+     5400,
+     0
     ],
     "openings": [
      {
@@ -51,18 +51,18 @@
       "height": 1200,
       "sill": 1000,
       "sash": "fixed",
-      "at": 1100
+      "at": 700
      }
     ]
    },
    {
     "id": "living-back",
     "from": [
-     13800,
+     15600,
      0
     ],
     "to": [
-     8400,
+     10200,
      0
     ],
     "openings": [
@@ -79,11 +79,11 @@
    {
     "id": "living-left",
     "from": [
-     8400,
+     10200,
      0
     ],
     "to": [
-     8400,
+     10200,
      4200
     ],
     "openings": [
@@ -100,11 +100,11 @@
    {
     "id": "office-back",
     "from": [
-     22200,
+     24000,
      0
     ],
     "to": [
-     16800,
+     18600,
      0
     ],
     "openings": [
@@ -121,11 +121,11 @@
    {
     "id": "office-right",
     "from": [
-     24000,
+     25800,
      3117.7
     ],
     "to": [
-     22200,
+     24000,
      0
     ],
     "openings": [
@@ -191,10 +191,11 @@
     "id": "hallway-bench",
     "asset": "bench",
     "at": [
-     4250,
+     5735.5,
      0,
-     190
+     961
     ],
+    "turn": -60,
     "mount": "floor",
     "params": {
      "w": 1000
@@ -206,10 +207,11 @@
     "id": "hallway-hooks",
     "asset": "coatHooks",
     "at": [
-     4250,
+     5900,
      1500,
-     0
+     866
     ],
+    "turn": -60,
     "mount": "wall",
     "group": "hallway:bench wall",
     "area": "hallway",
@@ -219,92 +221,82 @@
     "id": "hallway-bench-plant",
     "asset": "plant",
     "at": [
-     3950,
+     5585.5,
      450,
-     190
+     701.2
     ],
+    "turn": -60,
     "mount": "on",
     "params": {
      "form": 2
     },
     "group": "hallway:bench wall",
-    "area": "hallway"
+    "area": "hallway",
+    "off": 190
    },
    {
     "id": "hallway-cat",
     "asset": "cat",
     "at": [
-     4550,
+     5910.5,
      450,
-     190
+     1264.1
     ],
-    "turn": -15,
+    "turn": -60,
     "mount": "on",
     "params": {
      "pose": "curl",
      "scale": 0.65
     },
     "group": "hallway:bench wall",
-    "area": "hallway"
+    "area": "hallway",
+    "off": 190
    },
    {
     "id": "hallway-rug",
     "asset": "rug",
     "at": [
-     3300,
+     1500,
      0,
-     1050
+     1900
     ],
     "mount": "floor",
     "params": {
-     "w": 3800,
-     "d": 1000
+     "w": 1000,
+     "d": 3300
     },
-    "group": "hallway:bench wall",
+    "group": "hallway:runner",
     "area": "hallway"
    },
    {
     "id": "hallway-shoes",
     "asset": "shoes",
     "at": [
-     4250,
+     5415,
      0,
-     560
+     1146
     ],
+    "turn": -60,
     "mount": "floor",
     "group": "hallway:bench wall",
-    "area": "hallway"
-   },
-   {
-    "id": "hallway-floor-plant-2",
-    "asset": "floorPlant",
-    "at": [
-     -907.5,
-     0,
-     2131.9
-    ],
-    "turn": 60,
-    "mount": "floor",
-    "params": {
-     "form": 1
-    },
-    "group": "hallway:left corner",
-    "area": "hallway"
+    "area": "hallway",
+    "off": 560
    },
    {
     "id": "hallway-hall-basket",
     "asset": "basket",
     "at": [
-     600,
-     0,
-     2000
+     1500,
+     7,
+     2300
     ],
     "mount": "floor",
     "params": {
      "form": 2
     },
-    "group": "hallway:left corner",
-    "area": "hallway"
+    "group": "hallway:runner",
+    "area": "hallway",
+    "lift": 7
    },
    {
     "id": "hallway-umbrellas",
@@ -322,7 +314,7 @@
     "id": "living-curtain",
     "asset": "curtain",
     "at": [
-     12000,
+     13800,
      0,
      0
     ],
@@ -334,7 +326,7 @@
     "id": "living-rug",
     "asset": "rug",
     "at": [
-     10350,
+     12150,
      0,
      2300
     ],
@@ -350,7 +342,7 @@
     "id": "living-armchair-l",
     "asset": "armchair",
     "at": [
-     9600,
+     11400,
      7,
      2100
     ],
@@ -365,7 +357,7 @@
     "id": "living-armchair-r",
     "asset": "armchair",
     "at": [
-     11100,
+     12900,
      7,
      2100
     ],
@@ -379,7 +371,7 @@
     "id": "living-side-table",
     "asset": "sideTable",
     "at": [
-     10350,
+     12150,
      7,
      1900
     ],
@@ -392,7 +384,7 @@
     "id": "living-vase",
     "asset": "vase",
     "at": [
-     10350,
+     12150,
      527,
      1900
     ],
@@ -407,7 +399,7 @@
     "id": "living-cushion",
     "asset": "cushion",
     "at": [
-     9550,
+     11350,
      470,
      2050
     ],
@@ -425,7 +417,7 @@
     "id": "living-cat",
     "asset": "cat",
     "at": [
-     10350,
+     12150,
      7,
      2900
     ],
@@ -442,7 +434,7 @@
     "id": "living-lamp",
     "asset": "floorLamp",
     "at": [
-     10900,
+     12700,
      0,
      190
     ],
@@ -454,13 +446,13 @@
     "id": "living-floor-plant",
     "asset": "floorPlant",
     "at": [
-     13450,
+     15250,
      0,
      280
     ],
     "mount": "floor",
     "params": {
-     "form": 2
+     "form": 1
     },
     "group": "living:corner",
     "area": "living"
@@ -469,7 +461,7 @@
     "id": "living-pouf",
     "asset": "pouf",
     "at": [
-     11950,
+     13750,
      0,
      2750
     ],
@@ -481,7 +473,7 @@
     "id": "office-desk",
     "asset": "desk",
     "at": [
-     19500,
+     21300,
      0,
      350
     ],
@@ -494,7 +486,7 @@
     "id": "office-desk-plant",
     "asset": "plant",
     "at": [
-     19000,
+     20800,
      740,
      160
     ],
@@ -510,7 +502,7 @@
     "id": "office-chair",
     "asset": "deskChair",
     "at": [
-     19500,
+     21300,
      7,
      1250
     ],
@@ -524,7 +516,7 @@
     "id": "office-rug",
     "asset": "rug",
     "at": [
-     19500,
+     21300,
      0,
      1350
     ],
@@ -537,22 +529,10 @@
     "area": "office"
    },
    {
-    "id": "office-lamp",
-    "asset": "floorLamp",
-    "at": [
-     17250,
-     0,
-     190
-    ],
-    "mount": "floor",
-    "group": "office:wall",
-    "area": "office"
-   },
-   {
     "id": "office-picture",
     "asset": "picture",
     "at": [
-     18300,
+     20100,
      1400,
      0
     ],
@@ -565,10 +545,52 @@
     "shadow": false
    },
    {
+    "id": "office-rug-2",
+    "asset": "rug",
+    "at": [
+     20100,
+     0,
+     2100
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 1900,
+     "d": 1500
+    },
+    "group": "office:reading",
+    "area": "office"
+   },
+   {
+    "id": "office-reading-chair",
+    "asset": "readingChair",
+    "at": [
+     20100,
+     7,
+     2100
+    ],
+    "turn": 200,
+    "mount": "floor",
+    "group": "office:reading",
+    "area": "office",
+    "lift": 7
+   },
+   {
+    "id": "office-lamp",
+    "asset": "floorLamp",
+    "at": [
+     19300,
+     0,
+     1700
+    ],
+    "mount": "floor",
+    "group": "office:reading",
+    "area": "office"
+   },
+   {
     "id": "office-mirror",
     "asset": "mirror",
     "at": [
-     23600,
+     25400,
      800,
      2424.9
     ],
@@ -587,7 +609,7 @@
     "id": "office-shelf",
     "asset": "shelf",
     "at": [
-     21100,
+     22900,
      0,
      160
     ],
@@ -602,7 +624,7 @@
     "id": "office-shelf-plant",
     "asset": "plant",
     "at": [
-     21100,
+     22900,
      1800,
      160
     ],
@@ -618,13 +640,13 @@
     "id": "office-floor-plant",
     "asset": "floorPlant",
     "at": [
-     21850,
+     23650,
      0,
      280
     ],
     "mount": "floor",
     "params": {
-     "form": 3
+     "form": 2
     },
     "group": "office:shelf",
     "area": "office"
@@ -633,22 +655,22 @@
     "id": "office-floor-plant-3",
     "asset": "floorPlant",
     "at": [
-     17900,
+     18900,
      0,
-     2000
+     2900
     ],
     "mount": "floor",
     "params": {
-     "form": 0
+     "form": 3
     },
-    "group": "office:desk",
+    "group": "office:reading",
     "area": "office"
    },
    {
     "id": "office-bin",
     "asset": "wasteBin",
     "at": [
-     20450,
+     22250,
      0,
      450
     ],
@@ -660,7 +682,7 @@
     "id": "office-file-box",
     "asset": "fileBox",
     "at": [
-     21100,
+     22900,
      0,
      700
     ],
@@ -680,8 +702,8 @@
    ],
    "psi": 0,
    "bounds": {
-    "x0": -1800,
-    "x1": 5400,
+    "x0": 0,
+    "x1": 7200,
     "z0": 0,
     "z1": 3600,
     "top": 2500
@@ -701,31 +723,31 @@
      {
       "name": "console",
       "from": [
-       3200,
-       1100,
-       4800
+       3800,
+       1250,
+       4500
       ],
       "look": [
-       3116,
+       3266,
        900,
-       106
+       -5
       ],
-      "fov": 36,
+      "fov": 40,
       "subject": "hallway:console"
      },
      {
       "name": "bench wall",
       "from": [
-       -400,
+       2000,
        1100,
-       4200
+       3600
       ],
       "look": [
-       3700,
-       500,
-       1207
+       5361,
+       837,
+       561
       ],
-      "fov": 40,
+      "fov": 38,
       "subject": "hallway:bench wall"
      }
     ]
@@ -735,13 +757,13 @@
    "id": "living",
    "name": "Living room",
    "O": [
-    8400,
+    10200,
     0
    ],
    "psi": 0,
    "bounds": {
-    "x0": 8400,
-    "x1": 13800,
+    "x0": 10200,
+    "x1": 15600,
     "z0": 0,
     "z1": 4200,
     "top": 2500
@@ -749,7 +771,7 @@
    "camera": {
     "home": {
      "target": [
-      11200,
+      13000,
       800,
       1600
      ],
@@ -761,12 +783,12 @@
      {
       "name": "armchairs",
       "from": [
-       11600,
+       13400,
        1100,
        6600
       ],
       "look": [
-       9848,
+       11648,
        300,
        2446
       ],
@@ -776,12 +798,12 @@
      {
       "name": "window corner",
       "from": [
-       13400,
+       15200,
        1250,
        5400
       ],
       "look": [
-       12388,
+       14188,
        1200,
        1
       ],
@@ -795,13 +817,13 @@
    "id": "office",
    "name": "Home office",
    "O": [
-    16800,
+    18600,
     0
    ],
    "psi": 0,
    "bounds": {
-    "x0": 16800,
-    "x1": 24000,
+    "x0": 18600,
+    "x1": 25800,
     "z0": 0,
     "z1": 3600,
     "top": 2500
@@ -809,7 +831,7 @@
    "camera": {
     "home": {
      "target": [
-      19500,
+      21300,
       1350,
       1400
      ],
@@ -821,14 +843,14 @@
      {
       "name": "desk",
       "from": [
-       23600,
-       1100,
-       1800
+       25400,
+       1250,
+       2700
       ],
       "look": [
-       19172,
-       700,
-       723
+       21464,
+       300,
+       642
       ],
       "fov": 34,
       "subject": "office:desk"
@@ -836,14 +858,14 @@
      {
       "name": "shelf",
       "from": [
-       18800,
+       20600,
        1100,
        4800
       ],
       "look": [
-       20861,
+       22692,
        900,
-       149
+       146
       ],
       "fov": 40,
       "subject": "office:shelf"

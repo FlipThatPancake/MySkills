@@ -9,22 +9,21 @@ const H = new Home({ seed: 28, floor: 'boards' });
 { // ---------- hallway
   const a = H.area('hallway', 'Hallway', { rect: [0, 0, 5400, 3600] });
   const back = a.back(5400, [{ kind: 'arch', x: 1200, width: 1200, to: 'living', beyond: false, depth: 200 }]);
-  const left = a.left(3600, [{ kind: 'window', x: 2500, width: 1000, height: 1200, sill: 1000, sash: 'fixed' }], 120);
   back.place('console', 'console', 2850, { group: 'console', hero: true });                       // a console by the arch, with a mirror
   back.place('mirror', 'mirror', 2850, { y: 1150, group: 'console', shadow: false, params: { w: 700, h: 1000, shape: 'round' } });
   back.place('console-plant', 'plant', 3200, { y: 800, mount: 'on', group: 'console', off: 165 });
-  back.place('bench', 'bench', 4250, { group: 'bench wall', params: { w: 1000 } });                                     // a bench with coats above it
-  back.place('hooks', 'coatHooks', 4250, { group: 'bench wall', shadow: false });
-  a.put('bench-plant', 'plant', [3950, 190], 0, { y: 450, mount: 'on', group: 'bench wall' });
-  a.put('cat', 'cat', [4550, 190], -15, { y: 450, mount: 'on', group: 'bench wall', params: { pose: 'curl', scale: 0.65 } });
-  a.put('rug', 'rug', [3300, 1050], 0, { group: 'bench wall', params: { w: 3800, d: 1000 } });  // a runner in front of the wall pieces, leading to the arch
-  a.put('shoes', 'shoes', [4250, 560], 0, { group: 'bench wall' });
-  left.place('floor-plant-2', 'floorPlant', 1300, { group: 'left corner' });
-  a.put('hall-basket', 'basket', [600, 2000], 0, { group: 'left corner' });
+  const right = a.right(3600, [{ kind: 'window', x: 2900, width: 1000, height: 1200, sill: 1000, sash: 'fixed' }], 120);
+  right.place('bench', 'bench', 1000, { group: 'bench wall', params: { w: 1000 } });                                     // a bench with coats above it, on the side wall facing across the hall
+  right.place('hooks', 'coatHooks', 1000, { group: 'bench wall', shadow: false });
+  right.place('bench-plant', 'plant', 700, { y: 450, mount: 'on', group: 'bench wall', off: 190 });
+  right.place('cat', 'cat', 1350, { y: 450, mount: 'on', group: 'bench wall', off: 190, params: { pose: 'curl', scale: 0.65 } });
+  a.put('rug', 'rug', [1500, 1900], 0, { group: 'runner', params: { w: 1000, d: 3300 } });  // a runner from the front of the view to the arch
+  right.place('shoes', 'shoes', 1000, { group: 'bench wall', off: 560 });
+  a.put('hall-basket', 'basket', [1500, 2300], 0, { y: 7, lift: 7, group: 'runner' });
   back.place('umbrellas', 'umbrellaStand', 2050, { group: 'console' });
   a.view({ target: [2800, 1450, 1500], az: 12, el: 5 });
-  a.shot('console', [3200, 1100, 4800], [3116, 900, 106], 36, 'console');
-  a.shot('bench wall', [-400, 1100, 4200], [3700, 500, 1207], 40, 'bench wall');
+  a.shot('console', [3800, 1250, 4500], [3266, 900, -5], 40, 'console');
+  a.shot('bench wall', [2000, 1100, 3600], [5361, 837, 561], 38, 'bench wall');
 }
 { // ---------- living
   const a = H.area('living', 'Living room', { rect: [0, 0, 5400, 4200] });
@@ -53,18 +52,20 @@ const H = new Home({ seed: 28, floor: 'boards' });
   back.place('desk-plant', 'plant', 2200, { y: 740, mount: 'on', group: 'desk', off: 160 });
   a.put('chair', 'deskChair', [2700, 1250], 180, { y: 7, lift: 7, group: 'desk' });
   a.put('rug', 'rug', [2700, 1350], 0, { group: 'desk', params: { w: 2200, d: 1500 } });
-  back.place('lamp', 'floorLamp', 450, { group: 'wall' });
   back.place('picture', 'picture', 1500, { y: 1400, group: 'wall', shadow: false });
+  a.put('rug-2', 'rug', [1500, 2100], 0, { group: 'reading', params: { w: 1900, d: 1500 } });
+  a.put('reading-chair', 'readingChair', [1500, 2100], 200, { y: 7, lift: 7, group: 'reading' });
+  a.put('lamp', 'floorLamp', [700, 1700], 0, { group: 'reading' });
   right.place('mirror', 'mirror', 2800, { y: 800, group: 'wall', shadow: false, params: { w: 600, h: 1200, shape: 'pill' } });
   back.place('shelf', 'shelf', 4300, { group: 'shelf' });
   back.place('shelf-plant', 'plant', 4300, { y: 1800, mount: 'on', group: 'shelf', off: 160 });
   back.place('floor-plant', 'floorPlant', 5050, { group: 'shelf' });
-  a.put('floor-plant-3', 'floorPlant', [1100, 2000], 0, { group: 'desk' });
+  a.put('floor-plant-3', 'floorPlant', [300, 2900], 0, { group: 'reading' });
   a.put('bin', 'wasteBin', [3650, 450], 0, { group: 'desk' });
   a.put('file-box', 'fileBox', [4300, 700], 0, { group: 'shelf' });
   a.view({ target: [2700, 1350, 1400], az: 14, el: 5 });
-  a.shot('desk', [6800, 1100, 1800], [2372, 700, 723], 34, 'desk');
-  a.shot('shelf', [2000, 1100, 4800], [4061, 900, 149], 40, 'shelf');
+  a.shot('desk', [6800, 1250, 2700], [2864, 300, 642], 34, 'desk');
+  a.shot('shelf', [2000, 1100, 4800], [4092, 900, 146], 40, 'shelf');
 }
 H.write(new URL('./seed-28.json', import.meta.url).pathname, fs);
 console.log('wrote seed-28.json');

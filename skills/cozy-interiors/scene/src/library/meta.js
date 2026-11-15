@@ -49,7 +49,7 @@ export const ASSETS = {
   basket: A('centre', [460, 460, 320], 'floor', 'r 230, h 320'),
   stepStool: A('centre', [380, 320, 420], 'floor', 'w 380, h 420', { note: 'kitchen foreground' }),
   crate: A('centre', [520, 340, 260], 'floor', 'w 520, d 340, h 260', { note: 'a crate of fruit; kitchen foreground' }),
-  wateringCan: A('centre', [330, 180, 260], 'floor', 'h 260', { note: 'kitchen foreground' }),
+  wateringCan: A('centre', [330, 180, 260], 'on', 'h 260', { y: 'top', note: 'on a worktop or a window sill' }),
   umbrellaStand: A('centre', [250, 250, 1300], 'floor', 'h 520', { note: 'hallway, by the door' }),
   shoes: A('centre', [600, 290, 120], 'floor', 'pairs 2', { note: 'hallway, under the bench' }),
   wasteBin: A('centre', [260, 260, 340], 'floor', 'h 340', { note: 'office foreground' }),
