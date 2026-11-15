@@ -7,23 +7,24 @@ import { Home } from '../../../skills/cozy-interiors/scene/compose.mjs';
 const H = new Home({ seed: 28, floor: 'boards' });
 
 { // ---------- hallway
-  const a = H.area('hallway', 'Hallway', { rect: [0, 0, 5400, 3600] });
-  const back = a.back(5400, [{ kind: 'arch', x: 1200, width: 1200, to: 'living', beyond: false, depth: 200 }]);
-  back.place('console', 'console', 2850, { group: 'console', hero: true });                       // a console by the arch, with a mirror
-  back.place('mirror', 'mirror', 2850, { y: 1150, group: 'console', shadow: false, params: { w: 700, h: 1000, shape: 'round' } });
-  back.place('console-plant', 'plant', 3200, { y: 800, mount: 'on', group: 'console', off: 165 });
+  const a = H.area('hallway', 'Hallway', { rect: [0, 0, 4200, 3600] });
+  const back = a.back(4200, [{ kind: 'arch', x: 1200, width: 1200, to: 'living', beyond: false, depth: 200 }]);
+  back.place('console', 'console', 2650, { group: 'console', hero: true });                       // a console by the arch, with a mirror
+  back.place('mirror', 'mirror', 2650, { y: 1150, group: 'console', shadow: false, params: { w: 700, h: 1000, shape: 'round' } });
+  back.place('console-plant', 'plant', 3000, { y: 800, mount: 'on', group: 'console', off: 165 });
   const right = a.right(3600, [{ kind: 'window', x: 2900, width: 1000, height: 1200, sill: 1000, sash: 'fixed' }], 120);
   right.place('bench', 'bench', 1000, { group: 'bench wall', params: { w: 1000 } });                                     // a bench with coats above it, on the side wall facing across the hall
   right.place('hooks', 'coatHooks', 1000, { group: 'bench wall', shadow: false });
   right.place('bench-plant', 'plant', 700, { y: 450, mount: 'on', group: 'bench wall', off: 190 });
   right.place('cat', 'cat', 1350, { y: 450, mount: 'on', group: 'bench wall', off: 190, params: { pose: 'curl', scale: 0.65 } });
-  a.put('rug', 'rug', [1500, 1900], 0, { group: 'runner', params: { w: 1000, d: 3300 } });  // a runner from the front of the view to the arch
-  right.place('shoes', 'shoes', 1000, { group: 'bench wall', off: 560 });
-  a.put('hall-basket', 'basket', [1500, 2300], 0, { y: 7, lift: 7, group: 'runner' });
-  back.place('umbrellas', 'umbrellaStand', 2050, { group: 'console' });
-  a.view({ target: [2800, 1450, 1500], az: 12, el: 5 });
-  a.shot('console', [3800, 1250, 4500], [3266, 900, -5], 40, 'console');
-  a.shot('bench wall', [2000, 1100, 3600], [5361, 837, 561], 38, 'bench wall');
+  a.put('rug', 'rug', [1200, 1900], 0, { group: 'runner', params: { w: 1000, d: 3300 } });  // a runner from the front of the view to the arch
+  right.place('shoes', 'shoes', 1000, { group: 'front corner', off: 560 });
+  a.put('hall-basket', 'basket', [3000, 2700], 0, { group: 'front corner' });
+  a.put('hall-plant', 'floorPlant', [3500, 3000], 0, { group: 'front corner' });
+  back.place('umbrellas', 'umbrellaStand', 3700, { group: 'console' });
+  a.view({ target: [2100, 1450, 1500], az: 12, el: 5 });
+  a.shot('console', [4100, 1500, 4500], [3586, 900, 10], 38, 'console');
+  a.shot('bench wall', [200, 1250, 2100], [4713, 837, 1643], 36, 'bench wall');
 }
 { // ---------- living
   const a = H.area('living', 'Living room', { rect: [0, 0, 5400, 4200] });
@@ -65,7 +66,7 @@ const H = new Home({ seed: 28, floor: 'boards' });
   a.put('file-box', 'fileBox', [4300, 700], 0, { group: 'shelf' });
   a.view({ target: [2700, 1350, 1400], az: 14, el: 5 });
   a.shot('desk', [6800, 1250, 2700], [2864, 300, 642], 34, 'desk');
-  a.shot('shelf', [2000, 1100, 4800], [4092, 900, 146], 40, 'shelf');
+  a.shot('shelf', [2000, 1100, 4800], [4061, 900, 149], 40, 'shelf');
 }
 H.write(new URL('./seed-28.json', import.meta.url).pathname, fs);
 console.log('wrote seed-28.json');

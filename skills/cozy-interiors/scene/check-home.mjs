@@ -117,7 +117,7 @@ const issues = await page.evaluate(() => {
   // 4. a door or arch keeps a path 1000 mm wide and 1500 mm deep straight ahead (floor pieces; rugs and lamps do not count)
   for (const W of home.walls) for (const b of W.built) {
     if (b.op.kind === 'window') continue;
-    const xc = W.len - b.op.at, zone = { x0: xc - 500, x1: xc + 500, z0: 0, z1: 1500, y0: 0, y1: 1900 };
+    const xc = W.len - b.op.at, zone = { x0: xc - 500, x1: xc + 500, z0: 0, z1: b.op.kind === 'arch' ? 2400 : 1500, y0: 0, y1: 1900 };
     for (const id of Object.keys(objs)) { if (sc(id).mount !== 'floor' || ['rug'].includes(sc(id).asset)) continue; if (hit3(toLocal(W, boxes[id]), zone, 20)) out.push({ rule: 'path', what: `${id} blocks the path in front of the ${b.op.kind} on ${W.id || W.i} at ${b.op.at}` }); }
   }
   // 5. support: a thing that stands `on` something touches its top (or sits inside it, like a cushion on a seat); a thing on a wall touches that wall
@@ -175,7 +175,7 @@ const areaIssues = await page.evaluate(() => {
     if (!as(WALLDEC).length) out.push({ rule: 'interest', what: `${A} has nothing on a wall (picture, mirror, wall shelf, curtain)` });
     if (walls.length < 1 || walls.length > 2) out.push({ rule: 'interest', what: `${A} has ${walls.length} backing walls (need 1 or 2)` });
     const groups = {}; for (const i of real) (groups[sc(i).group || ''] ||= []).push(i);
-    for (const [g, m] of Object.entries(groups)) if (!g) out.push({ rule: 'group', what: `${m.join(', ')} belong to no group` }); else if (m.length < 2) out.push({ rule: 'group', what: `${m[0]} stands alone in "${g}": give it a group or remove it` });
+    for (const [g, m] of Object.entries(groups)) if (m.every((i) => sc(i).asset === 'rug')) continue; else if (!g) out.push({ rule: 'group', what: `${m.join(', ')} belong to no group` }); else if (m.length < 2) out.push({ rule: 'group', what: `${m[0]} stands alone in "${g}": give it a group or remove it` });
     // the home view
     api.setArea(A, true); camera.updateMatrixWorld(true); camera.updateProjectionMatrix();
     const R = Object.fromEntries(ids.map((i) => [i, rect(boxes[i])]));
@@ -195,7 +195,8 @@ const areaIssues = await page.evaluate(() => {
         { const poufs = real.filter((i) => sc(i).asset === 'pouf'); if (poufs.length) (window.__poufAreas ||= new Set()).add(A); }
         if (spread < 0.45 * D) out.push({ rule: 'depth', what: `${A}: its pieces span ${spread.toFixed(0)} mm of the ${D.toFixed(0)} mm depth (want 45%): pull the main group 800 to 1500 mm off the wall and add a low piece in front` }); } }
     // rugs lie under furniture, never alone
-    for (const r of real.filter((i) => sc(i).asset === 'rug')) { const rb = boxes[r]; if (!real.some((i) => i !== r && sc(i).asset !== 'rug' && ['floor'].includes(sc(i).mount) && rb.containsPoint(new T.Vector3(...boxes[i].getCenter(new T.Vector3()).toArray().map((v, k) => (k === 1 ? rb.min.y + 1 : v)))))) out.push({ rule: 'rug', what: `${r} has no furniture on it: put a group on the rug or remove it` }); }
+    for (const r of real.filter((i) => sc(i).asset === 'rug' && Math.min(boxes[i].max.x - boxes[i].min.x, boxes[i].max.z - boxes[i].min.z) > 1100)) { const rb = boxes[r];   // a runner (narrower than 1100 mm) lies free
+     if (!real.some((i) => i !== r && sc(i).asset !== 'rug' && ['floor'].includes(sc(i).mount) && rb.containsPoint(new T.Vector3(...boxes[i].getCenter(new T.Vector3()).toArray().map((v, k) => (k === 1 ? rb.min.y + 1 : v)))))) out.push({ rule: 'rug', what: `${r} has no furniture on it: put a group on the rug or remove it` }); }
     // ghosts: a piece partly outside the area's bounds fades half-way at the home view
     for (const i of mine) { const b = boxes[i]; if (b.min.x < bd.x0 - 5 || b.max.x > bd.x1 + 5 || b.min.z < bd.z0 - 5 || b.max.z > bd.z1 + 5) out.push({ rule: 'ghost', what: `${A}: ${i} reaches past the area's bounds, so it fades half-way at the home view: grow the rect or move it in` }); }
     for (const W of home.walls) { if (!W.id || !W.id.startsWith(A + '-')) continue; for (const b of W.built) { const q = box(b.group); if (q.min.x < bd.x0 - 400 || q.max.x > bd.x1 + 400 || q.min.z < bd.z0 - 400 || q.max.z > bd.z1 + 400) out.push({ rule: 'ghost', what: `${A}: the ${b.op.kind} on ${W.id} reaches past the area's bounds and fades half-way at the home view` }); } }
