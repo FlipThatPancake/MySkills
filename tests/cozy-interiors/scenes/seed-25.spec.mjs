@@ -36,6 +36,7 @@ const H = new Home({ seed: 25, floor: 'boards' });
   a.put('footstool', 'footstool', [1950, 2000], 25, { y: 7, lift: 7, group: 'reading group' });
   a.put('lamp', 'floorLamp', [650, 1650], 0, { group: 'reading group' });
   a.put('side-table', 'sideTable', [2650, 1250], 0, { group: 'chair side' });
+  a.put('mug', 'mug', [2560, 1290], 0, { y: a.topOf('side-table'), mount: 'on', group: 'chair side' });
   a.put('books', 'bookStack', [2750, 1250], 20, { y: a.topOf('side-table'), mount: 'on', group: 'chair side' });
   a.put('basket', 'basket', [700, 2500], 0, { group: 'chair side' });
   back.place('shelf', 'shelf', 3000, { group: 'shelf', params: { w: 800, h: 1800 } });

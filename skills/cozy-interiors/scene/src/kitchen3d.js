@@ -65,7 +65,7 @@ export function createKit() {
   const fill = makeFill(false), fadeFill = makeFill(true);
   // The plant is the one coloured thing: soft sage fill (#8fae8b at the light face) with a darker green line.
   const leafFill = makeFill(false, [0.62, 0.74, 0.60]);
-  const soilFill = makeFill(false, [0.80, 0.74, 0.68]);   // soil in a pot: a warm grey-brown
+  const soilFill = makeFill(false, [0.72, 0.71, 0.69]);   // soil in a pot, an insole: a warm mid grey
   // Lines win ties with fills by a tiny pull toward the camera in clip space (about 0.1 px of depth at the wide view, never more than a fraction of a mm up close), so an edge 2 mm behind a fill stays hidden at every distance.
   const biased = (m) => {
     m.onBeforeCompile = (sh) => {

@@ -2,7 +2,7 @@
 // A heightfield `height(x, z)` (with .top) can stand in for boxes: the top surface of a merged piece of furniture.
 // dropCloth({ boxes: [[x0, y0, z0, x1, y1, z1]], at: [x, z], w, d, nx, ny, seed, steps }) -> { nx, ny, pts: flat [x, y, z] in mm } in the boxes' frame. x spans w, z spans d.
 const rng = (seed) => () => { seed |= 0; seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
-export function dropCloth({ boxes = [], height = null, at, w, d, nx = 26, ny = 26, seed = 1, steps = 420, margin = 9, spin = 0 }) {
+export function dropCloth({ boxes = [], height = null, at, w, d, nx = 26, ny = 26, seed = 1, steps = 800, margin = 9, spin = 0 }) {
   const R = rng(seed * 104729 + 7), n = nx * ny, P = new Float64Array(n * 3), Q = new Float64Array(n * 3), top = Math.max(0, height?.top || 0, ...boxes.map((b) => b[4]));
   const ca = Math.cos(spin), sa = Math.sin(spin), id = (i, j) => j * nx + i;
   for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
@@ -11,7 +11,7 @@ export function dropCloth({ boxes = [], height = null, at, w, d, nx = 26, ny = 2
     Q[k] = P[k]; Q[k + 1] = P[k + 1]; Q[k + 2] = P[k + 2];
   }
   const cons = [];   // [a, b, rest]: structural, shear and bend links
-  const link = (i0, j0, i1, j1) => { if (i1 < 0 || j1 < 0 || i1 >= nx || j1 >= ny) return; const a = id(i0, j0) * 3, b = id(i1, j1) * 3; cons.push([a, b, Math.hypot(P[a] - P[b], P[a + 2] - P[b + 2])]); };
+  const link = (i0, j0, i1, j1) => { if (i1 < 0 || j1 < 0 || i1 >= nx || j1 >= ny) return; const a = id(i0, j0) * 3, b = id(i1, j1) * 3; cons.push([a, b, Math.hypot(P[a] - P[b], P[a + 2] - P[b + 2]), Math.abs(i1 - i0) + Math.abs(j1 - j0) > 1]); };   // the fourth number: a bend or shear link only resists stretching, so the cloth can fold
   for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) { link(i, j, i + 1, j); link(i, j, i, j + 1); link(i, j, i + 1, j + 1); link(i, j, i + 1, j - 1); link(i, j, i + 2, j); link(i, j, i, j + 2); }
   const g = 1.2;   // mm per step squared: slow enough that nothing tunnels through a box
   for (let s = 0; s < steps; s++) {
@@ -21,13 +21,13 @@ export function dropCloth({ boxes = [], height = null, at, w, d, nx = 26, ny = 2
       P[k] += vx; P[k + 1] += vy - g; P[k + 2] += vz;
     }
     for (let it = 0; it < 7; it++) {
-      for (const [a, b, rest] of cons) {
-        const dx = P[b] - P[a], dy = P[b + 1] - P[a + 1], dz = P[b + 2] - P[a + 2], L = Math.hypot(dx, dy, dz) || 1e-6, f = (L - rest) / L * 0.5;
+      for (const [a, b, rest, soft] of cons) {
+        const dx = P[b] - P[a], dy = P[b + 1] - P[a + 1], dz = P[b + 2] - P[a + 2], L = Math.hypot(dx, dy, dz) || 1e-6, f = (soft && L < rest ? 0 : (L - rest) / L * 0.5);
         P[a] += dx * f; P[a + 1] += dy * f; P[a + 2] += dz * f; P[b] -= dx * f; P[b + 1] -= dy * f; P[b + 2] -= dz * f;
       }
       for (let k = 0; k < n * 3; k += 3) {
         if (P[k + 1] < 5) { P[k + 1] = 5; Q[k] += (P[k] - Q[k]) * 0.5; Q[k + 2] += (P[k + 2] - Q[k + 2]) * 0.5; }
-        if (height) { const hh = height(P[k], P[k + 2]) + margin; if (hh > margin && P[k + 1] < hh) { P[k + 1] = hh; Q[k] += (P[k] - Q[k]) * 0.35; Q[k + 2] += (P[k + 2] - Q[k + 2]) * 0.35; Q[k + 1] = P[k + 1]; } }
+        if (height) { const hh = height(P[k], P[k + 2]) + margin; if (hh > margin && P[k + 1] < hh) { P[k + 1] = hh; Q[k] += (P[k] - Q[k]) * 0.2; Q[k + 2] += (P[k + 2] - Q[k + 2]) * 0.2; Q[k + 1] = P[k + 1]; } }
         for (const b of boxes) {
           const x0 = b[0] - margin, y0 = b[1] - margin, z0 = b[2] - margin, x1 = b[3] + margin, y1 = b[4] + margin, z1 = b[5] + margin;
           if (P[k] <= x0 || P[k] >= x1 || P[k + 1] <= y0 || P[k + 1] >= y1 || P[k + 2] <= z0 || P[k + 2] >= z1) continue;

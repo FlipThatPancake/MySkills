@@ -11,7 +11,7 @@ import { socket, lightSwitch } from '../kitchen/details.js';
 import { pendantLamp, LAMP } from '../kitchen/atmosphere.js';
 import { table, chair } from './dining.js';
 import { bookStack, mirror, wallShelf, roundTable, cat, pouf } from './decor.js';
-import { sideTable, cushion, pot } from './pieces.js';
+import { sideTable, cushion, pot, mug, openBook } from './pieces.js';
 import { floorPlant, plant, vase, picture, fridge, stool, basket } from './variants.js';
 import { jars, kettle, herbs, trolley, teaTowel } from './kitchenware.js';
 import { bed, bedsideTable, wardrobe, desk, deskChair, coatHooks, daybed, readingChair, footstool, console_ } from './rooms.js';
@@ -26,7 +26,7 @@ function fitted({ length, modules, ...rest }) {
 export const REGISTRY = {
   baseRun: (kit, p) => baseRun(kit, fitted(p)),
   wallRun: (kit, p) => wallRun(kit, fitted(p)),
-  floorPlant, cushion, pot, cloth, vase, bookStack, mirror, wallShelf, sideTable, roundTable, cat, basket, pouf,
+  floorPlant, cushion, pot, cloth, mug, openBook, vase, bookStack, mirror, wallShelf, sideTable, roundTable, cat, basket, pouf,
   stepStool, crate, wateringCan, umbrellaStand, shoes, wasteBin, fileBox, laptop,
   jars, kettle, herbs, trolley, teaTowel,
   bed, bedsideTable, wardrobe, desk, deskChair, coatHooks, daybed, readingChair, footstool, console: console_,

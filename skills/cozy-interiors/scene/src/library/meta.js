@@ -46,6 +46,8 @@ export const ASSETS = {
   cushion: A('centre', [440, 120, 420], 'on', 'w 440, h 420, tone mid|lo, lean 0-25 (degrees tilted back; 15 to 25 against a headboard or a sofa back)', { y: 'the seat height' }),
   vase: A('centre', [160, 160, 700], 'on', 'h 280, stems 5, seed', { y: 'top' }),
   cloth: A('centre', [800, 800, 300], 'floor', 'grid from compose drapeOver()', { y: 0, note: 'a cloth dropped on furniture at spec time (a.drapeOver)' }),
+  mug: A('centre', [110, 85, 95], 'on', 'r 36-48, h 92', { y: 'top' }),
+  openBook: A('centre', [300, 215, 50], 'on', 'w 150, d 215', { y: 'top' }),
   bookStack: A('centre', [240, 170, 120], 'on', 'n 4, seed', { y: 'top' }),
   basket: A('centre', [460, 460, 320], 'floor', 'r 230, h 320'),
   stepStool: A('centre', [380, 320, 420], 'floor', 'w 380, h 420', { note: 'kitchen foreground' }),
@@ -78,6 +80,6 @@ export const SPACE = {
   shelf: { w: [600, 1000], h: [1200, 2100], d: [260, 380], shelves: [3, 6], base: ['plinth', 'legs', 'feet'], back: ['closed', 'open'], fill: ['books', 'boxes', 'mixed'], seed: [1, 90] },
   pot: { r: [60, 220], tall: [0.8, 1.9], profile: ['straight', 'tapered', 'belly', 'tulip', 'urn'], saucer: ['yes', 'no'], plant: ['sprig', 'bush'], tone: ['mid', 'lo'], seed: [1, 90] },
   shoes: { kind: ['sneaker', 'boot'] },
-  cushion: { w: [360, 560], h: [300, 560], thick: [100, 170], piping: ['none', 'edge', 'double'], pattern: ['plain', 'stripes', 'inset', 'diamond', 'tufted'], tone: ['mid', 'lo'] },
+  cushion: { w: [360, 560], h: [300, 560], thick: [100, 170], piping: ['none', 'edge', 'double'], pattern: ['plain', 'stripes', 'inset', 'diamond', 'tufted'], tone: ['mid', 'lo'] , skew: [0, 0.3], crease: ['none', 'soft'] },
 };
 for (const [k, sp] of Object.entries(SPACE)) ASSETS[k].space = sp;

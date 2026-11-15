@@ -29,16 +29,14 @@ export function tote(kit, x, y, z, { w = 270, h = 340, d = 70, strap = 170, tone
 const lerpAt = (pts, s) => { for (let i = 1; i < pts.length; i++) if (s <= pts[i][0]) { const [a, ha] = pts[i - 1], [b, hb] = pts[i], t = (s - a) / (b - a), e = t * t * (3 - 2 * t); return ha + (hb - ha) * e; } return pts[pts.length - 1][1]; };
 const SIDE = { sneaker: [[0, 62], [0.05, 70], [0.3, 74], [0.46, 100], [0.64, 76], [0.82, 48], [0.95, 32], [1, 26]], boot: [[0, 150], [0.07, 168], [0.3, 160], [0.4, 128], [0.5, 96], [0.7, 66], [0.88, 44], [1, 28]] };
 export function shoe(kit, x, z, L = 270, o = {}) {
-  const g = kit.group(), T = kit.THREE, kind = o.kind === 'boot' ? 'boot' : 'sneaker', W = L * 0.37, side = SIDE[kind], sole = 16 * L / 270, NS = 48, NA = 22;
+  const g = kit.group(), T = kit.THREE, kind = o.kind === 'boot' ? 'boot' : 'sneaker', W = L * 0.37, side = SIDE[kind], sole = 16 * L / 270, NS = 56, NA = 36;
   const fw = (s) => { const base = s < 0.66 ? 0.6 + 0.4 * Math.pow(s / 0.66, 0.8) : 1, toe = s > 0.78 ? Math.max(0.1, Math.sqrt(Math.max(0, 1 - Math.pow((s - 0.78) / 0.22, 2)))) : 1, heel = s < 0.06 ? Math.sqrt(Math.max(0, 1 - Math.pow((0.06 - s) / 0.06, 2))) : 1; return W / 2 * base * toe * heel; };
   const spring = (s) => (s > 0.68 ? 16 * Math.pow((s - 0.68) / 0.32, 2) * L / 270 : 0), sp = (c, e) => Math.sign(c) * Math.pow(Math.abs(c), e);
-  const loft = (yb, yt, wf, ex, ey) => { const pos = [], idx = []; for (let i = 0; i <= NS; i++) { const s = 1 - Math.pow(1 - i / NS, 1.6); for (let j = 0; j < NA; j++) { const a = j / NA * 6.2832, b = yb(s), t = yt(s); pos.push((i === NS ? 0 : fw(s)) * wf * sp(Math.cos(a), ex), (b + t) / 2 + (t - b) / 2 * sp(Math.sin(a), ey), (s - 0.5) * L); } } for (let i = 0; i < NS; i++) for (let j = 0; j < NA; j++) { const a = i * NA + j, b = i * NA + (j + 1) % NA, c = a + NA, d = b + NA; idx.push(a, b, c, b, d, c); } const ge = new T.BufferGeometry(); ge.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); ge.setIndex(idx); ge.computeVertexNormals(); return ge; };
-  g.add(kit.solid(loft((s) => sole + spring(s), (s) => lerpAt(side, s) + spring(s) * 0.6, 0.97, 0.62, 0.5), x, 0, z, { smooth: true, tone: o.tone }));   // the upper
+  const loft = (yb, yt, wf, ex, ey, hole) => { const pos = [], idx = []; for (let i = 0; i <= NS; i++) { const s = 1 - Math.pow(1 - i / NS, 1.6); for (let j = 0; j < NA; j++) { const a = j / NA * 6.2832, b = yb(s), t = yt(s); let yy = (b + t) / 2 + (t - b) / 2 * sp(Math.sin(a), ey); if (hole && Math.sin(a) > 0.2 && Math.pow(Math.cos(a) / 0.72, 2) + Math.pow((s - hole.s) / hole.ds, 2) < 1) yy = Math.min(yy, hole.y); pos.push((i === NS ? 0 : fw(s)) * wf * sp(Math.cos(a), ex), yy, (s - 0.5) * L); } } for (let i = 0; i < NS; i++) for (let j = 0; j < NA; j++) { const a = i * NA + j, b = i * NA + (j + 1) % NA, c = a + NA, d = b + NA; idx.push(a, b, c, b, d, c); } const ge = new T.BufferGeometry(); ge.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); ge.setIndex(idx); ge.computeVertexNormals(); return ge; };
+  g.add(kit.solid(loft((s) => sole + spring(s), (s) => lerpAt(side, s) + spring(s) * 0.6, 0.97, 0.62, 0.5, { s: 0.2, ds: 0.105, y: sole + 10 }), x, 0, z, { smooth: true, tone: o.tone }));   // the upper, with a hole cut down to the insole
   g.add(kit.solid(loft((s) => spring(s), (s) => sole + spring(s), 1.03, 0.3, 0.3), x, 0, z, { smooth: true, tone: 'lo' }));   // the sole band
-  const s0 = kind === 'boot' ? 0.18 : 0.18, hy = lerpAt(side, s0) + 3, oa = fw(s0) * 0.78, ob = L * (kind === 'boot' ? 0.12 : 0.115);
+  const s0 = 0.2, hy = sole + 13, oa = fw(s0) * 0.62, ob = L * 0.09;   // the insole, a shade darker, at the bottom of the hole
   const mo = new T.CircleGeometry(1, 28); mo.scale(oa, ob, 1); const mouth = kit.solid(mo, x, hy, z + (s0 - 0.5) * L, { soil: true }); mouth.rotation.x = -Math.PI / 2; g.add(mouth);
-  const ring = []; for (let i = 0; i < 24; i++) { const p = i / 24 * 6.2832, q = (i + 1) / 24 * 6.2832; ring.push([x + Math.cos(p) * oa, hy + 1, z + (s0 - 0.5) * L + Math.sin(p) * ob], [x + Math.cos(q) * oa, hy + 1, z + (s0 - 0.5) * L + Math.sin(q) * ob]); }
-  g.add(kit.lines(ring, 'mid'));
   if (kind === 'sneaker') {   // laces across the vamp and a toe-cap line
     const ln = [], top = (t) => lerpAt(side, t) + spring(t) * 0.6 + 1.5;
     for (let k = 0; k < 5; k++) { const t = 0.4 + k * 0.05, w = fw(t) * 0.3; ln.push([x - w, top(t), z + (t - 0.5) * L], [x, top(t) + 3, z + (t - 0.5) * L], [x, top(t) + 3, z + (t - 0.5) * L], [x + w, top(t), z + (t - 0.5) * L]); }
@@ -60,7 +58,9 @@ export function poufBody(kit, r, h, tone) {
 // A cloth frozen in place by cloth.js: a double-skinned sheet through the grid points (area-local mm), edges closed, folds read from the shading.
 export function cloth(kit, { nx = 2, ny = 2, pts = [0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 1], thick = 6, tone = 'lo' } = {}) {
   const T = kit.THREE, g = kit.group(), n = nx * ny, pos = new Float32Array(n * 6), idx = [];
-  for (let i = 0; i < n; i++) { pos[i * 3] = pts[i * 3]; pos[i * 3 + 1] = pts[i * 3 + 1]; pos[i * 3 + 2] = pts[i * 3 + 2]; }
+  const P = Float32Array.from(pts);   // relax the frozen grid a little, so a crumpled edge draws as a soft line
+  for (let pass = 0; pass < 3; pass++) { const B = P.slice(); for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) { const k = (j * nx + i) * 3, nb = [[i - 1, j], [i + 1, j], [i, j - 1], [i, j + 1]].filter(([a, b]) => a >= 0 && b >= 0 && a < nx && b < ny); for (let c = 0; c < 3; c++) { let m = 0; for (const [a, b] of nb) m += B[(b * nx + a) * 3 + c]; P[k + c] = B[k + c] * 0.5 + m / nb.length * 0.5; } } }
+  for (let i = 0; i < n * 3; i++) pos[i] = P[i];
   const geo = new T.BufferGeometry(); geo.setAttribute('position', new T.BufferAttribute(pos, 3));
   for (let j = 0; j < ny - 1; j++) for (let i = 0; i < nx - 1; i++) { const a = j * nx + i, b = a + 1, c = a + nx, d = c + 1; idx.push(a, c, b, b, c, d); }
   geo.setIndex(idx); geo.computeVertexNormals();

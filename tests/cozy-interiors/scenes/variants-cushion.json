@@ -4,7 +4,8 @@
  "home": {
   "height": 2700,
   "floor": {
-   "style": "plain"
+   "style": "plain",
+   "seed": 7
   },
   "tiles": {
    "origin": [
@@ -42,7 +43,9 @@
      "thick": 131,
      "piping": "double",
      "pattern": "inset",
-     "tone": "mid"
+     "tone": "mid",
+     "skew": 0.28,
+     "crease": "soft"
     },
     "group": "sheet:row",
     "area": "sheet"
@@ -62,7 +65,9 @@
      "thick": 148,
      "piping": "none",
      "pattern": "stripes",
-     "tone": "lo"
+     "tone": "lo",
+     "skew": 0.13,
+     "crease": "none"
     },
     "group": "sheet:row",
     "area": "sheet"
@@ -82,7 +87,9 @@
      "thick": 104,
      "piping": "edge",
      "pattern": "diamond",
-     "tone": "lo"
+     "tone": "lo",
+     "skew": 0.24,
+     "crease": "soft"
     },
     "group": "sheet:row",
     "area": "sheet"
@@ -102,7 +109,9 @@
      "thick": 122,
      "piping": "double",
      "pattern": "tufted",
-     "tone": "mid"
+     "tone": "mid",
+     "skew": 0.21,
+     "crease": "none"
     },
     "group": "sheet:row",
     "area": "sheet"
@@ -122,7 +131,9 @@
      "thick": 166,
      "piping": "none",
      "pattern": "plain",
-     "tone": "mid"
+     "tone": "mid",
+     "skew": 0.06,
+     "crease": "soft"
     },
     "group": "sheet:row",
     "area": "sheet"
@@ -142,7 +153,9 @@
      "thick": 139,
      "piping": "edge",
      "pattern": "plain",
-     "tone": "lo"
+     "tone": "lo",
+     "skew": 0.09,
+     "crease": "none"
     },
     "group": "sheet:row",
     "area": "sheet"
@@ -162,7 +175,9 @@
      "thick": 157,
      "piping": "none",
      "pattern": "stripes",
-     "tone": "mid"
+     "tone": "mid",
+     "skew": 0.17,
+     "crease": "soft"
     },
     "group": "sheet:row",
     "area": "sheet"
@@ -182,7 +197,9 @@
      "thick": 113,
      "piping": "edge",
      "pattern": "tufted",
-     "tone": "lo"
+     "tone": "lo",
+     "skew": 0.02,
+     "crease": "none"
     },
     "group": "sheet:row",
     "area": "sheet"
