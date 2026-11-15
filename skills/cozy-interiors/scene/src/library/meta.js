@@ -72,10 +72,10 @@ for (const [k, n] of Object.entries({ floorPlant: 4, plant: 4, vase: 4, picture:
 const LEGS = ['block', 'tapered', 'turned', 'hairpin', 'sled', 'splay', 'ball'];
 export const SPACE = {
   armchair: { w: [760, 980], d: [780, 900], legs: LEGS.slice(0, 5), arms: ['track', 'rolled', 'flared', 'none'], legH: [80, 170], backH: [760, 920], back: ['loose', 'tight'], piping: ['none', 'edge'], tone: ['mid', 'lo'] },
-  sofa: { d: [820, 960], legs: LEGS.slice(0, 5), arms: ['track', 'rolled', 'flared', 'none'], legH: [80, 170], backH: [740, 880], back: ['loose', 'tight'], piping: ['none', 'edge'], tone: ['mid', 'lo'] },
+  sofa: { d: [820, 960], seatN: [1, 2, 3], legs: LEGS.slice(0, 5), arms: ['track', 'rolled', 'flared', 'none'], legH: [80, 170], backH: [740, 880], back: ['loose', 'tight', 'fixed'], piping: ['none', 'edge'], tone: ['mid', 'lo'] },
   sideTable: { r: [190, 280], h: [440, 620], top: ['round', 'square', 'rounded'], legs: ['tapered', 'turned', 'hairpin', 'splay', 'ball', 'block'], shelf: ['low', 'none'], drawer: ['none', 'bar', 'knob', 'cup', 'cutout'], tone: ['mid', 'lo'] },
-  shelf: { w: [600, 1000], h: [1200, 2100], d: [260, 380], shelves: [3, 6], base: ['plinth', 'legs', 'feet'], back: ['closed', 'open'], fill: ['books', 'boxes', 'mixed'] },
-  pot: { r: [60, 220], tall: [0.8, 1.9], profile: ['straight', 'tapered', 'belly', 'tulip', 'urn'], saucer: ['yes', 'no'], plant: ['sprig', 'bush', 'none'], tone: ['mid', 'lo'] },
+  shelf: { w: [600, 1000], h: [1200, 2100], d: [260, 380], shelves: [3, 6], base: ['plinth', 'legs', 'feet'], back: ['closed', 'open'], fill: ['books', 'boxes', 'mixed'], seed: [1, 90] },
+  pot: { r: [60, 220], tall: [0.8, 1.9], profile: ['straight', 'tapered', 'belly', 'tulip', 'urn'], saucer: ['yes', 'no'], plant: ['sprig', 'bush'], tone: ['mid', 'lo'], seed: [1, 90] },
   cushion: { w: [360, 560], h: [300, 560], thick: [100, 170], piping: ['none', 'edge', 'double'], pattern: ['plain', 'stripes', 'inset', 'diamond', 'tufted'], tone: ['mid', 'lo'] },
 };
 for (const [k, sp] of Object.entries(SPACE)) ASSETS[k].space = sp;

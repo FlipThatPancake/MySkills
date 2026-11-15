@@ -9,6 +9,7 @@ const H = new Home({ seed: Number(seed), floor: 'plain' }), small = m.size[0] < 
 const a = H.area('sheet', 'Sheet', { O: [0, 0], rect: [0, 0, step * 4, rowZ * 2 + 600] });
 a.wall('back', [0, 0], 0, step * 4, []);
 for (let i = 0; i < 8; i++) a.put(`v${i}`, asset, [step * (i % 4 + 0.5), 500 + rowZ * (1 - Math.floor(i / 4))], 0, { group: 'row', mount: m.mount === 'on' ? 'floor' : m.mount, params: JSON.parse(extra) });
-a.view({ target: [step * 2, 400, rowZ], az: 0, el: 24, dist: step * 3.4 });
+a.top = Math.max(m.size[2] * 1.2, 500);
+a.view({ target: [step * 2, m.size[2] * 0.45, rowZ * 0.85], az: 0, el: 22, dist: step * 4.5, fit: 'none' });
 H.write(new URL(`./variants-${asset}.json`, import.meta.url).pathname, fs);
 const used = H.S.home.objects.map((o) => `${o.id}: ${JSON.stringify(o.params)}`); console.log(used.join('\n'));

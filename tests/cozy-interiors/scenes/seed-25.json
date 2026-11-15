@@ -529,7 +529,7 @@
     ],
     "mount": "floor",
     "params": {
-     "form": 2
+     "form": 1
     },
     "group": "reading:chair side",
     "area": "reading"
@@ -550,7 +550,8 @@
      "shelves": 5,
      "base": "plinth",
      "back": "open",
-     "fill": "mixed"
+     "fill": "mixed",
+     "seed": 7
     },
     "group": "reading:shelf",
     "area": "reading"

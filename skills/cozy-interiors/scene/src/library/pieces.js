@@ -3,7 +3,7 @@
 // cushion({ w, h, thick, piping, pattern, tone, lean }) — stands on a seat on its edge; origin the middle of its foot, front toward +z; lean tilts it back (15 to 25 against a seat back).
 // pot({ r, tall, profile, saucer, plant, tone, seed }) — origin the middle of its foot (on a surface: y 'top').
 import { legs as legParts, handle } from './parts.js';
-import { softBox, vessel, PROFILES, onFace } from './soft.js';
+import { vessel, PROFILES, pillowGeometry, pillowZ } from './soft.js';
 const rnd = (seed) => { let r = (seed || 1) * 9301 + 49297; return () => { r = (r * 9301 + 49297) % 233280; return r / 233280; }; };
 
 export function sideTable(kit, { r = 230, h = 520, top = 'round', legs = 'splay', shelf = 'low', drawer = 'none', tone } = {}) {
@@ -26,27 +26,34 @@ export function sideTable(kit, { r = 230, h = 520, top = 'round', legs = 'splay'
 }
 
 export function cushion(kit, { w = 440, h = 420, thick = 120, tone = 'mid', piping = 'none', pattern = 'plain', lean = 0 } = {}) {
-  const g = kit.group(), bulge = thick * 0.32, b = softBox(kit, w, h, thick, { r: Math.min(70, thick * 0.5), bulge, piping, tone, dent: pattern === 'tufted' ? 0 : thick * 0.09, dentAt: [w * 0.03, h * 0.05] });
-  b.position.y = h / 2; g.add(b);
-  const shape = { bulge, dent: pattern === 'tufted' ? 0 : thick * 0.09, dentAt: [w * 0.03, h * 0.05] }, pr = [], m = Math.min(56, w * 0.12), y0 = -h / 2, face = (a) => onFace(w, h, thick, shape, a);
-  if (pattern === 'stripes') for (let i = 1; i < 6; i++) pr.push([-w / 2 + m, y0 + h * i / 6], [w / 2 - m, y0 + h * i / 6]);
-  else if (pattern === 'inset') pr.push([-w / 2 + m, y0 + m], [w / 2 - m, y0 + m], [w / 2 - m, y0 + m], [w / 2 - m, y0 + h - m], [w / 2 - m, y0 + h - m], [-w / 2 + m, y0 + h - m], [-w / 2 + m, y0 + h - m], [-w / 2 + m, y0 + m]);
-  else if (pattern === 'diamond') pr.push([-w / 2 + m, 0], [0, h / 2 - m], [0, h / 2 - m], [w / 2 - m, 0], [w / 2 - m, 0], [0, -h / 2 + m], [0, -h / 2 + m], [-w / 2 + m, 0]);
-  else if (pattern === 'tufted') for (const fx of [-0.22, 0.22]) for (const fy of [-0.2, 0.2]) { const x = fx * w, y = fy * h; pr.push([x - 9, y], [x + 9, y], [x, y - 9], [x, y + 9], [x, y], [x * 0.35, y * 0.35]); }
-  else pr.push([-w * 0.2, -h * 0.22], [-w * 0.02, -h * 0.1], [w * 0.1, h * 0.1], [w * 0.2, h * 0.2]);   // a plain pillow carries a soft crease
-  const pts = face(pr).map(([x, y, z]) => [x, y + h / 2, z]);
-  if (pts.length) g.add(kit.lines(pts, 'lo'));
+  const T = kit.THREE, g = kit.group(), edge = Math.min(26, thick * 0.25), dent = pattern === 'tufted' ? thick * 0.22 : thick * 0.08, pz = (x, y) => pillowZ(w, h, thick, edge, dent, x, y);
+  g.add(kit.solid(pillowGeometry(T, { w, h, thick, edge, dent }), 0, h / 2, 0, { smooth: true, tone }));
+  const m = Math.min(46, w * 0.1), P = [], face = (pairs, cut = 14) => { for (let i = 0; i < pairs.length; i += 2) { const [x0, y0] = pairs[i], [x1, y1] = pairs[i + 1]; let p = [x0, y0 + h / 2, pz(x0, y0)]; for (let k = 1; k <= cut; k++) { const x = x0 + (x1 - x0) * k / cut, y = y0 + (y1 - y0) * k / cut, q = [x, y + h / 2, pz(x, y)]; P.push(p, q); p = q; } } };
+  const loop = (a, b, c) => [[-a, -b], [a, -b], [a, -b], [a, b], [a, b], [-a, b], [-a, b], [-a, -b]];
+  if (piping !== 'none') { const k = 0.965, zz = edge / 2 + 1, a = w / 2 * k, b = h / 2 * k; const seam = []; for (const [x, y] of loop(a, b)) seam.push([x, y + h / 2, zz]); P.push(...seam.flatMap((p, i) => (i % 2 ? [] : [p, seam[i + 1]]))); }
+  if (piping === 'double') face(loop(w / 2 - m, h / 2 - m));
+  if (pattern === 'stripes') { const yy = [-0.34, 0, 0.34].map((f) => f * h); face(yy.flatMap((y) => [[-w / 2 + m, y], [w / 2 - m, y]])); }
+  else if (pattern === 'inset') face(loop(w / 2 - m * 1.4, h / 2 - m * 1.4));
+  else if (pattern === 'diamond') face([[-w / 2 + m, 0], [0, h / 2 - m], [0, h / 2 - m], [w / 2 - m, 0], [w / 2 - m, 0], [0, -h / 2 + m], [0, -h / 2 + m], [-w / 2 + m, 0]]);
+  else if (pattern === 'tufted') { face([[-10, 0], [10, 0], [0, -10], [0, 10]], 2); for (const [x, y] of [[-0.3, -0.3], [0.3, -0.3], [-0.3, 0.3], [0.3, 0.3]]) face([[0, 0], [x * w * 0.9, y * h * 0.9]].map(([a, b]) => [a * 0.25, b * 0.25]), 6); }
+  if (P.length) g.add(kit.lines(P, 'lo'));
   const out = kit.merge(g); out.rotation.x = -lean * Math.PI / 180; return out;
 }
 
-const leafAt = (kit, x, y, z, sx, sy, rx, rz) => { const T = kit.THREE, ge = new T.SphereGeometry(1, 12, 8); ge.scale(sx, sy, 10); const l = kit.solid(ge, x, y, z, { smooth: true, leaf: true }); l.rotation.set(rx, 0, rz); return l; };
+// a pointed leaf standing from `base` along `dir` (unit), length len, width wid
+const leaf = (kit, base, dir, len, wid) => { const T = kit.THREE, ge = new T.SphereGeometry(1, 12, 8); ge.scale(wid, len / 2, Math.max(4, wid * 0.22)); const m = kit.solid(ge, 0, 0, 0, { smooth: true, leaf: true }); const d = new T.Vector3(...dir).normalize(); m.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), d); m.position.set(base[0] + d.x * len / 2, base[1] + d.y * len / 2, base[2] + d.z * len / 2); return m; };
 export function pot(kit, { r = 110, tall = 1.2, profile = 'straight', saucer = 'yes', plant = 'sprig', tone, seed = 4 } = {}) {
   const g = kit.group(), h = r * tall, foot = saucer === 'yes' ? 14 : 0, R = rnd(seed), pts = [];
   if (foot) g.add(kit.cyl(0, 0, 0, r * 0.78, foot, { rTop: r * 0.86, seg: 36, tone: 'lo' }));
   const v = vessel(kit, (PROFILES[profile] || PROFILES.straight)(r, h), { seg: 36, tone, contents: 'soil' }); v.position.y = foot; g.add(v);
-  const top = foot + h, rim = r * (profile === 'belly' ? 0.9 : profile === 'urn' ? 0.95 : 1);
-  if (plant === 'sprig') for (let k = 0; k < 5; k++) { const a = k / 5 * 6.28 + R(), len = 50 + R() * 40, x = Math.sin(a) * rim * 0.3, z = Math.cos(a) * rim * 0.3, tx = x + Math.sin(a) * len * 0.5, tz = z + Math.cos(a) * len * 0.5, ty = top + len; pts.push([x, top - 6, z], [tx, ty, tz]); g.add(leafAt(kit, tx, ty, tz, 20 + r * 0.08, 30 + r * 0.12, Math.cos(a) * 0.5, -Math.sin(a) * 0.5)); }
-  else if (plant === 'bush') for (let k = 0; k < 14; k++) { const a = R() * 6.28, d = R() * rim * 0.65, x = Math.sin(a) * d, z = Math.cos(a) * d, y = top + 30 + R() * r * 1.1; pts.push([x * 0.3, top - 6, z * 0.3], [x, y, z]); g.add(leafAt(kit, x, y + 10, z, 22 + r * 0.1, 30 + r * 0.14, R() - 0.5, R() - 0.5)); }
-  if (pts.length) g.add(kit.lines(pts, 'green'));
+  const top = foot + h, rim = r * (profile === 'belly' ? 0.9 : profile === 'urn' ? 0.95 : 1), soilY = top - Math.min(30, Math.max(r * 0.22, 20));
+  const n = plant === 'bush' ? 18 : 7, len0 = plant === 'bush' ? r * 1.6 : r * 1.3;
+  for (let k = 0; k < n; k++) {
+    const a = k / n * 6.2832 * (plant === 'bush' ? 2.4 : 1) + R() * 0.6, tilt = 0.3 + R() * 0.7 + (plant === 'bush' ? 0.15 * (k % 3) : 0), rad = (plant === 'bush' ? 0.15 + 0.35 * R() : 0.12) * rim, len = len0 * (0.6 + 0.5 * R());
+    const b = [Math.sin(a) * rad, soilY, Math.cos(a) * rad], d = [Math.sin(a) * Math.sin(tilt), Math.cos(tilt), Math.cos(a) * Math.sin(tilt)];
+    pts.push(b, [b[0] + d[0] * len * 0.45, b[1] + d[1] * len * 0.45, b[2] + d[2] * len * 0.45]);
+    g.add(leaf(kit, [b[0] + d[0] * len * 0.3, b[1] + d[1] * len * 0.3, b[2] + d[2] * len * 0.3], d, len * 0.7, len * 0.13));
+  }
+  g.add(kit.lines(pts, 'green'));
   return kit.merge(g);
 }

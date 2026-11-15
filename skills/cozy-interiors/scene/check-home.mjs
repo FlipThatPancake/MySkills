@@ -67,8 +67,9 @@ const issues = await page.evaluate(() => {
       if (parts.length < 2) continue; const comp = parts.map((_, i) => i), find = (i) => comp[i] === i ? i : (comp[i] = find(comp[i]));
       for (let i = 0; i < parts.length; i++) for (let j = i + 1; j < parts.length; j++) if (parts[i].intersectsBox(parts[j])) comp[find(i)] = find(j);
       const n = new Set(parts.map((_, i) => find(i))).size; if (n > 1) out.push({ rule: 'floating', what: `${a} (${id}) is ${n} loose pieces: a part touches nothing else of it (a plank above its legs, a handle off its body): fix the asset` }); } }
+  for (const id of Object.keys(objs)) if (sc(id).asset === 'basket' && sc(id).params?.form === 2 && !/bed|bath/.test(sc(id).area || '')) out.push({ rule: 'accent', what: `${id}: a tall lidded hamper is laundry; in ${sc(id).area} use a magazine rack, log basket, book stack or a different basket form` });
   // 0b. a cushion on a bed or seat leans back (15 to 25 degrees) against the headboard or the back of the seat
-  for (const id of Object.keys(objs)) if (sc(id).asset === 'cushion' && (sc(id).params?.lean ?? 0) < 10) out.push({ rule: 'cushion', what: `${id} stands upright: give it params.lean 15 to 25 so it rests back against the headboard or the seat back` });
+  for (const id of Object.keys(objs)) if (sc(id).asset === 'cushion' && ((sc(id).params?.lean ?? 0) < 15 || sc(id).params.lean > 28)) out.push({ rule: 'cushion', what: `${id} stands upright or lies back too far: give it params.lean 15 to 25 so it rests back against the headboard or the seat back` });
   // swings: every opening front, shut to wide, against every object and every other opening
   const openings = home.walls.flatMap((W) => W.built.map((b) => ({ ...b, wall: W.id || W.i })));
   const fronts = [];

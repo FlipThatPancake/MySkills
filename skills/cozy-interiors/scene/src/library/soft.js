@@ -56,6 +56,22 @@ export function softBox(kit, w, h, d, o = {}) {
   return g;
 }
 
+// A pillow: thin at the seam all round (edge mm), puffy in the middle (thick mm), corners a little pointed. Centred on the origin, thickness along z. dent presses a hollow into the front.
+export function pillowGeometry(T, { w, h, thick, edge = 26, dent = 0, n = 28 }) {
+  const pos = [], idx = [], N = n + 1, bump = (u, v) => Math.pow(Math.max(0, (1 - u * u) * (1 - v * v)), 0.62);
+  const at = (i, j) => { const u = i / n * 2 - 1, v = j / n * 2 - 1, k = 1 - 0.07 * Math.pow(Math.abs(u * v), 2), t = edge + (thick - edge) * bump(u, v); return [u * w / 2 * k, v * h / 2 * k, t / 2, u, v]; };
+  for (const s of [1, -1]) for (let j = 0; j <= n; j++) for (let i = 0; i <= n; i++) { const [x, y, z, u, v] = at(i, j); pos.push(x, y, s * (z - (s > 0 ? dent * Math.exp(-((u * u + v * v) / 0.28)) : 0))); }
+  for (const s of [0, 1]) for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) { const a = s * N * N + j * N + i, b = a + 1, c = a + N, d = c + 1; if (s === 0) idx.push(a, b, c, b, d, c); else idx.push(a, c, b, b, c, d); }
+  const ring = []; for (let i = 0; i < n; i++) ring.push([i, 0]); for (let j = 0; j < n; j++) ring.push([n, j]); for (let i = 0; i < n; i++) ring.push([n - i, n]); for (let j = 0; j < n; j++) ring.push([0, n - j]);
+  for (let k = 0; k < ring.length; k++) { const [i0, j0] = ring[k], [i1, j1] = ring[(k + 1) % ring.length]; if (i0 === i1 && j0 === j1) continue; const a = j0 * N + i0, b = j1 * N + i1, c = N * N + a, d = N * N + b; idx.push(a, c, b, b, c, d); }
+  const g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
+  return g;
+}
+// The surface height (z) of a pillow's front at (x, y) in its own frame, for lines that lie on it.
+export function pillowZ(w, h, thick, edge, dent, x, y) {
+  const u = clamp(x / (w / 2), -1, 1), v = clamp(y / (h / 2), -1, 1);
+  return (edge + (thick - edge) * Math.pow(Math.max(0, (1 - u * u) * (1 - v * v)), 0.62)) / 2 - dent * Math.exp(-((u * u + v * v) / 0.28)) + 1.2;
+}
 // A cloth sheet w x h hung from its top edge (y = 0 at the line, hanging down to -h) with soft vertical folds; thickness gives it an edge. folds: number of folds across, depth: how far they stand out, flare: wider at the hem.
 export function drape(kit, w, h, { folds = 4, depth = 28, thick = 10, flare = 0.08, phase = 0.4, nx = 36, ny = 14, tone } = {}) {
   const T = kit.THREE, ix = (i, j, s) => (s * (ny + 1) + j) * (nx + 1) + i, pos = [], idx = [];
@@ -80,10 +96,10 @@ export function drape(kit, w, h, { folds = 4, depth = 28, thick = 10, flare = 0.
 export function vessel(kit, profile, o = {}) {
   const T = kit.THREE, g = kit.group(), seg = o.seg ?? 40, pts = profile.map(([r, y]) => new T.Vector2(Math.max(r, 0.01), y)), [rt, ht] = profile[profile.length - 1];
   g.add(kit.solid(new T.LatheGeometry(pts, seg), 0, 0, 0, { smooth: true, tone: o.tone }));
-  const k = Math.max(rt * 0.06, 3), dip = o.dip ?? Math.max(rt * 0.22, 14);
+  const k = Math.max(rt * 0.06, 3), dip = o.dip ?? Math.min(30, Math.max(rt * 0.22, 20));
   if (o.rim !== false) { const rim = kit.solid(new T.TorusGeometry(rt - k, k, 8, seg), 0, ht, 0, { smooth: true, tone: o.tone }); rim.rotation.x = Math.PI / 2; g.add(rim); }
   if (o.contents !== 'none') {
-    const soil = kit.cyl(0, ht - dip, 0, rt - 2 * k, dip, { seg, tone: 'lo' }); g.add(soil);
+    const soil = kit.cyl(0, ht - dip, 0, rt - 2 * k, dip, { seg, tone: 'lo', soil: true }); g.add(soil);
     if (o.contents !== 'tea') { const sp = []; for (let i = 0; i < 6; i++) { const a = i * 2.4 + 0.6, d = (rt - 3 * k) * (0.25 + 0.6 * ((i * 37) % 10) / 10), x = Math.cos(a) * d, z = Math.sin(a) * d; sp.push([x - 5, ht - dip + 0.6, z], [x + 5, ht - dip + 0.6, z + 3]); } g.add(kit.lines(sp, 'lo')); }
   }
   return g;

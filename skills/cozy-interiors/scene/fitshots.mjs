@@ -39,7 +39,13 @@ const res = await page.evaluate(() => {
         const ovl = (r) => Math.max(0, Math.min(r.x1, x1) - Math.max(r.x0, x0)) * Math.max(0, Math.min(r.y1, y1) - Math.max(r.y0, y0));
         for (const i of near) if (ovl(rect(boxes[i])) > 0.1 * subjArea) { stat.blocked = (stat.blocked || 0) + 1; return null; }
         const fg = near.concat(mem.length > 1 ? mem.filter((i) => ['pouf', 'basket', 'floorPlant', 'plant', 'stool', 'footstool', 'sideTable', 'crate', 'bench'].includes(sc(i).asset)) : []).some((i) => { const r = rect(boxes[i]), c = (r.x0 + r.x1) / 2; return SMALLFG.includes(sc(i).asset) && Math.abs(c) > 0.5 && Math.abs(c) < 1.15 && r.y1 > -1; });
-        if (!fg) { stat.fg = (stat.fg || 0) + 1; return null; } return { fill, cx };
+        if (!fg) { stat.fg = (stat.fg || 0) + 1; return null; }
+        if (Math.abs(cx) > 0.34) { stat.off = (stat.off || 0) + 1; return null; }   // the subject sits in the middle third
+        const rs = real.filter((i) => !['curtain', 'rug'].includes(sc(i).asset)).map((i) => rect(boxes[i])), cell = [0, 0, 0], tot = [0, 0, 0], NX = 18, NY = 10;
+        for (let a = 0; a < NX; a++) for (let b = 0; b < NY; b++) { const px = -1 + (a + 0.5) * 2 / NX, py = -1 + (b + 0.5) * 2 / NY, t = Math.min(2, Math.floor(a * 3 / NX)); tot[t]++; if (rs.some((r) => px >= r.x0 && px <= r.x1 && py >= r.y0 && py <= r.y1)) cell[t]++; }
+        if (cell[0] / tot[0] < 0.14 || cell[2] / tot[2] < 0.14 || (cell[0] + cell[1] + cell[2]) / (tot[0] + tot[1] + tot[2]) < 0.3) { stat.empty = (stat.empty || 0) + 1; return null; }   // no empty side, at least a third of the frame holds things
+        for (const i of real) { if (['curtain', 'rug', 'baseRun', 'wallRun'].includes(sc(i).asset)) continue; const r = rect(boxes[i]); if (r.y1 > 0.97 && r.y0 < 0.9 && r.x1 > -1 && r.x0 < 1 && !(mem.includes(i) && fill > 0.5)) { stat.clip = (stat.clip || 0) + 1; return null; } }   // nothing is cut by the top edge
+        return { fill, cx };
       };
       let best = null; const stat = {};
       for (let x = bd.x0 + 200; x <= bd.x1 - 200; x += 300) for (let z = bd.z0 + 300; z <= bd.z1 + 2500; z += 300) for (const y of ST.ys) for (const fov of ST.fovs) for (const t of [-0.55, -0.5, -0.45, -0.4, -0.35, -0.3, -0.25, -0.2, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55]) for (const ly of [0, 300, 500, 700, 900, 1100]) {

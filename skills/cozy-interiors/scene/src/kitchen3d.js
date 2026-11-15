@@ -65,6 +65,7 @@ export function createKit() {
   const fill = makeFill(false), fadeFill = makeFill(true);
   // The plant is the one coloured thing: soft sage fill (#8fae8b at the light face) with a darker green line.
   const leafFill = makeFill(false, [0.62, 0.74, 0.60]);
+  const soilFill = makeFill(false, [0.80, 0.74, 0.68]);   // soil in a pot: a warm grey-brown
   // Lines win ties with fills by a tiny pull toward the camera in clip space (about 0.1 px of depth at the wide view, never more than a fraction of a mm up close), so an edge 2 mm behind a fill stays hidden at every distance.
   const biased = (m) => {
     m.onBeforeCompile = (sh) => {
@@ -149,7 +150,7 @@ export function createKit() {
       const f = o * dim, t = f < 0.999;
       uniforms.uOpacity.value = f; backU.value = o; lineMid.opacity = lineLo.opacity = lineFaint.opacity = seamLine.opacity = lineGreen.opacity = f;
       paints.forEach(m => { m.transparent = t; });
-      leafFill.transparent = lineGreen.transparent = fill.transparent = hull.transparent = hullLo.transparent = hullGreen.transparent = lineMid.transparent = lineLo.transparent = lineFaint.transparent = seamLine.transparent = t;
+      soilFill.transparent = leafFill.transparent = lineGreen.transparent = fill.transparent = hull.transparent = hullLo.transparent = hullGreen.transparent = lineMid.transparent = lineLo.transparent = lineFaint.transparent = seamLine.transparent = t;
       fadeFill.transparent = true;
       if (backdropMat) backdropMat.transparent = o < 0.999;
       depthMeshes.forEach(m => { m.visible = t; });
@@ -160,7 +161,7 @@ export function createKit() {
     track(group) {
       roots.push(group);
       const twins = [];
-      group.traverse((o) => { if (o.isMesh && (o.material === fill || o.material === leafFill || paints.includes(o.material))) twins.push(o); });
+      group.traverse((o) => { if (o.isMesh && (o.material === fill || o.material === leafFill || o.material === soilFill || paints.includes(o.material))) twins.push(o); });
       twins.forEach((o) => { const t = new THREE.Mesh(o.geometry, depth); t.renderOrder = -10; o.add(t); depthMeshes.push(t); });
       return group;
     },
@@ -186,7 +187,7 @@ export function createKit() {
     },
     // Fill a geometry and outline it, at (x, y, z) — the position of the geometry's own origin.
     solid(geometry, x = 0, y = 0, z = 0, opts = {}) {
-      const m = new THREE.Mesh(geometry, opts.leaf ? leafFill : fill);   // leaf: true draws foliage in the sage fill with a green outline
+      const m = new THREE.Mesh(geometry, opts.leaf ? leafFill : opts.soil ? soilFill : fill);   // soil: true draws earth in warm grey-brown; leaf: true draws foliage in the sage fill with a green outline
       m.position.set(x, y, z);
       return kit.outline(m, opts);
     },
@@ -319,7 +320,7 @@ export function createKit() {
       if (kit.keepParts) return group;   // the scene checks need every part on its own (?check in the page address)
       group.updateMatrixWorld(true);
       const inv = group.matrixWorld.clone().invert();
-      const fills = [], hulls = [], hullsLo = [], hullsG = [], leaves = [], segs = { mid: [], lo: [], green: [] };
+      const fills = [], soils = [], hulls = [], hullsLo = [], hullsG = [], leaves = [], segs = { mid: [], lo: [], green: [] };
       const bake = (geo, m, list) => {
         let g = geo.index ? geo.toNonIndexed() : geo.clone();
         g.applyMatrix4(m);
@@ -341,6 +342,7 @@ export function createKit() {
         else if (o.isMesh && o.material === hullLo) bake(o.geometry, m, hullsLo);
         else if (o.isMesh && o.material === hullGreen) bake(o.geometry, m, hullsG);
         else if (o.isMesh && o.material === leafFill && !o.userData.lines) bake(o.geometry, m, leaves);
+        else if (o.isMesh && o.material === soilFill) bake(o.geometry, m, soils);
       });
       const kids = [...group.children];
       kids.forEach(c => group.remove(c));
@@ -355,6 +357,7 @@ export function createKit() {
       if (hullsLo.length) group.add(mesh(hullsLo, hullLo));
       if (hullsG.length) group.add(mesh(hullsG, hullGreen));
       if (leaves.length) group.add(mesh(leaves, leafFill));
+      if (soils.length) group.add(mesh(soils, soilFill));
       ['mid', 'lo', 'green'].forEach((t) => { if (segs[t].length) { const l = kit.lines([], t); l.geometry.setPositions(segs[t]); group.add(l); } });
       return group;
     }

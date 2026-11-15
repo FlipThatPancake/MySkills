@@ -60,7 +60,8 @@ export function arms(kit, style, { w, d, y0, top, armW = 170, tone } = {}) {
     else if (style === 'rolled') {
       g.add(kit.rbox(cx - armW / 2, y0, zF, armW, h - armW * 0.5, depth, 22, { tone }));
       g.add(kit.cyl(cx, y0 + h - armW * 0.52, zF, armW * 0.52, depth, { axis: 'z', seg: 28, tone }));
-      g.add(kit.cyl(cx, y0 + h - armW * 0.52, zF + 1, armW * 0.34, 2, { axis: 'z', seg: 28, tone: 'lo' }));
+      const R = armW * 0.52, yc = y0 + h - R, cap = kit.solid(new kit.THREE.SphereGeometry(R, 24, 12), cx, yc, zF, { smooth: true, tone }); cap.scale.set(1, 1, 0.3); g.add(cap);   // the scroll face: a soft dome, one curl drawn on it
+      const sp = []; let px = null; for (let k = 0; k <= 26; k++) { const t = k / 26, a = -0.6 + t * 8.6, rho = R * (0.86 - 0.62 * t), x = cx + Math.cos(a) * rho, y = yc + Math.sin(a) * rho, z = zF + 0.3 * Math.sqrt(Math.max(0, R * R - rho * rho)) + 1.2; if (px) sp.push(px, [x, y, z]); px = [x, y, z]; } g.add(kit.lines(sp, 'mid'));
     } else if (style === 'flared') {
       const a = armW * 0.42, b = armW * 0.56, x0 = cx, poly = [[x0 - s * a, y0], [x0 + s * a, y0], [x0 + s * b, y0 + h], [x0 - s * b + s * 0, y0 + h]];
       g.add(prism(kit, poly.map(([x, y]) => [x, y]), depth - 24, zF - 12, { tone, bevel: 12 }));

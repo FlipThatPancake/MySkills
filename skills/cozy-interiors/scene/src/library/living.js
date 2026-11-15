@@ -13,7 +13,8 @@ function boxes(kit) {   // boxes by their middle (x, z) and bottom (y), not by a
   };
 }
 import { sofa, armchair } from './seating.js';
-import { legs as legParts } from './parts.js';
+import { legs as legParts, handle } from './parts.js';
+import { vessel, PROFILES } from './soft.js';
 export { sofa, armchair };
 
 export function coffeeTable(kit, { w = 1000, d = 600, h = 380 } = {}) {
@@ -40,21 +41,24 @@ export function shelf(kit, { w = 800, h = 1800, d = 320, shelves = 5, seed = 3, 
   ys.forEach((y) => g.add(bx(0, y, 0, w - 2 * T, T, d - 4)));
   if (base === 'plinth') g.add(bx(0, 0, 8, w - 2 * T, P, d - 30, lo));   // the plinth, set back
   else { const pts = []; for (const sx of [-1, 1]) for (const sz of [-1, 1]) pts.push([sx * (w / 2 - 50), sz * (d / 2 - 40)]); g.add(legParts(kit, base === 'legs' ? 'tapered' : 'block', pts, P + 2, { r: base === 'legs' ? 24 : 30, out: [0, 0] })); }
-  for (let s = 1; s < shelves; s++) {   // books on some shelves: spines of mixed heights, one leaning, a pot at the end of the third
-    const y = ys[s] + T, gap = ys[s + 1] - y - T;
-    if (form === 1) {   // storage boxes in a row, a flat stack of books on top of the last one
-      const nb = 2, bw2 = (w - 2 * T - 60) / nb; for (let i = 0; i < nb; i++) { const bh = Math.min(gap - 40, 150 + (s % 2) * 60); g.add(bx(-w / 2 + T + 30 + bw2 * (i + 0.5), y, 0, bw2 - 12, bh, d - 90)); g.add(bx(-w / 2 + T + 30 + bw2 * (i + 0.5), y + bh, 0, bw2 - 6, 10, d - 84, lo)); }
-      if (s % 2 === 1) for (let k = 0; k < 3; k++) g.add(bx(w / 2 - T - 130 + R() * 10, y + Math.min(gap - 40, 150) + 10 + k * 28, 0, 180, 24, 200, lo));
-    } else if (form === 2) {   // two short groups of books standing, with a gap holding a pot or a basket
-      const half = (w - 2 * T) / 2;
-      for (const x0 of [-w / 2 + T + 20, 40 + (s % 2) * 60]) { let x = x0; const end = x0 + half * 0.55; while (x < end) { const bw = 24 + R() * 22, bh = Math.min(gap - 30, 170 + R() * 90); g.add(bx(x + bw / 2, y, 0, bw, bh, d - 90, lo)); x += bw + 2; } }
-      if (s % 2 === 1) g.add(kit.cyl(-20, y, 0, 70, 130, { rTop: 80, seg: 20 })); else g.add(kit.cyl(w / 2 - T - 110, y, 0, 80, 110, { rTop: 95, seg: 24, ...lo }));
-    } else if (s % 2 === 1) {
-      let x = -w / 2 + T + 20; const end = w / 2 - T - 120;
-      while (x < end) { const bw = 24 + R() * 22, bh = Math.min(gap - 30, 170 + R() * 90); g.add(bx(x + bw / 2, y, 0, bw, bh, d - 90, lo)); x += bw + 2; }
-    } else if (s === 2) {
-      g.add(kit.cyl(w / 2 - T - 90, y, 0, 52, 120, { rTop: 66, seg: 20, ...lo })); g.add(kit.cyl(-w / 2 + T + 110, y, 0, 70, 90, { seg: 20, ...lo }));
-    }
+  const T3 = kit.THREE, inner = w - 2 * T, x0s = -inner / 2 + 12, dep = d - 90;
+  const run = (x, y, gap, len) => {   // a row of books as one skyline: mixed heights and widths, one leaning at the end, a few spine lines
+    const pts = [[x, 0]], hmax = Math.min(gap - 30, 300); let cx = x; const sp = [];
+    while (cx < x + len - 60) { const bw = 20 + R() * 32, bh = Math.min(hmax, 150 + R() * 170); pts.push([cx, bh], [cx + bw, bh]); if (R() < 0.45) sp.push(cx + bw); cx += bw; }
+    pts.push([cx, 0]);
+    const geo = new T3.ExtrudeGeometry(new T3.Shape(pts.map(([a, b]) => new T3.Vector2(a, b))), { depth: dep, bevelEnabled: false }), m = kit.solid(geo, 0, y, -dep / 2, { tone: 'lo' }); g.add(m);
+    if (sp.length) g.add(kit.lines(sp.flatMap((a) => [[a, y + 12, dep / 2 + 0.5], [a, y + Math.min(hmax, 150 + R() * 100), dep / 2 + 0.5]]), 'lo'));
+    const lb = bx(cx + 70, 0, 0, 30, Math.min(hmax, 240), dep, lo); lb.position.set(cx + 50, y + Math.min(hmax, 240) / 2, 0); lb.rotation.z = 0.2 + R() * 0.1; lb.position.x = cx + 60 + 12; g.add(lb);   // a leaning book
+    return cx + 130;
+  };
+  const stack = (x, y, gap) => { let yy = y; const n = 2 + (R() * 2 | 0); for (let k = 0; k < n; k++) { const bh = 24 + R() * 14, bw = 200 - k * 14 + R() * 20; const b = bx(x + bw / 2, yy, 0, bw, bh, dep * 0.8, k % 2 ? lo : {}); b.rotation.y = (R() - 0.5) * 0.2; g.add(b); yy += bh; } return x + 230; };
+  const bowl = (x, y, gap) => { const r = 60 + R() * 30, hh = Math.min(gap - 40, 70 + R() * 90), v = vessel(kit, PROFILES[R() < 0.5 ? 'tulip' : 'belly'](r, hh), { contents: 'none', seg: 24 }); v.position.set(x + r, y, 0); g.add(v); return x + 2 * r + 30; };
+  const box = (x, y, gap) => { const bw = 150 + R() * 90, bh = Math.min(gap - 40, 120 + R() * 120); g.add(bx(x + bw / 2, y, 0, bw, bh, dep, {})); g.add(bx(x + bw / 2, y + bh, 0, bw + 6, 8, dep + 6, lo)); g.add(handle(kit, 'cutout', x + bw / 2, y + bh * 0.62, dep / 2, { w: 70 })); return x + bw + 14; };
+  const kinds = { books: ['run', 'bowl', 'stack'], boxes: ['box', 'box', 'stack'], mixed: ['run', 'box', 'bowl', 'stack'] }[['books', 'boxes', 'mixed'][form]] || ['run'];
+  for (let s = 1; s < shelves; s++) {
+    const y = ys[s] + T, gap = ys[s + 1] - y - T; let x = x0s + R() * 60; const order = kinds.slice().sort(() => R() - 0.5);
+    if (s % 2 === 0 && form !== 1) order.length = Math.max(1, order.length - 1);   // every other shelf holds less
+    for (const k of order) { if (x > x0s + inner - 260) break; const len = Math.min(inner - (x - x0s) - 80, 200 + R() * inner * 0.35); x = k === 'run' ? run(x, y, gap, len) : k === 'bowl' ? bowl(x, y, gap) : k === 'box' ? box(x, y, gap) : stack(x, y, gap); x += 10 + R() * 40; }
   }
   return kit.merge(g);
 }

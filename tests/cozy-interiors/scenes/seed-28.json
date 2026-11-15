@@ -295,7 +295,7 @@
     "turn": -60,
     "mount": "floor",
     "params": {
-     "form": 2
+     "form": 0
     },
     "group": "hallway:bench wall",
     "area": "hallway"
@@ -679,7 +679,8 @@
      "shelves": 6,
      "base": "feet",
      "back": "closed",
-     "fill": "books"
+     "fill": "books",
+     "seed": 29
     },
     "group": "office:shelf",
     "area": "office"

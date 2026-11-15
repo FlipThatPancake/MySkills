@@ -655,11 +655,12 @@
     "params": {
      "seats": 3,
      "d": 850,
+     "seatN": 1,
      "legs": "turned",
      "arms": "rolled",
      "legH": 142,
      "backH": 750,
-     "back": "tight",
+     "back": "fixed",
      "piping": "edge",
      "tone": "lo"
     },
