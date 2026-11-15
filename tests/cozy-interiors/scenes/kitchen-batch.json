@@ -17,7 +17,7 @@
    {
     "id": "sheet-back",
     "from": [
-     8400,
+     4200,
      0
     ],
     "to": [
@@ -32,7 +32,7 @@
     "id": "sheet-pr",
     "asset": "potRail",
     "at": [
-     1500,
+     1100,
      1050,
      100
     ],
@@ -50,7 +50,7 @@
     "id": "sheet-os",
     "asset": "openShelf",
     "at": [
-     3500,
+     2600,
      1300,
      100
     ],
@@ -61,92 +61,6 @@
      "mugs": 2,
      "seed": 62,
      "rack": "bowls"
-    },
-    "group": "sheet:row",
-    "area": "sheet"
-   },
-   {
-    "id": "sheet-sp",
-    "asset": "spiceRack",
-    "at": [
-     5200,
-     1250,
-     100
-    ],
-    "mount": "wall",
-    "params": {
-     "w": 450,
-     "rows": 2,
-     "seed": 18,
-     "style": "tins"
-    },
-    "group": "sheet:row",
-    "area": "sheet"
-   },
-   {
-    "id": "sheet-og",
-    "asset": "ovenGlove",
-    "at": [
-     6200,
-     1500,
-     100
-    ],
-    "mount": "wall",
-    "params": {
-     "hand": "left"
-    },
-    "group": "sheet:row",
-    "area": "sheet"
-   },
-   {
-    "id": "sheet-og2",
-    "asset": "ovenGlove",
-    "at": [
-     6500,
-     1500,
-     100
-    ],
-    "mount": "wall",
-    "params": {
-     "hand": "right"
-    },
-    "group": "sheet:row",
-    "area": "sheet"
-   },
-   {
-    "id": "sheet-wc",
-    "asset": "wallClock",
-    "at": [
-     7100,
-     1700,
-     100
-    ],
-    "mount": "wall",
-    "params": {
-     "r": 210,
-     "form": "square",
-     "seed": 7,
-     "face": "plain",
-     "rim": "thick"
-    },
-    "group": "sheet:row",
-    "area": "sheet"
-   },
-   {
-    "id": "sheet-wc2",
-    "asset": "wallClock",
-    "at": [
-     7700,
-     1700,
-     100
-    ],
-    "mount": "wall",
-    "params": {
-     "form": "square",
-     "r": 150,
-     "seed": 62,
-     "face": "ticks",
-     "rim": "thin"
     },
     "group": "sheet:row",
     "area": "sheet"
@@ -164,7 +78,7 @@
    "psi": 0,
    "bounds": {
     "x0": 0,
-    "x1": 8400,
+    "x1": 4200,
     "z0": 0,
     "z1": 3200,
     "top": 2200
@@ -172,14 +86,14 @@
    "camera": {
     "home": {
      "target": [
-      4200,
-      1300,
-      1500
+      1850,
+      1400,
+      200
      ],
-     "az": 6,
-     "el": 6,
+     "az": 4,
+     "el": 4,
      "fit": "none",
-     "dist": 8200
+     "dist": 3000
     },
     "shots": []
    }

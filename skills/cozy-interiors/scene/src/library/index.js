@@ -1,4 +1,5 @@
 import { scuff, leaf, heightChart } from './signs.js';
+import { candlesticks, jug, breadBasket, placeSetting, glazedCabinet, benchCushion, wallPlates, pendantForm } from './diningset.js';
 import { dishRack, utensilCrock, breadBin, toaster, mokaPot, potRail, openShelf, spiceRack, ovenGlove, wallClock, cookbookStand } from './kitchenset.js';
 import { bedsideLamp, alarmClock, glassesBook, chestOfDrawers, clothesRail, clothesChair, hamper, leaningMirror, wallSconce } from './bedset.js';
 import { chair as armChair, chaise, coffeeShape, floorCushion, logBasket, woodStove, recordPlayer, magazineRack, plantStand, galleryWall, scratches } from './livingset.js';
@@ -34,6 +35,7 @@ export const REGISTRY = {
   stepStool, crate, wateringCan, umbrellaStand, shoes, wasteBin, fileBox, laptop,
   jars, kettle, herbs, trolley, teaTowel,
   bed, bedsideTable, wardrobe, desk, deskChair, coatHooks, daybed, readingChair, footstool, console: console_,
+  candlesticks, jug, breadBasket, placeSetting, glazedCabinet, benchCushion, wallPlates, pendantForm,
   dishRack, utensilCrock, breadBin, toaster, mokaPot, potRail, openShelf, spiceRack, ovenGlove, wallClock, cookbookStand,
   bedsideLamp, alarmClock, glassesBook, chestOfDrawers, clothesRail, clothesChair, hamper, leaningMirror, wallSconce,
   floorCushion, logBasket, woodStove, recordPlayer, magazineRack, plantStand, galleryWall, scratches,

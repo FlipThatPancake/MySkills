@@ -49,7 +49,7 @@ export function breadBin(kit, { w = 380, d = 250, h = 210, form = 'roll', seed =
     for (let i = 1; i < 6; i++) { const a = (i / 6) * 3.1416; pts.push([-w / 2 + 12, h * 0.78 - 4 + Math.sin(a) * (d * 0.5), Math.cos(a) * (d * 0.5) + 0.6], [w / 2 - 12, h * 0.78 - 4 + Math.sin(a) * (d * 0.5), Math.cos(a) * (d * 0.5) + 0.6]); }
     g.add(kit.cyl(0, h * 0.45, d / 2 + 6, 9, 14, { axis: 'z', seg: 10, tone: 'lo' }));
   } else {
-    const lid = kit.group(); lid.add(kit.rbox(-w / 2, 0, d, w, 26, d, 10)); lid.position.set(0, h * 0.78, -d / 2); lid.rotation.x = -(16 + R() * 8) * DEG; g.add(lid);   // hinged at the back
+    const lid = kit.group(); lid.add(kit.rbox(-w / 2, 0, d, w, 26, d, 10)); lid.position.set(0, h * 0.78, -d / 2); lid.rotation.x = -(9 + R() * 5) * DEG; g.add(lid); g.add(kit.cyl(-w / 2 + 20, h * 0.78 + 4, -d / 2 + 4, 8, w - 40, { axis: 'x', seg: 10, tone: 'lo' }));   // hinged at the back, resting on the rim, a hinge bar along it
     const loaf = kit.cyl(-w * 0.3, h * 0.62, 0, 52, w * 0.6, { axis: 'x', seg: 18, tone: 'lo' }); g.add(loaf);
     pts.push([-w * 0.25, h * 0.62 + 52, 30], [-w * 0.18, h * 0.62 + 40, 40]);
   }
@@ -88,7 +88,7 @@ export function potRail(kit, { w = 900, n = 4, seed = 4, mix = 'mixed' } = {}) {
   for (let i = 0; i < n && x < w / 2 - 80; i++) {
     const k = kinds[(i + Math.floor(R() * 4)) % 4], hook = (xx) => g.add(rod(kit, [xx, yR + 6, z], [xx, yR - 40, z], 3.5, 3.5, 'lo'));
     hook(x);
-    if (k === 'ladle') { g.add(rod(kit, [x, yR - 40, z], [x, yR - 300, z + 6], 6, 6, 'lo')); const b = kit.solid(new T.SphereGeometry(44, 14, 10, 0, 6.2832, 0, 1.8), x, yR - 320, z + 14, { smooth: true, tone: 'lo' }); b.scale.set(1, 1, 0.8); g.add(b); x += 150; }
+    if (k === 'ladle') { g.add(rod(kit, [x, yR - 40, z], [x, yR - 290, z + 6], 6, 6, 'lo')); g.add(kit.cyl(x, yR - 330, z + 18, 46, 20, { axis: 'z', seg: 24, tone: 'lo' })); g.add(kit.cyl(x, yR - 330, z + 20, 34, 6, { axis: 'z', seg: 22 })); g.add(kit.lines(ringXY(x, yR - 330, 30, z + 21, 20), 'lo')); x += 150; }   // a ladle: a round bowl facing out
     else if (k === 'skillet') { const r = 105 + R() * 25; g.add(rod(kit, [x, yR - 40, z], [x, yR - 160, z], 7, 7, 'lo')); g.add(kit.cyl(x, yR - 160 - r, z + 8, r, 22, { axis: 'z', seg: 30, tone: 'lo' })); g.add(kit.lines(ringXY(x, yR - 160 - r, r * 0.78, z + 9, 26), 'mid')); x += r * 2 + 40; }
     else if (k === 'saucepan') { const r = 80; g.add(rod(kit, [x, yR - 40, z], [x, yR - 130, z], 7, 7, 'lo')); g.add(kit.cyl(x, yR - 130 - r * 1.5, z + 6, r, 70, { axis: 'z', seg: 28 })); g.add(kit.lines(ringXY(x, yR - 130 - r * 1.5, r * 0.8, z + 7, 24), 'mid')); x += r * 2 + 50; }
     else { const r = 70; g.add(rod(kit, [x, yR - 40, z], [x, yR - 110, z], 5, 5, 'lo')); g.add(kit.cyl(x, yR - 110 - r, z + 6, r, 26, { axis: 'z', seg: 26, tone: 'lo' })); const m = []; for (let j = -3; j <= 3; j++) m.push([x + j * 18, yR - 110 - r - 55, z + 7], [x + j * 18, yR - 110 - r + 55, z + 7]); g.add(kit.lines(m, 'faint')); x += r * 2 + 40; }
@@ -121,10 +121,10 @@ export function spiceRack(kit, { w = 480, rows = 2, seed = 6, style = 'jars' } =
 
 export function ovenGlove(kit, { hand = 'left' } = {}) {   // a quilted mitt hanging from a hook: origin at the hook on the wall face
   const g = kit.group(), sg = hand === 'left' ? 1 : -1, w0 = 0.4; g.add(kit.cyl(0, 0, 14, 9, 22, { axis: 'z', seg: 10, tone: 'lo' })); g.add(kit.solid(new kit.THREE.SphereGeometry(13, 12, 8), 0, 0, 28, { smooth: true, tone: 'lo' }));
-  g.add(kit.rbox(-85, -300, 58, 170, 270, 28, 60, { tone: 'mid', grey: true }));   // the mitt
-  g.add(kit.rbox(-80, -334, 60, 160, 50, 34, 18, { tone: 'lo', grey: true }));   // the cuff
-  const th = kit.group(); th.add(kit.rbox(-30, -130, 55, 60, 130, 24, 28, { tone: 'mid', grey: true })); th.position.set(sg * 98, -190, 0); th.rotation.z = -sg * 0.55; g.add(th);   // the thumb
-  const q = []; for (let i = 1; i < 4; i++) q.push([-60, -60 - i * 55, 62], [60, -60 - i * 55, 62]); for (let i = -1; i <= 1; i++) q.push([i * 45, -50, 62], [i * 45, -270, 62]);
+  g.add(kit.rbox(-85, -300, 58, 170, 270, 28, 60, { tone: 'mid' }));   // the mitt
+  g.add(kit.rbox(-80, -334, 60, 160, 50, 34, 18, { tone: 'lo' }));   // the cuff
+  const th = kit.group(); th.add(kit.rbox(-30, -130, 55, 60, 130, 24, 28, { tone: 'mid' })); th.position.set(sg * 98, -190, 0); th.rotation.z = -sg * 0.55; g.add(th);   // the thumb
+  const q = [[-60, -110, 62], [60, -110, 62], [-60, -170, 62], [60, -170, 62], [-60, -230, 62], [60, -230, 62]];   // three quilt lines
   g.add(kit.lines(q, 'faint')); g.add(kit.lines([[0, -6, 30], [-30, -64, 50], [0, -6, 30], [30, -64, 50]], 'mid'));
   return kit.merge(g);
 }
