@@ -3,14 +3,16 @@
 // bed({ w = 1600, l = 2100 }), bedsideTable({ w = 450, d = 380, h = 520 }), wardrobe({ w = 1200, h = 2100, d = 600 }), desk({ w = 1400, d = 700, h = 740 }), deskChair(), coatHooks({ n = 4, w = 900 }),
 // daybed({ w = 1900, d = 850 }), readingChair() (an armchair with a high back), footstool({ w = 520 }), console({ w = 1100, d = 330, h = 800 }).
 import { armchair } from './living.js';
+import { duvetCloth } from './softpieces.js';
 const lo = { tone: 'lo' };
 const bx = (kit) => (cx, y, cz, w, h, d, o) => kit.box(cx - w / 2, y, cz + d / 2, w, h, d, o), rb = (kit) => (cx, y, cz, w, h, d, r, o) => kit.rbox(cx - w / 2, y, cz + d / 2, w, h, d, r, o);
-export function bed(kit, { w = 1600, l = 2100, head = 1000 } = {}) {   // head: the headboard's height above the base (the bed stands 300 + head mm tall)
+export function bed(kit, { w = 1600, l = 2100, head = 1000, duvet = 'made', seed = 1 } = {}) {   // head: the headboard's height above the base (the bed stands 300 + head mm tall)
   const g = kit.group(), B = bx(kit), R = rb(kit);
   g.add(R(0, 0, 0, w + 60, 300, l, 14));                                                    // the base
   g.add(R(0, 300, 40, w - 20, 210, l - 100, 40, lo));                                       // the mattress
   g.add(B(0, 300, -l / 2 + 25, w + 60, head, 50));                                          // the headboard
-  g.add(R(0, 505, 260, w - 40, 90, l - 760, 36));                                           // the duvet, folded back at the top
+  if (duvet === 'unmade') { const d = duvetCloth(kit, { w: w - 20, head: -560, foot: 1040, sagL: 190 + 40 * ((seed * 7) % 5) / 4, sagR: 300, sagFoot: 250, seed }); d.position.set(0, 510, 0); g.add(d); }   // thrown over unevenly: one side sags low, the foot hangs
+  else g.add(R(0, 505, 260, w - 40, 90, l - 760, 36));                                       // the duvet, folded back at the top
   for (const s of [-1, 1]) g.add(R(s * w * 0.24, 510, -l / 2 + 240, w * 0.4, 130, 330, 50, lo));   // two pillows
   return kit.merge(g);
 }

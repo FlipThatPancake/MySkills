@@ -104,12 +104,12 @@ export function hangGrid({ bx, bz, cx, cz, nx = 56, ny = 40, y = 0, fold = 7, am
 }
 
 // A tablecloth: origin the middle of the table top at the surface (y 0 = the top). w, d: the table's top; drop: how far it hangs.
-export function tablecloth(kit, { w = 1600, d = 900, drop = 260, fold = 7, amp = 34, tone = 'lo', seed = 1 } = {}) {
+export function tablecloth(kit, { w = 1600, d = 900, drop = 400, fold = 6, amp = 64, tone = 'lo', seed = 1 } = {}) {
   const hx = w / 2, hz = d / 2, grid = hangGrid({ bx: [-hx, hx], bz: [-hz, hz], cx: [-hx - drop, hx + drop], cz: [-hz - drop, hz + drop], y: 3, fold, amp, seed, nx: Math.round((w + 2 * drop) / 40), ny: Math.round((d + 2 * drop) / 40) });
   return cloth(kit, { ...grid, thick: 5, tone });
 }
 // A table runner: a strip along the table's length, hanging over both short ends. rw: its width.
-export function tableRunner(kit, { w = 1600, d = 900, rw = 380, drop = 230, fold = 3, amp = 20, tone = 'lo', seed = 1 } = {}) {
+export function tableRunner(kit, { w = 1600, d = 900, rw = 380, drop = 320, fold = 3, amp = 20, tone = 'lo', seed = 1 } = {}) {
   const hx = w / 2, hz = rw / 2, grid = hangGrid({ bx: [-hx, hx], bz: [-hz, hz], cx: [-hx - drop, hx + drop], cz: [-hz, hz], y: 4, fold, amp, seed, nx: Math.round((w + 2 * drop) / 40), ny: Math.max(8, Math.round(rw / 30)), ripple: 3 });
   return cloth(kit, { ...grid, thick: 4, tone });
 }

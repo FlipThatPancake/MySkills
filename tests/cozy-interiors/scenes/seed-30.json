@@ -584,6 +584,24 @@
     "area": "dining"
    },
    {
+    "id": "dining-runner",
+    "asset": "tableRunner",
+    "at": [
+     12100,
+     750,
+     3000
+    ],
+    "mount": "on",
+    "params": {
+     "w": 1700,
+     "d": 900,
+     "rw": 380,
+     "drop": 300
+    },
+    "group": "dining:table set",
+    "area": "dining"
+   },
+   {
     "id": "dining-dining-pendantLamp",
     "asset": "pendantLamp",
     "at": [

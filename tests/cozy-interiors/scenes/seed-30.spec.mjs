@@ -35,6 +35,7 @@ const H = new Home({ seed: 30, floor: 'boards' });
   back.place('sideboard-plant', 'plant', 1950, { y: 800, mount: 'on', group: 'sideboard', off: 200 });
   const T = a.table('dining', { at: [2900, 3000], w: 1700, d: 900, chairs: 4, rug: false, group: 'table set', hero: false });
   a.put('rug', 'rug', [2900, 3000], 0, { group: 'table light', params: { w: 2500, d: 1700 } });
+  a.put('runner', 'tableRunner', [2900, 3000], 0, { y: 750, mount: 'on', group: 'table set', params: { w: 1700, d: 900, rw: 380, drop: 300 } });
   T.over('pendantLamp', { params: { rim: 1700 }, group: 'table light' }); T.on('vase');
   back.place('wall-shelf', 'wallShelf', 3150, { y: 1500, group: 'sideboard', shadow: false, params: { w: 600 } });
   left.place('bench', 'bench', 3900, { group: 'door side' });

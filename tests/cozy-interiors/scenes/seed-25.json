@@ -671,7 +671,10 @@
     ],
     "mount": "floor",
     "params": {
-     "head": 550
+     "head": 550,
+     "duvet": "unmade",
+     "seed": 25,
+     "w": 1580
     },
     "group": "bedroom:bed",
     "hero": true,
@@ -739,9 +742,9 @@
     "id": "bedroom-throw",
     "asset": "foldedThrow",
     "at": [
-     20600,
-     595,
-     1810
+     20604.6,
+     531,
+     1823.8
     ],
     "mount": "on",
     "params": {

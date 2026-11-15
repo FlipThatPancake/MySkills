@@ -53,7 +53,7 @@ const H = new Home({ seed: 25, floor: 'boards' });
   const a = H.area('bedroom', 'Bedroom', { rect: [0, 0, 6000, 4800] });
   const back = a.back(6000, [{ kind: 'window', x: 3000, width: 1400, height: 1100, sill: 1000, sash: 'fixed' }, { kind: 'door', x: 5400, width: 900, hinge: 'r', open: 20 }]);
   const left = a.left(4800);
-  back.place('bed', 'bed', 3000, { group: 'bed', hero: true, params: { head: 550 } });
+  back.place('bed', 'bed', 3000, { group: 'bed', hero: true, params: { head: 550, duvet: 'unmade', seed: 25 } });
   back.place('bedside-l', 'bedsideTable', 1550, { group: 'bed' }); back.place('bedside-r', 'bedsideTable', 4450, { group: 'bed' });
   back.place('bedside-books', 'bookStack', 1550, { y: 520, mount: 'on', group: 'bed', off: 190, params: { n: 3 } });
   back.place('bedside-plant', 'plant', 4450, { y: 520, mount: 'on', group: 'bed', off: 190 });
