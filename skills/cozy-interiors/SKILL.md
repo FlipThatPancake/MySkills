@@ -19,8 +19,8 @@ Run from `scene/` with Node, global esbuild and Playwright (Pillow for shots.mjs
 1. `node roll.mjs <seed> <kinds...>`: this home's choices. A kind the tables lack: add it to tables.json.
 2. `node assets.mjs`: every asset with origin, size, mount, params and forms. Missing: a new generator in `src/library/` in the same style, registered in index.js and meta.js.
 3. A spec script importing compose.mjs (its header lists the calls) writes the scene json.
-4. `node check-home.mjs <scene.json>` until "No problems".
-5. Views: [camera.md](references/camera.md). `node fitshots.mjs <scene.json>` finds a camera per tour shot; put them in the spec, then steps 3–4 again.
+4. `node check-home.mjs <scene.json>`: fix every layout issue; shot issues wait for step 5.
+5. Views: [camera.md](references/camera.md). `node fitshots.mjs <scene.json>` finds a camera per tour shot; put them in the spec, rerun step 3, then check-home until "No problems".
 6. Look by eye: `node snap.mjs <scene.json> out.png all` and `node shots.mjs <scene.json> sheet.png`. Each view a still photo of a lived-in home? Fix what reads wrong.
 
 ## Deliver
