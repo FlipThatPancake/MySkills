@@ -31,15 +31,7 @@ export function wardrobe(kit, { w = 1200, h = 2100, d = 600 } = {}) {
   g.add(kit.lines(pts, 'lo'));
   return kit.merge(g);
 }
-export function desk(kit, { w = 1400, d = 700, h = 740 } = {}) {
-  const g = kit.group(), B = bx(kit), R = rb(kit), TT = 30, pts = [], z = d / 2 + 0.6;
-  g.add(R(0, h - TT, 0, w, TT, d, 6));
-  g.add(B(-w / 2 + 25, 0, 0, 30, h - TT, d - 60));                                          // a side panel
-  g.add(R(w / 2 - 230, 0, 0, 440, h - TT, d - 40, 4)); g.add(B(0, 450, -d / 2 + 80, w - 80, 20, 20, lo));   // a drawer unit and a rail
-  for (const y of [90, 280, 460]) { pts.push([w / 2 - 440, y, z - 20], [w / 2 - 30, y, z - 20], [w / 2 - 30, y, z - 20], [w / 2 - 30, y + 170, z - 20], [w / 2 - 30, y + 170, z - 20], [w / 2 - 440, y + 170, z - 20], [w / 2 - 440, y + 170, z - 20], [w / 2 - 440, y, z - 20]); g.add(kit.cyl(w / 2 - 235, y + 85, z - 16, 14, 10, { axis: 'z', seg: 12, ...lo })); }
-  g.add(kit.lines(pts, 'lo'));
-  return kit.merge(g);
-}
+export function desk(kit, o = {}) { return deskFrame(kit, o); }   // forms and parts: officeset.js deskFrame
 export function deskChair(kit) {   // a swivel chair: five-star base, a gas post, a round seat and a curved back
   const T = kit.THREE, g = kit.group();
   for (let i = 0; i < 5; i++) { const a = i * Math.PI * 2 / 5, c = Math.cos(a), s = Math.sin(a), m = kit.solid(new T.CylinderGeometry(12, 16, 290, 8), c * 145, 60, s * 145, { smooth: true, ...lo }); m.rotation.set(0, 0, 0); m.position.set(c * 145, 35, s * 145); m.scale.set(1, 1, 1); m.rotation.order = 'YXZ'; m.rotation.y = -a; m.rotation.z = Math.PI / 2; g.add(m); g.add(kit.cyl(c * 270, 0, s * 270, 26, 40, { seg: 12, ...lo })); }
@@ -50,6 +42,7 @@ export function deskChair(kit) {   // a swivel chair: five-star base, a gas post
   return kit.merge(g);
 }
 import { coat, tote } from './softpieces.js';
+import { deskFrame } from './officeset.js';
 export function coatHooks(kit, { n = 4, w = 900 } = {}) {   // a wooden board on the wall with hooks, a cloth coat on the second hook, a tote bag on the fourth
   const g = kit.group(), zc = 24 + 110;
   g.add(kit.rbox(-w / 2, 0, 24, w, 120, 24, 6));

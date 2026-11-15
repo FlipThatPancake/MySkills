@@ -23,7 +23,7 @@ else if (PART === 'floor') {
   wall('h1', 'hungHat', 700, { form: 'brim' }); wall('h2', 'hungHat', 1500, { form: 'beanie', seed: 4 }); wall('g1', 'hungBag', 2400, { form: 'satchel' }); wall('g2', 'hungBag', 3300, { form: 'tote' }); wall('g3', 'hungBag', 4300, { form: 'basket', seed: 5 });
   ty = 1000; dd = 5000; tz = 800;
 } else {
-  put('r1', 'runner', 900, 1800, { form: 'stripe', w: 700, l: 2400 }); put('r2', 'runner', 2200, 1800, { form: 'bands', w: 760, l: 2000, seed: 4 }); put('r3', 'runner', 3500, 1800, { form: 'check', w: 620, l: 2800, seed: 6, fold: 'no' }); put('r4', 'runner', 4600, 1800, { form: 'lines', w: 560, l: 2200, seed: 8 });
+  put('r1', 'runner', 900, 1800, { form: 'stripe', w: 700, l: 2400 }); put('r2', 'runner', 2200, 1800, { form: 'bands', w: 760, l: 2000, seed: 4 }); put('r3', 'runner', 3500, 1800, { form: 'check', w: 620, l: 2800, seed: 6, fold: 'no' }); put('r4', 'runner', 4600, 1800, { form: 'stripe', w: 560, l: 2200, seed: 8 });
   ty = 0; dd = 6000; el = 45; tz = 1800;
 }
 if (process.env.TX) tx = +process.env.TX; if (process.env.DD) dd = +process.env.DD;

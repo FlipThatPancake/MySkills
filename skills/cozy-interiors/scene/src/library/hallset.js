@@ -9,12 +9,12 @@ const rx = (m, a) => { m.rotation.x = a; return m; };
 const bx = (kit) => (cx, y, cz, w, h, d, o) => kit.box(cx - w / 2, y, cz + d / 2, w, h, d, o), rb = (kit) => (cx, y, cz, w, h, d, r, o) => kit.rbox(cx - w / 2, y, cz + d / 2, w, h, d, r, o);
 const ringXZ = (cx, y, cz, r, n = 28) => { const p = []; for (let i = 0; i < n; i++) { const a = i / n * 6.2832, b = (i + 1) / n * 6.2832; p.push([cx + Math.cos(a) * r, y, cz + Math.sin(a) * r], [cx + Math.cos(b) * r, y, cz + Math.sin(b) * r]); } return p; };
 
-// shoes standing on a shelf top at y: pairs along x, toes to +z, a little askew
-function shoesOn(kit, g, R, x0, x1, y, z, { kind = 'sneaker', fill = 0.8, L = 265, xs } = {}) {
+// shoes standing on a shelf top at y: a mix of sneakers, ankle boots and a slipper pair; one pair heel-out, one askew, gaps left; light shells
+function shoesOn(kit, g, R, x0, x1, y, z, { fill = 0.8, L = 265, xs } = {}) {
   for (const x of xs || Array.from({ length: Math.max(0, Math.floor((x1 - x0 - 190) / 190) + 1) }, (_, i) => x0 + 95 + i * 190)) {
     if (R() > fill) continue;
-    const k = R() < 0.25 ? 'boot' : kind, LL = L * (0.9 + R() * 0.15), ro = (R() - 0.5) * 0.35;
-    for (const s of [-1, 1]) { const sh = shoe(kit, 0, 0, LL, { kind: k, tone: R() < 0.5 ? 'lo' : undefined }); sh.position.set(x + s * 46, y, z); sh.rotation.y = ro + s * 0.04; g.add(sh); }
+    const q = R(), kind = q < 0.55 ? 'sneaker' : q < 0.8 ? 'boot' : 'slipper', turn = R() < 0.12 ? Math.PI : 0, ro = turn + (R() < 0.25 ? (R() - 0.5) * 1.2 : (R() - 0.5) * 0.22), dx = (R() - 0.5) * 24, LL = (kind === 'slipper' ? 235 : L) * (0.9 + R() * 0.15);
+    for (const s of [-1, 1]) { const sh = shoe(kit, 0, 0, LL, { kind: kind === 'boot' ? 'boot' : 'sneaker', tone: kind === 'sneaker' ? (R() < 0.5 ? 'lo' : undefined) : 'lo', light: true }); if (kind === 'slipper') sh.scale.y = 0.62; const c = new kit.THREE.Group(); c.add(sh); c.position.set(x + dx + s * 46 * (turn ? -1 : 1), y, z); c.rotation.y = ro + s * 0.04; g.add(c); }
   }
 }
 
@@ -37,12 +37,13 @@ export function shoeRack(kit, { w = 760, tiers = 3, form = 'slat', fill = 'most'
     for (let t = 0; t < tiers; t++) for (const f of [-1, 1]) g.add(rod(kit, [-w / 2 + 14, shelfY(t) + 6, f * (d / 2 - 60)], [w / 2 - 14, shelfY(t) + 6, f * (d / 2 - 60)], 7, 7, 'mid'));
     for (const s of [-1, 1]) g.add(rod(kit, [s * (w / 2 - 12), 400, -d / 2 + 14], [s * (w / 2 - 12), 400, d / 2 - 14], 6, 6, 'lo'));
   }
-  const kindOf = tiers > 3 ? 'sneaker' : 'sneaker';
   const nC = Math.max(2, Math.round(w / 330)), cwC = (w - 24) / nC;
-  for (let t = 0; t < tiers; t++) shoesOn(kit, g, rn, -w / 2 + 24, w / 2 - 24, shelfY(t) + (form === 'slat' ? 16 : form === 'cubby' ? 0 : 12), 0, { kind: kindOf, fill: fl, L: form === 'cubby' ? 250 : 262, xs: form === 'cubby' ? Array.from({ length: nC }, (_, i) => -w / 2 + 12 + (i + 0.5) * cwC) : undefined });
+  for (let t = 0; t < tiers; t++) shoesOn(kit, g, rn, -w / 2 + 24, w / 2 - 24, shelfY(t) + (form === 'slat' ? 16 : form === 'cubby' ? 0 : 12), 0, { fill: fl, L: form === 'cubby' ? 250 : 262, xs: form === 'cubby' ? Array.from({ length: nC }, (_, i) => -w / 2 + 12 + (i + 0.5) * cwC) : undefined });
   return kit.merge(g);
 }
 
+// the pale lining of a bowl: the profile pulled in 3 mm and turned so its faces look inward
+const inner = (kit, P) => kit.solid(new kit.THREE.LatheGeometry(P.map(([a, b]) => new kit.THREE.Vector2(Math.max(0.01, a - 3), b + 3)).reverse(), 36), 0, 0, 0, { smooth: true, linen: true });
 function key(kit, x, y, z, ang, R) {   // a flat key: a round bow with a hole, a shaft with two teeth
   const g = kit.group(), L = 52 + R() * 12; g.scale.setScalar(1.15);
   g.add(kit.cyl(0, 0, 0, 11, 3, { seg: 16, tone: 'lo' })); g.add(rx(kit.solid(new kit.THREE.TorusGeometry(11, 1.6, 6, 18), 0, 3.4, 0, { smooth: true }), Math.PI / 2));
@@ -52,9 +53,9 @@ function key(kit, x, y, z, ang, R) {   // a flat key: a round bow with a hole, a
 }
 export function keyBowl(kit, { r = 95, form = 'bowl', keys = 3, fob = 'tag', seed = 1 } = {}) {   // a small dish by the door with keys lying in it
   const g = kit.group(), R = rnd(seed), T = kit.THREE; let floor = 10;
-  if (form === 'bowl') { g.add(vessel(kit, [[r * 0.38, 0], [r * 0.6, 6], [r * 0.95, r * 0.34], [r, r * 0.5]], { contents: 'none', seg: 36 })); g.add(kit.cyl(0, 10, 0, r * 0.55, 4, { seg: 30, soil: true })); floor = 16; }
-  else if (form === 'dish') { g.add(vessel(kit, [[r * 0.7, 0], [r * 0.85, 4], [r, 22], [r * 1.02, 30]], { contents: 'none', seg: 36 })); g.add(kit.cyl(0, 4, 0, r * 0.75, 4, { seg: 30, soil: true })); floor = 10; }
-  else { g.add(kit.rbox(-r * 1.1, 0, r * 0.75, r * 2.2, 26, r * 1.5, 12)); g.add(kit.rbox(-r * 1.1 + 12, 20, r * 0.75 - 12, r * 2.2 - 24, 7, r * 1.5 - 24, 8, { soil: true })); floor = 27; }
+  if (form === 'bowl') { { const P = [[r * 0.38, 0], [r * 0.6, 6], [r * 0.95, r * 0.34], [r, r * 0.5]]; g.add(vessel(kit, P, { contents: 'none', seg: 36 })); g.add(inner(kit, P)); } g.add(kit.cyl(0, 10, 0, r * 0.55, 4, { seg: 30, linen: true })); floor = 16; }
+  else if (form === 'dish') { { const P = [[r * 0.7, 0], [r * 0.85, 4], [r, 22], [r * 1.02, 30]]; g.add(vessel(kit, P, { contents: 'none', seg: 36 })); g.add(inner(kit, P)); } g.add(kit.cyl(0, 4, 0, r * 0.75, 4, { seg: 30, linen: true })); floor = 10; }
+  else { g.add(kit.rbox(-r * 1.1, 0, r * 0.75, r * 2.2, 26, r * 1.5, 12)); g.add(kit.rbox(-r * 1.1 + 12, 20, r * 0.75 - 12, r * 2.2 - 24, 7, r * 1.5 - 24, 8, { linen: true })); floor = 27; }
   const n = Math.max(1, Math.min(5, keys));
   for (let i = 0; i < n; i++) { const a = R() * 6.28, d = form === 'tray' ? 0 : r * (0.12 + 0.2 * R()); g.add(key(kit, Math.cos(a) * d - 8, floor + i * 3.4, Math.sin(a) * d * 0.6, a + i * 1.7, R)); }
   if (fob === 'tag') { const t = kit.rbox(-20 + R() * 30, floor + n * 3.4, 12 + R() * 14, 38, 3.4, 22, 6, lo); t.rotation.y = R() * 3; g.add(t); }
@@ -77,7 +78,7 @@ export function hungHat(kit, { form = 'brim', tone = 'lo', seed = 1 } = {}) {   
   const g = kit.group(), R = rnd(seed), T = kit.THREE;
   g.add(pegAt(kit, 0, 0, 64));
   if (form === 'brim') {
-    const br = 135 + R() * 30, h = brimHat(kit, { br, cr: 76, ch: 100, tone, seed }), pv = kit.group(); pv.add(h); pv.rotation.x = Math.PI / 2 - 0.12; pv.position.set(0, -(br - 14), 22); g.add(pv);
+    const br = 135 + R() * 30, h = brimHat(kit, { br, cr: 76, ch: 100, tone, seed }), pv = kit.group(); pv.add(h); pv.rotation.x = Math.PI / 2 - 0.52; pv.position.set(0, -(br - 14), 22); g.add(pv);
   } else {
     const r = 88, pr = [[0.01, -250], [r * 0.9, -246], [r, -226], [r * 1.0, -190], [r * 1.04, -120], [r * 0.9, -60], [r * 0.5, -22], [0.01, -8]].map(([x, y]) => new T.Vector2(x, y)), sack = kit.solid(new T.LatheGeometry(pr, 30), 0, 0, 0, { smooth: true, tone }); sack.scale.z = 0.42; sack.position.set(0, 0, 54); g.add(sack);
     const rb2 = []; for (let k = 0; k < 5; k++) { const y = -232 + k * 8 + (k ? 0 : 0), rr = r * (0.9 + 0.1 * Math.min(1, k / 2)) + 1; for (let q = 0; q < 24; q++) { const a1 = q / 24 * 6.2832, a2 = (q + 1) / 24 * 6.2832; rb2.push([Math.cos(a1) * rr, y, 54 + Math.sin(a1) * rr * 0.42], [Math.cos(a2) * rr, y, 54 + Math.sin(a2) * rr * 0.42]); } } g.add(kit.lines(rb2, 'mid'));
@@ -143,9 +144,8 @@ export function runner(kit, { w = 700, l = 2400, form = 'stripe', fringe = true,
   const mat = kit.solid(geo, 0, 0, 0, { smooth: false, ...lo }); g.add(mat);
   const inset = (i) => [[-hw + i, y, -hl + 60], [hw - i, y, -hl + 60], [hw - i, y, -hl + 60], [hw - i, y, hl - 60], [hw - i, y, hl - 60], [-hw + i, y, hl - 60], [-hw + i, y, hl - 60], [-hw + i, y, -hl + 60]];
   if (form === 'stripe') { pts.push(...inset(46), ...inset(74)); pts.push([0, y, -hl + 60], [0, y, hl - 60]); }
-  else if (form === 'bands') { const bands = Math.round(l / 520); for (let i = 1; i < bands; i++) { const z = -hl + l * i / bands + (R() - 0.5) * 60; pts.push([-hw + 30, y, z], [hw - 30, y, z], [-hw + 30, y, z + 34], [hw - 30, y, z + 34]); } pts.push(...inset(40)); }
-  else if (form === 'check') { const cw = w / 4; for (let i = 1; i < 4; i++) pts.push([-hw + i * cw, y, -hl + 40], [-hw + i * cw, y, hl - 40]); for (let z = -hl + 300; z < hl - 150; z += 300) pts.push([-hw + 40, y, z], [hw - 40, y, z]); }
-  else for (let i = 0; i < 9; i++) { const x = -hw + 50 + (w - 100) * i / 8 + (R() - 0.5) * 12; pts.push([x, y, -hl + 90], [x + (R() - 0.5) * 10, y, hl - 90]); }
+  else if (form === 'bands') { const bands = Math.max(2, Math.min(4, Math.round(l / 800))); for (let i = 1; i < bands; i++) { const z = -hl + l * i / bands + (R() - 0.5) * 60; pts.push([-hw + 30, y, z], [hw - 30, y, z], [-hw + 30, y, z + 34], [hw - 30, y, z + 34]); } pts.push(...inset(40)); }
+  else { const cw = w / 3, rows = 6; for (let i = 1; i < 3; i++) pts.push([-hw + i * cw, y, -hl + 60], [-hw + i * cw, y, hl - 60]); for (let k = 1; k < rows; k++) pts.push([-hw + 40, y, -hl + l * k / rows], [hw - 40, y, -hl + l * k / rows]); pts.push(...inset(40)); }
   g.add(kit.lines(pts, 'mid'));
   if (fringe && fringe !== 'no') { const fr = []; for (const s of [-1, 1]) for (let x = -hw + 14; x <= hw - 14; x += 18) { const dz = (R() - 0.5) * 8; fr.push([x, 4, s * (hl + 2)], [x + dz, 3, s * (hl + 34 + R() * 10)]); } g.add(kit.lines(fr, 'lo')); }
   if (fold && fold !== 'no') {   // the front-left corner turned back over the mat: a triangle lying on top of it
