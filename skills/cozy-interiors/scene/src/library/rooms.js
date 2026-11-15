@@ -47,16 +47,13 @@ export function deskChair(kit) {   // a swivel chair: five-star base, a gas post
   g.add(kit.cyl(0, 470, -215, 14, 100, { seg: 10, ...lo }));
   return kit.merge(g);
 }
-export function coatHooks(kit, { n = 4, w = 900 } = {}) {   // a wooden board on the wall with hooks, a coat with sleeves and a collar on the second hook, a tote bag on the fourth
-  const T = kit.THREE, g = kit.group(), pts = [], zc = 24 + 110;
+import { coat, tote } from './softpieces.js';
+export function coatHooks(kit, { n = 4, w = 900 } = {}) {   // a wooden board on the wall with hooks, a cloth coat on the second hook, a tote bag on the fourth
+  const g = kit.group(), zc = 24 + 110;
   g.add(kit.rbox(-w / 2, 0, 24, w, 120, 24, 6));
-  for (let i = 0; i < n; i++) { const x = -w / 2 + w * (i + 0.5) / n; g.add(kit.cyl(x, 80, 24 + 55, 9, 55, { axis: 'z', seg: 10 })); g.add(kit.cyl(x, 80, 24 + 80, 13, 24, { seg: 10, ...lo })); }
-  const hx = -w / 2 + w * 1.5 / n, hy = 70, sh = new T.Shape([[0, 20], [60, 0], [175, -55], [205, -200], [225, -880], [135, -895], [128, -320], [150, -1010], [-150, -1010], [-128, -320], [-135, -895], [-225, -880], [-205, -200], [-175, -55], [-60, 0]].map(([x, y]) => new T.Vector2(x, y)));
-  g.add(kit.solid(new T.ExtrudeGeometry(sh, { depth: 52, bevelEnabled: true, bevelSize: 14, bevelThickness: 14, bevelSegments: 3 }), hx, hy, zc - 26, { tone: 'lo' }));
-  const z = zc + 40; pts.push([hx + 0, hy - 40, z], [hx + 0, hy - 1000, z], [hx - 128, hy - 320, z], [hx - 170, hy - 880, z], [hx + 128, hy - 320, z], [hx + 170, hy - 880, z], [hx - 70, hy - 30, z], [hx, hy - 120, z], [hx, hy - 120, z], [hx + 70, hy - 30, z]);
-  g.add(kit.lines(pts, 'mid'));
-  const bx0 = -w / 2 + w * 3.5 / n, strap = kit.solid(new T.TorusGeometry(85, 8, 8, 20, Math.PI), bx0, hy + 10, 24 + 80, { smooth: true }); strap.rotation.z = 0; g.add(strap);   // a tote bag by its handles
-  g.add(kit.rbox(bx0 - 140, hy - 400, 24 + 80 + 60, 280, 330, 120, 30, lo));
+  for (let i = 0; i < n; i++) { const x = -w / 2 + w * (i + 0.5) / n; g.add(kit.cyl(x, 80, 24 + 55, 9, 55, { axis: 'z', seg: 10 })); g.add(kit.cyl(x, 80, 24 + 80, 13, 24, { seg: 10, tone: 'lo' })); }
+  g.add(coat(kit, -w / 2 + w * 1.5 / n, 70, zc + 10));
+  g.add(tote(kit, -w / 2 + w * 3.5 / n, 80, 24 + 100));
   return kit.merge(g);
 }
 export function daybed(kit, { w = 1900, d = 850 } = {}) {

@@ -38,9 +38,10 @@ export function umbrellaStand(kit, { h = 520 } = {}) {   // a tall round bin hol
   g.add(bar(kit, [0, h * 0.5, 50], [30, h * 0.5 + 780, 40], 12, lo));
   return kit.merge(g);
 }
+import { shoe } from './softpieces.js';
 export function shoes(kit, { pairs = 2 } = {}) {   // pairs of shoes side by side, toes to the front
-  const g = kit.group(), R = rb(kit);
-  for (let p = 0; p < pairs; p++) for (const s of [-1, 1]) { const x = p * 300 + s * 70 - (pairs - 1) * 150, L = p ? 260 : 290; g.add(R(x, 0, 0, 100, 24, L, 10, lo)); g.add(R(x, 24, -L * 0.1, 96, 92, L * 0.78, 40)); g.add(R(x, 24, L * 0.36, 90, 46, L * 0.3, 34)); }
+  const g = kit.group();
+  for (let p = 0; p < pairs; p++) for (const s of [-1, 1]) g.add(shoe(kit, p * 300 + s * 70 - (pairs - 1) * 150, 0, p ? 260 : 290, { tone: p ? 'lo' : undefined }));
   return kit.merge(g);
 }
 export function wasteBin(kit, { h = 340 } = {}) {   // a slim round waste bin with a rolled rim

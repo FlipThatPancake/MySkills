@@ -88,10 +88,7 @@ export function basket(kit, { r = 230, h = 320 } = {}) {   // a woven basket wit
   b1.rotation.y = 0.25; b2.rotation.y = -0.3; g.add(b1, b2);
   return kit.merge(g);
 }
+import { poufBody } from './softpieces.js';
 export function pouf(kit, { r = 280, h = 380 } = {}) {
-  const g = kit.group(), pts = [], n = 36;
-  g.add(kit.cyl(0, 0, 0, r * 0.94, h * 0.7, { rTop: r, seg: 36 })); g.add(kit.cyl(0, h * 0.7, 0, r, h * 0.3, { rTop: r * 0.82, seg: 36 }));
-  for (let i = 0; i < n; i++) { const a = i / n * 6.2832, b = (i + 1) / n * 6.2832, rr = r * 0.6; pts.push([Math.cos(a) * rr, h + 0.5, Math.sin(a) * rr], [Math.cos(b) * rr, h + 0.5, Math.sin(b) * rr]); }
-  g.add(kit.lines(pts, 'lo'));
-  return kit.merge(g);
+  const g = kit.group(); g.add(poufBody(kit, r, h)); return kit.merge(g);
 }

@@ -40,14 +40,15 @@ const res = await page.evaluate(() => {
         for (const i of near) if (ovl(rect(boxes[i])) > 0.1 * subjArea) { stat.blocked = (stat.blocked || 0) + 1; return null; }
         const fg = near.concat(mem.length > 1 ? mem.filter((i) => ['pouf', 'basket', 'floorPlant', 'plant', 'stool', 'footstool', 'sideTable', 'crate', 'bench'].includes(sc(i).asset)) : []).some((i) => { const r = rect(boxes[i]), c = (r.x0 + r.x1) / 2; return SMALLFG.includes(sc(i).asset) && Math.abs(c) > 0.5 && Math.abs(c) < 1.15 && r.y1 > -1; });
         if (!fg) { stat.fg = (stat.fg || 0) + 1; return null; }
-        if (Math.abs(cx) > 0.34) { stat.off = (stat.off || 0) + 1; return null; }   // the subject sits in the middle third
+        if (strict && Math.abs(cx) > 0.34) { stat.off = (stat.off || 0) + 1; return null; }   // the subject sits in the middle third
         const rs = real.filter((i) => !['curtain', 'rug'].includes(sc(i).asset)).map((i) => rect(boxes[i])), cell = [0, 0, 0], tot = [0, 0, 0], NX = 18, NY = 10;
         for (let a = 0; a < NX; a++) for (let b = 0; b < NY; b++) { const px = -1 + (a + 0.5) * 2 / NX, py = -1 + (b + 0.5) * 2 / NY, t = Math.min(2, Math.floor(a * 3 / NX)); tot[t]++; if (rs.some((r) => px >= r.x0 && px <= r.x1 && py >= r.y0 && py <= r.y1)) cell[t]++; }
-        if (cell[0] / tot[0] < 0.14 || cell[2] / tot[2] < 0.14 || (cell[0] + cell[1] + cell[2]) / (tot[0] + tot[1] + tot[2]) < 0.3) { stat.empty = (stat.empty || 0) + 1; return null; }   // no empty side, at least a third of the frame holds things
-        for (const i of real) { if (['curtain', 'rug', 'baseRun', 'wallRun'].includes(sc(i).asset)) continue; const r = rect(boxes[i]); if (r.y1 > 0.97 && r.y0 < 0.9 && r.x1 > -1 && r.x0 < 1 && !(mem.includes(i) && fill > 0.5)) { stat.clip = (stat.clip || 0) + 1; return null; } }   // nothing is cut by the top edge
+        if (strict && (cell[0] / tot[0] < 0.09 || cell[2] / tot[2] < 0.09 || (cell[0] + cell[1] + cell[2]) / (tot[0] + tot[1] + tot[2]) < 0.25)) { stat.empty = (stat.empty || 0) + 1; stat.cov = [cell[0] / tot[0], cell[1] / tot[1], cell[2] / tot[2]].map((v) => +v.toFixed(2)); return null; }   // no empty side, at least a third of the frame holds things
+        if (strict) for (const i of real) { if (['curtain', 'rug', 'baseRun', 'wallRun'].includes(sc(i).asset)) continue; const r = rect(boxes[i]); if (r.y1 > 0.97 && r.y0 < 0.9 && r.x1 > -1 && r.x0 < 1 && !(mem.includes(i) && fill > 0.5)) { stat.clip = (stat.clip || 0) + 1; return null; } }   // nothing is cut by the top edge
         return { fill, cx };
       };
-      let best = null; const stat = {};
+      let best = null, strict = true; const stat = {};
+      for (const pass of [true, false]) { strict = pass; if (best) break;
       for (let x = bd.x0 + 200; x <= bd.x1 - 200; x += 300) for (let z = bd.z0 + 300; z <= bd.z1 + 2500; z += 300) for (const y of ST.ys) for (const fov of ST.fovs) for (const t of [-0.55, -0.5, -0.45, -0.4, -0.35, -0.3, -0.25, -0.2, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55]) for (const ly of [0, 300, 500, 700, 900, 1100]) {
         const from = new T.Vector3(x, y, z), dir = sc3.clone().sub(from), dist = dir.length(); if (dist < 1500) continue;
         const right = new T.Vector3().crossVectors(dir.clone().normalize(), new T.Vector3(0, 1, 0)).normalize(), half = dist * Math.tan(fov * Math.PI / 360) * (1200 / 750);
@@ -56,10 +57,11 @@ const res = await page.evaluate(() => {
         const cost = Math.abs(dist - ST.dp) + 50 * Math.abs(fov - ST.fp) + 800 * Math.abs(r.fill - 0.45) + 0.05 * Math.hypot(x - (sh.from[0] || 0), z - (sh.from[2] || 0));
         if (!best || cost < best.cost) best = { cost, from: from.toArray().map(Math.round), look: look.toArray().map(Math.round), fov, fill: +r.fill.toFixed(2), cx: +r.cx.toFixed(2) };
       }
+      if (best && !strict) best.loose = true; }   // the strict pass found nothing: this camera ignores the middle-third, empty-side and top-clip rules
       out.push({ area: A, name: sh.name, subject: subj, best, stat });
     }
   }
   return out;
 });
-for (const r of res) { const o = O[r.area]; console.log(r.area, JSON.stringify(r.name), '→', r.best ? `[${[r.best.from[0] - o[0], r.best.from[1], r.best.from[2] - o[1]]}], [${[r.best.look[0] - o[0], r.best.look[1], r.best.look[2] - o[1]]}], ${r.best.fov} (fills ${r.best.fill}, at ${r.best.cx})` : 'no camera found (make the subject group smaller, add a foreground piece) ' + JSON.stringify(r.stat)); }
+for (const r of res) { const o = O[r.area]; console.log(r.area, JSON.stringify(r.name), '→', r.best ? `[${[r.best.from[0] - o[0], r.best.from[1], r.best.from[2] - o[1]]}], [${[r.best.look[0] - o[0], r.best.look[1], r.best.look[2] - o[1]]}], ${r.best.fov} (fills ${r.best.fill}, at ${r.best.cx}${r.best.loose ? ", LOOSE: strict rules found nothing" : ""})` : 'no camera found (make the subject group smaller, add a foreground piece) ' + JSON.stringify(r.stat)); }
 await browser.close();

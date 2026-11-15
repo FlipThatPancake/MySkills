@@ -73,11 +73,11 @@ export function pillowZ(w, h, thick, edge, dent, x, y) {
   return (edge + (thick - edge) * Math.pow(Math.max(0, (1 - u * u) * (1 - v * v)), 0.62)) / 2 - dent * Math.exp(-((u * u + v * v) / 0.28)) + 1.2;
 }
 // A cloth sheet w x h hung from its top edge (y = 0 at the line, hanging down to -h) with soft vertical folds; thickness gives it an edge. folds: number of folds across, depth: how far they stand out, flare: wider at the hem.
-export function drape(kit, w, h, { folds = 4, depth = 28, thick = 10, flare = 0.08, phase = 0.4, nx = 36, ny = 14, tone } = {}) {
+export function drape(kit, w, h, { folds = 4, depth = 28, thick = 10, flare = 0.08, phase = 0.4, nx = 36, ny = 14, slope = 0, tone } = {}) {
   const T = kit.THREE, ix = (i, j, s) => (s * (ny + 1) + j) * (nx + 1) + i, pos = [], idx = [];
   for (const s of [0, 1]) for (let j = 0; j <= ny; j++) for (let i = 0; i <= nx; i++) {
     const u = i / nx - 0.5, t = j / ny, wide = 1 + flare * t, x = u * w * wide, amp = depth * (0.25 + 0.75 * smooth(t)), z = Math.sin((u * folds * 2 * Math.PI) + phase) * amp * 0.5 + (s ? -thick : 0);
-    pos.push(x, -t * h, z * (1 - 0.15 * Math.abs(u)));
+    pos.push(x, -t * h - slope * Math.pow(2 * Math.abs(u), 2) * (1 - t), z * (1 - 0.15 * Math.abs(u)));
   }
   for (const s of [0, 1]) for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
     const a = ix(i, j, s), b = ix(i + 1, j, s), c = ix(i, j + 1, s), d = ix(i + 1, j + 1, s);
