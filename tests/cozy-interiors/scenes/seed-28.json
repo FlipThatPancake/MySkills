@@ -334,9 +334,9 @@
     "id": "living-rug",
     "asset": "rug",
     "at": [
-     11350,
+     10350,
      0,
-     2000
+     2300
     ],
     "mount": "floor",
     "params": {
@@ -350,9 +350,9 @@
     "id": "living-armchair-l",
     "asset": "armchair",
     "at": [
-     10600,
+     9600,
      7,
-     1700
+     2100
     ],
     "turn": 25,
     "mount": "floor",
@@ -365,9 +365,9 @@
     "id": "living-armchair-r",
     "asset": "armchair",
     "at": [
-     12100,
+     11100,
      7,
-     1700
+     2100
     ],
     "turn": -25,
     "mount": "floor",
@@ -379,9 +379,9 @@
     "id": "living-side-table",
     "asset": "sideTable",
     "at": [
-     11350,
+     10350,
      7,
-     1500
+     1900
     ],
     "mount": "floor",
     "group": "living:seating",
@@ -392,9 +392,9 @@
     "id": "living-vase",
     "asset": "vase",
     "at": [
-     11350,
+     10350,
      527,
-     1500
+     1900
     ],
     "mount": "on",
     "params": {
@@ -407,9 +407,9 @@
     "id": "living-cushion",
     "asset": "cushion",
     "at": [
-     10550,
+     9550,
      470,
-     1650
+     2050
     ],
     "turn": 25,
     "mount": "on",
@@ -425,9 +425,9 @@
     "id": "living-cat",
     "asset": "cat",
     "at": [
-     11350,
+     10350,
      7,
-     2650
+     2900
     ],
     "turn": 160,
     "mount": "floor",
@@ -442,7 +442,7 @@
     "id": "living-lamp",
     "asset": "floorLamp",
     "at": [
-     8850,
+     10900,
      0,
      190
     ],
@@ -751,9 +751,9 @@
        6300
       ],
       "look": [
-       11856,
+       10938,
        300,
-       1865
+       1984
       ],
       "fov": 40,
       "subject": "living:seating"
@@ -761,14 +761,14 @@
      {
       "name": "window corner",
       "from": [
-       9200,
-       1100,
-       5700
+       13400,
+       1250,
+       5400
       ],
       "look": [
-       9954,
-       1100,
-       -37
+       12388,
+       1200,
+       1
       ],
       "fov": 40,
       "subject": "living:window"

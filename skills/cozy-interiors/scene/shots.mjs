@@ -10,7 +10,7 @@ mkdirSync(tmp, { recursive: true });
 execSync(`node ${join(here, 'build.mjs')} ${scene}`, { stdio: 'ignore' });
 const { chromium } = createRequire(join(execSync('npm root -g', { encoding: 'utf8' }).trim(), 'x.js'))('playwright');
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
-const page = await browser.newPage({ viewport: { width: 800, height: 500 } });
+const page = await browser.newPage({ viewport: { width: 1200, height: 750 } });
 await page.goto('file://' + scene.replace(/\.json$/, '.html')); await page.waitForFunction(() => window.cozyScene);
 const list = await page.evaluate(() => window.cozyScene.areaIds.map((id) => [id, (window.cozyScene.areas[id].camera.shots || []).map((s) => s.name)]));
 const files = [];
@@ -21,5 +21,5 @@ for (const [id, names] of list) for (let i = 0; i < names.length; i++) {
 }
 await browser.close();
 const rows = list.map(([id, names]) => names.map((n, i) => `${id}-${i}.png|${n}`).join(',')).join(';');
-execSync(`python3 - <<'PY'\nfrom PIL import Image, ImageDraw\nrows=[r.split(',') for r in '${rows}'.split(';')]\nW,H=480,300\nim=Image.new('RGB',(W*max(len(r) for r in rows),H*len(rows)),'white')\nd=ImageDraw.Draw(im)\nfor y,r in enumerate(rows):\n  for x,c in enumerate(r):\n    f,n=c.split('|'); t=Image.open('${tmp}/'+f).convert('RGB').resize((W,H)); im.paste(t,(x*W,y*H)); d.text((x*W+8,y*H+6),n,fill=(90,90,90))\nim.save('${out}')\nPY`);
+execSync(`python3 - <<'PY'\nfrom PIL import Image, ImageDraw\nrows=[r.split(',') for r in '${rows}'.split(';')]\nW,H=1200,750\nim=Image.new('RGB',(W*max(len(r) for r in rows),H*len(rows)),'white')\nd=ImageDraw.Draw(im)\nfor y,r in enumerate(rows):\n  for x,c in enumerate(r):\n    f,n=c.split('|'); t=Image.open('${tmp}/'+f).convert('RGB').resize((W,H)); im.paste(t,(x*W,y*H)); d.text((x*W+8,y*H+6),n,fill=(90,90,90))\nim.save('${out}')\nPY`);
 console.log(out);

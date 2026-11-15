@@ -11,21 +11,19 @@ const H = new Home({ seed: 30, floor: 'plain' });
   const back = a.back(6200, [{ kind: 'window', x: 2400, width: 1300, height: 1100, sill: 1000, sash: 'fixed' }]);
   const left = a.left(4600);
   back.place('fridge', 'fridge', 455, { group: 'larder' });
-  const R = a.run(back, 'run', 910, [{ w: 600, kind: 'door', hinge: 'r' }, { w: 800, kind: 'sink' }, { w: 600, kind: 'drawers' }, { w: 900, kind: 'hob' }, { w: 600, kind: 'doors' }], { group: 'cooking', hero: true });
+  const R = a.run(back, 'run', 910, [{ w: 600, kind: 'door', hinge: 'r' }, { w: 800, kind: 'sink' }, { w: 600, kind: 'drawers' }, { w: 900, kind: 'hob' }], { group: 'cooking', hero: true });
   R.on('hob', 'hob'); R.on('hob', 'hood'); R.on('hob', 'pan');
-  R.on('doors', 'kettle', { id: 'kettle' }); R.on('drawers', 'plant', { id: 'plant', dx: -100 });
+  R.on('drawers', 'kettle', { id: 'kettle' }); R.on('door', 'plant', { id: 'plant' });
   back.place('towel', 'teaTowel', 1200, { y: 1350, group: 'cooking', shadow: false });
-  back.place('wall-units', 'wallRun', 4400, { group: 'cooking', params: { modules: [{ w: 600, kind: 'doors' }] } });
   back.place('wall-shelf', 'wallShelf', 5400, { group: 'shelf corner', shadow: false });
-  a.put('island', 'baseRun', [3800, 2500], 180, { group: 'island', params: { finishedBack: true, backOverhang: 300, modules: [{ w: 600, kind: 'doors' }, { w: 600, kind: 'drawers', n: 3 }, { w: 900, kind: 'doors' }, { w: 600, kind: 'drawers', n: 3 }] } });
-  a.put('island-plant', 'plant', [1400, 2800], 0, { y: 900, mount: 'on', group: 'island' });
-  for (const [i, x] of [1700, 2600, 3500].entries()) a.put(`stool-${i + 1}`, 'stool', [x, 3750], 0, { group: 'island' });
-  a.put('basket', 'basket', [4350, 2900], 0, { group: 'island' });
+  a.put('island', 'baseRun', [6000, 2500], 180, { group: 'island', params: { finishedBack: true, backOverhang: 300, modules: [{ w: 600, kind: 'doors' }, { w: 600, kind: 'drawers', n: 3 }, { w: 900, kind: 'doors' }, { w: 600, kind: 'drawers', n: 3 }] } });
+  a.put('island-plant', 'plant', [4500, 2800], 0, { y: 900, mount: 'on', group: 'island' });
+  for (const [i, x] of [3900, 4700, 5500].entries()) a.put(`stool-${i + 1}`, 'stool', [x, 3750], 0, { group: 'island' });
   a.put('trolley', 'trolley', [500, 3600], 8, { group: 'larder' });
   back.place('floor-plant', 'floorPlant', 5900, { group: 'shelf corner' });
   a.view({ target: [3200, 900, 1600], az: 14, el: 11 });
-  a.shot('cooking', [2900, 1100, 5700], [3283, 1100, 320], 40, 'cooking');
-  a.shot('island', [500, 1500, 6900], [2400, 700, 2921], 40, 'island');
+  a.shot('cooking', [2000, 1100, 5700], [1737, 1100, 306], 40, 'cooking');
+  a.shot('island', [200, 1100, 6900], [3893, 1100, 2289], 40, 'island');
 }
 { // ---------- dining
   const a = H.area('dining', 'Dining', { rect: [0, 0, 5400, 4800] });

@@ -170,10 +170,6 @@
       {
        "w": 900,
        "kind": "hob"
-      },
-      {
-       "w": 600,
-       "kind": "doors"
       }
      ]
     },
@@ -225,7 +221,7 @@
     "id": "kitchen-kettle",
     "asset": "kettle",
     "at": [
-     4110,
+     2610,
      900,
      330
     ],
@@ -238,7 +234,7 @@
     "id": "kitchen-plant",
     "asset": "plant",
     "at": [
-     2510,
+     1210,
      900,
      330
     ],
@@ -264,27 +260,6 @@
     "shadow": false
    },
    {
-    "id": "kitchen-wall-units",
-    "asset": "wallRun",
-    "at": [
-     4100,
-     0,
-     320
-    ],
-    "mount": "wall",
-    "params": {
-     "modules": [
-      {
-       "w": 600,
-       "kind": "doors"
-      }
-     ],
-     "form": 1
-    },
-    "group": "kitchen:cooking",
-    "area": "kitchen"
-   },
-   {
     "id": "kitchen-wall-shelf",
     "asset": "wallShelf",
     "at": [
@@ -301,7 +276,7 @@
     "id": "kitchen-island",
     "asset": "baseRun",
     "at": [
-     3800,
+     6000,
      0,
      2500
     ],
@@ -338,7 +313,7 @@
     "id": "kitchen-island-plant",
     "asset": "plant",
     "at": [
-     1400,
+     4500,
      900,
      2800
     ],
@@ -353,7 +328,7 @@
     "id": "kitchen-stool-1",
     "asset": "stool",
     "at": [
-     1700,
+     3900,
      0,
      3750
     ],
@@ -365,7 +340,7 @@
     "id": "kitchen-stool-2",
     "asset": "stool",
     "at": [
-     2600,
+     4700,
      0,
      3750
     ],
@@ -377,21 +352,9 @@
     "id": "kitchen-stool-3",
     "asset": "stool",
     "at": [
-     3500,
+     5500,
      0,
      3750
-    ],
-    "mount": "floor",
-    "group": "kitchen:island",
-    "area": "kitchen"
-   },
-   {
-    "id": "kitchen-basket",
-    "asset": "basket",
-    "at": [
-     4350,
-     0,
-     2900
     ],
     "mount": "floor",
     "group": "kitchen:island",
@@ -806,14 +769,14 @@
      {
       "name": "cooking",
       "from": [
-       2900,
+       2000,
        1100,
        5700
       ],
       "look": [
-       3283,
+       1737,
        1100,
-       320
+       306
       ],
       "fov": 40,
       "subject": "kitchen:cooking"
@@ -821,14 +784,14 @@
      {
       "name": "island",
       "from": [
-       500,
-       1500,
+       200,
+       1100,
        6900
       ],
       "look": [
-       2400,
-       700,
-       2921
+       3893,
+       1100,
+       2289
       ],
       "fov": 40,
       "subject": "kitchen:island"
