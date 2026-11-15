@@ -3,7 +3,7 @@
 //  dining: corner-left, hero sideboard with a big mirror, door second + window first, accents floor lamp, wall shelf, basket, mirror, vase, 1 plant, pieces table, chairs, rug
 //  living: wide-angle, hero sofa with rug and coffee table, window first + arch (other wall), accents cat, mirror, side table, basket, 1 plant, piece curtain at a window
 import fs from 'node:fs';
-import { Home } from '../compose.mjs';
+import { Home } from '../../../skills/cozy-interiors/scene/compose.mjs';
 const H = new Home({ seed: 30, floor: 'plain' });
 
 { // ---------- kitchen

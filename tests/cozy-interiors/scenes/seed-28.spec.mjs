@@ -3,7 +3,7 @@
 //  living: corner-left, hero two armchairs and a side table, window first + arch (on the other wall), accents cushion, cat, side table, floor lamp, vase, 1 plant, piece curtain at the window
 //  home-office: wide-angle, hero desk under a window, window first + door second, accents picture, mirror, floor lamp, 3 plants, pieces desk, desk chair, shelf, rug
 import fs from 'node:fs';
-import { Home } from '../compose.mjs';
+import { Home } from '../../../skills/cozy-interiors/scene/compose.mjs';
 const H = new Home({ seed: 28, floor: 'boards' });
 
 { // ---------- hallway

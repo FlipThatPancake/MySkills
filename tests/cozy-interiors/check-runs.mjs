@@ -1,9 +1,9 @@
 // node check-runs.mjs — checks for library/runs.js without a browser.
 // 1. fillWidths always returns widths that sum exactly to the run length, every width standard, with at most one filler of under 100 mm.
-import { fillWidths, WIDTHS } from './src/library/runs.js';
+import { fillWidths, WIDTHS } from '../../skills/cozy-interiors/scene/src/library/runs.js';
 import { readFileSync } from 'node:fs';
-import { createKit } from './src/kitchen3d.js';
-import { buildScene } from './src/scene-build.js';
+import { createKit } from '../../skills/cozy-interiors/scene/src/kitchen3d.js';
+import { buildScene } from '../../skills/cozy-interiors/scene/src/scene-build.js';
 let bad = 0, n = 0;
 for (let len = 600; len <= 4800; len += 10) {
   for (const off of [0, 3, 7]) { if (off) { const r = fillWidths(len + off).fill; if (r.reduce((s, m) => s + m.w, 0) !== len + off) { bad++; console.log("BAD odd", len + off); } n++; } }

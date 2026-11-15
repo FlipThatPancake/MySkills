@@ -1,10 +1,10 @@
 // Test page for the room shell: two rooms (a kitchen with an alcove and a living room) joined by a door, with the view fade (blocking walls fade, edges thin out).
-import * as THREE from './vendor/three/three.module.js';
-import { OrbitControls } from './vendor/three/OrbitControls.js';
-import { createKit } from './kitchen3d.js';
-import { roomShell } from './shell.js';
-import { fridge } from './kitchen/fridge.js';
-import { plant } from './kitchen/plant.js';
+import * as THREE from '../../../../skills/cozy-interiors/scene/src/vendor/three/three.module.js';
+import { OrbitControls } from '../../../../skills/cozy-interiors/scene/src/vendor/three/OrbitControls.js';
+import { createKit } from '../../../../skills/cozy-interiors/scene/src/kitchen3d.js';
+import { roomShell } from '../../../../skills/cozy-interiors/scene/src/shell.js';
+import { fridge } from '../../../../skills/cozy-interiors/scene/src/kitchen/fridge.js';
+import { plant } from '../../../../skills/cozy-interiors/scene/src/kitchen/plant.js';
 
 const PLAN = {
   height: 2500, thickness: 120,

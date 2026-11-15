@@ -2,8 +2,8 @@
 // Two painted wings per side, flapping 6-9 times a second with short glides; now and then it lands on the plant, the fruit bowl or the window sill and slowly opens and folds its wings.
 // Kitchen millimetres. It keeps out of every solid (the BOXES below, padded) and never goes past x 3000, so it cannot cover the oven in the front view.
 // `update(dt, on)` runs once a frame, only while the kitchen is visible (view3d.js).
-import { paintCanvas } from './paint.js';
-import { LAMP } from './atmosphere.js';
+import { paintCanvas } from '../../../../../skills/cozy-interiors/scene/src/kitchen/paint.js';
+import { LAMP } from '../../../../../skills/cozy-interiors/scene/src/kitchen/atmosphere.js';
 
 // Solid things, [x0, x1, y0, y1, z0, z1]: the counters with what stands on them, the wall cabinets, the hood and the lamp with its cord.
 const BOXES = [

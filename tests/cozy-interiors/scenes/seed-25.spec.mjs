@@ -3,7 +3,7 @@
 //  reading-corner: one wall, hero reading chair + footstool + floor lamp, window first + arch first, accents picture, book stack, side table, 2 plants (+ rug)
 //  bedroom: corner-left, hero bed under a window with a bedside table each side, window first + door first, accents picture, book stack, cushion, mirror, cat, 2 plants (pieces bed, bedside tables, wardrobe, rug)
 import fs from 'node:fs';
-import { Home } from '../compose.mjs';
+import { Home } from '../../../skills/cozy-interiors/scene/compose.mjs';
 const H = new Home({ seed: 25, floor: 'boards' });
 
 { // ---------- kitchen

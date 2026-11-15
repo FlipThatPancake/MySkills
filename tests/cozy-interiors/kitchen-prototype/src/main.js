@@ -1,10 +1,10 @@
 // @js:scene-main — the kitchen scene on its own: one canvas, an orbit camera, the room's own motion and an idle tour.
 // Everything in kitchen millimetres (the room's origin is the left-front-floor corner of the base run).
-import * as THREE from './vendor/three/three.module.js';
-import { OrbitControls } from './vendor/three/OrbitControls.js';
-import { createKit } from './kitchen3d.js';
+import * as THREE from '../../../../skills/cozy-interiors/scene/src/vendor/three/three.module.js';
+import { OrbitControls } from '../../../../skills/cozy-interiors/scene/src/vendor/three/OrbitControls.js';
+import { createKit } from '../../../../skills/cozy-interiors/scene/src/kitchen3d.js';
 import { buildKitchen, SIZE, FADE } from './kitchen/room.js';
-import { createTour } from './tour.js';
+import { createTour } from '../../../../skills/cozy-interiors/scene/src/tour.js';
 
 const FOV = 30;
 const rad = THREE.MathUtils.degToRad;

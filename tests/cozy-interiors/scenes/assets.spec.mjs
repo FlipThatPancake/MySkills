@@ -1,6 +1,6 @@
 // A sheet of the small assets laid in rows on a bare floor, for looking at them close up: node scenes/assets.spec.mjs, then node snap.mjs scenes/assets.json out.png <row>
 import fs from 'node:fs';
-import { Home } from '../compose.mjs';
+import { Home } from '../../../skills/cozy-interiors/scene/compose.mjs';
 const H = new Home({ seed: 0, floor: 'plain' });
 const rows = {
   small: [['jars', 'jars'], ['kettle', 'kettle'], ['herbs', 'herbs'], ['stool', 'stool'], ['cat1', 'cat', { pose: 'sit' }], ['cat2', 'cat', { pose: 'curl' }], ['cat3', 'cat', { pose: 'loaf' }], ['vase', 'vase'], ['books', 'bookStack'], ['trolley', 'trolley']],
