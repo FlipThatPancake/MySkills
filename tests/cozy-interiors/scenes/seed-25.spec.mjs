@@ -54,6 +54,7 @@ const H = new Home({ seed: 25, floor: 'boards' });
   back.place('bedside-l', 'bedsideTable', 1550, { group: 'bed' }); back.place('bedside-r', 'bedsideTable', 4450, { group: 'bed' });
   back.place('bedside-books', 'bookStack', 1550, { y: 520, mount: 'on', group: 'bed', off: 190, params: { n: 3 } });
   back.place('bedside-plant', 'plant', 4450, { y: 520, mount: 'on', group: 'bed', off: 190 });
+  a.drapeOver('throw', 'bed', { group: 'bed', w: 1700, d: 900, dz: 650, spin: 6 });
   a.put('cushion', 'cushion', [3300, 520], 0, { y: 600, mount: 'on', group: 'bed', params: { w: 400, h: 340, lean: 20 } });
   a.put('rug', 'rug', [3000, 2300], 0, { group: 'rug area', params: { w: 3200, d: 1700 } });
   a.put('cat', 'cat', [1700, 2700], 40, { y: 7, lift: 7, group: 'rug area', params: {} });

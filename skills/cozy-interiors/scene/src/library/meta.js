@@ -45,6 +45,7 @@ export const ASSETS = {
   coatHooks: A('wall-centre', [900, 100, 120], 'wall', 'n 4, w 900', { y: 1500, note: 'a coat and a scarf hang below it' }),
   cushion: A('centre', [440, 120, 420], 'on', 'w 440, h 420, tone mid|lo, lean 0-25 (degrees tilted back; 15 to 25 against a headboard or a sofa back)', { y: 'the seat height' }),
   vase: A('centre', [160, 160, 700], 'on', 'h 280, stems 5, seed', { y: 'top' }),
+  cloth: A('centre', [800, 800, 300], 'floor', 'grid from compose drapeOver()', { y: 0, note: 'a cloth dropped on furniture at spec time (a.drapeOver)' }),
   bookStack: A('centre', [240, 170, 120], 'on', 'n 4, seed', { y: 'top' }),
   basket: A('centre', [460, 460, 320], 'floor', 'r 230, h 320'),
   stepStool: A('centre', [380, 320, 420], 'floor', 'w 380, h 420', { note: 'kitchen foreground' }),

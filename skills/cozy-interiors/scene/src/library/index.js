@@ -1,3 +1,4 @@
+import { cloth } from './softpieces.js';
 // @js:library-index — the asset registry: scene.json's `asset` name -> generator(kit, params) returning a group (origin and axes as each generator documents).
 // A run's params are { length, modules, joins, ownsTop, depth, ... }: with `length` and no `modules` the run is filled with standard widths (fillWidths); modules that fall short of `length` are topped up the same way.
 import { baseRun, wallRun, fillWidths } from './runs.js';
@@ -25,7 +26,7 @@ function fitted({ length, modules, ...rest }) {
 export const REGISTRY = {
   baseRun: (kit, p) => baseRun(kit, fitted(p)),
   wallRun: (kit, p) => wallRun(kit, fitted(p)),
-  floorPlant, cushion, pot, vase, bookStack, mirror, wallShelf, sideTable, roundTable, cat, basket, pouf,
+  floorPlant, cushion, pot, cloth, vase, bookStack, mirror, wallShelf, sideTable, roundTable, cat, basket, pouf,
   stepStool, crate, wateringCan, umbrellaStand, shoes, wasteBin, fileBox, laptop,
   jars, kettle, herbs, trolley, teaTowel,
   bed, bedsideTable, wardrobe, desk, deskChair, coatHooks, daybed, readingChair, footstool, console: console_,

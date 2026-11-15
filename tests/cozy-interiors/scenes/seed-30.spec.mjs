@@ -49,6 +49,7 @@ const H = new Home({ seed: 30, floor: 'boards' });
   const right = a.right(3600, [{ kind: 'arch', x: 1800, width: 1200, to: 'dining', beyond: false, depth: 200 }], 120);
   back.place('curtain', 'curtain', 1500, { group: 'window' });
   back.place('sofa', 'sofa', 3600, { y: 7, lift: 7, group: 'sofa', hero: true, params: { seats: 3 } });
+  a.drapeOver('throw', 'sofa', { group: 'sofa', w: 1300, d: 900, dx: -650, dz: 80, spin: 18 });
   back.place('mirror', 'mirror', 3600, { y: 1250, group: 'sofa', shadow: false, params: { w: 800, h: 800, shape: 'round' } });
   a.put('rug', 'rug', [3600, 1700], 0, { group: 'sofa', params: { w: 3000, d: 2000 } });
   a.put('coffee', 'coffeeTable', [3600, 1750], 0, { y: 7, lift: 7, group: 'sofa' });

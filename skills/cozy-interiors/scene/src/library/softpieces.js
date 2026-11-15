@@ -57,3 +57,20 @@ export function poufBody(kit, r, h, tone) {
   g.add(kit.lines(seam, 'lo'));
   return g;
 }
+// A cloth frozen in place by cloth.js: a double-skinned sheet through the grid points (area-local mm), edges closed, folds read from the shading.
+export function cloth(kit, { nx = 2, ny = 2, pts = [0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 1], thick = 6, tone = 'lo' } = {}) {
+  const T = kit.THREE, g = kit.group(), n = nx * ny, pos = new Float32Array(n * 6), idx = [];
+  for (let i = 0; i < n; i++) { pos[i * 3] = pts[i * 3]; pos[i * 3 + 1] = pts[i * 3 + 1]; pos[i * 3 + 2] = pts[i * 3 + 2]; }
+  const geo = new T.BufferGeometry(); geo.setAttribute('position', new T.BufferAttribute(pos, 3));
+  for (let j = 0; j < ny - 1; j++) for (let i = 0; i < nx - 1; i++) { const a = j * nx + i, b = a + 1, c = a + nx, d = c + 1; idx.push(a, c, b, b, c, d); }
+  geo.setIndex(idx); geo.computeVertexNormals();
+  const nrm = geo.attributes.normal;
+  for (let i = 0; i < n; i++) for (let k = 0; k < 3; k++) pos[(n + i) * 3 + k] = pos[i * 3 + k] - nrm.getComponent(i, k) * thick;
+  const all = [...idx]; for (let t = 0; t < idx.length; t += 3) all.push(n + idx[t], n + idx[t + 2], n + idx[t + 1]);
+  const edge = []; for (let i = 0; i < nx; i++) edge.push(i, (ny - 1) * nx + i); for (let j = 0; j < ny; j++) edge.push(j * nx, j * nx + nx - 1);
+  for (let i = 0; i < nx - 1; i++) { for (const base of [0, (ny - 1) * nx]) { const a = base + i, b = a + 1; all.push(a, b, n + a, b, n + b, n + a); } }
+  for (let j = 0; j < ny - 1; j++) { for (const off of [0, nx - 1]) { const a = j * nx + off, b = a + nx; all.push(a, b, n + a, b, n + b, n + a); } }
+  const solid = new T.BufferGeometry(); solid.setAttribute('position', new T.BufferAttribute(pos, 3)); solid.setIndex(all); solid.computeVertexNormals();
+  g.add(kit.solid(solid, 0, 0, 0, { smooth: true, tone, crease: 55 })); g.userData.size = { w: 1, d: 1, h: 1 };
+  return g;
+}

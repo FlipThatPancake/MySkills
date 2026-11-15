@@ -15,6 +15,9 @@
 // Every object has a `group` (its run, table set, seating group or wall arrangement) and hero: true marks the area's main piece.
 import { ASSETS } from './src/library/meta.js';
 import { dealParams } from './src/library/space.js';
+import { dropCloth, heightField } from './src/cloth.js';
+import { createKit } from './src/kitchen3d.js';
+import { REGISTRY } from './src/library/index.js';
 const rad = (d) => d * Math.PI / 180, deg = (r) => r * 180 / Math.PI, r0 = (v) => Math.round(v * 10) / 10;
 export const GAP = 3000;
 export class Home {
@@ -81,6 +84,18 @@ class Area {
     params = vary(this.h, asset, params, this.id);
     const [wx, wz] = this.P([x, z]);
     this.h.S.home.objects.push({ id: `${this.id}-${id}`, asset, at: [wx, y, wz], ...(turn - this.psi ? { turn: r0(turn - this.psi) } : {}), mount: mount || ASSETS[asset].mount, ...(params ? { params } : {}), group: `${this.id}:${group}`, ...(hero ? { hero: true } : {}), area: this.id, ...rest });
+  }
+  // a cloth dropped onto a placed thing and frozen (verlet, at spec time): a.drapeOver('throw', 'sofa', { w: 1300, d: 900, at: [x, z] (area frame) or dx/dz from the target's middle, spin (deg), tone, group })
+  drapeOver(id, targetId, { w = 1200, d = 900, at, dx = 0, dz = 0, spin = 0, tone = 'lo', group, thick = 6, seed, nx = 26, ny = 26, mount = 'on', y = 0 } = {}) {
+    const T = (this.h.kit ||= createKit()).THREE, tgt = this.h.S.home.objects.find((q) => q.id === `${this.id}-${targetId}`);
+    if (!tgt) throw new Error(`drapeOver('${id}', '${targetId}'): place the target first`);
+    const mk = (o, rot) => { const g = REGISTRY[o.asset](this.h.kit, { ...(o.params || {}) }); g.rotation.y = rot * Math.PI / 180; g.position.set(...o.at); g.updateMatrixWorld(true); return g; };
+    const tg = mk(tgt, tgt.turn || 0), cm = new T.Matrix4().compose(new T.Vector3(...this.P([0, 0]).flatMap((v, i) => i ? [0, v] : [v])), new T.Quaternion().setFromAxisAngle(new T.Vector3(0, 1, 0), -rad(this.psi)), new T.Vector3(1, 1, 1)), inv = cm.clone().invert(), boxes = [], bb = new T.Box3();
+    const tris = [], va = new T.Vector3(), vb = new T.Vector3(), vc = new T.Vector3(), all = new T.Box3();
+    tg.traverse((o) => { if (!o.isMesh || o.isLineSegments2 || o.userData.lines || o.material.isMeshBasicMaterial || this.h.kit.hulls.includes(o.material) || o.material === this.h.kit.depth) return; const m = new T.Matrix4().multiplyMatrices(inv, o.matrixWorld), g = o.geometry, p = g.attributes.position, ix = g.index;
+      for (let t = 0, n = ix ? ix.count : p.count; t < n; t += 3) { const [a, b, cc] = ix ? [ix.getX(t), ix.getX(t + 1), ix.getX(t + 2)] : [t, t + 1, t + 2]; va.fromBufferAttribute(p, a).applyMatrix4(m); vb.fromBufferAttribute(p, b).applyMatrix4(m); vc.fromBufferAttribute(p, cc).applyMatrix4(m); tris.push([va.x, va.y, va.z, vb.x, vb.y, vb.z, vc.x, vc.y, vc.z]); all.expandByPoint(va).expandByPoint(vb).expandByPoint(vc); } });
+    const c = all.getCenter(new T.Vector3()), res = dropCloth({ height: heightField(tris), at: at || [c.x + dx, c.z + dz], w, d, nx, ny, spin: rad(spin), seed: seed ?? this.h.S.seed + id.length });
+    this.put(id, 'cloth', [0, 0], 0, { group, y, mount, params: { nx, ny, pts: res.pts, thick, tone } });
   }
   // ---- a cabinet run with slots: R.on('hob', 'pan') puts a pan on the middle of the first hob module
   run(F, id, left, modules, o = {}) {
