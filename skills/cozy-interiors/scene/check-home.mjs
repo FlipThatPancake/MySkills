@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// node check-home.mjs [scenes/x.json] → builds the scene (?check keeps every part) and prints the rules a `home` scene breaks.
+// node check-home.mjs <scene.json> → builds the scene (?check keeps every part) and prints the rules a `home` scene breaks.
 // Rules: openings (1200 mm of clear wall between two openings, round corners too), sash (nothing in an inward sash's sweep), table (centred on a pendant or rug, 900 mm clear or against a wall), path (a door or arch keeps 1000 x 1500 mm clear), overlap (two floor pieces, or two wall pieces, pass through each other), wall (an object straddles a wall plane), floor (below it),
 // swing (a door leaf or sash, at every angle from shut to wide open, touches an object or another opening's frame; so does an opening front of a cabinet run),
 // Per area (scenes with `areas`): enough to look at (at least 8 objects in the floor, waist and wall bands, a hero, something living, something soft, something on a wall, every object in a group of two or more, one or two backing walls),
@@ -9,7 +9,7 @@ import { createRequire } from 'node:module';
 import { execSync } from 'node:child_process';
 import { dirname, join, resolve, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
-const here = dirname(fileURLToPath(import.meta.url)), scene = resolve(process.argv[2] || join(here, 'scenes/kitchen-view.json'));
+const here = dirname(fileURLToPath(import.meta.url)), scene = process.argv[2] ? resolve(process.argv[2]) : (console.error('usage: node check-home.mjs <scene.json>   (the scene a spec wrote)'), process.exit(2));
 execSync(`node ${join(here, 'build.mjs')} ${scene}`, { stdio: 'ignore' });
 const { chromium } = createRequire(join(execSync('npm root -g', { encoding: 'utf8' }).trim(), 'x.js'))('playwright');
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
@@ -133,6 +133,10 @@ const issues = await page.evaluate(() => {
     const xc = W.len - b.op.at, zone = { x0: xc - 500, x1: xc + 500, z0: 0, z1: b.op.kind === 'arch' ? 2400 : 1500, y0: 0, y1: 1900 };
     for (const id of Object.keys(objs)) { if (sc(id).mount !== 'floor' || ['rug'].includes(sc(id).asset)) continue; if (hit3(toLocal(W, boxes[id]), zone, 20)) out.push({ rule: 'path', what: `${id} blocks the path in front of the ${b.op.kind} on ${W.id || W.i} at ${b.op.at}` }); }
   }
+  // 4b. the front of a console, desk, sideboard or wardrobe keeps 600 mm clear (its own chair, rugs and curtains excepted)
+  for (const id of Object.keys(objs)) { if (!['console', 'desk', 'sideboard', 'wardrobe'].includes(sc(id).asset)) continue; for (const W of home.walls) { const l = toLocal(W, boxes[id]); if (l.z0 < -60 || l.z0 > 90 || l.x1 < 0 || l.x0 > W.len) continue; const zone = { x0: l.x0, x1: l.x1, z0: l.z1, z1: l.z1 + 600, y0: 0, y1: 1500 }; for (const o of Object.keys(objs)) { if (o === id || sc(o).mount !== 'floor' || ['rug', 'curtain', 'chair', 'deskChair'].includes(sc(o).asset)) continue; if (hit3(toLocal(W, boxes[o]), zone, 20)) out.push({ rule: 'path', what: `${o} stands within 600 mm in front of ${id}: keep the front of a ${sc(id).asset} clear (move the ${sc(o).asset} to a side or to another group)` }); } break; } }
+  // 4c. a tea towel hangs where it is used: within 450 mm of a run's end, or on a wall unit
+  for (const t of Object.keys(objs).filter((i) => sc(i).asset === 'teaTowel')) for (const W of home.walls) { const l = toLocal(W, boxes[t]); if (l.z0 < -60 || l.z0 > 120 || l.x1 < 0 || l.x0 > W.len) continue; const ends = Object.keys(objs).filter((i) => ['baseRun', 'wallRun', 'fridge', 'oven'].includes(sc(i).asset) && sc(i).mount !== 'on').map((i) => toLocal(W, boxes[i])).filter((r) => r.z0 < 100); const c = (l.x0 + l.x1) / 2; if (!ends.some((r) => Math.abs(c - r.x0) < 450 || Math.abs(c - r.x1) < 450 || (c > r.x0 - 150 && c < r.x1 + 150 && r.y1 > 1500))) out.push({ rule: 'towel', what: `${t} hangs on bare wall: put it at the end of a run, on a wall unit or beside the sink` }); break; }
   // 5. support: a thing that stands `on` something touches its top (or sits inside it, like a cushion on a seat); a thing on a wall touches that wall
   const inside = (poly, [x, z]) => { let c = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) { const [xi, zi] = poly[i], [xj, zj] = poly[j]; if ((zi > z) !== (zj > z) && x < (xj - xi) * (z - zi) / (zj - zi) + xi) c = !c; } return c; };
   const topOf = (id) => sc(id).asset === 'baseRun' ? (sc(id).params?.top || 900) : boxes[id].max.y;
@@ -263,6 +267,7 @@ const areaIssues = await page.evaluate(() => {
       if (sc(s).asset === 'armchair' && table) { const tc = boxes[table].getCenter(new T.Vector3()), to = tc.clone().sub(c).setY(0).normalize(), ang = Math.acos(Math.min(1, f.dot(to))) * 180 / Math.PI; if (ang > 50) out.push({ rule: 'seating', what: `${A}: ${s} faces ${ang.toFixed(0)} degrees away from the coffee table (keep within 50)` }); }
       if (sc(s).asset === 'sofa' && walls.length) { const back = c.clone().addScaledVector(f, -(boxes[s].max.z - boxes[s].min.z > 0 ? 0 : 0)); const d = Math.min(...walls.map((W) => { const p = new T.Vector3().copy(c).addScaledVector(f, -450); return Math.abs((p.x - W.to[0]) * W.n[0] + (p.z - W.to[1]) * W.n[1]); })); if (d > 330) out.push({ rule: 'seating', what: `${A}: the back of ${s} is ${d.toFixed(0)} mm from the nearest wall (a sofa backs onto a wall)` }); }
     }
+    for (const f of mine.filter((i) => ['console', 'desk', 'sideboard', 'wardrobe'].includes(sc(i).asset))) { const r = R[f], hid = mine.filter((i) => i !== f && sc(i).mount === 'floor' && !['rug', 'curtain', 'chair', 'deskChair', 'cat', 'baseRun'].includes(sc(i).asset) && cp.distanceTo(boxes[i].getCenter(new T.Vector3())) < cp.distanceTo(boxes[f].getCenter(new T.Vector3())) && ov(R[i], r) > 0.08 * area2(r)); if (hid.length && hid.reduce((t, i) => t + ov(R[i], r), 0) > 0.18 * area2(r)) out.push({ rule: 'hidden', what: `${A}: ${hid.join(', ')} stands in front of ${f} in the home view and hides it: move it clear` }); }
     if (table) { const r = R[table], hid = mine.filter((i) => i !== table && ['floor'].includes(sc(i).mount) && !['rug', 'plant', 'cat'].includes(sc(i).asset) && cp.distanceTo(boxes[i].getCenter(new T.Vector3())) < cp.distanceTo(boxes[table].getCenter(new T.Vector3())) && ov(R[i], r) > 0.35 * area2(r)); if (hid.length) out.push({ rule: 'seating', what: `${A}: ${hid.join(', ')} hides the coffee table in the home view` }); }
   }
   { const ACC = ['basket', 'pouf', 'trolley', 'stool', 'footstool', 'stepStool', 'crate'], seen = {}; for (const i of ids) { const a = sc(i).asset; if (ACC.includes(a)) (seen[a] ||= []).push(i); }

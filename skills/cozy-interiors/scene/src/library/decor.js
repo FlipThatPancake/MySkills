@@ -88,9 +88,9 @@ export function floorPlant(kit, { h = 950, seed = 6 } = {}) {   // a large pot w
     let px = 0, py = 400, pz = 0; const n = 6;
     for (let i = 1; i <= n; i++) { const t = i / n, nx = sx * len * t * t * 0.9 + 0, nz = sz * len * t * t * 0.9, ny = 400 + cy * len * t; pts.push([px, py, pz], [nx, ny, nz]); px = nx; py = ny; pz = nz; }
     const ge = new T.SphereGeometry(1, 16, 10); ge.scale(70 + R() * 30, 150 + R() * 50, 14);
-    const leaf = kit.solid(ge, px, py + 60, pz, { smooth: true }); leaf.rotation.set(Math.cos(a) * lean * 0.9, 0, -Math.sin(a) * lean * 0.9); g.add(leaf);
+    const leaf = kit.solid(ge, px, py + 60, pz, { smooth: true, leaf: true }); leaf.rotation.set(Math.cos(a) * lean * 0.9, 0, -Math.sin(a) * lean * 0.9); g.add(leaf);
   }
-  g.add(kit.lines(pts, 'mid'));
+  g.add(kit.lines(pts, 'green'));
   return kit.merge(g);
 }
 export function basket(kit, { r = 230, h = 320 } = {}) {   // a woven basket with a blanket folded over the rim

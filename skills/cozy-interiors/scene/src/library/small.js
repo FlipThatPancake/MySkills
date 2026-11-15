@@ -60,3 +60,13 @@ export function fileBox(kit, { w = 300, h = 290, d = 380 } = {}) {   // an archi
   g.add(kit.lines(pts, 'lo'));
   return kit.merge(g);
 }
+export function laptop(kit, { w = 330, d = 230 } = {}) {   // an open laptop, its screen dark and tilted back; the origin is the middle of its foot, the screen at the back (-z)
+  const g = kit.group(), R = rb(kit), B = bx(kit), t = 14, sh = 215;
+  g.add(R(0, 0, 0, w, t, d, 5));                                                            // the base
+  g.add(B(0, t, -12, w - 50, 1.5, d * 0.5, lo));                                            // the keyboard
+  g.add(B(0, t, d / 2 - 38, 100, 1, 56, lo));                                               // the trackpad
+  const s = kit.group(); s.position.set(0, t - 2, -d / 2 + 8); s.rotation.x = -0.3;           // the lid hinged at the back edge, leaning back
+  s.add(kit.rbox(-w / 2, 0, 0, w, sh, 8, 5)); s.add(kit.box(-w / 2 + 14, 14, 1, w - 28, sh - 30, 1, lo));
+  g.add(s);
+  return kit.merge(g);
+}

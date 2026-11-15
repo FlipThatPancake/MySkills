@@ -13,7 +13,7 @@ import { bookStack, mirror, wallShelf, sideTable, roundTable, cat, pouf } from '
 import { floorPlant, plant, vase, cushion, picture, fridge, stool, basket } from './variants.js';
 import { jars, kettle, herbs, trolley, teaTowel } from './kitchenware.js';
 import { bed, bedsideTable, wardrobe, desk, deskChair, coatHooks, daybed, readingChair, footstool, console_ } from './rooms.js';
-import { stepStool, crate, wateringCan, umbrellaStand, shoes, wasteBin, fileBox } from './small.js';
+import { stepStool, crate, wateringCan, umbrellaStand, shoes, wasteBin, fileBox, laptop } from './small.js';
 import { sofa, armchair, coffeeTable, rug, shelf, floorLamp, sideboard, bench, curtain } from './living.js';
 
 function fitted({ length, modules, ...rest }) {
@@ -25,7 +25,7 @@ export const REGISTRY = {
   baseRun: (kit, p) => baseRun(kit, fitted(p)),
   wallRun: (kit, p) => wallRun(kit, fitted(p)),
   floorPlant, cushion, vase, bookStack, mirror, wallShelf, sideTable, roundTable, cat, basket, pouf,
-  stepStool, crate, wateringCan, umbrellaStand, shoes, wasteBin, fileBox,
+  stepStool, crate, wateringCan, umbrellaStand, shoes, wasteBin, fileBox, laptop,
   jars, kettle, herbs, trolley, teaTowel,
   bed, bedsideTable, wardrobe, desk, deskChair, coatHooks, daybed, readingChair, footstool, console: console_,
   table, chair, sofa, armchair, coffeeTable, rug, shelf, floorLamp, picture, sideboard, bench, curtain, stool,

@@ -14,7 +14,7 @@ const H = new Home({ seed: 30, floor: 'plain' });
   const R = a.run(back, 'run', 600, [{ w: 600, kind: 'door', hinge: 'r' }, { w: 800, kind: 'sink' }, { w: 600, kind: 'drawers' }, { w: 900, kind: 'hob' }], { group: 'cooking', hero: true });
   R.on('hob', 'hob'); R.on('hob', 'hood'); R.on('hob', 'pan');
   R.on('drawers', 'kettle', { id: 'kettle' }); R.on('door', 'wateringCan', { id: 'can' }); R.on('sink', 'plant', { id: 'plant', dx: 250 });
-  back.place('towel', 'teaTowel', 4000, { y: 1350, group: 'cooking', shadow: false });
+  back.place('towel', 'teaTowel', 3700, { y: 1100, group: 'cooking', shadow: false });
   back.place('wall-shelf', 'wallShelf', 5400, { group: 'shelf corner', shadow: false });
   a.put('island', 'baseRun', [5000, 2500], 180, { group: 'island', params: { finishedBack: true, backOverhang: 300, modules: [{ w: 600, kind: 'doors' }, { w: 600, kind: 'drawers', n: 3 }, { w: 900, kind: 'doors' }] } });
   a.put('island-plant', 'plant', [3900, 2800], 0, { y: 900, mount: 'on', group: 'island' });

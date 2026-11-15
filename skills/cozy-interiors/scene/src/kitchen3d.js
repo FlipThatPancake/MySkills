@@ -9,7 +9,7 @@ import { LineMaterial } from './vendor/three/LineMaterial.js';
 import { LineSegmentsGeometry } from './vendor/three/LineSegmentsGeometry.js';
 
 // The look is anatomy's light theme: paper-white fills and thin grey lines.
-const TONES = { mid: 0x8a8a8f, lo: 0xb4b4b8 };
+const TONES = { mid: 0x8a8a8f, lo: 0xb4b4b8, green: 0x5f7f5b };
 const WIDTH = 0.6;
 const FAINT = { color: 0xc4c4c6, width: 0.4 };   // the faintest line: marks that should only show when you look closely (cat scratches)
 const BACKDROP = 0xf4f4f1;   // what the wall and floor melt into: the plain wall tone, never darker
@@ -95,7 +95,7 @@ export function createKit() {
       }`,
     fragmentShader: `uniform float uOpacity; ${VF_PARS} varying vec3 vW; void main() { vec3 c = vec3(${new THREE.Color(TONES[tone]).toArray().map(c => c.toFixed(3)).join(',')}); ${VF_MIX('c', 'vW')} gl_FragColor = vec4(c, uOpacity); }`
   });
-  const hull = makeHull('mid'), hullLo = makeHull('lo');
+  const hull = makeHull('mid'), hullLo = makeHull('lo'), hullGreen = makeHull('green');
   const seamLine = biased(new LineMaterial({ color: 0xffffff, linewidth: WIDTH, vertexColors: true, depthTest: true }));
   let backdropMat = null;
   const backU = { value: 1 };            // the backdrop follows the fade, not the dimming
@@ -115,7 +115,7 @@ export function createKit() {
     return d[0] < 200 || d[1] < 40 || (d[2] <= 20 && d[1] >= 150) ? 'lo' : 'mid';
   };
   const kit = {
-    THREE, fill, fadeFill, line, hulls: [hull, hullLo], depth,
+    THREE, fill, fadeFill, line, hulls: [hull, hullLo, hullGreen], depth,
     // 0..1: how visible the side wall's things (window, its seam and shadow) are; view3d lowers it while the camera is outside that wall.
     sideVis: { value: 1 },
     // Own copies of the fill and line materials, so a group can fade on its own: kit.useFade(group, fa) swaps them in, fa.set(a) fades it.
@@ -149,7 +149,7 @@ export function createKit() {
       const f = o * dim, t = f < 0.999;
       uniforms.uOpacity.value = f; backU.value = o; lineMid.opacity = lineLo.opacity = lineFaint.opacity = seamLine.opacity = lineGreen.opacity = f;
       paints.forEach(m => { m.transparent = t; });
-      leafFill.transparent = lineGreen.transparent = fill.transparent = hull.transparent = hullLo.transparent = lineMid.transparent = lineLo.transparent = lineFaint.transparent = seamLine.transparent = t;
+      leafFill.transparent = lineGreen.transparent = fill.transparent = hull.transparent = hullLo.transparent = hullGreen.transparent = lineMid.transparent = lineLo.transparent = lineFaint.transparent = seamLine.transparent = t;
       fadeFill.transparent = true;
       if (backdropMat) backdropMat.transparent = o < 0.999;
       depthMeshes.forEach(m => { m.visible = t; });
@@ -172,13 +172,13 @@ export function createKit() {
       if (!opts.tone) opts = { ...opts, tone: autoTone(mesh.geometry) };
       const edges = new THREE.EdgesGeometry(mesh.geometry, opts.crease ?? CREASE);
       if (edges.attributes.position.count) {
-        const l = new LineSegments2(new LineSegmentsGeometry().fromEdgesGeometry(edges), opts.tone === 'lo' ? lineLo : lineMid);
+        const l = new LineSegments2(new LineSegmentsGeometry().fromEdgesGeometry(edges), opts.leaf ? lineGreen : opts.tone === 'lo' ? lineLo : lineMid);
         l.userData.kitLine = true;
         mesh.add(l);
       }
       edges.dispose();
       if (opts.smooth) {
-        const h = new THREE.Mesh(mesh.geometry, opts.tone === 'lo' ? hullLo : hull);
+        const h = new THREE.Mesh(mesh.geometry, opts.leaf ? hullGreen : opts.tone === 'lo' ? hullLo : hull);
         h.userData.kitLine = true;
         mesh.add(h);
       }
@@ -186,7 +186,7 @@ export function createKit() {
     },
     // Fill a geometry and outline it, at (x, y, z) — the position of the geometry's own origin.
     solid(geometry, x = 0, y = 0, z = 0, opts = {}) {
-      const m = new THREE.Mesh(geometry, fill);
+      const m = new THREE.Mesh(geometry, opts.leaf ? leafFill : fill);   // leaf: true draws foliage in the sage fill with a green outline
       m.position.set(x, y, z);
       return kit.outline(m, opts);
     },
@@ -264,7 +264,7 @@ export function createKit() {
     lines(points, tone = 'lo') {
       const g = new LineSegmentsGeometry();
       if (points.length) g.setPositions(points.flat());
-      const l = new LineSegments2(g, tone === 'mid' ? lineMid : tone === 'faint' ? lineFaint : lineLo);
+      const l = new LineSegments2(g, tone === 'mid' ? lineMid : tone === 'faint' ? lineFaint : tone === 'green' ? lineGreen : lineLo);
       l.userData.kitLine = true;
       return l;
     },
@@ -319,7 +319,7 @@ export function createKit() {
       if (kit.keepParts) return group;   // the scene checks need every part on its own (?check in the page address)
       group.updateMatrixWorld(true);
       const inv = group.matrixWorld.clone().invert();
-      const fills = [], hulls = [], hullsLo = [], segs = { mid: [], lo: [] };
+      const fills = [], hulls = [], hullsLo = [], hullsG = [], leaves = [], segs = { mid: [], lo: [], green: [] };
       const bake = (geo, m, list) => {
         let g = geo.index ? geo.toNonIndexed() : geo.clone();
         g.applyMatrix4(m);
@@ -332,13 +332,15 @@ export function createKit() {
         if (o.isLineSegments2) {
           const a = o.geometry.attributes.instanceStart, b = o.geometry.attributes.instanceEnd, v = new THREE.Vector3();
           for (let i = 0; i < a.count; i++) {
-            const out = o.material === lineMid ? segs.mid : segs.lo;
+            const out = o.material === lineMid ? segs.mid : o.material === lineGreen ? segs.green : segs.lo;
             v.fromBufferAttribute(a, i).applyMatrix4(m); out.push(v.x, v.y, v.z);
             v.fromBufferAttribute(b, i).applyMatrix4(m); out.push(v.x, v.y, v.z);
           }
         } else if (o.isMesh && o.material === fill) bake(o.geometry, m, fills);
         else if (o.isMesh && o.material === hull) bake(o.geometry, m, hulls);
         else if (o.isMesh && o.material === hullLo) bake(o.geometry, m, hullsLo);
+        else if (o.isMesh && o.material === hullGreen) bake(o.geometry, m, hullsG);
+        else if (o.isMesh && o.material === leafFill && !o.userData.lines) bake(o.geometry, m, leaves);
       });
       const kids = [...group.children];
       kids.forEach(c => group.remove(c));
@@ -351,7 +353,9 @@ export function createKit() {
       if (fills.length) group.add(mesh(fills, fill));
       if (hulls.length) group.add(mesh(hulls, hull));
       if (hullsLo.length) group.add(mesh(hullsLo, hullLo));
-      ['mid', 'lo'].forEach((t) => { if (segs[t].length) { const l = kit.lines([], t); l.geometry.setPositions(segs[t]); group.add(l); } });
+      if (hullsG.length) group.add(mesh(hullsG, hullGreen));
+      if (leaves.length) group.add(mesh(leaves, leafFill));
+      ['mid', 'lo', 'green'].forEach((t) => { if (segs[t].length) { const l = kit.lines([], t); l.geometry.setPositions(segs[t]); group.add(l); } });
       return group;
     }
   };

@@ -255,7 +255,7 @@
     "id": "hallway-rug",
     "asset": "rug",
     "at": [
-     1200,
+     1350,
      0,
      1900
     ],
@@ -277,7 +277,7 @@
     ],
     "turn": -60,
     "mount": "floor",
-    "group": "hallway:front corner",
+    "group": "hallway:bench wall",
     "area": "hallway",
     "off": 560
    },
@@ -285,22 +285,23 @@
     "id": "hallway-hall-basket",
     "asset": "basket",
     "at": [
-     3000,
+     4950.8,
      0,
-     2700
+     1760.4
     ],
+    "turn": -60,
     "mount": "floor",
     "params": {
      "form": 2
     },
-    "group": "hallway:front corner",
+    "group": "hallway:bench wall",
     "area": "hallway"
    },
    {
     "id": "hallway-hall-plant",
     "asset": "floorPlant",
     "at": [
-     3500,
+     480,
      0,
      3000
     ],
@@ -308,7 +309,7 @@
     "params": {
      "form": 1
     },
-    "group": "hallway:front corner",
+    "group": "hallway:runner",
     "area": "hallway"
    },
    {
@@ -735,13 +736,13 @@
       "name": "console",
       "from": [
        4100,
-       1500,
+       1400,
        4500
       ],
       "look": [
-       3586,
+       3587,
        900,
-       10
+       11
       ],
       "fov": 38,
       "subject": "hallway:console"
@@ -751,12 +752,12 @@
       "from": [
        200,
        1250,
-       2100
+       300
       ],
       "look": [
-       4713,
+       4367,
        837,
-       1643
+       2259
       ],
       "fov": 36,
       "subject": "hallway:bench wall"

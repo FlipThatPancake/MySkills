@@ -266,8 +266,8 @@
     "id": "kitchen-towel",
     "asset": "teaTowel",
     "at": [
-     4000,
-     1350,
+     3700,
+     1100,
      0
     ],
     "mount": "wall",

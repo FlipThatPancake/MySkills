@@ -17,14 +17,14 @@ const H = new Home({ seed: 28, floor: 'boards' });
   right.place('hooks', 'coatHooks', 1000, { group: 'bench wall', shadow: false });
   right.place('bench-plant', 'plant', 700, { y: 450, mount: 'on', group: 'bench wall', off: 190 });
   right.place('cat', 'cat', 1350, { y: 450, mount: 'on', group: 'bench wall', off: 190, params: { scale: 0.65 } });
-  a.put('rug', 'rug', [1200, 1900], 0, { group: 'runner', params: { w: 1000, d: 3300 } });  // a runner from the front of the view to the arch
-  right.place('shoes', 'shoes', 1000, { group: 'front corner', off: 560 });
-  a.put('hall-basket', 'basket', [3000, 2700], 0, { group: 'front corner' });
-  a.put('hall-plant', 'floorPlant', [3500, 3000], 0, { group: 'front corner' });
+  a.put('rug', 'rug', [1350, 1900], 0, { group: 'runner', params: { w: 1000, d: 3300 } });  // a runner from the front of the view to the arch
+  right.place('shoes', 'shoes', 1000, { group: 'bench wall', off: 560 });
+  right.place('hall-basket', 'basket', 1900, { group: 'bench wall', params: { form: 2 } });
+  a.put('hall-plant', 'floorPlant', [480, 3000], 0, { group: 'runner' });
   back.place('umbrellas', 'umbrellaStand', 3700, { group: 'console' });
   a.view({ target: [2100, 1450, 1500], az: 12, el: 5 });
-  a.shot('console', [4100, 1500, 4500], [3586, 900, 10], 38, 'console');
-  a.shot('bench wall', [200, 1250, 2100], [4713, 837, 1643], 36, 'bench wall');
+  a.shot('console', [4100, 1400, 4500], [3587, 900, 11], 38, 'console');
+  a.shot('bench wall', [200, 1250, 300], [4367, 837, 2259], 36, 'bench wall');
 }
 { // ---------- living
   const a = H.area('living', 'Living room', { rect: [0, 0, 5400, 4200] });

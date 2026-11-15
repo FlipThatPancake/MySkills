@@ -54,6 +54,7 @@ export const ASSETS = {
   shoes: A('centre', [600, 290, 120], 'floor', 'pairs 2', { note: 'hallway, under the bench' }),
   wasteBin: A('centre', [260, 260, 340], 'floor', 'h 340', { note: 'office foreground' }),
   fileBox: A('centre', [300, 380, 290], 'floor', 'w 300, h 290, d 380', { note: 'office foreground' }),
+  laptop: A('centre', [330, 300, 230], 'on', 'w 330, d 230', { y: 'top', note: 'open, on a desk or table; screen toward -z' }),
   pouf: A('centre', [560, 560, 380], 'floor', 'r 280, h 380'),
   cat: A('centre', [260, 400, 440], 'floor', "scale 1 (0.65 fits a 380 mm bench)", { y: 0, note: 'floor or lift on a rug; mount on for a seat or bench' }),
   bed: A('centre', [1660, 2100, 1300], 'floor', 'w 1600, l 2100, head 1000 (headboard height; keep 300 + head at least 150 mm below a window sill)', { note: 'head toward -z: back it onto a wall' }),

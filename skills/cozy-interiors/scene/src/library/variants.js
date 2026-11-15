@@ -10,7 +10,7 @@ import { potTop } from './pots.js';
 const rimTop = (kit, g, r, y) => { const t = potTop(kit, r); t.position.y = y; g.add(t); };
 const rnd = (seed) => { let r = (seed || 1) * 9301 + 49297; return () => { r = (r * 9301 + 49297) % 233280; return r / 233280; }; };
 const lo = { tone: 'lo' };
-const leafAt = (kit, x, y, z, sx, sy, rx, rz) => { const T = kit.THREE, ge = new T.SphereGeometry(1, 14, 8); ge.scale(sx, sy, 12); const l = kit.solid(ge, x, y, z, { smooth: true }); l.rotation.set(rx, 0, rz); return l; };
+const leafAt = (kit, x, y, z, sx, sy, rx, rz) => { const T = kit.THREE, ge = new T.SphereGeometry(1, 14, 8); ge.scale(sx, sy, 12); const l = kit.solid(ge, x, y, z, { smooth: true, leaf: true }); l.rotation.set(rx, 0, rz); return l; };
 
 export const FORMS = { floorPlant: 4, plant: 4, vase: 4, cushion: 4, picture: 4, fridge: 3, stool: 3, basket: 3 };
 
@@ -26,9 +26,9 @@ export function floorPlant(kit, { form = 0, h = 950, seed = 6 } = {}) {
     for (let k = 0; k < 22; k++) { const a = R() * 6.28, r = 40 + R() * 150, y = 340 + R() * (h - 520), x = Math.sin(a) * r, z = Math.cos(a) * r; pts.push([0, 330, 0], [x, y, z]); g.add(leafAt(kit, x, y + 30, z, 52, 62, R() - 0.5, R() - 0.5)); }
   } else {   // a snake plant: stiff upright blades in a square planter
     g.add(kit.box(-170, 0, 170, 340, 360, 340, lo)); g.add(kit.box(-185, 360, 185, 370, 24, 370));
-    for (let k = 0; k < 11; k++) { const a = R() * 6.28, r = R() * 110, x = Math.sin(a) * r, z = Math.cos(a) * r, len = 360 + R() * (h - 700), tilt = (R() - 0.5) * 0.35; const ge = new kit.THREE.SphereGeometry(1, 12, 8); ge.scale(34, len / 2, 9); const b = kit.solid(ge, x, 400 + len / 2, z, { smooth: true }); b.rotation.z = tilt; b.rotation.x = (R() - 0.5) * 0.3; g.add(b); }
+    for (let k = 0; k < 11; k++) { const a = R() * 6.28, r = R() * 110, x = Math.sin(a) * r, z = Math.cos(a) * r, len = 360 + R() * (h - 700), tilt = (R() - 0.5) * 0.35; const ge = new kit.THREE.SphereGeometry(1, 12, 8); ge.scale(34, len / 2, 9); const b = kit.solid(ge, x, 400 + len / 2, z, { smooth: true, leaf: true }); b.rotation.z = tilt; b.rotation.x = (R() - 0.5) * 0.3; g.add(b); }
   }
-  if (pts.length) g.add(kit.lines(pts, 'mid'));
+  if (pts.length) g.add(kit.lines(pts, 'green'));
   return kit.merge(g);
 }
 
@@ -44,7 +44,7 @@ export function plant(kit, { form = 0 } = {}) {   // the small pot on a worktop 
     g.add(kit.cyl(0, 0, 0, 50, 80, { rTop: 58, seg: 20, ...lo }));rimTop(kit, g, 58, 80);
     for (let k = 0; k < 8; k++) { const a = k / 8 * 6.28, x = Math.sin(a) * 58, z = Math.cos(a) * 58; pts.push([0, 90, 0], [x * 0.6, 150, z * 0.6], [x * 0.6, 150, z * 0.6], [x * 1.2, 40 + R() * 40, z * 1.2]); g.add(leafAt(kit, x * 1.2, 50, z * 1.2, 20, 26, 0.4, 0.4)); }
   }
-  if (pts.length) g.add(kit.lines(pts, 'mid'));
+  if (pts.length) g.add(kit.lines(pts, 'green'));
   return kit.merge(g);
 }
 
