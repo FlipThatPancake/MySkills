@@ -83,3 +83,40 @@ export function foldedThrow(kit, { w = 1400, d = 380, layers = 3, tone = 'lo' } 
   for (let i = 0; i < layers; i++) { const h = 24 + (i % 2) * 4, b = softBox(kit, w - i * 36, h, d - i * 18, { r: 10, bulge: 3, tone }); b.position.set(i * 6 - 6, y + h / 2, (i % 2 ? 5 : -4)); g.add(b); y += h - 3; }
   return g;
 }
+
+// A cloth laid over a box top (bx: x range, bz: z range of the top) and hanging past its edges: the grid for `cloth`. cx / cz: the cloth's own x and z range (past the top = the drop); folds ripple the hanging parts, `ripple` the flat part.
+// Hanging parts fall straight down from the edge (y = y0 - distance past it), flare a little, and gather at the corners. All numbers in mm, y relative to the top.
+export function hangGrid({ bx, bz, cx, cz, nx = 56, ny = 40, y = 0, fold = 7, amp = 30, ripple = 0, phase = 0.6, flare = 0.07, seed = 1 }) {
+  const pts = [], clamp = (v, a, b) => Math.min(b, Math.max(a, v)), Lx = bx[1] - bx[0], Lz = bz[1] - bz[0];
+  const ph = (k) => Math.sin(seed * 12.9898 + k * 78.233) * 0.5 + 0.5;   // a small per-seed wobble so the folds differ
+  for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+    const x = cx[0] + (cx[1] - cx[0]) * i / (nx - 1), z = cz[0] + (cz[1] - cz[0]) * j / (ny - 1);
+    const dx = Math.max(bx[0] - x, x - bx[1], 0), dz = Math.max(bz[0] - z, z - bz[1], 0);
+    if (!dx && !dz) { pts.push(x, y + ripple * (Math.sin(x * 0.0042 + phase) * Math.sin(z * 0.0051 + phase * 2) + 0.5 * Math.sin(x * 0.011 + z * 0.007)), z); continue; }
+    const r = Math.hypot(dx, dz), ex = clamp(x, bx[0], bx[1]), ez = clamp(z, bz[0], bz[1]);
+    const ux = dx ? (x > bx[1] ? 1 : -1) * dx / r : 0, uz = dz ? (z > bz[1] ? 1 : -1) * dz / r : 0;   // outward, along the drop
+    const along = dx && !dz ? z - bz[0] : dz && !dx ? x - bx[0] : Math.atan2(dz, dx) * 380;
+    const k = fold * (0.8 + 0.4 * ph(1)), wave = amp * (0.3 + 0.7 * Math.min(1, r / 260)) * (Math.sin(along * k * 2 * Math.PI / (dx && !dz ? Lz : Lx) + phase) + 0.45 * Math.sin(along * k * 4.3 * Math.PI / (dx && !dz ? Lz : Lx) + 2 * phase)) * Math.min(1, r / 90) * (dx && dz ? 1.5 : 1);
+    const out = flare * r + wave * 0.5 + 6;
+    pts.push(ex + ux * out, y - r, ez + uz * out);
+  }
+  return { nx, ny, pts };
+}
+
+// A tablecloth: origin the middle of the table top at the surface (y 0 = the top). w, d: the table's top; drop: how far it hangs.
+export function tablecloth(kit, { w = 1600, d = 900, drop = 260, fold = 7, amp = 34, tone = 'lo', seed = 1 } = {}) {
+  const hx = w / 2, hz = d / 2, grid = hangGrid({ bx: [-hx, hx], bz: [-hz, hz], cx: [-hx - drop, hx + drop], cz: [-hz - drop, hz + drop], y: 3, fold, amp, seed, nx: Math.round((w + 2 * drop) / 40), ny: Math.round((d + 2 * drop) / 40) });
+  return cloth(kit, { ...grid, thick: 5, tone });
+}
+// A table runner: a strip along the table's length, hanging over both short ends. rw: its width.
+export function tableRunner(kit, { w = 1600, d = 900, rw = 380, drop = 230, fold = 3, amp = 20, tone = 'lo', seed = 1 } = {}) {
+  const hx = w / 2, hz = rw / 2, grid = hangGrid({ bx: [-hx, hx], bz: [-hz, hz], cx: [-hx - drop, hx + drop], cz: [-hz, hz], y: 4, fold, amp, seed, nx: Math.round((w + 2 * drop) / 40), ny: Math.max(8, Math.round(rw / 30)), ripple: 3 });
+  return cloth(kit, { ...grid, thick: 4, tone });
+}
+// An unmade duvet over a mattress (x: -w/2..w/2, z from `head` to `foot`, the top at the surface): the sides sag by different amounts, the foot hangs, and the top is a little rumpled.
+export function duvetCloth(kit, { w = 1600, head = -700, foot = 900, sagL = 200, sagR = 330, sagFoot = 260, tone = 'lo', seed = 1 } = {}) {
+  const hx = w / 2, grid = hangGrid({ bx: [-hx, hx], bz: [head, foot], cx: [-hx - sagL, hx + sagR], cz: [head, foot + sagFoot], y: 4, fold: 4, amp: 40, ripple: 16, seed, nx: Math.round((w + sagL + sagR) / 40), ny: Math.round((foot - head + sagFoot) / 40), flare: 0.1 });
+  const g = cloth(kit, { ...grid, thick: 6, tone }), T = kit.THREE, fl = [];
+  for (let i = 0; i <= 12; i++) { const x = -hx + 60 + (w - 120) * i / 12; fl.push([x, 12 + 6 * Math.sin(i * 1.3), head + 180 + 30 * Math.sin(i * 0.7)], [x + (w - 120) / 12, 12 + 6 * Math.sin((i + 1) * 1.3), head + 180 + 30 * Math.sin((i + 1) * 0.7)]); }   // the turned-back edge, drawn as a line
+  g.add(kit.lines(fl, 'lo')); return g;
+}

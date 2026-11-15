@@ -43,7 +43,7 @@ export async function bakeLight({ THREE: T, renderer, scene, kit, walls, areas, 
         else { float d = uOrtho > 0.5 ? dot(P - uRef, uAxis) : length(P - uRef); float s = texture2D(uDepth, q).r * ${FAR.toFixed(1)}; float dd = d - s, bias = 14.0 + 14.0 / max(c, 0.1); vis = dd > bias ? 0.0 : 1.0; near = dd > bias && dd < ${REACH.toFixed(1)} ? 1.0 : 0.0;
           if (dd > bias) {
             vec3 B = P + L * dd;
-            if (uWallR > 0.5) { if (dot(B - uO, uN) < (uOrtho > 0.5 ? 90.0 : 230.0)) { vis = 1.0; near = 0.0; } }   // what hangs on a wall (a shelf, a frame) leaves no blob on it: only a thin line from its own thickness
+            if (uWallR > 0.5) { if (dot(B - uO, uN) < 340.0) { vis = 1.0; near = 0.0; } }   // what hangs on a wall (a shelf, a frame) leaves no blob on it: only a thin line from its own thickness
             else if (uOrtho > 0.5) for (int i = 0; i < 4; i++) if (float(i) < uNW) { vec2 rel = B.xz - uWA[i].xy; float al = dot(rel, uWA[i].zw), di = dot(rel, uWB[i].xy); if (abs(di) < 30.0 && al > -30.0 && al < uWB[i].z + 30.0) near = 0.0; }   // the floor takes no contact shade from the wall's own face
           } }
         gl_FragColor = vec4(vis * c, c, near * c, 1.0);
