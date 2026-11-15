@@ -1,6 +1,6 @@
 // compose.mjs — helpers for laying a home out in each area's own frame, then writing scene.json. A spec is a small script: scenes/seed-<n>.spec.mjs writes scenes/seed-<n>.json (the helpers are below).
 // Everything is millimetres. An area has a local frame: x to the right, z toward the viewer, its backing wall along z = 0 (see the walls below). Areas are placed side by side with a 3000 mm gap, so no neighbour shows in an area's own view.
-//   const H = new Home({ seed, floor: 'tiles' | 'boards' | 'plain' });
+//   const H = new Home({ seed, floor: 'auto' (boards, sometimes tiles) | 'tiles' | 'boards' | 'plain' (rare) });
 //   const a = H.area('kitchen', 'Kitchen', { rect: [0, 0, 6600, 4200] });      // rect: [x0, z0, x1, z1] of the floor the area owns (its bounds); psi turns the whole area 90, 180 or -90 degrees; O sets its place by hand
 //   Walls (the room is in front of each one). Openings are { kind: 'window' | 'door' | 'arch', x, width, height, sill, sash: 'fixed', hinge: 'l' | 'r', to: <area id>, ... }; x is the opening's middle, measured from the wall's LEFT end as you see it from the room:
 //   const back = a.back(6600, [openings]);            // along the back, z = 0, from x = 0 to the right
@@ -18,7 +18,7 @@ import { dealParams } from './src/library/space.js';
 const rad = (d) => d * Math.PI / 180, deg = (r) => r * 180 / Math.PI, r0 = (v) => Math.round(v * 10) / 10;
 export const GAP = 3000;
 export class Home {
-  constructor({ seed, floor = 'plain', height = 2700 }) { this.S = { units: 'mm', seed, home: { height, floor: { style: floor, seed }, tiles: { origin: [0, 0] }, walls: [], objects: [] }, areas: [] }; this.list = []; }
+  constructor({ seed, floor = 'auto', height = 2700 }) { if (floor === 'auto') floor = seed % 5 === 3 ? 'tiles' : 'boards'; this.S = { units: 'mm', seed, home: { height, floor: { style: floor, seed }, tiles: { origin: [0, 0] }, walls: [], objects: [] }, areas: [] }; this.list = []; }
   area(id, name, { O, psi = 0, rect }) {
     const a = new Area(this, id, name, O || [0, 0], psi, rect);
     if (!O) { const prev = this.list[this.list.length - 1], b = a.worldBounds(), x0 = prev ? prev.worldBounds().x1 + GAP : 0; a.O = [r0(x0 - b.x0), r0(-b.z0)]; }

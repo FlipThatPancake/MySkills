@@ -4,7 +4,8 @@
  "home": {
   "height": 2700,
   "floor": {
-   "style": "plain"
+   "style": "plain",
+   "seed": 3
   },
   "tiles": {
    "origin": [
@@ -122,14 +123,14 @@
    "camera": {
     "home": {
      "target": [
-      2300,
-      60,
-      900
+      1000,
+      1050,
+      100
      ],
-     "az": 35,
-     "el": 30,
+     "az": 0,
+     "el": 3,
      "fit": "none",
-     "dist": 800
+     "dist": 2300
     },
     "shots": []
    }

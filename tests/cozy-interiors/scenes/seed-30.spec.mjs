@@ -4,7 +4,7 @@
 //  living: wide-angle, hero sofa with rug and coffee table, window first + arch (other wall), accents cat, mirror, side table, basket, 1 plant, piece curtain at a window
 import fs from 'node:fs';
 import { Home } from '../../../skills/cozy-interiors/scene/compose.mjs';
-const H = new Home({ seed: 30, floor: 'plain' });
+const H = new Home({ seed: 30, floor: 'boards' });
 
 { // ---------- kitchen
   const a = H.area('kitchen', 'Kitchen', { rect: [0, 0, 6200, 4600] });
