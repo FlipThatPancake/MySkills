@@ -104,7 +104,7 @@ export function createAreaScene(canvas, S) {
     cur = id; api.area = id; only(id);
     const v = viewOf(areas[id]);
     controls.target.set(...v.target); camera.position.copy(controls.target).add(sph(v.dist, v.az, v.el)); camera.lookAt(controls.target);
-    limits(v.az); controls.enabled = true; resize(); controls.update();
+    camera.fov = FOV; limits(v.az); controls.enabled = true; resize(); controls.update();   // resize() updates the projection; a glide that cut a tour shot short would otherwise keep the shot's lens
     applyFade(fadeOf(areas[id])); makeTour(id); markLabels();
   }
   // Where the camera is now, as target + spherical offset.
