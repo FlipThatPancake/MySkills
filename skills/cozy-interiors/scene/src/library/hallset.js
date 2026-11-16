@@ -72,17 +72,17 @@ function brimHat(kit, { br = 150, cr = 82, ch = 105, tone = 'lo', seed = 1 } = {
 }
 function peg(kit, len = 62) { const g = kit.group(); g.add(kit.cyl(0, 0, len / 2, 9, len / 2, { axis: 'z', seg: 10 })); g.add(kit.cyl(0, 0, len, 13, 22, { axis: 'z', seg: 10, ...lo })); return g; }
 // a peg centred on the wall face at y 0; axis z: cyl(x,y,z,...,{axis:'z'}) takes the centre z; keep pegs simple: a short post and a round cap
-function pegAt(kit, x, y, len) { const g = kit.group(); g.add(kit.cyl(x, y, len * 0.5, 9, len, { axis: 'z', seg: 10 })); g.add(kit.cyl(x, y, len, 14, 18, { axis: 'z', seg: 12, ...lo })); return g; }
+function pegAt(kit, x, y, len) { const g = kit.group(); g.add(kit.cyl(x, y, len, 9, len, { axis: 'z', seg: 10 })); g.add(kit.cyl(x, y, len, 14, 18, { axis: 'z', seg: 12, ...lo })); return g; }   // cyl on the z axis: z is its front face, it reaches back by its height, so the post spans 0 to len
 
 export function hungHat(kit, { form = 'brim', tone = 'lo', seed = 1 } = {}) {   // a hat hung on a peg: a brimmed hat with its crown out, or a knitted beanie with a bobble
   const g = kit.group(), R = rnd(seed), T = kit.THREE;
-  g.add(pegAt(kit, 0, 0, 64));
+  g.add(pegAt(kit, 0, 0, 96));
   if (form === 'brim') {
-    const br = 135 + R() * 30, h = brimHat(kit, { br, cr: 76, ch: 100, tone, seed }), pv = kit.group(); pv.add(h); pv.rotation.x = Math.PI / 2 - 0.52; pv.position.set(0, -(br - 14), 22); g.add(pv);
+    const br = 135 + R() * 30, h = brimHat(kit, { br, cr: 76, ch: 100, tone, seed }), pv = kit.group(); pv.add(h); pv.rotation.x = Math.PI / 2 - 0.52; pv.position.set(0, -(br - 14), 100); g.add(pv);
   } else {
-    const r = 88, pr = [[0.01, -250], [r * 0.9, -246], [r, -226], [r * 1.0, -190], [r * 1.04, -120], [r * 0.9, -60], [r * 0.5, -22], [0.01, -8]].map(([x, y]) => new T.Vector2(x, y)), sack = kit.solid(new T.LatheGeometry(pr, 30), 0, 0, 0, { smooth: true, tone }); sack.scale.z = 0.42; sack.position.set(0, 0, 54); g.add(sack);
-    const rb2 = []; for (let k = 0; k < 5; k++) { const y = -232 + k * 8 + (k ? 0 : 0), rr = r * (0.9 + 0.1 * Math.min(1, k / 2)) + 1; for (let q = 0; q < 24; q++) { const a1 = q / 24 * 6.2832, a2 = (q + 1) / 24 * 6.2832; rb2.push([Math.cos(a1) * rr, y, 54 + Math.sin(a1) * rr * 0.42], [Math.cos(a2) * rr, y, 54 + Math.sin(a2) * rr * 0.42]); } } g.add(kit.lines(rb2, 'mid'));
-    g.add(kit.solid(new T.SphereGeometry(24, 12, 10), 0, -10, 54, { smooth: true, tone: 'mid' }));
+    const r = 88, pr = [[0.01, -250], [r * 0.9, -246], [r, -226], [r * 1.0, -190], [r * 1.04, -120], [r * 0.9, -60], [r * 0.5, -22], [0.01, -8]].map(([x, y]) => new T.Vector2(x, y)), sack = kit.solid(new T.LatheGeometry(pr, 30), 0, 0, 0, { smooth: true, tone }); sack.scale.z = 0.42; sack.position.set(0, 0, 70); g.add(sack);
+    const rb2 = []; for (let k = 0; k < 5; k++) { const y = -232 + k * 8 + (k ? 0 : 0), rr = r * (0.9 + 0.1 * Math.min(1, k / 2)) + 1; for (let q = 0; q < 24; q++) { const a1 = q / 24 * 6.2832, a2 = (q + 1) / 24 * 6.2832; rb2.push([Math.cos(a1) * rr, y, 70 + Math.sin(a1) * rr * 0.42], [Math.cos(a2) * rr, y, 70 + Math.sin(a2) * rr * 0.42]); } } g.add(kit.lines(rb2, 'mid'));
+    g.add(kit.solid(new T.SphereGeometry(24, 12, 10), 0, -10, 70, { smooth: true, tone: 'mid' }));
   }
   return kit.merge(g);
 }
@@ -131,8 +131,9 @@ export function boots(kit, { kind = 'wellington', spread = 176, shaft = 250, ton
     if (kind === 'wellington') { b.add(kit.cyl(0, 120, zA - 2, 64, 250, { rTop: 74, seg: 28, tone: 'lo' })); b.add(rx(kit.solid(new T.TorusGeometry(74, 8, 8, 28), 0, 370, zA - 2, { smooth: true, tone: 'lo' }), Math.PI / 2)); b.add(kit.cyl(0, 116 + shaft, zA - 2, 66, 4, { seg: 24, soil: true })); b.add(kit.lines([[-72, 80 + shaft, zA + 2], [72, 80 + shaft, zA + 2], [0, 120, zA + 64], [0, 110 + shaft, zA + 71]], 'faint')); }
     else if (kind === 'hiker') { const ln = []; for (let k = 0; k < 6; k++) { const y = 70 + k * 18, zz = (0.52 - 0.5) * L + k * 14; ln.push([-22, y + 40, zz + 52], [0, y + 46, zz + 56], [0, y + 46, zz + 56], [22, y + 40, zz + 52]); } b.add(kit.lines(ln, 'mid')); b.add(rx(kit.solid(new T.TorusGeometry(52, 14, 8, 20), 0, 156, zA, { smooth: true, ...lo }), Math.PI / 2)); }
     else b.add(kit.rbox(-10, 150, zA - 40, 20, 40, 8, 3, lo));   // a pull tab at the back
-    b.position.set(s * spread / 2, 0, 0); b.rotation.y = (R() - 0.5) * 0.3; g.add(b);
+    b.position.set(s * spread / 2, 12, 0); b.rotation.y = (R() - 0.5) * 0.3; g.add(b);
   }
+  g.add(kit.rbox(-(spread + 190) / 2, 0, L / 2 + 24, spread + 190, 12, L + 48, 5, lo));   // a boot tray under the pair
   return kit.merge(g);
 }
 

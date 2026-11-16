@@ -120,7 +120,7 @@ export function spiceRack(kit, { w = 480, rows = 2, seed = 6, style = 'jars' } =
 }
 
 export function ovenGlove(kit, { hand = 'left' } = {}) {   // a quilted mitt hanging from a hook: origin at the hook on the wall face
-  const g = kit.group(), sg = hand === 'left' ? 1 : -1, w0 = 0.4; g.add(kit.cyl(0, 0, 14, 9, 22, { axis: 'z', seg: 10, tone: 'lo' })); g.add(kit.solid(new kit.THREE.SphereGeometry(13, 12, 8), 0, 0, 28, { smooth: true, tone: 'lo' }));
+  const g = kit.group(), sg = hand === 'left' ? 1 : -1, w0 = 0.4; g.add(kit.cyl(0, 0, 22, 9, 22, { axis: 'z', seg: 10, tone: 'lo' })); g.add(kit.rbox(-10, -48, 46, 20, 44, 16, 4, { tone: 'lo' }));   // the hook, and the loop that holds the mitt g.add(kit.solid(new kit.THREE.SphereGeometry(13, 12, 8), 0, 0, 28, { smooth: true, tone: 'lo' }));
   g.add(kit.rbox(-85, -300, 58, 170, 270, 28, 60, { tone: 'mid' }));   // the mitt
   g.add(kit.rbox(-80, -334, 60, 160, 50, 34, 18, { tone: 'lo' }));   // the cuff
   const th = kit.group(); th.add(kit.rbox(-30, -130, 55, 60, 130, 24, 28, { tone: 'mid' })); th.position.set(sg * 98, -190, 0); th.rotation.z = -sg * 0.55; g.add(th);   // the thumb

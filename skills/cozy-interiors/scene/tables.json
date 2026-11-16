@@ -125,6 +125,21 @@
    "basket of vegetables",
    "wall shelf with jars"
   ],
+  "more": [
+   "dish rack by the sink (dishRack)",
+   "utensil crock (utensilCrock)",
+   "bread bin (breadBin)",
+   "toaster (toaster)",
+   "moka pot on the hob (mokaPot)",
+   "pot rail with pans (potRail)",
+   "spice rack (spiceRack)",
+   "oven glove on a hook (ovenGlove)",
+   "wall clock (wallClock)",
+   "cookbook on a stand (cookbookStand)",
+   "watering can (wateringCan)",
+   "step stool by the larder (stepStool)",
+   "crate of fruit (crate)"
+  ],
   "shapeNotes": {
    "straight": "one run on the backing wall, nothing else",
    "galley": "two facing runs with a 1200 mm aisle: a run on the wall and a freestanding run opposite it with a finished back and closed ends (no stools)",
@@ -188,6 +203,16 @@
    "floor lamp",
    "bench"
   ],
+  "more": [
+   "candlesticks (candlesticks)",
+   "jug of water (jug)",
+   "bread basket on the table (breadBasket)",
+   "place settings (placeSetting)",
+   "glazed cabinet with dishes (glazedCabinet)",
+   "cushion pad on a bench (benchCushion)",
+   "plates on the wall (wallPlates)",
+   "a pendant of another form (pendantForm)"
+  ],
   "pieces": [
    "table (round or long)",
    "chairs",
@@ -249,6 +274,14 @@
    "wall shelf",
    "floor lamp",
    "side table"
+  ],
+  "more": [
+   "floor cushion (floorCushion)",
+   "wood stove with a log basket (woodStove, logBasket)",
+   "record player cabinet (recordPlayer)",
+   "magazine rack (magazineRack)",
+   "plant stand (plantStand)",
+   "gallery wall of frames (galleryWall)"
   ],
   "pieces": [
    "curtain at a window"
@@ -313,6 +346,17 @@
    "wall shelf",
    "picture",
    "book stack"
+  ],
+  "more": [
+   "bedside lamp (bedsideLamp)",
+   "alarm clock (alarmClock)",
+   "glasses on a book (glassesBook)",
+   "chest of drawers (chestOfDrawers)",
+   "clothes rail (clothesRail)",
+   "chair with clothes on it (clothesChair)",
+   "laundry hamper (hamper)",
+   "leaning mirror (leaningMirror)",
+   "wall sconce (wallSconce)"
   ]
  },
  "reading-corner": {
@@ -377,6 +421,13 @@
    "floor books",
    "tea set",
    "small wall shelf (readShelf)"
+  ],
+  "more": [
+   "floor cushion (floorCushion)",
+   "magazine rack (magazineRack)",
+   "plant stand (plantStand)",
+   "wall sconce (wallSconce)",
+   "gallery wall of frames (galleryWall)"
   ]
  },
  "hallway": {
@@ -436,6 +487,13 @@
    "boots",
    "hat on a hook (hungHat)",
    "bag on a hook (hungBag)"
+  ],
+  "more": [
+   "umbrella stand (umbrellaStand)",
+   "pair of shoes (shoes)",
+   "wall clock (wallClock)",
+   "wall sconce (wallSconce)",
+   "magazine rack (magazineRack)"
   ]
  },
  "home-office": {
@@ -506,6 +564,14 @@
    "printer",
    "globe",
    "wall calendar (wallCalendar)"
+  ],
+  "more": [
+   "waste bin (wasteBin)",
+   "file box (fileBox)",
+   "laptop (laptop)",
+   "wall clock (wallClock)",
+   "magazine rack (magazineRack)",
+   "plant stand (plantStand)"
   ]
  },
  "backingWeights": {

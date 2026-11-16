@@ -5,7 +5,7 @@ const PART = process.env.PART || 'seats', W = 5200;
 const H = new Home({ seed: 3, floor: 'plain' }), a = H.area('sheet', 'Sheet', { O: [0, 0], rect: [0, 0, W, 3200] });
 a.wall('back', [0, 0], 0, W, []);
 const put = (id, asset, x, z, params, o = {}) => a.put(id, asset, [x, z], o.turn || 0, { group: 'row', params, y: 0, ...o.m });
-const wall = (id, asset, x, y, params) => a.put(id, asset, [x, 100], 0, { mount: 'wall', y, group: 'row', params });
+const wall = (id, asset, x, y, params) => a.put(id, asset, [x, 0], 0, { mount: 'wall', y, group: 'row', params });
 let tx = 2600, ty = 400, tz = 1000, dd = 4600, el = 14;
 if (PART === 'seats') { put('s1', 'windowSeat', 1500, 400, { form: 'storage', w: 1700, cushion: 'striped', pillows: 2 }); put('s2', 'windowSeat', 3700, 400, { form: 'open', w: 1500, cushion: 'plain', pillows: 1, throwOn: 'no', seed: 4 }); tx = 2600; dd = 4800; }
 else if (PART === 'seats2') { put('s3', 'windowSeat', 1500, 400, { form: 'legs', w: 1400, cushion: 'tufted', pillows: 3, seed: 6 }); put('s4', 'windowSeat', 3700, 400, { form: 'storage', w: 1200, d: 480, cushion: 'plain', pillows: 0, throwOn: 'yes', seed: 9 }); tx = 2600; dd = 4400; }

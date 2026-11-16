@@ -75,7 +75,7 @@ export function glassesBook(kit, { w = 150, d = 215, seed = 2 } = {}) {   // a p
 export function chestOfDrawers(kit, { w = 900, h = 1000, d = 480, rows = 4, pull = 'knob', legs = 'tapered' } = {}) {
   const g = kit.group(), legH = 130, bodyH = h - legH, pts = [], z = d / 2 + 0.8, rh = (bodyH - 60) / rows;
   g.add(legParts(kit, legs, [[-w / 2 + 50, -d / 2 + 50], [w / 2 - 50, -d / 2 + 50], [-w / 2 + 50, d / 2 - 50], [w / 2 - 50, d / 2 - 50]], legH + 6, { r: 28 }));
-  g.add(kit.rbox(-w / 2, legH, d / 2, w, bodyH, d, 10)); g.add(kit.rbox(-w / 2 - 12, h - 34, d / 2 + 14, w + 24, 34, d + 20, 8));
+  g.add(kit.rbox(-w / 2, legH, d / 2, w, bodyH, d, 10)); g.add(kit.rbox(-w / 2 - 12, h - 34, d / 2 + 14, w + 24, 34, d + 14, 8));
   for (let i = 0; i < rows; i++) {
     const y0 = legH + 20 + i * rh, y1 = y0 + rh - 14;
     pts.push([-w / 2 + 24, y0, z], [w / 2 - 24, y0, z], [w / 2 - 24, y0, z], [w / 2 - 24, y1, z], [w / 2 - 24, y1, z], [-w / 2 + 24, y1, z], [-w / 2 + 24, y1, z], [-w / 2 + 24, y0, z]);
@@ -139,7 +139,7 @@ export function leaningMirror(kit, { w = 520, h = 1650, shape = 'arch', lean = 8
   return g;
 }
 export function wallSconce(kit, { arm = 'swing', shade = 'cone', h = 260 } = {}) {   // origin bottom middle on the wall face; y is the height of its backplate's foot
-  const g = kit.group(); g.add(kit.cyl(0, 66, 16, 46, 16, { axis: 'z', seg: 24 }));   // the backplate
+  const g = kit.group(); g.add(kit.cyl(0, 150, 16, 46, 16, { axis: 'z', seg: 24 }));   // the backplate, centred where the arm leaves it
   const top = 150;
   if (arm === 'swing') { g.add(rod(kit, [0, top, 18], [0, top, 120], 8, 8, 'mid')); g.add(rod(kit, [0, top, 120], [0, top + 14, 190], 8, 8, 'mid')); } else g.add(rod(kit, [0, top, 18], [0, top, 70], 9, 9, 'mid'));
   const z = arm === 'swing' ? 190 : 70;

@@ -19,7 +19,7 @@ else if (PART === 'floor') {
   put('lt1', 'letterTray', 3200, 1500, { form: 'tray' }); put('lt2', 'letterTray', 4300, 1500, { form: 'caddy', seed: 5 });
   ty = 100; dd = 3000; el = 30; tx = 2500;
 } else if (PART === 'wall') {
-  const wall = (id, asset, x, params) => a.put(id, asset, [x, 100], 0, { mount: 'wall', y: 1500, group: 'row', params });
+  const wall = (id, asset, x, params) => a.put(id, asset, [x, 0], 0, { mount: 'wall', y: 1500, group: 'row', params });
   wall('h1', 'hungHat', 700, { form: 'brim' }); wall('h2', 'hungHat', 1500, { form: 'beanie', seed: 4 }); wall('g1', 'hungBag', 2400, { form: 'satchel' }); wall('g2', 'hungBag', 3300, { form: 'tote' }); wall('g3', 'hungBag', 4300, { form: 'basket', seed: 5 });
   ty = 1000; dd = 5000; tz = 800;
 } else {

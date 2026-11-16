@@ -65,14 +65,14 @@ export function glazedCabinet(kit, { w = 1000, h = 1800, d = 420, shelves = 3, d
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) g.add(kit.cyl(sx * (w / 2 - 50), 0, sz * (d / 2 - 50), 24, legH + 6, { rTop: 18, seg: 10, tone: 'lo' }));
   g.add(kit.rbox(-w / 2, legH, d / 2, w, lowH, d, 8));   // the lower cupboard
   const uh = h - legH - lowH - 40, uy = legH + lowH;
-  for (const sx of [-1, 1]) g.add(kit.box(sx * (w / 2 - 14) - 14, uy, 0 + (d - 30) / 2, 28, uh, d - 30));
-  g.add(kit.box(-w / 2 + 28, uy, -d / 2 + 30, w - 56, uh, 14, lo)); g.add(kit.rbox(-w / 2 - 12, h - 40, d / 2 + 12, w + 24, 40, d + 24, 6));
+  for (const sx of [-1, 1]) g.add(kit.box(sx * (w / 2 - 14) - 14, uy - 4, 0 + (d - 30) / 2, 28, uh + 8, d - 30));
+  g.add(kit.box(-w / 2 + 22, uy - 4, -d / 2 + 30, w - 44, uh + 8, 14, lo)); g.add(kit.rbox(-w / 2 - 12, h - 40, d / 2 + 12, w + 24, 40, d + 12, 6));
   for (let s = 0; s < shelves; s++) {   // shelves with plates standing and a stack of bowls
-    const y = uy + (s + 0.5) * uh / shelves - uh / (shelves * 2) + 6; g.add(kit.box(-w / 2 + 28, y, d / 2 - 20, w - 56, 16, d - 60, lo));
+    const y = uy + (s + 0.5) * uh / shelves - uh / (shelves * 2) + 6; g.add(kit.box(-w / 2 + 22, y, d / 2 - 20, w - 44, 16, d - 60, lo));
     let x = -w / 2 + 90; while (x < w / 2 - 150) { const rr = 90 + R() * 22; if (R() < 0.7) { const p = kit.group(); p.add(kit.cyl(0, rr, 0, rr, 8, { axis: 'z', seg: 28 })); p.position.set(x, y + 16, 0); p.rotation.x = -0.14; g.add(p); x += 60; } else { g.add(kit.cyl(x, y + 16, 0, 70, 90, { rTop: 90, seg: 24 })); x += 190; } }
   }
   const cw = (w - 56) / doors;
-  for (let i = 0; i < doors; i++) { const x0 = -w / 2 + 28 + i * cw + 3, x1 = x0 + cw - 6, y0 = uy + 6, y1 = uy + uh - 6, mid = (x0 + x1) / 2; pts.push([x0, y0, z], [x1, y0, z], [x1, y0, z], [x1, y1, z], [x1, y1, z], [x0, y1, z], [x0, y1, z], [x0, y0, z], [x0 + 22, y0 + 22, z], [x1 - 22, y0 + 22, z], [x1 - 22, y0 + 22, z], [x1 - 22, y1 - 22, z], [x1 - 22, y1 - 22, z], [x0 + 22, y1 - 22, z], [x0 + 22, y1 - 22, z], [x0 + 22, y0 + 22, z], [mid, y0 + 22, z], [mid, y1 - 22, z]); g.add(kit.cyl(i % 2 ? x0 + 26 : x1 - 26, (y0 + y1) / 2, z + 4, 7, 14, { axis: 'z', seg: 10, tone: 'lo' })); }
+  for (let i = 0; i < doors; i++) { const x0 = -w / 2 + 28 + i * cw + 3, x1 = x0 + cw - 6, y0 = uy + 6, y1 = uy + uh - 6, mid = (x0 + x1) / 2; for (const sx of [x0, x1 - 22]) g.add(kit.box(sx, y0, z + 3, 22, y1 - y0, 18, lo)); for (const sy of [y0, y1 - 22]) g.add(kit.box(x0, sy, z + 3, x1 - x0, 22, 18, lo)); pts.push([x0, y0, z], [x1, y0, z], [x1, y0, z], [x1, y1, z], [x1, y1, z], [x0, y1, z], [x0, y1, z], [x0, y0, z], [x0 + 22, y0 + 22, z], [x1 - 22, y0 + 22, z], [x1 - 22, y0 + 22, z], [x1 - 22, y1 - 22, z], [x1 - 22, y1 - 22, z], [x0 + 22, y1 - 22, z], [x0 + 22, y1 - 22, z], [x0 + 22, y0 + 22, z], [mid, y0 + 22, z], [mid, y1 - 22, z]); g.add(kit.cyl(i % 2 ? x0 + 26 : x1 - 26, (y0 + y1) / 2, z + 4, 7, 14, { axis: 'z', seg: 10, tone: 'lo' })); }
   const ly0 = legH + 24, ly1 = legH + lowH - 24; for (let i = 0; i < 2; i++) { const x0 = -w / 2 + 24 + i * (w - 48) / 2 + 3, x1 = -w / 2 + 24 + (i + 1) * (w - 48) / 2 - 3; pts.push([x0, ly0, z], [x1, ly0, z], [x1, ly0, z], [x1, ly1, z], [x1, ly1, z], [x0, ly1, z], [x0, ly1, z], [x0, ly0, z]); g.add(kit.cyl(i ? x0 + 30 : x1 - 30, (ly0 + ly1) / 2, z + 4, 7, 14, { axis: 'z', seg: 10, tone: 'lo' })); }
   g.add(kit.lines(pts, 'lo'));
   return kit.merge(g);

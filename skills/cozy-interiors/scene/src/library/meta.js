@@ -85,7 +85,7 @@ export const ASSETS = {
   floorCushion: A('centre', [680, 680, 160], 'floor', 'w 680, thick 150', { note: 'a big square cushion lying on the floor' }),
   logBasket: A('centre', [540, 540, 400], 'floor', 'r 270, h 400, logs 7', { note: 'wicker basket of split logs; beside a stove' }),
   woodStove: A('centre', [780, 650, 1700], 'floor', 'w 520, d 430, h 600, flueH 1700', { note: 'on its stone hearth plate (stove + 220 mm); flue goes up through the ceiling; back it toward a wall, keep furniture 500 mm away' }),
-  recordPlayer: A('centre', [800, 420, 640], 'floor', 'w 760, d 400, h 520, records 9', { note: 'low cabinet with records, a turntable on top' }),
+  recordPlayer: A('centre', [800, 420, 640], 'floor', 'w 760, d 400, h 520, records 9', { note: 'low cabinet with records, a turntable on top; backed onto a wall use lid half or closed (open reaches 90 mm behind it)' }),
   magazineRack: A('centre', [420, 300, 460], 'floor', 'w 400, h 460, form frame|sling|crate', { note: 'a wire frame, a wooden sling or a small crate, with magazines' }),
   plantStand: A('centre', [400, 400, 560], 'floor', 'h 560, r 190, tiers 1|2, plant sprig|bush', { note: 'a round-topped stand with a potted plant on it' }),
   galleryWall: A('wall-centre', [1500, 50, 1100], 'wall', 'w 1500, h 1100, n 6, seed', { y: 900, note: 'frames of different sizes packed into columns' }),

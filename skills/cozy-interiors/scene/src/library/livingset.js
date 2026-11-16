@@ -50,7 +50,7 @@ export function chair(kit, { shape = 'wing', legs: legsOpt, w = 840, d = 860, to
     if (back === 'loose') { const cu = softBox(kit, w - 260, 300, 110, { r: 50, bulge: 22, tone, piping: 'edge' }); cu.position.set(0, sh + 190, -Z + 50); cu.rotation.x = -12 * DEG; g.add(cu); }
   } else {   // a sling: a leather seat-and-back hung from a bent frame
     const sh = 360, X = w / 2 - 40, Z = d / 2 - 30;
-    for (const sx of [-1, 1]) { const pts = [[sx * X, 0, Z], [sx * X, sh * 0.8, Z - 30], [sx * X, sh, -Z + 160], [sx * X, 700, -Z - 60]]; for (let i = 0; i < 3; i++) g.add(rod(kit, pts[i], pts[i + 1], 15, 15, 'mid')); g.add(rod(kit, [sx * X, 0, -Z + 120], [sx * X, 0, Z], 14, 14, 'mid')); }
+    for (const sx of [-1, 1]) { const pts = [[sx * X, 8, Z], [sx * X, sh * 0.8, Z - 30], [sx * X, sh, -Z + 160], [sx * X, 700, -Z - 60]]; for (let i = 0; i < 3; i++) g.add(rod(kit, pts[i], pts[i + 1], 15, 15, 'mid')); g.add(rod(kit, [sx * X, 8, -Z + 120], [sx * X, 8, Z], 14, 14, 'mid')); }
     const seat = softBox(kit, w - 110, 520, 70, { r: 30, bulge: 14, tone, dent: 16, sag: 6 }); seat.rotation.x = -(Math.PI / 2 - 8 * DEG); seat.position.set(0, sh + 6, 40); g.add(seat);
     const back = softBox(kit, w - 110, 520, 70, { r: 30, bulge: 14, tone }); back.rotation.x = -28 * DEG; back.position.set(0, sh + 260, -Z + 90); g.add(back);
     g.add(kit.lines([[-w / 2 + 70, sh + 30, 300], [w / 2 - 70, sh + 30, 300]], 'lo'));
@@ -142,7 +142,7 @@ export function woodStove(kit, { w = 520, d = 430, h = 600, flueH = 1700, seed =
 }
 export function recordPlayer(kit, { w = 760, d = 400, h = 520, seed = 4, records = 9, lid: lidP = 'open', legs: lg = 'splay' } = {}) {
   const g = kit.group(), R = rnd(seed), B = bx(kit), Rb = rb(kit), pts = [], th = 22, cy0 = h - 380, cy1 = h - 40;   // cabinet from cy0 to cy1
-  for (const sx of [-1, 1]) for (const sz of [-1, 1]) g.add(lg === 'block' ? B(sx * (w / 2 - 50), 0, sz * (d / 2 - 50), 36, cy0 + 4, 36) : rod(kit, [sx * (w / 2 - 60), cy0 + 10, sz * (d / 2 - 50)], [sx * (w / 2 - 40), 0, sz * (d / 2 - 36)], 18, 12, 'mid'));
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) g.add(lg === 'block' ? B(sx * (w / 2 - 50), 0, sz * (d / 2 - 50), 36, cy0 + 4, 36) : rod(kit, [sx * (w / 2 - 60), cy0 + 10, sz * (d / 2 - 50)], [sx * (w / 2 - 40), 6, sz * (d / 2 - 36)], 18, 12, 'mid'));
   g.add(B(0, cy0, 0, w, th, d));   // the base
   for (const sx of [-1, 1]) g.add(B(sx * (w / 2 - th / 2), cy0, 0, th, cy1 - cy0, d));   // the ends
   g.add(B(0, cy0, -d / 2 + th / 2, w, cy1 - cy0, th, lo));   // the back
