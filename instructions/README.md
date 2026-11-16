@@ -6,6 +6,6 @@ Storage for the user's instructions. The live copies are already set in ChatGPT 
 - `projects/`: one file per kind of project, each pasted into that project's instruction field.
   - `writing-and-brainstorming.md`: writing, editing and brainstorming.
   - `career.md` and `life.md`: decision support (identical files).
-- `model-routing-claude`: rule for naming a model and effort before starting a thread.
+- `model-routing-claude`: routing for Claude Code Projects, pasted into each project's instructions.
 
 To keep a project's instructions in a repo, put `global.md` and then the project file in the repo's `AGENTS.md`, and put `@AGENTS.md` in its `CLAUDE.md`.
