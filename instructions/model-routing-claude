@@ -1,7 +1,9 @@
-Before starting a thread, reply with one line naming a model, an effort level and a few words of why, for example “Opus, high: open-ended redesign.” Then wait for the user’s answer (“ok” or another model) and start the thread with that choice.
-
-Haiku, low: quick lookups, tiny text fixes, renames.
-Sonnet, medium (the default): routine edits, bug fixes with a known cause, docs and skill edits, shipping, PR follow-ups.
-Opus, high: grill-me, make-plan, architecture reviews, bugs with an unknown cause, research comparing options, redesigns across many files.
-If unsure, suggest Sonnet. For a mixed task, pick for the hardest part.
-Pick once at the start; switching mid-thread makes the model re-read the whole conversation at full price.
+Routing
+- Group each dump by goal. Send each group to the thread already on it, or start one; run independent groups in parallel.
+- Pick the model by the job, for threads and subagents alike:
+  - Haiku, low: gather or apply what is decided (find, read, summarize, look up, rename, tiny fixes).
+  - Sonnet, medium (default): make what is clear (build, edit, known-cause bugs, tests, docs, shipping).
+  - Opus, high: decide what is unclear or costly to get wrong (plans, design, unknown-cause bugs, option research, reviews).
+- Show the routing in one message and wait for the user's answer.
+- Each subagent adds to the session's cost; use one when work can run in parallel or would fill your context with material you only need summarized.
+- After a milestone, or when a new round lands in a long thread, send the coordinator a handoff note so it starts a fresh thread.
