@@ -1,0 +1,139 @@
+{
+ "units": "mm",
+ "seed": 3,
+ "home": {
+  "height": 2700,
+  "floor": {
+   "style": "plain",
+   "seed": 3
+  },
+  "tiles": {
+   "origin": [
+    0,
+    0
+   ]
+  },
+  "walls": [
+   {
+    "id": "sheet-back",
+    "from": [
+     5200,
+     0
+    ],
+    "to": [
+     0,
+     0
+    ],
+    "openings": []
+   }
+  ],
+  "objects": [
+   {
+    "id": "sheet-hooks",
+    "asset": "coatHooks",
+    "at": [
+     900,
+     1500,
+     100
+    ],
+    "mount": "wall",
+    "params": {},
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-shoes",
+    "asset": "shoes",
+    "at": [
+     2200,
+     0,
+     900
+    ],
+    "mount": "floor",
+    "params": {
+     "pairs": 2,
+     "kind": "sneaker"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-boots",
+    "asset": "shoes",
+    "at": [
+     2900,
+     0,
+     900
+    ],
+    "mount": "floor",
+    "params": {
+     "pairs": 1,
+     "kind": "boot"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-pouf",
+    "asset": "pouf",
+    "at": [
+     3200,
+     0,
+     800
+    ],
+    "mount": "floor",
+    "params": {},
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-pouf2",
+    "asset": "pouf",
+    "at": [
+     4200,
+     0,
+     800
+    ],
+    "mount": "floor",
+    "params": {
+     "r": 220,
+     "h": 300
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   }
+  ]
+ },
+ "areas": [
+  {
+   "id": "sheet",
+   "name": "Sheet",
+   "O": [
+    0,
+    0
+   ],
+   "psi": 0,
+   "bounds": {
+    "x0": 0,
+    "x1": 5200,
+    "z0": 0,
+    "z1": 1800,
+    "top": 2000
+   },
+   "camera": {
+    "home": {
+     "target": [
+      2300,
+      60,
+      900
+     ],
+     "az": 35,
+     "el": 30,
+     "fit": "none",
+     "dist": 800
+    },
+    "shots": []
+   }
+  }
+ ]
+}

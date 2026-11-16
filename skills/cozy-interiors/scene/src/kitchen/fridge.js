@@ -17,7 +17,7 @@ export function fridge(kit) {
 
   // Tall vertical bar handles near the seam, 30 mm proud, two posts each.
   const handle = (x) => {
-    const r = 9, y0 = 800, y1 = 1700;
+    const r = 9, y0 = 650, y1 = 1500;   // a tall door's handle is centred near 1000 to 1100 mm, within easy reach
     g.add(kit.cyl(x, y0, 30 - r, r, y1 - y0));
     [y0 + 40, y1 - 40].forEach(y => g.add(kit.cyl(x, y, 30 - r, 6, 22, { axis: 'z' })));
   };

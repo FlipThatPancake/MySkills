@@ -9,7 +9,7 @@ import { LineMaterial } from './vendor/three/LineMaterial.js';
 import { LineSegmentsGeometry } from './vendor/three/LineSegmentsGeometry.js';
 
 // The look is anatomy's light theme: paper-white fills and thin grey lines.
-const TONES = { mid: 0x8a8a8f, lo: 0xb4b4b8 };
+const TONES = { mid: 0x8a8a8f, lo: 0xb4b4b8, green: 0x5f7f5b };
 const WIDTH = 0.6;
 const FAINT = { color: 0xc4c4c6, width: 0.4 };   // the faintest line: marks that should only show when you look closely (cat scratches)
 const BACKDROP = 0xf4f4f1;   // what the wall and floor melt into: the plain wall tone, never darker
@@ -34,15 +34,21 @@ function smoothNormals(g, maxDeg = 50) {
 
 export function createKit() {
   const uniforms = { uOpacity: { value: 1 } };
+  // View fade: everything (fills, lines, silhouettes) thins into the backdrop colour with distance from a centre, between radii r0 and r1 (set with setViewFade).
+  // The default radii are huge, so a scene that never sets them is untouched. The uniform objects are shared by every material, clones included.
+  const viewFade = { uVC: { value: new THREE.Vector3() }, uVR: { value: new THREE.Vector2(1e9, 2e9) }, uVH: { value: new THREE.Vector3() } };   // uVH: half-size of a box round uVC that stays clear (zero: a sphere)
+  const BACK = [BACKDROP >> 16, (BACKDROP >> 8) & 255, BACKDROP & 255].map((c) => (c / 255).toFixed(4)).join(',');   // the fills' own (display) values, so a faded thing becomes exactly the page's tone, never a darker grey
+  const VF_PARS = 'uniform vec3 uVC; uniform vec2 uVR; uniform vec3 uVH;';
+  const VF_MIX = (col, w) => `${col} = mix(${col}, vec3(${BACK}), smoothstep(uVR.x, uVR.y, length(max(abs(${w} - uVC) - uVH, 0.0))));`;
   // The fill. `fade` makes a copy for the wall and floor that thins out with distance from a
   // centre (set with setFade), so the far ends of those big planes never show.
   const makeFill = (fade, tint = [1, 1, 1]) => new THREE.ShaderMaterial({
-    uniforms: fade ? { uOpacity: uniforms.uOpacity, uTint: { value: new THREE.Vector3(...tint) }, uC: { value: new THREE.Vector3() }, uH: { value: new THREE.Vector3(1e9, 1e9, 1e9) }, uR: { value: new THREE.Vector2(1e9, 2e9) } } : { uOpacity: uniforms.uOpacity, uTint: { value: new THREE.Vector3(...tint) } },
+    uniforms: fade ? { uOpacity: uniforms.uOpacity, uTint: { value: new THREE.Vector3(...tint) }, uC: { value: new THREE.Vector3() }, uH: { value: new THREE.Vector3(1e9, 1e9, 1e9) }, uR: { value: new THREE.Vector2(1e9, 2e9) } } : { uOpacity: uniforms.uOpacity, uTint: { value: new THREE.Vector3(...tint) }, ...viewFade },
     transparent: !!fade,
     // no polygon offset: it grows with the slope of a face, so at a distance it pushed fills back far enough for hidden edges to leak through (the seams near the sink)
     vertexShader: `varying vec3 vN; varying vec3 vW;
       void main() { vN = normalize(mat3(modelMatrix) * normal); vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`,
-    fragmentShader: `uniform float uOpacity; uniform vec3 uTint; ${fade ? 'uniform vec3 uC; uniform vec3 uH; uniform vec2 uR;' : ''} varying vec3 vN; varying vec3 vW;
+    fragmentShader: `uniform float uOpacity; uniform vec3 uTint; ${fade ? 'uniform vec3 uC; uniform vec3 uH; uniform vec2 uR;' : VF_PARS} varying vec3 vN; varying vec3 vW;
       void main() {
         vec3 n = normalize(vN);
         // top #ffffff, front #f4f4f1, left #ededea, right #e5e5e2, underside #dcdcd9
@@ -50,7 +56,7 @@ export function createKit() {
         vec3 w = vec3(max(n.x, 0.0), max(n.y, 0.0), max(n.z, 0.0)), v = vec3(max(-n.x, 0.0), max(-n.y, 0.0), max(-n.z, 0.0));
         vec3 col = (right * w.x + top * w.y + front * w.z + left * v.x + under * v.y + front * v.z) / (w.x + w.y + w.z + v.x + v.y + v.z);
         col *= uTint;
-        ${fade ? 'col = front;' : ''}   // wall and floor are one flat tone, the backdrop's
+        ${fade ? 'col = front;' : VF_MIX('col', 'vW')}   // wall and floor are one flat tone, the backdrop's
         float a = uOpacity;
         ${fade ? 'a *= 1.0 - smoothstep(uR.x, uR.y, length(max(abs(vW - uC) - uH, 0.0)));' : ''}
         gl_FragColor = vec4(col, a);
@@ -59,27 +65,40 @@ export function createKit() {
   const fill = makeFill(false), fadeFill = makeFill(true);
   // The plant is the one coloured thing: soft sage fill (#8fae8b at the light face) with a darker green line.
   const leafFill = makeFill(false, [0.62, 0.74, 0.60]);
+  const linenFill = makeFill(false, [0.93, 0.915, 0.87]);   // a runner or a throw in faint linen
+  const greyFill = makeFill(false, [0.86, 0.86, 0.86]);   // a jacket or a jumper in soft grey, one shade darker than the paper
+  const soilFill = makeFill(false, [0.72, 0.71, 0.69]);   // soil in a pot, an insole: a warm mid grey
   // Lines win ties with fills by a tiny pull toward the camera in clip space (about 0.1 px of depth at the wide view, never more than a fraction of a mm up close), so an edge 2 mm behind a fill stays hidden at every distance.
-  const biased = (m) => { m.onBeforeCompile = (sh) => { sh.vertexShader = sh.vertexShader.replace('gl_Position = clip;', 'clip.z -= clip.w * 2.0e-6; gl_Position = clip;'); }; return m; };
+  const biased = (m) => {
+    m.onBeforeCompile = (sh) => {
+      Object.assign(sh.uniforms, viewFade);
+      sh.vertexShader = sh.vertexShader.replace('gl_Position = clip;', 'clip.z -= clip.w * 2.0e-6; gl_Position = clip;')
+        .replace('void main() {', 'varying vec3 vVW;\nvoid main() { vVW = (modelMatrix * vec4(position.y < 0.5 ? instanceStart : instanceEnd, 1.0)).xyz;');
+      sh.fragmentShader = sh.fragmentShader.replace('void main() {', `${VF_PARS}\nvarying vec3 vVW;\nvoid main() {`)
+        .replace('gl_FragColor = vec4( diffuseColor.rgb, alpha );', `vec3 lc = diffuseColor.rgb; ${VF_MIX('lc', 'vVW')} gl_FragColor = vec4( lc, alpha );`);
+    };
+    return m;
+  };
   const lineGreen = biased(new LineMaterial({ color: 0x5f7f5b, linewidth: WIDTH, depthTest: true }));
   const lineMid = biased(new LineMaterial({ color: TONES.mid, linewidth: WIDTH, depthTest: true }));
   const lineLo = biased(new LineMaterial({ color: TONES.lo, linewidth: WIDTH, depthTest: true }));
   const lineFaint = biased(new LineMaterial({ color: FAINT.color, linewidth: FAINT.width, depthTest: true }));
   const line = lineMid;
   // Silhouette of a smooth shape: its back faces pushed out one pixel, drawn in the line colour.
-  const hullU = { uPx: { value: WIDTH }, uRes: { value: new THREE.Vector2(1, 1) }, uOpacity: uniforms.uOpacity };
+  const hullU = { uPx: { value: WIDTH }, uRes: { value: new THREE.Vector2(1, 1) }, uOpacity: uniforms.uOpacity, ...viewFade };
   const makeHull = (tone) => new THREE.ShaderMaterial({
     uniforms: hullU, side: THREE.BackSide,
-    vertexShader: `uniform float uPx; uniform vec2 uRes;
+    vertexShader: `uniform float uPx; uniform vec2 uRes; varying vec3 vW;
       void main() {
+        vW = (modelMatrix * vec4(position, 1.0)).xyz;
         vec4 p = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
         vec2 d = (projectionMatrix * vec4(normalize(normalMatrix * normal), 0.0)).xy;
         p.xy += normalize(d + 1e-6) * uPx * 2.0 / uRes * p.w;
         gl_Position = p;
       }`,
-    fragmentShader: `uniform float uOpacity; void main() { gl_FragColor = vec4(${new THREE.Color(TONES[tone]).toArray().map(c => c.toFixed(3)).join(',')}, uOpacity); }`
+    fragmentShader: `uniform float uOpacity; ${VF_PARS} varying vec3 vW; void main() { vec3 c = vec3(${new THREE.Color(TONES[tone]).toArray().map(c => c.toFixed(3)).join(',')}); ${VF_MIX('c', 'vW')} gl_FragColor = vec4(c, uOpacity); }`
   });
-  const hull = makeHull('mid'), hullLo = makeHull('lo');
+  const hull = makeHull('mid'), hullLo = makeHull('lo'), hullGreen = makeHull('green');
   const seamLine = biased(new LineMaterial({ color: 0xffffff, linewidth: WIDTH, vertexColors: true, depthTest: true }));
   let backdropMat = null;
   const backU = { value: 1 };            // the backdrop follows the fade, not the dimming
@@ -99,24 +118,29 @@ export function createKit() {
     return d[0] < 200 || d[1] < 40 || (d[2] <= 20 && d[1] >= 150) ? 'lo' : 'mid';
   };
   const kit = {
-    THREE, fill, fadeFill, line, hulls: [hull, hullLo], depth,
+    THREE, fill, fadeFill, line, hulls: [hull, hullLo, hullGreen], depth,
     // 0..1: how visible the side wall's things (window, its seam and shadow) are; view3d lowers it while the camera is outside that wall.
     sideVis: { value: 1 },
     // Own copies of the fill and line materials, so a group can fade on its own: kit.useFade(group, fa) swaps them in, fa.set(a) fades it.
     fadable() {
-      const fa = { fill: fill.clone(), mid: biased(lineMid.clone()), lo: biased(lineLo.clone()), seam: biased(seamLine.clone()),
+      const hc = (h) => { const m = h.clone(); Object.assign(m.uniforms, hullU, { uOpacity: { value: 1 } }); return m; };   // own opacity; resolution and view fade stay shared
+      const fa = { hull: hc(hull), hullLo: hc(hullLo), fill: fill.clone(), mid: biased(lineMid.clone()), lo: biased(lineLo.clone()), seam: biased(seamLine.clone()),
         twins: [],
         // The group's depth twins follow it: gone when it is invisible, there while it fades (else hidden parts of the group would show through).
-        set(a) { fa.twins.forEach((t) => { t.visible = a > 0.001 && (t.visible || a < 0.999); }); fa.fill.uniforms.uOpacity.value = a; fa.mid.opacity = fa.lo.opacity = fa.seam.opacity = a; fa.fill.transparent = fa.mid.transparent = fa.lo.transparent = fa.seam.transparent = a < 0.999; } };
+        set(a) { fa.twins.forEach((t) => { t.visible = a > 0.001 && (t.visible || a < 0.999); }); fa.hull.uniforms.uOpacity.value = fa.hullLo.uniforms.uOpacity.value = a; fa.hull.transparent = fa.hullLo.transparent = a < 0.999; fa.fill.uniforms.uOpacity.value = a; fa.mid.opacity = fa.lo.opacity = fa.seam.opacity = a; fa.fill.transparent = fa.mid.transparent = fa.lo.transparent = fa.seam.transparent = a < 0.999; } };
+      Object.assign(fa.fill.uniforms, viewFade);   // clone() copied the values; share the view fade again
       fadables.push(fa);
       return fa;
     },
     useFade(group, fa) {
       group.traverse((o) => {
         if (o.isMesh && o.material === fill) { o.material = fa.fill; o.children.forEach((c) => { if (c.material === depth) fa.twins.push(c); }); }
+        else if (o.isMesh && (o.material === hull || o.material === hullLo)) o.material = o.material === hull ? fa.hull : fa.hullLo;
         else if (o.isLineSegments2) o.material = o.material === lineMid ? fa.mid : o.material === lineLo ? fa.lo : o.material === seamLine ? fa.seam : o.material;
       });
     },
+    // Everything thins into the backdrop colour between radii r0 and r1 (world units) round `centre`; a scene calls it each frame to keep a soft-edged cutout round the orbit target.
+    setViewFade(centre, r0, r1, half = null) { viewFade.uVC.value.copy(centre); viewFade.uVR.value.set(r0, r1); viewFade.uVH.value.copy(half || new THREE.Vector3()); },
     // Wall and floor thin out between r0 and r1 (world units) beyond the box that is `half` wide around `centre`.
     setFade(centre, half, r0, r1) { fadeFill.uniforms.uC.value.copy(centre); fadeFill.uniforms.uH.value.copy(half); fadeFill.uniforms.uR.value.set(r0, r1); },
     // The window size in CSS pixels; call it on every resize so lines stay 1 px.
@@ -128,7 +152,7 @@ export function createKit() {
       const f = o * dim, t = f < 0.999;
       uniforms.uOpacity.value = f; backU.value = o; lineMid.opacity = lineLo.opacity = lineFaint.opacity = seamLine.opacity = lineGreen.opacity = f;
       paints.forEach(m => { m.transparent = t; });
-      leafFill.transparent = lineGreen.transparent = fill.transparent = hull.transparent = hullLo.transparent = lineMid.transparent = lineLo.transparent = lineFaint.transparent = seamLine.transparent = t;
+      greyFill.transparent = linenFill.transparent = soilFill.transparent = leafFill.transparent = lineGreen.transparent = fill.transparent = hull.transparent = hullLo.transparent = hullGreen.transparent = lineMid.transparent = lineLo.transparent = lineFaint.transparent = seamLine.transparent = t;
       fadeFill.transparent = true;
       if (backdropMat) backdropMat.transparent = o < 0.999;
       depthMeshes.forEach(m => { m.visible = t; });
@@ -139,7 +163,7 @@ export function createKit() {
     track(group) {
       roots.push(group);
       const twins = [];
-      group.traverse((o) => { if (o.isMesh && (o.material === fill || o.material === leafFill || paints.includes(o.material))) twins.push(o); });
+      group.traverse((o) => { if (o.isMesh && (o.material === fill || o.material === leafFill || o.material === soilFill || o.material === linenFill || o.material === greyFill || paints.includes(o.material))) twins.push(o); });
       twins.forEach((o) => { const t = new THREE.Mesh(o.geometry, depth); t.renderOrder = -10; o.add(t); depthMeshes.push(t); });
       return group;
     },
@@ -151,13 +175,13 @@ export function createKit() {
       if (!opts.tone) opts = { ...opts, tone: autoTone(mesh.geometry) };
       const edges = new THREE.EdgesGeometry(mesh.geometry, opts.crease ?? CREASE);
       if (edges.attributes.position.count) {
-        const l = new LineSegments2(new LineSegmentsGeometry().fromEdgesGeometry(edges), opts.tone === 'lo' ? lineLo : lineMid);
+        const l = new LineSegments2(new LineSegmentsGeometry().fromEdgesGeometry(edges), opts.leaf ? lineGreen : opts.tone === 'lo' ? lineLo : lineMid);
         l.userData.kitLine = true;
         mesh.add(l);
       }
       edges.dispose();
       if (opts.smooth) {
-        const h = new THREE.Mesh(mesh.geometry, opts.tone === 'lo' ? hullLo : hull);
+        const h = new THREE.Mesh(mesh.geometry, opts.leaf ? hullGreen : opts.tone === 'lo' ? hullLo : hull);
         h.userData.kitLine = true;
         mesh.add(h);
       }
@@ -165,7 +189,7 @@ export function createKit() {
     },
     // Fill a geometry and outline it, at (x, y, z) — the position of the geometry's own origin.
     solid(geometry, x = 0, y = 0, z = 0, opts = {}) {
-      const m = new THREE.Mesh(geometry, fill);
+      const m = new THREE.Mesh(geometry, opts.leaf ? leafFill : opts.soil ? soilFill : opts.linen ? linenFill : opts.grey ? greyFill : fill);   // soil: true draws earth in warm grey-brown; leaf: true draws foliage in the sage fill with a green outline
       m.position.set(x, y, z);
       return kit.outline(m, opts);
     },
@@ -199,17 +223,18 @@ export function createKit() {
       const tex = new THREE.CanvasTexture(canvas);
       tex.colorSpace = THREE.SRGBColorSpace;
       const m = new THREE.ShaderMaterial({
-        uniforms: { uOpacity: uniforms.uOpacity, uMap: { value: tex } },
+        uniforms: { uOpacity: uniforms.uOpacity, uMap: { value: tex }, ...viewFade },
         side: double ? THREE.DoubleSide : THREE.FrontSide,
-        vertexShader: `varying vec3 vN; varying vec2 vUv;
-          void main() { vN = normalize(mat3(modelMatrix) * normal); vUv = uv; gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(position, 1.0); }`,
-        fragmentShader: `uniform float uOpacity; uniform sampler2D uMap; varying vec3 vN; varying vec2 vUv;
+        vertexShader: `varying vec3 vN; varying vec2 vUv; varying vec3 vW;
+          void main() { vN = normalize(mat3(modelMatrix) * normal); vUv = uv; vW = (modelMatrix * vec4(position, 1.0)).xyz; gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(position, 1.0); }`,
+        fragmentShader: `uniform float uOpacity; uniform sampler2D uMap; ${VF_PARS} varying vec3 vN; varying vec2 vUv; varying vec3 vW;
           void main() {
             vec3 n = normalize(vN);
             vec3 top = vec3(1.0), front = vec3(0.957, 0.957, 0.945), left = vec3(0.929, 0.929, 0.918), right = vec3(0.898, 0.898, 0.886), under = vec3(0.863, 0.863, 0.851);
             vec3 w = vec3(max(n.x, 0.0), max(n.y, 0.0), max(n.z, 0.0)), v = vec3(max(-n.x, 0.0), max(-n.y, 0.0), max(-n.z, 0.0));
             vec3 col = (right * w.x + top * w.y + front * w.z + left * v.x + under * v.y + front * v.z) / (w.x + w.y + w.z + v.x + v.y + v.z);
-            gl_FragColor = vec4(col * texture2D(uMap, vUv).rgb, uOpacity);
+            col *= texture2D(uMap, vUv).rgb; ${VF_MIX('col', 'vW')}
+            gl_FragColor = vec4(col, uOpacity);
           }`
       });
       paints.push(m);
@@ -242,7 +267,7 @@ export function createKit() {
     lines(points, tone = 'lo') {
       const g = new LineSegmentsGeometry();
       if (points.length) g.setPositions(points.flat());
-      const l = new LineSegments2(g, tone === 'mid' ? lineMid : tone === 'faint' ? lineFaint : lineLo);
+      const l = new LineSegments2(g, tone === 'mid' ? lineMid : tone === 'faint' ? lineFaint : tone === 'green' ? lineGreen : lineLo);
       l.userData.kitLine = true;
       return l;
     },
@@ -259,6 +284,14 @@ export function createKit() {
       return l;
     },
     loopMat,
+    // A set of pencil strokes whose colours change at run time: pos holds 6 numbers a segment; the caller writes rgb pairs into `colors`, then calls commit().
+    strokeSet(pos) {
+      const g = new LineSegmentsGeometry(), n = pos.length / 6;
+      g.setPositions(pos); g.setColors(new Float32Array(n * 6));
+      const l = new LineSegments2(g, seamLine); l.userData.kitLine = true; l.frustumCulled = false;
+      const rgb = (h) => { const c = new THREE.Color(h); return [c.r, c.g, c.b]; };
+      return { line: l, colors: g.attributes.instanceColorStart.data.array, commit() { g.attributes.instanceColorStart.data.needsUpdate = true; }, ink: rgb(TONES.lo), back: rgb(BACKDROP) };
+    },
     // A long line that melts into the backdrop: `tone(point)` is 0 (full line colour) .. 1 (backdrop).
     meltingLine(a, b, tone, parts = 240, toneName = 'mid') {
       const pos = [], col = [], c0 = new THREE.Color(TONES[toneName]), c1 = new THREE.Color(BACKDROP), c = new THREE.Color();
@@ -297,7 +330,7 @@ export function createKit() {
       if (kit.keepParts) return group;   // the scene checks need every part on its own (?check in the page address)
       group.updateMatrixWorld(true);
       const inv = group.matrixWorld.clone().invert();
-      const fills = [], hulls = [], hullsLo = [], segs = { mid: [], lo: [] };
+      const fills = [], soils = [], linens = [], greys = [], hulls = [], hullsLo = [], hullsG = [], leaves = [], segs = { mid: [], lo: [], green: [] };
       const bake = (geo, m, list) => {
         let g = geo.index ? geo.toNonIndexed() : geo.clone();
         g.applyMatrix4(m);
@@ -310,13 +343,18 @@ export function createKit() {
         if (o.isLineSegments2) {
           const a = o.geometry.attributes.instanceStart, b = o.geometry.attributes.instanceEnd, v = new THREE.Vector3();
           for (let i = 0; i < a.count; i++) {
-            const out = o.material === lineMid ? segs.mid : segs.lo;
+            const out = o.material === lineMid ? segs.mid : o.material === lineGreen ? segs.green : segs.lo;
             v.fromBufferAttribute(a, i).applyMatrix4(m); out.push(v.x, v.y, v.z);
             v.fromBufferAttribute(b, i).applyMatrix4(m); out.push(v.x, v.y, v.z);
           }
         } else if (o.isMesh && o.material === fill) bake(o.geometry, m, fills);
         else if (o.isMesh && o.material === hull) bake(o.geometry, m, hulls);
         else if (o.isMesh && o.material === hullLo) bake(o.geometry, m, hullsLo);
+        else if (o.isMesh && o.material === hullGreen) bake(o.geometry, m, hullsG);
+        else if (o.isMesh && o.material === leafFill && !o.userData.lines) bake(o.geometry, m, leaves);
+        else if (o.isMesh && o.material === soilFill) bake(o.geometry, m, soils);
+        else if (o.isMesh && o.material === linenFill) bake(o.geometry, m, linens);
+        else if (o.isMesh && o.material === greyFill) bake(o.geometry, m, greys);
       });
       const kids = [...group.children];
       kids.forEach(c => group.remove(c));
@@ -329,7 +367,12 @@ export function createKit() {
       if (fills.length) group.add(mesh(fills, fill));
       if (hulls.length) group.add(mesh(hulls, hull));
       if (hullsLo.length) group.add(mesh(hullsLo, hullLo));
-      ['mid', 'lo'].forEach((t) => { if (segs[t].length) { const l = kit.lines([], t); l.geometry.setPositions(segs[t]); group.add(l); } });
+      if (hullsG.length) group.add(mesh(hullsG, hullGreen));
+      if (leaves.length) group.add(mesh(leaves, leafFill));
+      if (soils.length) group.add(mesh(soils, soilFill));
+      if (linens.length) group.add(mesh(linens, linenFill));
+      if (greys.length) group.add(mesh(greys, greyFill));
+      ['mid', 'lo', 'green'].forEach((t) => { if (segs[t].length) { const l = kit.lines([], t); l.geometry.setPositions(segs[t]); group.add(l); } });
       return group;
     }
   };

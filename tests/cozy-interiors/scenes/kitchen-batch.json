@@ -1,0 +1,102 @@
+{
+ "units": "mm",
+ "seed": 3,
+ "home": {
+  "height": 2700,
+  "floor": {
+   "style": "plain",
+   "seed": 3
+  },
+  "tiles": {
+   "origin": [
+    0,
+    0
+   ]
+  },
+  "walls": [
+   {
+    "id": "sheet-back",
+    "from": [
+     4200,
+     0
+    ],
+    "to": [
+     0,
+     0
+    ],
+    "openings": []
+   }
+  ],
+  "objects": [
+   {
+    "id": "sheet-pr",
+    "asset": "potRail",
+    "at": [
+     1100,
+     1050,
+     100
+    ],
+    "mount": "wall",
+    "params": {
+     "w": 920,
+     "n": 4,
+     "seed": 40,
+     "mix": "tools"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-os",
+    "asset": "openShelf",
+    "at": [
+     2600,
+     1300,
+     100
+    ],
+    "mount": "wall",
+    "params": {
+     "w": 1140,
+     "plates": 7,
+     "mugs": 2,
+     "seed": 62,
+     "rack": "bowls"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   }
+  ]
+ },
+ "areas": [
+  {
+   "id": "sheet",
+   "name": "Sheet",
+   "O": [
+    0,
+    0
+   ],
+   "psi": 0,
+   "bounds": {
+    "x0": 0,
+    "x1": 4200,
+    "z0": 0,
+    "z1": 3200,
+    "top": 2200
+   },
+   "camera": {
+    "home": {
+     "target": [
+      1850,
+      1400,
+      200
+     ],
+     "az": 4,
+     "el": 4,
+     "fit": "none",
+     "dist": 3000
+    },
+    "shots": []
+   }
+  }
+ ]
+}

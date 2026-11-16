@@ -1,0 +1,209 @@
+{
+ "units": "mm",
+ "seed": 7,
+ "home": {
+  "height": 2700,
+  "floor": {
+   "style": "plain",
+   "seed": 7
+  },
+  "tiles": {
+   "origin": [
+    0,
+    0
+   ]
+  },
+  "walls": [
+   {
+    "id": "sheet-back",
+    "from": [
+     6000,
+     0
+    ],
+    "to": [
+     0,
+     0
+    ],
+    "openings": []
+   }
+  ],
+  "objects": [
+   {
+    "id": "sheet-v0",
+    "asset": "coffeeTable",
+    "at": [
+     750,
+     0,
+     1800
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 1080,
+     "d": 510,
+     "h": 410,
+     "shape": "tray"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-v1",
+    "asset": "coffeeTable",
+    "at": [
+     2250,
+     0,
+     1800
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 1180,
+     "d": 590,
+     "h": 370,
+     "shape": "block"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-v2",
+    "asset": "coffeeTable",
+    "at": [
+     3750,
+     0,
+     1800
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 1130,
+     "d": 540,
+     "h": 420,
+     "shape": "round"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-v3",
+    "asset": "coffeeTable",
+    "at": [
+     5250,
+     0,
+     1800
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 880,
+     "d": 660,
+     "h": 360,
+     "shape": "frame"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-v4",
+    "asset": "coffeeTable",
+    "at": [
+     750,
+     0,
+     500
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 1030,
+     "d": 610,
+     "h": 400,
+     "shape": "tray"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-v5",
+    "asset": "coffeeTable",
+    "at": [
+     2250,
+     0,
+     500
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 980,
+     "d": 690,
+     "h": 350,
+     "shape": "frame"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-v6",
+    "asset": "coffeeTable",
+    "at": [
+     3750,
+     0,
+     500
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 830,
+     "d": 560,
+     "h": 380,
+     "shape": "block"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-v7",
+    "asset": "coffeeTable",
+    "at": [
+     5250,
+     0,
+     500
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 930,
+     "d": 640,
+     "h": 430,
+     "shape": "round"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   }
+  ]
+ },
+ "areas": [
+  {
+   "id": "sheet",
+   "name": "Sheet",
+   "O": [
+    0,
+    0
+   ],
+   "psi": 0,
+   "bounds": {
+    "x0": 0,
+    "x1": 6000,
+    "z0": 0,
+    "z1": 3200,
+    "top": 500
+   },
+   "camera": {
+    "home": {
+     "target": [
+      3000,
+      171,
+      1105
+     ],
+     "az": 0,
+     "el": 22,
+     "fit": "none",
+     "dist": 6750
+    },
+    "shots": []
+   }
+  }
+ ]
+}

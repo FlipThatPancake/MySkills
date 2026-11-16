@@ -1,0 +1,271 @@
+{
+ "units": "mm",
+ "seed": 3,
+ "home": {
+  "height": 2700,
+  "floor": {
+   "style": "plain",
+   "seed": 3
+  },
+  "tiles": {
+   "origin": [
+    0,
+    0
+   ]
+  },
+  "walls": [
+   {
+    "id": "sheet-back",
+    "from": [
+     10200,
+     0
+    ],
+    "to": [
+     0,
+     0
+    ],
+    "openings": []
+   }
+  ],
+  "objects": [
+   {
+    "id": "sheet-cush",
+    "asset": "floorCushion",
+    "at": [
+     600,
+     0,
+     2700
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 770,
+     "thick": 146,
+     "tone": "lo",
+     "piping": "none"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-logs",
+    "asset": "logBasket",
+    "at": [
+     1600,
+     0,
+     2700
+    ],
+    "mount": "floor",
+    "params": {
+     "r": 240,
+     "h": 380,
+     "logs": 6,
+     "seed": 62
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-stove",
+    "asset": "woodStove",
+    "at": [
+     2600,
+     0,
+     2700
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 530,
+     "d": 390,
+     "h": 580,
+     "flueH": 1530
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-rec",
+    "asset": "recordPlayer",
+    "at": [
+     3700,
+     0,
+     2700
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 660,
+     "h": 520,
+     "records": 5,
+     "seed": 84
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-mag",
+    "asset": "magazineRack",
+    "at": [
+     4900,
+     0,
+     2700
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 350,
+     "h": 440,
+     "seed": 73
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-stand",
+    "asset": "plantStand",
+    "at": [
+     5800,
+     0,
+     2700
+    ],
+    "mount": "floor",
+    "params": {
+     "h": 580,
+     "r": 165,
+     "tiers": 2,
+     "plant": "sprig",
+     "seed": 40
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-stand2",
+    "asset": "plantStand",
+    "at": [
+     6700,
+     0,
+     2700
+    ],
+    "mount": "floor",
+    "params": {
+     "tiers": 2,
+     "plant": "sprig",
+     "h": 650,
+     "r": 175,
+     "seed": 62
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-sofaL",
+    "asset": "sofa",
+    "at": [
+     8800,
+     0,
+     2500
+    ],
+    "mount": "floor",
+    "params": {
+     "chaise": "left",
+     "seats": 3,
+     "d": 950,
+     "seatN": 1,
+     "legs": "turned",
+     "arms": "none",
+     "legH": 108,
+     "backH": 770,
+     "back": "tight",
+     "piping": "none",
+     "tone": "mid"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-gal",
+    "asset": "galleryWall",
+    "at": [
+     3000,
+     700,
+     100
+    ],
+    "mount": "wall",
+    "params": {
+     "seed": 4,
+     "w": 1420,
+     "h": 980,
+     "n": 8
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-gal2",
+    "asset": "galleryWall",
+    "at": [
+     6000,
+     700,
+     100
+    ],
+    "mount": "wall",
+    "params": {
+     "seed": 9,
+     "w": 1300,
+     "h": 1000,
+     "n": 5
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-scr",
+    "asset": "scratches",
+    "at": [
+     7747,
+     520,
+     2750
+    ],
+    "turn": 270,
+    "mount": "lines",
+    "params": {
+     "n": 6,
+     "len": 125,
+     "seed": 84
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   }
+  ]
+ },
+ "areas": [
+  {
+   "id": "sheet",
+   "name": "Sheet",
+   "O": [
+    0,
+    0
+   ],
+   "psi": 0,
+   "bounds": {
+    "x0": 0,
+    "x1": 10200,
+    "z0": 0,
+    "z1": 3600,
+    "top": 2200
+   },
+   "camera": {
+    "home": {
+     "target": [
+      5100,
+      500,
+      1500
+     ],
+     "az": 8,
+     "el": 18,
+     "fit": "none",
+     "dist": 13500
+    },
+    "shots": []
+   }
+  }
+ ]
+}

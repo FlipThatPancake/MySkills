@@ -2,23 +2,23 @@
 // and soft contact shadows, floor tiles, props and the window. Millimetres, origin at the left-front-floor corner of the
 // base run, room at -z; the oven (the live oven's 880 x 760 front picture, or the 3D model that replaces it when the camera leaves home) sits in the column's opening at OVEN.
 import { ovenColumn } from './ovenColumn.js';
-import { fridge } from './fridge.js';
+import { fridge } from '../../../../../skills/cozy-interiors/scene/src/kitchen/fridge.js';
 import { baseRun } from './baseRun.js';
-import { hob } from './hob.js';
-import { hood } from './hood.js';
+import { hob } from '../../../../../skills/cozy-interiors/scene/src/kitchen/hob.js';
+import { hood } from '../../../../../skills/cozy-interiors/scene/src/kitchen/hood.js';
 import { wallCabinets } from './wallCabinets.js';
 import { counterOven } from './counterOven.js';
-import { pan } from './pan.js';
-import { cuttingBoard } from './cuttingBoard.js';
-import { plant } from './plant.js';
+import { pan } from '../../../../../skills/cozy-interiors/scene/src/kitchen/pan.js';
+import { cuttingBoard } from '../../../../../skills/cozy-interiors/scene/src/kitchen/cuttingBoard.js';
+import { plant } from '../../../../../skills/cozy-interiors/scene/src/kitchen/plant.js';
 import { catScratches } from './catScratches.js';
-import { socket, lightSwitch } from './details.js';
+import { socket, lightSwitch } from '../../../../../skills/cozy-interiors/scene/src/kitchen/details.js';
 import SCENE from './scene.json';
 import { cat } from './cat.js';
-import { fruitBowl } from './fruitBowl.js';
+import { fruitBowl } from '../../../../../skills/cozy-interiors/scene/src/kitchen/fruitBowl.js';
 import { butterfly } from './butterfly.js';
 import { builtinOven } from './builtinOven.js';
-import { shadows, tiles, windowAndLight, pendantLamp, WIN } from './atmosphere.js';
+import { shadows, tiles, windowAndLight, pendantLamp, WIN } from '../../../../../skills/cozy-interiors/scene/src/kitchen/atmosphere.js';
 
 // Main run along the wall, left to right: corner unit 1000, sink unit 800, drawer unit 600, hob unit 900,
 // oven column 920, fridge 910; a 1500 mm return run comes forward from the left end.

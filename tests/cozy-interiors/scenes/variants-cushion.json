@@ -1,0 +1,241 @@
+{
+ "units": "mm",
+ "seed": 7,
+ "home": {
+  "height": 2700,
+  "floor": {
+   "style": "plain",
+   "seed": 7
+  },
+  "tiles": {
+   "origin": [
+    0,
+    0
+   ]
+  },
+  "walls": [
+   {
+    "id": "sheet-back",
+    "from": [
+     2600,
+     0
+    ],
+    "to": [
+     0,
+     0
+    ],
+    "openings": []
+   }
+  ],
+  "objects": [
+   {
+    "id": "sheet-v0",
+    "asset": "cushion",
+    "at": [
+     325,
+     0,
+     1200
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 470,
+     "h": 320,
+     "thick": 131,
+     "piping": "double",
+     "pattern": "inset",
+     "tone": "mid",
+     "skew": 0.28,
+     "crease": "soft"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-v1",
+    "asset": "cushion",
+    "at": [
+     975,
+     0,
+     1200
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 400,
+     "h": 410,
+     "thick": 148,
+     "piping": "none",
+     "pattern": "stripes",
+     "tone": "lo",
+     "skew": 0.13,
+     "crease": "none"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-v2",
+    "asset": "cushion",
+    "at": [
+     1625,
+     0,
+     1200
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 500,
+     "h": 350,
+     "thick": 104,
+     "piping": "edge",
+     "pattern": "diamond",
+     "tone": "lo",
+     "skew": 0.24,
+     "crease": "soft"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-v3",
+    "asset": "cushion",
+    "at": [
+     2275,
+     0,
+     1200
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 370,
+     "h": 540,
+     "thick": 122,
+     "piping": "double",
+     "pattern": "tufted",
+     "tone": "mid",
+     "skew": 0.21,
+     "crease": "none"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-v4",
+    "asset": "cushion",
+    "at": [
+     325,
+     0,
+     500
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 520,
+     "h": 450,
+     "thick": 166,
+     "piping": "none",
+     "pattern": "plain",
+     "tone": "mid",
+     "skew": 0.06,
+     "crease": "soft"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-v5",
+    "asset": "cushion",
+    "at": [
+     975,
+     0,
+     500
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 550,
+     "h": 380,
+     "thick": 139,
+     "piping": "edge",
+     "pattern": "plain",
+     "tone": "lo",
+     "skew": 0.09,
+     "crease": "none"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-v6",
+    "asset": "cushion",
+    "at": [
+     1625,
+     0,
+     500
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 450,
+     "h": 510,
+     "thick": 157,
+     "piping": "none",
+     "pattern": "stripes",
+     "tone": "mid",
+     "skew": 0.17,
+     "crease": "soft"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-v7",
+    "asset": "cushion",
+    "at": [
+     2275,
+     0,
+     500
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 420,
+     "h": 480,
+     "thick": 113,
+     "piping": "edge",
+     "pattern": "tufted",
+     "tone": "lo",
+     "skew": 0.02,
+     "crease": "none"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   }
+  ]
+ },
+ "areas": [
+  {
+   "id": "sheet",
+   "name": "Sheet",
+   "O": [
+    0,
+    0
+   ],
+   "psi": 0,
+   "bounds": {
+    "x0": 0,
+    "x1": 2600,
+    "z0": 0,
+    "z1": 2000,
+    "top": 504
+   },
+   "camera": {
+    "home": {
+     "target": [
+      1300,
+      189,
+      595
+     ],
+     "az": 0,
+     "el": 22,
+     "fit": "none",
+     "dist": 2925
+    },
+    "shots": []
+   }
+  }
+ ]
+}

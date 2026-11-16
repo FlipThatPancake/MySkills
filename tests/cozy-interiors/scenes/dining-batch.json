@@ -1,0 +1,248 @@
+{
+ "units": "mm",
+ "seed": 3,
+ "home": {
+  "height": 2700,
+  "floor": {
+   "style": "plain",
+   "seed": 3
+  },
+  "tiles": {
+   "origin": [
+    0,
+    0
+   ]
+  },
+  "walls": [
+   {
+    "id": "sheet-back",
+    "from": [
+     5200,
+     0
+    ],
+    "to": [
+     0,
+     0
+    ],
+    "openings": []
+   }
+  ],
+  "objects": [
+   {
+    "id": "sheet-cs",
+    "asset": "candlesticks",
+    "at": [
+     600,
+     0,
+     1400
+    ],
+    "mount": "on",
+    "params": {
+     "form": "turned",
+     "n": 2,
+     "h": 310,
+     "seed": 7
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-cs2",
+    "asset": "candlesticks",
+    "at": [
+     1300,
+     0,
+     1400
+    ],
+    "mount": "on",
+    "params": {
+     "form": "stem",
+     "n": 3,
+     "seed": 9,
+     "h": 280
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-cs3",
+    "asset": "candlesticks",
+    "at": [
+     2000,
+     0,
+     1400
+    ],
+    "mount": "on",
+    "params": {
+     "form": "tapered",
+     "n": 3,
+     "h": 230,
+     "seed": 73
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-jg",
+    "asset": "jug",
+    "at": [
+     2700,
+     0,
+     1400
+    ],
+    "mount": "on",
+    "params": {
+     "r": 88,
+     "h": 260,
+     "form": "tapered",
+     "band": "plain",
+     "handle": "loop"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-jg2",
+    "asset": "jug",
+    "at": [
+     3100,
+     0,
+     1400
+    ],
+    "mount": "on",
+    "params": {
+     "form": "straight",
+     "band": "banded",
+     "handle": "none",
+     "r": 83,
+     "h": 210
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-bk",
+    "asset": "breadBasket",
+    "at": [
+     3700,
+     0,
+     1400
+    ],
+    "mount": "on",
+    "params": {
+     "bread": "loaf",
+     "r": 159,
+     "seed": 29,
+     "cloth": "yes",
+     "rim": "rolled"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-bk2",
+    "asset": "breadBasket",
+    "at": [
+     4200,
+     0,
+     1400
+    ],
+    "mount": "on",
+    "params": {
+     "bread": "baguette",
+     "r": 133,
+     "seed": 7,
+     "cloth": "no",
+     "rim": "plain"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-ps",
+    "asset": "placeSetting",
+    "at": [
+     900,
+     0,
+     2500
+    ],
+    "mount": "on",
+    "params": {
+     "glass": "yes",
+     "napkin": "yes",
+     "r": 143
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-ps2",
+    "asset": "placeSetting",
+    "at": [
+     2200,
+     0,
+     2500
+    ],
+    "mount": "on",
+    "params": {
+     "glass": "no",
+     "napkin": "no",
+     "r": 120
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-bc",
+    "asset": "benchCushion",
+    "at": [
+     3800,
+     0,
+     2500
+    ],
+    "mount": "on",
+    "params": {
+     "stripes": "check",
+     "w": 890,
+     "d": 320,
+     "thick": 56,
+     "tone": "mid"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   }
+  ]
+ },
+ "areas": [
+  {
+   "id": "sheet",
+   "name": "Sheet",
+   "O": [
+    0,
+    0
+   ],
+   "psi": 0,
+   "bounds": {
+    "x0": 0,
+    "x1": 5200,
+    "z0": 0,
+    "z1": 3600,
+    "top": 2400
+   },
+   "camera": {
+    "home": {
+     "target": [
+      2300,
+      150,
+      2000
+     ],
+     "az": 4,
+     "el": 26,
+     "fit": "none",
+     "dist": 4600
+    },
+    "shots": []
+   }
+  }
+ ]
+}

@@ -1,0 +1,49 @@
+{
+  "units": "mm",
+  "seed": 1,
+  "plan": {
+    "height": 2500, "thickness": 120,
+    "rooms": [
+      { "name": "kitchen", "outline": [[0, -3200], [4400, -3200], [4400, 400], [0, 400]] },
+      { "name": "living",  "outline": [[4400, -3200], [8800, -3200], [8800, 400], [4400, 400]] }
+    ],
+    "openings": [
+      { "at": [1900, -3200], "width": 1400, "kind": "window", "sill": 950, "height": 1200 },
+      { "at": [2800, 400],   "width": 900,  "kind": "door" },
+      { "at": [4400, -1000], "width": 900,  "kind": "door" },
+      { "at": [6600, -3200], "width": 1800, "kind": "window", "sill": 600, "height": 1600 },
+      { "at": [8800, -1200], "width": 1200, "kind": "window", "sill": 800, "height": 1300 },
+      { "at": [6600, 400],   "width": 900,  "kind": "door" }
+    ]
+  },
+  "camera": {
+    "home": { "target": [4400, 500, -1400], "az": 25, "el": 42 },
+    "after": 12, "cutsAfter": 12, "cutEvery": 4,
+    "shots": [
+      { "name": "down the worktop", "from": [3700, 1250, -2150], "look": [600, 1000, -2900], "fov": 34 },
+      { "name": "sink and window", "from": [1900, 1450, -300], "look": [1900, 1250, -3200], "fov": 28 },
+      { "name": "kitchen corner", "from": [2400, 1500, -200], "look": [300, 900, -2500], "fov": 30 },
+      { "name": "through the door", "from": [8300, 1550, -2800], "look": [3600, 1150, -1100], "fov": 36 }
+    ]
+  },
+  "objects": [
+    { "id": "run-a", "asset": "baseRun", "at": [0, 0, -2600], "mount": "floor",
+      "params": { "length": 4400, "joins": { "side": "start", "length": 2200 },
+        "modules": [{ "w": 900, "kind": "blind", "dead": "l" }, { "w": 600, "kind": "drawers" }, { "w": 800, "kind": "sink" }, { "w": 600, "kind": "doors" }, { "w": 900, "kind": "hob" }] } },
+    { "id": "run-b", "asset": "baseRun", "at": [600, 0, -400], "turn": 90, "mount": "floor",
+      "params": { "ownsTop": false, "modules": [{ "w": 800, "kind": "doors" }, { "w": 300, "kind": "door" }, { "w": 600, "kind": "drawers", "n": 2 }, { "w": 500, "kind": "filler" }] } },
+    { "id": "wall-left",  "asset": "wallRun", "at": [0, 0, -2880],    "mount": "wall", "params": { "length": 1100 } },
+    { "id": "wall-right", "asset": "wallRun", "at": [3800, 0, -2880], "mount": "wall", "params": { "length": 600 } },
+    { "id": "hob",   "asset": "hob",  "at": [2900, 0, -2600], "mount": "on", "inset": 8 },
+    { "id": "hood",  "asset": "hood", "at": [2900, 0, -2600], "mount": "wall" },
+    { "id": "fridge", "asset": "fridge", "at": [730, 0, 510], "turn": 90, "mount": "floor" },
+    { "id": "plant",  "asset": "plant",  "at": [1050, 900, -2900], "mount": "on" },
+    { "id": "fruit-bowl", "asset": "fruitBowl", "at": [2550, 900, -2850], "mount": "on" },
+    { "id": "cutting-board", "asset": "cuttingBoard", "at": [3750, 904, -2900], "mount": "on" },
+    { "id": "pan", "asset": "pan", "at": [3125, 940, -2800], "turn": -40, "mount": "on" },
+    { "id": "socket", "asset": "socket", "at": [2700, 1100, -3200], "mount": "wall", "detail": true },
+    { "id": "light-switch", "asset": "lightSwitch", "at": [4280, 1150, -3200], "mount": "wall", "detail": true },
+    { "id": "kitchen-lamp", "asset": "pendantLamp", "at": [2200, 0, -1200], "mount": "ceiling" },
+    { "id": "living-plant", "asset": "plant", "at": [7900, 0, -2600], "mount": "floor" }
+  ]
+}
