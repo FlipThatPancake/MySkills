@@ -127,6 +127,7 @@
     ],
     "mount": "floor",
     "params": {
+     "depth": 600,
      "modules": [
       {
        "w": 600,

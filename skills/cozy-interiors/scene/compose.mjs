@@ -130,7 +130,7 @@ class Area {
     const { group = 'run', depth = 600, hero, ...params } = o, mods = []; let x = left;
     for (const m of modules) { mods.push({ ...m, xc: x + m.w / 2 }); x += m.w; }
     const length = x - left;
-    F.put(id, 'baseRun', left, depth, { group, hero, params: { ...params, modules } });
+    F.put(id, 'baseRun', left, depth, { group, hero, params: { ...params, depth, modules } });
     let n = 0;
     return {
       length, left, depth, mods, F,

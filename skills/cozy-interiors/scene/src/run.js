@@ -54,7 +54,7 @@ export function createScene(canvas, S) {
   // Idle tour.
   const quick = Number(q.get('cuts')) || 0, cam = S.camera || {};
   const homeView = { pos: camera.position.clone(), target: controls.target.clone() };
-  const tour = createTour({ THREE, camera, controls, room: root, home: homeView, cfg: { after: cam.after, cutsAfter: cam.cutsAfter, cutEvery: cam.cutEvery, shots: cam.shots, ...(quick ? { after: quick, cutsAfter: quick } : {}) } });
+  const tour = createTour({ THREE, camera, controls, room: root, home: homeView, cfg: { ...Object.fromEntries(['after', 'cutsAfter', 'cutEvery'].filter((k) => cam[k] != null).map((k) => [k, cam[k]])), shots: cam.shots, ...(quick ? { after: quick, cutsAfter: quick } : {}) } });
   let lastInput = performance.now();
   for (const ev of ['pointerdown', 'pointermove', 'wheel', 'keydown', 'touchstart']) addEventListener(ev, () => { lastInput = performance.now(); }, { capture: true, passive: true });
 
