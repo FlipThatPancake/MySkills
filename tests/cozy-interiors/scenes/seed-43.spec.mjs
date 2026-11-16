@@ -44,13 +44,13 @@ const H = new Home({ seed: 43, floor: 'plain' });
   back.place('dresser-plant', 'plant', 5450, { y: a.topOf('dresser'), mount: 'on', group: 'dresser', off: 150, params: { form: 1 } });
   a.put('island', 'baseRun', [4600, 2500], 180, { group: 'island', params: { finishedBack: true, backOverhang: 300, modules: [{ w: 600, kind: 'doors' }, { w: 600, kind: 'drawers', n: 3 }, { w: 900, kind: 'doors' }] } });
   a.put('table-runner', 'tableRunner', [3550, 2550], 0, { y: 900, mount: 'on', group: 'island', params: { w: 2100, d: 900, rw: 380, drop: 230 } });
-  for (const [i, x] of [3000, 3900].entries()) a.put(`stool-${i + 1}`, 'stool', [x, 3750], 0, { group: 'island', params: { form: i } });
+  for (const [i, x] of [3000, 3900].entries()) a.put(`stool-${i + 1}`, 'stool', [x, 3750], 0, { group: 'island', params: { form: 0 } });
   a.put('floor-runner', 'runner', [3000, 1500], 90, { group: 'cooking', params: { form: 'stripe', w: 700, l: 2400, fringe: 'no' } });
   a.put('crate', 'crate', [500, 1500], 10, { group: 'larder' });
   a.put('leaf', 'leaf', [5200, 750], 0, { group: 'dresser', mount: 'lines', params: { turn: 0.7 } });
   a.put('scuff', 'scuff', [3200, 1800], 0, { group: 'larder', mount: 'lines' });
   a.view({ target: [3000, 900, 1700], az: 10, el: 14 });
-  a.shot('stove', [3500, 1100, 4800], [3457, 900, 299], 38, 'stove');
+  a.shot('stove', [3200, 1100, 4800], [4415, 1100, 427], 36, 'stove');
   a.shot('island', [500, 1700, 6900], [3078, 700, 2774], 34, 'island');
 }
 { // ---------- living
@@ -65,19 +65,19 @@ const H = new Home({ seed: 43, floor: 'plain' });
   a.put('glasses', 'glassesBook', [2950, 2150], 20, { y: a.topOf('side-table'), mount: 'on', group: 'seating' });
   a.put('vase', 'vase', [2800, 2200], 0, { y: a.topOf('side-table'), mount: 'on', group: 'seating' });
   a.put('cushion', 'cushion', [1900, 2350], 25, { y: 470, mount: 'on', group: 'seating', params: { w: 400, h: 360, lean: 20 } });
-  a.drapeOver('cloth', 'armchair-r', { group: 'seating', w: 760, d: 1000, dz: 40, spin: -25, tone: 'mid' });
+  a.drapeOver('cloth', 'armchair-r', { group: 'seating', w: 1000, d: 1100, dz: 60, spin: -25, tone: 'mid', wave: 0 });
   a.put('shoes', 'shoes', [1000, 3150], 150, { group: 'edge', params: { pairs: 1, kind: 'sneaker' } });
   a.put('floor-plant-2', 'floorPlant', [900, 2150], 0, { group: 'edge' });
   a.put('lamp', 'floorLamp', [450, 1100], 0, { group: 'edge' });
   a.put('side-2', 'sideTable', [4950, 2300], 0, { y: 7, lift: 7, group: 'edge', params: { top: 'round', drawer: 'none' } });
   a.put('books', 'bookStack', [4900, 2300], 0, { y: a.topOf('side-2'), mount: 'on', group: 'edge' });
   a.put('side-plant', 'plant', [5030, 2260], 0, { y: a.topOf('side-2'), mount: 'on', group: 'edge', params: { form: 3 } });
-  a.put('floor-plant', 'floorPlant', [4950, 3100], 0, { group: 'edge' });
+  a.put('floor-plant', 'floorPlant', [4950, 700], 0, { group: 'edge' });
   back.place('record-player', 'recordPlayer', 3500, { group: 'music wall', params: { w: 760, records: 8, lid: 'half' } });
   back.place('gallery', 'galleryWall', 3500, { y: 1000, group: 'music wall', shadow: false, params: { w: 1200, h: 1000, n: 5 } });
   right.place('mirror', 'mirror', 800, { y: 800, group: 'room edge', shadow: false, params: { w: 600, h: 1200, shape: 'pill' } });
   a.view({ target: [2800, 800, 1700], az: 12, el: 12 });
-  a.shot('armchairs', [5600, 1100, 6000], [3480, 1100, 1884], 40, 'seating');
+  a.shot('armchairs', [6500, 1100, 5100], [3229, 700, 1901], 36, 'seating');
 }
 H.write(new URL('./seed-43.json', import.meta.url).pathname, fs);
 console.log('wrote seed-43.json');

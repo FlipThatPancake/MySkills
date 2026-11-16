@@ -163,6 +163,18 @@ const issues = await page.evaluate(() => {
   { const SEAT = ['stool', 'pouf', 'footstool', 'sideTable', 'stepStool', 'floorPlant'], BIG = (i) => sc(i).mount === 'floor' && !['rug', 'plant', 'floorPlant', 'cat', 'basket', 'pouf', 'stool', 'trolley', 'footstool', 'curtain', 'sideTable'].includes(sc(i).asset);
     for (const id of Object.keys(objs).filter((i) => SEAT.includes(sc(i).asset))) { const others = Object.keys(objs).filter((o) => o !== id && (BIG(o) || (sc(id).asset === 'floorPlant' && sc(o).asset === 'rug'))); const framing = sc(id).asset === 'floorPlant' && home.walls.some((W) => W.built.some((b) => { if (b.op.kind === 'window') return false; const l = toLocal(W, boxes[id]), xc = W.len - b.op.at; return l.z0 < 400 && l.x1 > xc - b.op.width / 2 - 700 && l.x0 < xc + b.op.width / 2 + 700; }));   // a plant beside a door or arch frames it
     if (!framing && !others.some((o) => gap2(boxes[id], boxes[o]) <= 600) ) out.push({ rule: 'lone', what: `${id} stands ${others.length ? Math.min(...others.map((o) => gap2(boxes[id], boxes[o]))).toFixed(0) : 'far'} mm from anything it serves (need 600 or less): put it beside a table, desk, bench, sofa or console, or remove it` }); } }
+  // 6b. a bar stool (form 0) serves a counter or island, and comes in a pair; anywhere else use a low stool (form 1 or 2) or nothing
+  { const ids = Object.keys(objs), tall = ids.filter((i) => sc(i).asset === 'stool' && ((sc(i).params || {}).form ?? 0) === 0);
+    for (const id of tall) { const mate = tall.some((o) => o !== id && gap2(boxes[id], boxes[o]) <= 700), counter = ids.some((o) => sc(o).asset === 'baseRun' && gap2(boxes[id], boxes[o]) <= 800);
+      if (!mate || !counter) out.push({ rule: 'stool', what: `${id} is a bar stool ${!counter ? 'away from a counter or island' : 'on its own'}: bar stools stand in pairs at a counter or island; elsewhere use a low stool (params.form 1 or 2) or nothing` }); } }
+  // 6c. small things sit on a surface that suits them: footwear on the floor, tableware and books never on the floor
+  { for (const id of Object.keys(objs)) { const a = sc(id).asset, b = boxes[id];
+      if (['shoes', 'boots'].includes(a) && b.min.y > 40) out.push({ rule: 'surface', what: `${id} (${a}) stands ${b.min.y.toFixed(0)} mm above the floor: footwear goes on the floor or a rack, never on a seat or table` });
+      if (['mug', 'teaSet', 'jug', 'keyBowl', 'glassesBook', 'breadBasket', 'fruitBowl'].includes(a) && b.min.y < 300) out.push({ rule: 'surface', what: `${id} (${a}) is on the floor: put it on a table, shelf or counter` }); } }
+  // 6d. a table carries one centrepiece and one small item at most
+  { const ids = Object.keys(objs);
+    for (const t of ids.filter((i) => sc(i).asset === 'table')) { const tb = boxes[t], top = tb.max.y, on = ids.filter((o) => o !== t && !['rug', 'chair', 'curtain', 'tablecloth', 'tableRunner', 'pendantForm', 'pendantLamp', 'cloth'].includes(sc(o).asset) && sc(o).mount === 'on' && boxes[o].min.y > top - 30 && boxes[o].min.y < top + 60 && (boxes[o].min.x + boxes[o].max.x) / 2 > tb.min.x && (boxes[o].min.x + boxes[o].max.x) / 2 < tb.max.x && (boxes[o].min.z + boxes[o].max.z) / 2 > tb.min.z && (boxes[o].min.z + boxes[o].max.z) / 2 < tb.max.z);
+      if (on.length > 2) out.push({ rule: 'tabletop', what: `${t} carries ${on.length} things (${on.join(', ')}): one centrepiece and one small item at most` }); } }
   // 7. nothing tall stands in front of a window's sill: a piece under or beside a window stays 150 mm below the sill
   for (const W of home.walls) for (const b of W.built) {
     if (b.op.kind !== 'window') continue;
@@ -187,7 +199,7 @@ const areaIssues = await page.evaluate(() => {
   const rect = (b) => { const xs = [], ys = []; for (const x of [b.min.x, b.max.x]) for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) { const p = new T.Vector3(x, y, z).project(camera); xs.push(p.x); ys.push(p.y); } return { x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys) }; };
   const ov = (a, b) => Math.max(0, Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0)) * Math.max(0, Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0)), area2 = (a) => (a.x1 - a.x0) * (a.y1 - a.y0);
   const face = (id) => { const t = objs[id].rotation.y; return new T.Vector3(Math.sin(t), 0, Math.cos(t)); };
-  const SOFT = ['rug', 'curtain', 'cushion', 'pouf', 'basket', 'teaTowel', 'runner', 'floorCushion', 'benchCushion', 'tablecloth'], WALLDEC = ['picture', 'mirror', 'wallShelf', 'curtain', 'teaTowel', 'coatHooks', 'readShelf', 'pinboard', 'wallCalendar', 'galleryWall', 'wallClock', 'wallPlates', 'openShelf', 'spiceRack', 'potRail', 'wallSconce'], LIVING = ['plant', 'floorPlant', 'cat'], LAMPS = ['pendantLamp', 'floorLamp'], MINOR = ['socket', 'lightSwitch'];
+  const SOFT = ['rug', 'curtain', 'cushion', 'pouf', 'basket', 'teaTowel', 'runner', 'floorCushion', 'benchCushion', 'tablecloth'], WALLDEC = ['picture', 'mirror', 'wallShelf', 'curtain', 'teaTowel', 'coatHooks', 'readShelf', 'pinboard', 'wallCalendar', 'galleryWall', 'wallClock', 'wallPlates', 'openShelf', 'spiceRack', 'potRail', 'wallSconce'], LIVING = ['plant', 'floorPlant', 'cat'], LAMPS = ['pendantLamp', 'floorLamp', 'readingLamp'], MINOR = ['socket', 'lightSwitch'];
   for (const A of api.areaIds) {
     const mine = ids.filter((i) => areaOf(i) === A), real = mine.filter((i) => !MINOR.includes(sc(i).asset)), as = (list) => real.filter((i) => list.includes(sc(i).asset));
     const walls = home.walls.filter((w) => w.id && w.id.startsWith(A + '-'));
@@ -263,7 +275,7 @@ const areaIssues = await page.evaluate(() => {
     const lamps = real.filter((i) => LAMPS.includes(sc(i).asset)), wide = bnd.x1 - bnd.x0 > 5000 || bnd.z1 - bnd.z0 > 5000;
     if (lamps.length > 1) out.push({ rule: 'lamps', what: `${A} has ${lamps.length} lamps (one: a pendant over the table or a floor lamp)` });
     for (const l of lamps) for (const d of as(WALLDEC)) if (ov(R[l], R[d]) > 0.002 && sc(d).asset !== 'curtain') out.push({ rule: 'lamps', what: `${A}: ${l} overlaps ${d} in the home view: move the lamp or the ${sc(d).asset}` });
-    for (const l of lamps) {
+    for (const l of real.filter((i) => LAMPS.includes(sc(i).asset) || sc(i).asset === 'pendantForm')) {
       for (const W of home.walls) { if (!W.id || !W.id.startsWith(A + '-')) continue; for (const b of W.built) if (ov(R[l], rect(box(b.group))) > 0.002) out.push({ rule: 'lamps', what: `${A}: ${l} overlaps the ${b.op.kind} on ${W.id} in the home view` }); }
       for (const m of lamps) if (m > l && ov(R[l], R[m]) > 0) out.push({ rule: 'lamps', what: `${A}: ${l} and ${m} overlap in the home view` });
     }

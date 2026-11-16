@@ -493,10 +493,11 @@
     "id": "reading-lamp",
     "asset": "readingLamp",
     "at": [
-     11600,
+     13550,
      0,
-     600
+     650
     ],
+    "turn": 180,
     "mount": "floor",
     "params": {
      "form": "arc",
@@ -694,9 +695,9 @@
     "id": "reading-plant-stand",
     "asset": "plantStand",
     "at": [
-     13550,
+     9900,
      0,
-     650
+     1900
     ],
     "mount": "floor",
     "params": {
@@ -1100,9 +1101,9 @@
        6000
       ],
       "look": [
-       11652,
-       895,
-       1148
+       11715,
+       700,
+       1081
       ],
       "fov": 40,
       "subject": "reading:reading group"

@@ -1,6 +1,6 @@
 // seed 41 (node roll.mjs 41 kitchen dining bedroom): floor plain.
 //  kitchen: corner-right, U, hero open shelves and a dresser, window + door on the back wall, accents wall shelf with jars, kettle, fruit bowl, stool, oven glove, cookbook stand, 3 plants, signs fallen leaf + tablecloth
-//  dining: corner-left, hero long table under a pendant, window first + arch second, accents floor lamp, basket, book stack, wall shelf, vase of branches, cushion pad on a bench, jug, 2 plants, signs height chart + scuffed floor
+//  dining: corner-left, hero long table under a pendant, window first + arch second, accents floor lamp, basket, book stack, wall shelf, vase of branches, cushion pad on a bench, 1 plant, signs height chart + scuffed floor
 //  bedroom: one wall, hero bed under a window with a bedside table each side, window first, accents bench at the foot, cat, floor lamp, chest of drawers, 3 plants, signs unmade bed + folded throw
 import fs from 'node:fs';
 import { Home } from '../../../skills/cozy-interiors/scene/compose.mjs';
@@ -24,7 +24,7 @@ const H = new Home({ seed: 41, floor: 'plain' });
   right.place('dresser-jars', 'jars', 3550, { y: a.topOf('dresser'), mount: 'on', group: 'dresser', off: 160 });
   right.place('dresser-plant', 'plant', 4300, { y: a.topOf('dresser'), mount: 'on', group: 'dresser', off: 170, params: { form: 0 } });
   right.place('wall-shelf', 'wallShelf', 1800, { y: 1500, group: 'cooking', shadow: false, params: { w: 600 } });
-  const T = a.table('table', { at: [3632, 3750], w: 800, d: 700, chairs: 2, rug: false, group: 'table set', hero: false }); a.put('rug', 'rug', [3632, 3750], 0, { group: 'table light', params: { w: 1900, d: 1400 } }); T.over('pendantForm', { group: 'table light', params: { form: 'globe', rim: 1750 } });
+  const T = a.table('table', { at: [3632, 3750], w: 800, d: 700, chairs: 2, rug: false, group: 'table set', hero: false }); a.put('rug', 'rug', [3632, 3750], 0, { group: 'table light', params: { w: 1900, d: 1400 } });
   a.put('cloth', 'tablecloth', [3632, 3750], 0, { y: 757, mount: 'on', group: 'table set', params: { w: 800, d: 700, drop: 180 } });
   a.put('crate', 'crate', [1500, 4300], 12, { group: 'table light' });
   a.put('stool', 'stool', [1000, 2400], 20, { group: 'larder', params: { form: 1 } });
@@ -39,21 +39,20 @@ const H = new Home({ seed: 41, floor: 'plain' });
   const back = a.back(5600, [{ kind: 'window', x: 3900, width: 1300, height: 1200, sill: 900 }]);
   const left = a.left(4800, [{ kind: 'arch', x: 700, width: 1200, to: 'kitchen', beyond: false, depth: 200 }]);
   const T = a.table('dining', { at: [3000, 2300], w: 1800, d: 900, chairs: 4, rug: false, group: 'table set', hero: true }); a.put('rug', 'rug', [3000, 2300], 0, { group: 'table light', params: { w: 2400, d: 2200 } });
-  T.over('pendantForm', { group: 'table light', params: { form: 'rattan', rim: 1750 } }); T.on('vase', { dx: -300 }); T.on('breadBasket', { dx: 350 }); T.on('jug', { dx: 0, dz: 150 }); 
+  T.over('pendantForm', { group: 'table light', params: { form: 'rattan', rim: 1750 } }); T.on('vase', { dx: -300 }); T.on('breadBasket', { dx: 350 });
   back.place('bench', 'bench', 1400, { group: 'wall', params: { w: 1300 } });
   back.place('bench-cushion', 'benchCushion', 1400, { y: 450, mount: 'on', group: 'wall' });
   back.place('wall-shelf', 'wallShelf', 1400, { y: 1450, group: 'wall', shadow: false, params: { w: 800 } });
   back.place('books', 'bookStack', 1100, { y: 450, mount: 'on', group: 'wall', off: 160 });
-  back.place('shelf-plant', 'plant', 1800, { y: 450, mount: 'on', group: 'wall', off: 160 });
   back.place('lamp', 'floorLamp', 5200, { group: 'table light' });
   a.put('basket', 'basket', [4950, 3700], 0, { group: 'table light' });
-  back.place('floor-plant', 'floorPlant', 2500, { group: 'wall' });
-  a.put('stool', 'stool', [400, 450], 20, { group: 'wall' });
+  back.place('floor-plant', 'floorPlant', 4500, { group: 'table light' });
+  a.put('stool', 'stool', [400, 450], 20, { group: 'wall', params: { form: 2 } });
   left.put('chart', 'heightChart', 1600, 2, { group: 'arch side', mount: 'lines' });
   a.put('scuff', 'scuff', [400, 3500], 90, { group: 'arch side', mount: 'lines' });
   a.view({ target: [3000, 900, 2000], az: 10, el: 14 });
   a.shot('table', [3500, 1100, 6900], [3479, 300, 2248], 36, 'table set');
-  a.shot('bench wall', [2300, 1900, 5100], [1932, 300, 259], 34, 'wall');
+  a.shot('bench wall', [2300, 1900, 5100], [1816, 300, 167], 34, 'wall');
 }
 { // ---------- bedroom
   const a = H.area('bedroom', 'Bedroom', { rect: [0, 0, 5900, 4600] });

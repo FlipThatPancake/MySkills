@@ -529,24 +529,6 @@
     "area": "kitchen"
    },
    {
-    "id": "kitchen-table-pendantForm",
-    "asset": "pendantForm",
-    "at": [
-     3632,
-     0,
-     3750
-    ],
-    "mount": "ceiling",
-    "params": {
-     "form": "globe",
-     "rim": 1750,
-     "r": 220,
-     "canopy": "disc"
-    },
-    "group": "kitchen:table light",
-    "area": "kitchen"
-   },
-   {
     "id": "kitchen-cloth",
     "asset": "tablecloth",
     "at": [
@@ -746,8 +728,8 @@
     "params": {
      "form": "rattan",
      "rim": 1750,
-     "r": 250,
-     "canopy": "bar"
+     "r": 220,
+     "canopy": "disc"
     },
     "group": "dining:table light",
     "area": "dining"
@@ -787,27 +769,6 @@
     "group": "dining:table set",
     "area": "dining",
     "dx": 350
-   },
-   {
-    "id": "dining-dining-jug",
-    "asset": "jug",
-    "at": [
-     12000,
-     757,
-     2450
-    ],
-    "mount": "on",
-    "params": {
-     "r": 75,
-     "h": 250,
-     "form": "belly",
-     "band": "banded",
-     "handle": "loop"
-    },
-    "group": "dining:table set",
-    "area": "dining",
-    "dx": 0,
-    "dz": 150
    },
    {
     "id": "dining-bench",
@@ -874,22 +835,6 @@
     "off": 160
    },
    {
-    "id": "dining-shelf-plant",
-    "asset": "plant",
-    "at": [
-     10800,
-     450,
-     160
-    ],
-    "mount": "on",
-    "params": {
-     "form": 2
-    },
-    "group": "dining:wall",
-    "area": "dining",
-    "off": 160
-   },
-   {
     "id": "dining-lamp",
     "asset": "floorLamp",
     "at": [
@@ -921,7 +866,7 @@
     "id": "dining-floor-plant",
     "asset": "floorPlant",
     "at": [
-     11500,
+     13500,
      0,
      280
     ],
@@ -929,7 +874,7 @@
     "params": {
      "form": 2
     },
-    "group": "dining:wall",
+    "group": "dining:table light",
     "area": "dining"
    },
    {
@@ -943,7 +888,7 @@
     "turn": 20,
     "mount": "floor",
     "params": {
-     "form": 0
+     "form": 2
     },
     "group": "dining:wall",
     "area": "dining"
@@ -1379,9 +1324,9 @@
        5100
       ],
       "look": [
-       10932,
+       10816,
        300,
-       259
+       167
       ],
       "fov": 34,
       "subject": "dining:wall"
