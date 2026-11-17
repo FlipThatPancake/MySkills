@@ -14,12 +14,15 @@
 //     via (the opening named by the roll, or null), room: { x0, x1, z0, z1, ymin, ymax } (where a flier may be: the area's floor shrunk 150 mm, above 1000 mm, below the lamp line) }
 //   opening = { id, W, op, centre: [x, z], n: [nx, nz] (into the room), u: [ux, uz] (along the wall), width, height, sill, open() 0 shut .. 1 wide, gap() the clear width at the middle now (mm), usable(r) gap >= 2 r + 30 }
 // Rule for every plug-in: anything that comes in from outside uses `ctx.via` and goes only while via.usable(r) holds (the window is open); nothing passes through furniture at any frame.
+// Fliers (butterfly, bee, bird) share their flight, perches and window rules in flight.js: a new flier builds its body and calls createFlight(ctx, group, { R, flap, ...numbers }); see the header there.
 // To add a kind: tables.json motion.kinds (say, needs, in, weight, flies), the module here, PLUGINS below; then `node check-motion.mjs` is part of check-home.
 import * as THREE from '../vendor/three/three.module.js';
 import { openable, gapOf } from './rules.js';
 import butterfly from './butterfly.js';
+import bee from './bee.js';
+import bird from './bird.js';
 import wind from './wind.js';
-export const PLUGINS = { wind, butterfly };
+export const PLUGINS = { wind, butterfly, bee, bird };
 
 const hash = (s) => { let h = 2166136261 >>> 0; for (const c of String(s)) h = Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0; return h; };
 const seeded = (seed) => { let s = seed >>> 0; return (a = 0, b = 1) => { s = (s + 0x6d2b79f5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return a + (b - a) * (((t ^ (t >>> 14)) >>> 0) / 4294967296); }; };

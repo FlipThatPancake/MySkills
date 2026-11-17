@@ -1,4 +1,4 @@
-// Motion test: the worked example with an opening sash window on the back wall and the two living things the framework has so far (butterfly, wind-moved plants).
+// Motion test: the worked example with an opening sash window on the back wall and three living things (default butterfly, bee, bird; `node motion.spec.mjs out.json wind,bird` picks others).
 // A worked spec: one kitchen area with an L run, a table set and a seating group, clean through check-home and fitshots.
 //   node example.spec.mjs [out.json]  →  node check-home.mjs out.json --quick  →  node fitshots.mjs out.json
 // Every coordinate is millimetres in the area's frame: x along the back wall from its left end, z out into the room.
@@ -7,7 +7,7 @@ import { Home } from '/home/user/MySkills/skills/cozy-interiors/scene/compose.mj
 const H = new Home({ seed: 12, floor: 'boards' });
 const a = H.area('kitchen', 'Kitchen', { rect: [0, 0, 6600, 4400] });
 const back = a.back(6600, [{ kind: 'window', x: 4700, width: 1300, height: 1200, sill: 1000 }]);
-a.alive([{ kind: 'butterfly', needs: ['openWindow'] }, { kind: 'wind', needs: ['openWindow', 'plant'] }]);   // after the back wall (the left wall's window stays fixed)
+a.alive((process.argv[3] || 'butterfly,bee,bird').split(',').map((kind) => ({ kind, needs: kind === 'wind' ? ['openWindow', 'plant'] : ['openWindow'] })));   // after the back wall; kinds from argv[3] (3 at most: butterfly, bee, bird, wind) (the left wall's window stays fixed)
 const left = a.left(4400, [{ kind: 'window', x: 2300, width: 1000, height: 1100, sill: 1000, sash: 'fixed' }]);
 // The L: run A stands on the back wall; its `joins` says run B stands at A's start and reaches 2200 mm out from A's front.
 // A builds the L-shaped worktop for both; B (on the left wall) is built with ownsTop: false and starts 1200 mm along the wall,
@@ -26,6 +26,8 @@ T.on('jug', { y: 757, dx: -180 }); T.on('candlesticks', { y: 757, dx: 260 });
 a.put('chair', 'armchair', [5700, 2300], -35, { group: 'nook', y: 7, lift: 7 });
 a.put('side', 'sideTable', [5700, 3150], 0, { group: 'nook' });
 a.put('fern', 'floorPlant', [5900, 700], 0, { group: 'nook', params: { form: 2 } });   // a floor plant without blades of its own: the wind leans it as a whole
+// A chest of drawers by the right wall: a flat top a bird may land on (src/motion/bird.js stands on wardrobes, cabinets, shelves, chests).
+a.put('chest', 'chestOfDrawers', [6350, 3000], -90, { group: 'nook' });
 // Shots: a.shot(name, from, look, fov, group). fitshots.mjs finds the cameras; its numbers go in here.
 a.shot('cook', [2600, 1100, 4800], [1710, 1300, 393], 36, 'cook');
 a.shot('table', [6200, 2100, 6900], [2737, 681, 2923], 36, 'breakfast');

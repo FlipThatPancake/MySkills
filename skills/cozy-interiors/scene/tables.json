@@ -1348,7 +1348,7 @@
  }
 },
  "motion": {
-  "note": "Living, moving things dealt per area by motion-roll.mjs (read there and in src/motion/index.js). Each kind: say (plain words), needs (openWindow: the area has a window or glass door rendered open; plant: the area has a plant), in (area kinds), weight. flies: it passes through the opening, so that window is opened wide enough (rules.js VISITOR_OPEN). Count: how many kinds one area gets (never the same kind twice). Add a kind here, in src/motion/<kind>.js and in the PLUGINS map of src/motion/index.js.",
+  "note": "Living, moving things dealt per area by motion-roll.mjs (read there and in src/motion/index.js). Each kind: say (plain words), needs (openWindow: the area has a window or glass door rendered open; plant: the area has a plant), in (area kinds), weight. flies: it passes through the opening, so that window is opened wide enough (rules.js VISITOR_OPEN); a number (the bird: 800) is the narrowest window in mm it can use, and the roll deals it only to an area with a window that wide. Count: how many kinds one area gets (never the same kind twice). Add a kind here, in src/motion/<kind>.js and in the PLUGINS map of src/motion/index.js.",
   "count": [
    2,
    3
@@ -1387,6 +1387,40 @@
     ],
     "weight": 2,
     "flies": true
+   },
+   "bee": {
+    "say": "a bee buzzes in through the open window, darts about, lands on a plant or the sill, and leaves again",
+    "needs": [
+     "openWindow"
+    ],
+    "in": [
+     "kitchen",
+     "dining",
+     "living",
+     "bedroom",
+     "reading-corner",
+     "hallway",
+     "home-office"
+    ],
+    "weight": 2,
+    "flies": true
+   },
+   "bird": {
+    "say": "a small bird flies in through the wide open window, perches on the sill or a cabinet top, looks about, and leaves again",
+    "needs": [
+     "openWindow"
+    ],
+    "in": [
+     "kitchen",
+     "dining",
+     "living",
+     "bedroom",
+     "reading-corner",
+     "hallway",
+     "home-office"
+    ],
+    "weight": 1,
+    "flies": 800
    }
   }
  }
