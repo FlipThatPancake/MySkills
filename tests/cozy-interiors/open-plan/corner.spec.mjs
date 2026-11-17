@@ -7,15 +7,15 @@ let d, k;
 { // ---------- dining (the start of the chain: a left wall is allowed, the roll dealt none; its right wall is the stretch beside the kitchen)
   const a = d = H.area('dining', 'Dining', { rect: [0, 0, 5400, 4800] });
   const back = a.back(5400, [{ kind: 'door', x: 700, width: 900, hinge: 'r', open: 20 }, { kind: 'window', x: 3600, width: 1300, height: 1200, sill: 900 }]);
-  a.put('rug', 'rug', [2900, 3500], 0, { group: 'table set', params: { w: 2200, d: 2200, form: 'round', fringe: 'ends', border: 40 } });
-  const T = a.table('dining', { at: [2900, 3500], r: 650, chairs: 4, rug: false, group: 'table set', hero: true });
+  a.put('rug', 'rug', [2900, 2800], 0, { group: 'dining rug', params: { w: 2200, d: 2200, form: 'round', fringe: 'ends', border: 40 } });
+  const T = a.table('dining', { at: [2900, 2800], r: 650, chairs: 4, rug: false, group: 'table set', hero: true });
   T.over('pendantLamp', { group: 'table set', params: { rim: 1582 } }); T.on('jug', { dx: -120 }); T.on('bookStack', { dx: 220 });
   back.place('side', 'sideboard', 2200, { group: 'wall', params: { w: 1400, h: 800 } });
   a.onTop('side', [{ id: 'side-vase', asset: 'vase' }, { id: 'side-plant', asset: 'plant', params: { form: 2 } }], { at: 'back', group: 'wall' });
   back.place('pic', 'picture', 2200, { y: 1250, group: 'wall', shadow: false, params: { w: 700, h: 500 } });
-  a.put('basket', 'basket', [4350, 4350], 10, { group: 'table set' });
+  a.put('basket', 'basket', [4250, 3300], 10, { group: 'rwall' });
   a.view({ target: [2900, 800, 2300], az: 52, el: 14, dist: 7700, fit: 'fixed' });
-  a.shot('table', [2600, 1250, 8400], [2637, 300, 3437], 40, 'table set'); a.shot('table-side', [-100, 1700, 8400], [2567, 500, 3074], 36, 'table set'); a.shot('wall', [5300, 700, 4800], [1594, 900, 595], 34, 'wall');
+  a.shot('table', [2600, 1250, 8400], [2637, 300, 3437], 40, 'table set'); a.shot('table-side', [-100, 1700, 8400], [2567, 500, 3074], 36, 'table set'); a.shot('wall', [5300, 700, 4800], [1594, 900, 595], 34, 'wall'); a.shot('right wall', [1200, 1300, 4300], [5200, 1000, 2400], 34, 'rwall');
 }
 { // ---------- kitchen (the end: the chain turns; its back wall runs on from the dining area's right wall; a right wall is allowed)
   const a = k = H.area('kitchen', 'Kitchen', { rect: [0, 0, 5400, 4200] }); H.join(d, k, { layout: 'corner', share: 0, separators: ['openShelf', 'island'] });
@@ -24,7 +24,7 @@ let d, k;
   const R = a.run(back, 'run', 1100, [{ w: 800, kind: 'sink' }, { w: 600, kind: 'drawers', n: 3 }, { w: 900, kind: 'hob' }], { group: 'cooking', hero: true });
   R.on('hob', 'hob', { group: 'stove' }); R.on('hob', 'hood', { group: 'stove' }); R.on('hob', 'pan', { group: 'stove' });
   R.on('drawers', 'kettle', { id: 'kettle', group: 'stove', dx: -170 }); R.on('drawers', 'fruitBowl', { id: 'fruit', group: 'stove', dx: 150 });
-  back.place('fridge', 'fridge', 4750, { group: 'cooking', params: { form: 1 } });
+  back.place('fridge', 'fridge', 4750, { group: 'trolley', params: { form: 1 } });
   back.place('kshelf', 'openShelf', 3900, { y: 1350, group: 'stove', shadow: false, params: { w: 700 } });
   // the island, a separator: its back faces the dining area, stools on that side
   a.put('island', 'baseRun', [2100, 1700], 180, { group: 'island', sep: 'island', params: { depth: 600, finishedBack: true, modules: [{ w: 600, kind: 'doors' }, { w: 600, kind: 'drawers', n: 3 }, { w: 600, kind: 'doors' }] } });
@@ -32,13 +32,13 @@ let d, k;
   a.put('iplant', 'plant', [900, 2000], 0, { y: a.topOf('island'), mount: 'on', group: 'island', params: { form: 1 } });
   // the open shelf unit, the other separator: seen from both sides, standing on the seam's end
   a.put('shelfunit', 'shelf', [200, 3700], 90, { group: 'shelfwall', sep: 'openShelf', params: { w: 900, h: 1800 } });
-  a.put('trolley', 'trolley', [4300, 3400], 0, { group: 'cooking' });
-  a.put('tm1', 'mug', [4230, 3380], 0, { y: a.topOf('trolley'), mount: 'on', group: 'cooking' }); a.put('tm2', 'mug', [4390, 3430], 0, { y: a.topOf('trolley'), mount: 'on', group: 'cooking' });
-  a.put('runner', 'rug', [2400, 1200], 0, { group: 'cooking', params: { form: 'runner', w: 2200, d: 700, fringe: 'ends', border: 120 } });
+  a.put('trolley', 'trolley', [4100, 650], 0, { group: 'trolley' });
+  a.put('tm1', 'mug', [4030, 630], 0, { y: a.topOf('trolley'), mount: 'on', group: 'trolley' }); a.put('tm2', 'mug', [4190, 680], 0, { y: a.topOf('trolley'), mount: 'on', group: 'trolley' });
+  a.put('runner', 'rug', [2400, 1200], 0, { group: 'cooking rug', params: { form: 'runner', w: 2200, d: 700, fringe: 'ends', border: 120 } });
   right.place('rshelf', 'wallShelf', 3500, { y: 1500, group: 'shelfwall', shadow: false, params: { w: 800 } });
   a.across('across the island', [5300, 1400, 3300], [1200, 600, 2000], 38, 'island', 'dining');
   a.view({ target: [2500, 800, 1500], az: 8, el: 13, dist: 5600 });
-  a.shot('stove', [-4300, 1000, 2400], [-244, 1300, 2520], 34, 'stove'); a.shot('island', [-1900, 1100, 5700], [-1644, 557, 1158], 30, 'island');
+  a.shot('stove', [-4300, 1000, 2400], [-244, 1300, 2520], 34, 'stove'); a.shot('island', [-1900, 1100, 5700], [-1644, 557, 1158], 30, 'island'); a.shot('trolley', [-2500, 1100, 6200], [-600, 600, 3400], 34, 'trolley');
 }
 { // the dining area's right wall is the stretch beside the kitchen, built by H.join(d, k, { layout: 'corner' }): hang things on it after the join
   d.cornerWall.place('rshelf2', 'wallShelf', 3900, { y: 1500, group: 'rwall', shadow: false, params: { w: 900 } });

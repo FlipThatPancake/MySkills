@@ -413,7 +413,7 @@
     "id": "dining-rug",
     "asset": "rug",
     "at": [
-     7500,
+     6500,
      0,
      2600
     ],
@@ -432,7 +432,7 @@
     "id": "dining-dining",
     "asset": "roundTable",
     "at": [
-     7500,
+     6500,
      7,
      2600
     ],
@@ -450,7 +450,7 @@
     "id": "dining-dining-chair-1",
     "asset": "chair",
     "at": [
-     7500,
+     6500,
      7,
      1670
     ],
@@ -466,7 +466,7 @@
     "id": "dining-dining-chair-2",
     "asset": "chair",
     "at": [
-     8430,
+     7430,
      7,
      2600
     ],
@@ -483,7 +483,7 @@
     "id": "dining-dining-chair-3",
     "asset": "chair",
     "at": [
-     7500,
+     6500,
      7,
      3530
     ],
@@ -500,7 +500,7 @@
     "id": "dining-dining-chair-4",
     "asset": "chair",
     "at": [
-     6570,
+     5570,
      7,
      2600
     ],
@@ -517,7 +517,7 @@
     "id": "dining-dining-pendantLamp",
     "asset": "pendantLamp",
     "at": [
-     7500,
+     6500,
      0,
      2600
     ],
@@ -532,7 +532,7 @@
     "id": "dining-dining-jug",
     "asset": "jug",
     "at": [
-     7380,
+     6380,
      757,
      2600
     ],
@@ -552,7 +552,7 @@
     "id": "dining-dining-breadBasket",
     "asset": "breadBasket",
     "at": [
-     7720,
+     6720,
      757,
      2600
     ],
@@ -572,7 +572,7 @@
     "id": "dining-side",
     "asset": "sideboard",
     "at": [
-     5550,
+     8300,
      0,
      210
     ],
@@ -590,7 +590,7 @@
     "id": "dining-side-vase",
     "asset": "jug",
     "at": [
-     5258.7,
+     8008.7,
      800,
      116
     ],
@@ -609,7 +609,7 @@
     "id": "dining-side-books",
     "asset": "bookStack",
     "at": [
-     5787.3,
+     8537.3,
      800,
      135
     ],
@@ -619,28 +619,10 @@
     "area": "dining"
    },
    {
-    "id": "dining-pic",
-    "asset": "picture",
-    "at": [
-     5550,
-     1250,
-     0
-    ],
-    "mount": "wall",
-    "params": {
-     "w": 700,
-     "h": 500,
-     "form": 0
-    },
-    "group": "dining:wall",
-    "area": "dining",
-    "shadow": false
-   },
-   {
     "id": "dining-fplant",
     "asset": "floorPlant",
     "at": [
-     6600,
+     9050,
      0,
      700
     ],
@@ -655,8 +637,8 @@
     "id": "dining-basket",
     "asset": "basket",
     "at": [
-     8250,
-     7,
+     7450,
+     0,
      3500
     ],
     "turn": 10,
@@ -665,8 +647,22 @@
      "form": 1
     },
     "group": "dining:table set",
-    "area": "dining",
-    "lift": 7
+    "area": "dining"
+   },
+   {
+    "id": "dining-dstool",
+    "asset": "stool",
+    "at": [
+     5500,
+     0,
+     3700
+    ],
+    "mount": "floor",
+    "params": {
+     "form": 1
+    },
+    "group": "dining:table set",
+    "area": "dining"
    },
    {
     "id": "living-sofa",
@@ -868,7 +864,7 @@
     "params": {
      "w": 800,
      "h": 600,
-     "form": 1
+     "form": 0
     },
     "group": "living:shelves",
     "area": "living",
@@ -913,6 +909,20 @@
     "mount": "floor",
     "params": {},
     "group": "living:seating",
+    "area": "living",
+    "lift": 8
+   },
+   {
+    "id": "living-foot",
+    "asset": "footstool",
+    "at": [
+     12200,
+     8,
+     3150
+    ],
+    "mount": "floor",
+    "params": {},
+    "group": "living:coffee set",
     "area": "living",
     "lift": 8
    },
@@ -1053,34 +1063,34 @@
       "subject": "dining:table set"
      },
      {
-      "name": "table-side",
-      "from": [
-       9350,
-       2100,
-       7200
-      ],
-      "look": [
-       7150,
-       500,
-       2785
-      ],
-      "fov": 36,
-      "subject": "dining:table set"
-     },
-     {
       "name": "wall",
       "from": [
-       5450,
-       700,
-       5100
+       8400,
+       1900,
+       6000
       ],
       "look": [
-       5350,
-       875,
-       403
+       5800,
+       800,
+       300
       ],
       "fov": 34,
       "subject": "dining:wall"
+     },
+     {
+      "name": "table-low",
+      "from": [
+       8200,
+       850,
+       5600
+      ],
+      "look": [
+       7400,
+       450,
+       2300
+      ],
+      "fov": 30,
+      "subject": "dining:table set"
      }
     ]
    }
@@ -1144,34 +1154,19 @@
       "subject": "living:coffee set"
      },
      {
-      "name": "shelves",
+      "name": "coffee-low",
       "from": [
-       13700,
-       1700,
-       5700
+       12800,
+       850,
+       6200
       ],
       "look": [
-       13236,
-       300,
-       168
+       11900,
+       400,
+       2300
       ],
-      "fov": 32,
-      "subject": "living:shelves"
-     },
-     {
-      "name": "window",
-      "from": [
-       13400,
-       1000,
-       7500
-      ],
-      "look": [
-       10283,
-       700,
-       2340
-      ],
-      "fov": 34,
-      "subject": "living:window"
+      "fov": 30,
+      "subject": "living:coffee set"
      }
     ]
    }

@@ -103,7 +103,7 @@
     "at": [
      2900,
      0,
-     3500
+     2800
     ],
     "mount": "floor",
     "params": {
@@ -113,7 +113,7 @@
      "fringe": "ends",
      "border": 40
     },
-    "group": "dining:table set",
+    "group": "dining:dining rug",
     "area": "dining"
    },
    {
@@ -122,7 +122,7 @@
     "at": [
      2900,
      7,
-     3500
+     2800
     ],
     "mount": "floor",
     "params": {
@@ -140,7 +140,7 @@
     "at": [
      2900,
      7,
-     2620
+     1920
     ],
     "mount": "floor",
     "params": {
@@ -156,7 +156,7 @@
     "at": [
      3780,
      7,
-     3500
+     2800
     ],
     "turn": -90,
     "mount": "floor",
@@ -173,7 +173,7 @@
     "at": [
      2900,
      7,
-     4380
+     3680
     ],
     "turn": 180,
     "mount": "floor",
@@ -190,7 +190,7 @@
     "at": [
      2020,
      7,
-     3500
+     2800
     ],
     "turn": 90,
     "mount": "floor",
@@ -207,7 +207,7 @@
     "at": [
      2900,
      0,
-     3500
+     2800
     ],
     "mount": "ceiling",
     "params": {
@@ -222,7 +222,7 @@
     "at": [
      2780,
      757,
-     3500
+     2800
     ],
     "mount": "on",
     "params": {
@@ -242,7 +242,7 @@
     "at": [
      3120,
      757,
-     3500
+     2800
     ],
     "mount": "on",
     "params": {},
@@ -320,16 +320,16 @@
     "id": "dining-basket",
     "asset": "basket",
     "at": [
-     4350,
+     4250,
      0,
-     4350
+     3300
     ],
     "turn": 10,
     "mount": "floor",
     "params": {
      "form": 0
     },
-    "group": "dining:table set",
+    "group": "dining:rwall",
     "area": "dining"
    },
    {
@@ -452,7 +452,7 @@
     "params": {
      "form": 1
     },
-    "group": "kitchen:cooking",
+    "group": "kitchen:trolley",
     "area": "kitchen"
    },
    {
@@ -584,42 +584,42 @@
     "id": "kitchen-trolley",
     "asset": "trolley",
     "at": [
-     2000,
+     4750,
      0,
-     9100
+     8900
     ],
     "turn": -90,
     "mount": "floor",
     "params": {},
-    "group": "kitchen:cooking",
+    "group": "kitchen:trolley",
     "area": "kitchen"
    },
    {
     "id": "kitchen-tm1",
     "asset": "mug",
     "at": [
-     2020,
+     4770,
      820,
-     9030
+     8830
     ],
     "turn": -90,
     "mount": "on",
     "params": {},
-    "group": "kitchen:cooking",
+    "group": "kitchen:trolley",
     "area": "kitchen"
    },
    {
     "id": "kitchen-tm2",
     "asset": "mug",
     "at": [
-     1970,
+     4720,
      820,
-     9190
+     8990
     ],
     "turn": -90,
     "mount": "on",
     "params": {},
-    "group": "kitchen:cooking",
+    "group": "kitchen:trolley",
     "area": "kitchen"
    },
    {
@@ -639,7 +639,7 @@
      "fringe": "ends",
      "border": 120
     },
-    "group": "kitchen:cooking",
+    "group": "kitchen:cooking rug",
     "area": "kitchen"
    },
    {
@@ -788,6 +788,21 @@
       ],
       "fov": 34,
       "subject": "dining:wall"
+     },
+     {
+      "name": "right wall",
+      "from": [
+       1200,
+       1300,
+       4300
+      ],
+      "look": [
+       5200,
+       1000,
+       2400
+      ],
+      "fov": 34,
+      "subject": "dining:rwall"
      }
     ]
    }
@@ -866,6 +881,21 @@
       ],
       "fov": 30,
       "subject": "kitchen:island"
+     },
+     {
+      "name": "trolley",
+      "from": [
+       -800,
+       1100,
+       2300
+      ],
+      "look": [
+       2000,
+       600,
+       4200
+      ],
+      "fov": 34,
+      "subject": "kitchen:trolley"
      }
     ]
    }

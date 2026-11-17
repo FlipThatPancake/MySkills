@@ -1,7 +1,9 @@
 // check-openplan.mjs — the open-plan rules of check-home (it calls openPlanIssues(page, sceneFile, { quick }) at the end; nothing here runs for a home without `groups`).
+import { nbrRule } from './openshot.mjs';
 // Layout: joined bounds touch or overlap by 1000 mm at most; back walls meet end to end; no wall on a seam; a walkway of 900 mm or more across every seam; an island keeps 1000 to 1250 mm from the kitchen run.
 // Separators: each one the spec named (H.join(..., { separators })) stands within 800 mm of its seam (an object with `sep: '<kind>'`; a rug by its edge); at least one is furniture.
-// Glimpse (home view and every shot, needs renders): a neighbour's pixels touch one side edge only and take at most 25% of the frame's width; none covers the hero or the shot's subject; an area two steps away does not show.
+// Tour shots (geometry, openshot.mjs): a neighbouring area shows only behind the shot's subject, never in front of it, and is never the subject (rule open-shot).
+// Glimpse (home view only, needs renders): a neighbour's pixels touch one side edge only and take at most 25% of the frame's width; none covers the hero or the shot's subject; an area two steps away does not show.
 // Glide: nothing switches on or off while the camera glides between areas of one group.
 import { readFileSync } from 'node:fs';
 import { FURNITURE, SEAM_REACH, WALKWAY, ISLAND_GAP, GLIMPSE } from './openplan.mjs';
@@ -77,6 +79,20 @@ export async function openPlanIssues(page, sceneFile, { quick = false } = {}) {
     }, [G.areas[i], G.areas[i + 1]]);
     if (r.bad.length || !r.same) out.push({ rule: 'open-glide', what: `${G.areas[i]} -> ${G.areas[i + 1]}: pieces switch on or off during the glide (at ${r.bad.join(', ') || 'the end'})` });
   }
+  // ---- tour shots: a neighbour may show only BEHIND the subject (openshot.mjs), and the subject belongs to this area
+  for (const G of S.groups) for (const id of G.areas) for (const [i, sh] of (area[id].camera?.shots || []).entries()) {
+    if (sh.subject && !sh.subject.startsWith(id + ':')) { out.push({ rule: 'open-shot', what: `${id} shot "${sh.name}": its subject "${sh.subject}" belongs to another area: a neighbour is never the subject of a tour shot` }); continue; }
+    const bad = await page.evaluate(([id, i, group, src]) => {
+      const c = window.cozyScene, T = c.kit.THREE, rule = new Function('return ' + src)(), sh = c.areas[id].camera.shots[i];
+      c.setArea(id, true); c.controls.minDistance = 10; c.at(sh.from, sh.look); c.camera.fov = sh.fov || 30; c.camera.updateProjectionMatrix(); c.camera.updateMatrixWorld(true);
+      const box = (k) => new T.Box3().setFromObject(c.objects[k]), keys = Object.keys(c.objects), ar = (k) => c.objects[k].userData.scene.area;
+      const hero = keys.filter((k) => ar(k) === id && (sh.subject ? c.objects[k].userData.scene.group === sh.subject : c.objects[k].userData.scene.hero));
+      if (!hero.length) return null;
+      const nb = keys.filter((k) => ar(k) !== id && group.includes(ar(k))).map((k) => ({ id: k, box: box(k) }));
+      return rule(T, c.camera, hero.map(box), nb);
+    }, [id, i, G.areas, nbrRule.toString()]);
+    if (bad) out.push({ rule: 'open-shot', what: `${id} shot "${sh.name}": ${bad} (a neighbouring area) stands in front of the subject: a neighbour may show only behind the subject, never in front of it` });
+  }
   // ---- glimpse: renders. Each neighbour's pixels (the frame with the group drawn, against the frame with that neighbour hidden) stay at one side edge, within 25% of the width, off the hero / subject; a middle area may show one neighbour at each edge
   if (!quick) for (const G of S.groups) for (const id of G.areas) {
     const idx = G.areas.indexOf(id), views = [{ name: 'home view', shot: null }, ...(area[id].camera?.shots || []).map((s, i) => ({ name: `shot "${s.name}"`, shot: i, subject: s.subject, across: s.across }))];
@@ -84,6 +100,7 @@ export async function openPlanIssues(page, sceneFile, { quick = false } = {}) {
       const r = await glimpse(page, id, G.areas, idx, v);
       if (r.far > 150) out.push({ rule: 'open-glimpse', what: `${id} ${v.name}: ${r.far} pixels of an area two steps away show: aim away from it` });
       for (const n of r.each) {
+        if (v.shot !== null) continue;   // a tour shot follows the behind-the-subject rule above, not the home-view glimpse
         if (v.across === n.id) continue;   // an across-the-seam shot looks into this neighbour on purpose
         const t = `${id} ${v.name}, ${n.id}`;
         if (n.left > 40 && n.right > 40) out.push({ rule: 'open-glimpse', what: `${t}: shows at both side edges (one side only)` });
