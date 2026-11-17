@@ -9,9 +9,12 @@ export const SIZE = 1.0;   // the sleeping cat's scale: a curled cat about 400 m
 // a smooth body swept along a centreline: radius r(t) wide, flat * r(t) high, rounded at both ends (cap = the part of the length that closes to a point)
 export function loft(T, pts, rOf, { flat = 0.9, ring = 22, cap = 0.12 } = {}) {
   const n = pts.length, pos = [], idx = [], up = new T.Vector3(0, 1, 0), tan = new T.Vector3(), side = new T.Vector3(), up2 = new T.Vector3();
+  let prevSide = null;
   for (let i = 0; i < n; i++) {
     const t = i / (n - 1), a = pts[Math.max(0, i - 1)], b = pts[Math.min(n - 1, i + 1)];
-    tan.subVectors(b, a).normalize(); side.crossVectors(up, tan).normalize(); up2.crossVectors(tan, side).normalize();
+    tan.subVectors(b, a).normalize();
+    if (!prevSide) side.crossVectors(up, tan).normalize(); else side.copy(prevSide).addScaledVector(tan, -prevSide.dot(tan)).normalize();   // parallel transport: the section never flips when the path climbs
+    prevSide = side.clone(); up2.crossVectors(tan, side).normalize();
     let m = 1; if (t < cap) m = Math.sqrt(Math.max(0, 1 - ((cap - t) / cap) ** 2)); else if (t > 1 - cap) m = Math.sqrt(Math.max(0, 1 - ((t - (1 - cap)) / cap) ** 2));
     const r = rOf(t) * Math.max(m, 0.001);
     for (let k = 0; k < ring; k++) {
@@ -62,35 +65,46 @@ export function sleeper(kit, { seed = 1 } = {}) {
   const T = kit.THREE, V = (x, y, z) => new T.Vector3(x, y, z), R = 94;
   // spine: a ring of radius R about the origin from the haunch (190 degrees) round the back to the shoulders (440 = 80 degrees); the head rests where the ring is open, touching the shoulder
   const N = 44, ph = (t) => (190 + 250 * t) * rad, spine = [];
-  const width = (t) => 60 + 17 * Math.exp(-Math.pow((t - 0.15) / 0.18, 2)) + 9 * Math.exp(-Math.pow((t - 0.88) / 0.15, 2));
-  for (let i = 0; i < N; i++) { const t = i / (N - 1); spine.push(V(Math.cos(ph(t)) * R, width(t) * 0.9, Math.sin(ph(t)) * R)); }
+  const width = (t) => 52 + 22 * Math.exp(-Math.pow((t - 0.24) / 0.16, 2)) + 17 * Math.exp(-Math.pow((t - 0.86) / 0.13, 2));   // narrow waist, big hip, shoulder
+  for (let i = 0; i < N; i++) { const t = i / (N - 1); spine.push(V(Math.cos(ph(t)) * R, width(t) * 0.9 + 10 * Math.exp(-Math.pow((t - 0.24) / 0.13, 2)) + 5 * Math.exp(-Math.pow((t - 0.8) / 0.1, 2)), Math.sin(ph(t)) * R)); }
   const breath = kit.group();
   breath.add(kit.solid(loft(T, spine, width, { flat: 0.9, ring: 24, cap: 0.1 }), 0, 0, 0, { smooth: true }));
-  const hip = spine[6]; breath.add(kit.solid(ellipsoid(T, 52, 52, 56, 18), hip.x * 0.98, 52, hip.z * 0.98, { smooth: true }));   // the haunch, blended into the back
+  // the haunch: a thigh bulging above the flank at the rump, its outline drawn, with the hind foot tucked in front of it
+  const hip = spine[10], hr = V(hip.x, 0, hip.z).normalize(), htan = V(-hr.z, 0, hr.x), HC = V(hip.x + hr.x * 14, 66, hip.z + hr.z * 14);
+  const TR = 42, thigh = kit.solid(ellipsoid(T, TR, 50, 48, 22), HC.x + hr.x * 6, 62, HC.z + hr.z * 6, { smooth: true }); breath.add(thigh);
+  { const FP = V(hip.x - hr.x * 6 + htan.x * -52, 20, hip.z - hr.z * 6 + htan.z * -52); const foot = kit.solid(ellipsoid(T, 16, 15, 36, 14), FP.x, FP.y, FP.z, { smooth: true }); foot.rotation.y = Math.atan2(-htan.x, -htan.z) + 0.3; breath.add(foot); }
   const sh = spine[N - 3]; breath.add(kit.solid(ellipsoid(T, 50, 46, 54, 18), sh.x * 0.98, 50, sh.z * 0.98, { smooth: true }));   // the chest, blended
   breath.add(kit.solid(ellipsoid(T, 92, 40, 92, 22), 0, 36, 0, { smooth: true }));   // the flank and belly fill the middle of the curl
   breath.add(kit.solid(ellipsoid(T, 50, 36, 62, 16), -32, 34, 40, { smooth: true }));   // the tucked hind legs
   // tabby: a few fine arcs over the back
   const stripes = [];
-  for (const t of [0.3, 0.4, 0.5, 0.6, 0.7]) {
+  for (const t of [0.3, 0.37, 0.44, 0.51, 0.58, 0.65, 0.72]) {
     const i = Math.round(t * (N - 1)), a = spine[i - 1], b = spine[i + 1], tan = V().subVectors(b, a).normalize(), side = V().crossVectors(V(0, 1, 0), tan).normalize(), up = V().crossVectors(tan, side).normalize(), r = width(t) * 1.012;
     for (const [q0, q1] of [[25, 70], [110, 155]]) { let prev = null; for (let k = 0; k <= 4; k++) { const q = (q0 + (q1 - q0) * k / 4) * rad, p = [spine[i].x + side.x * Math.cos(q) * r + up.x * Math.sin(q) * r * 0.9, spine[i].y + side.y * Math.cos(q) * r + up.y * Math.sin(q) * r * 0.9, spine[i].z + side.z * Math.cos(q) * r + up.z * Math.sin(q) * r * 0.9]; if (prev) stripes.push(prev, p); prev = p; } }
   }
-  breath.add(kit.lines(stripes, 'lo'));
+  for (let i = 4; i < N - 6; i++) { const a = spine[i], b = spine[i + 1], wa = width(i / (N - 1)) * 0.9 * 1.005, wb = width((i + 1) / (N - 1)) * 0.9 * 1.005; stripes.push([a.x, a.y + wa * 0.97, a.z], [b.x, b.y + wb * 0.97, b.z]); }   // the spine ridge
+  breath.add(kit.lines(stripes, 'mid'));
   // head: resting on the front paws, against the shoulder, nose toward the haunch side of the opening
   const hd = V().subVectors(spine[N - 1], spine[N - 4]).normalize(), headAt = spine[N - 1].clone().addScaledVector(hd, 58); headAt.y = 52;
   const front = kit.group(); front.position.copy(headAt); front.rotation.y = Math.atan2(hd.x, hd.z) + 0.25;
   for (const sx of [-1, 1]) { front.add(kit.solid(ellipsoid(T, 17, 15, 36, 14), sx * 17, -36, 26, { smooth: true })); front.add(kit.lines([[sx * 17 - 5, -31, 59], [sx * 17 - 5, -34, 66], [sx * 17 + 5, -31, 59], [sx * 17 + 5, -34, 66]], 'lo')); }
   const hd0 = head(kit, {}); hd0.group.rotation.x = 0.2; front.add(hd0.group);
   // tail: from the rump along the outside of the flank, round the front, tip near the nose
-  const tailPts = [], tN = 30, tr = R + 66;
-  for (let i = 0; i < tN; i++) { const t = i / (tN - 1), a = (200 - 122 * t) * rad, r = i < 4 ? R + 10 + 14 * i : tr - 6 * t; tailPts.push(V(Math.cos(a) * r, 20, Math.sin(a) * r)); }
-  const tail = kit.solid(loft(T, tailPts, (t) => 21 - 7 * t, { flat: 0.95, ring: 14, cap: 0.08 }), 0, 0, 0, { smooth: true });
-  const tl = []; for (let i = 6; i < tN - 3; i += 4) { const p = tailPts[i], q = tailPts[i + 1], tan = V().subVectors(q, p).normalize(), side = V().crossVectors(V(0, 1, 0), tan).normalize(); tl.push([p.x + side.x * 9, 38, p.z + side.z * 9], [p.x - side.x * 9, 38, p.z - side.z * 9]); }
+  const tailPts = [], tN = 34, P = (deg, r, y) => V(Math.cos(deg * rad) * r, y, Math.sin(deg * rad) * r);
+  const tan0 = V().subVectors(spine[3], spine[0]).normalize(), rear = tan0.clone().negate(), out0 = V(spine[0].x, 0, spine[0].z).normalize();
+  { const at = (d, o, y) => V(spine[0].x + rear.x * d + out0.x * o, y, spine[0].z + rear.z * d + out0.z * o);   // a point behind the rump (d), out from the ring (o), at height y
+    const cv = new T.CatmullRomCurve3([P(204, R - 4, 66), P(193, R + 30, 48), P(179, R + 66, 31), P(157, R + 84, 22), P(130, R + 76, 20), P(106, R + 60, 20), P(91, R + 52, 20)], false, 'centripetal'); for (let i = 0; i < tN; i++) tailPts.push(cv.getPoint(i / (tN - 1)));
+    // the rump seen from behind: two contour arcs round the haunch, the buttock and the thigh behind it
+    const side0 = V().crossVectors(V(0, 1, 0), tan0).normalize(), ring = (d, rho, a0, a1) => { const o = []; for (let k = 0; k <= 14; k++) { const a = (a0 + (a1 - a0) * k / 14) * rad; o.push([spine[0].x + tan0.x * d + side0.x * Math.cos(a) * rho, 66 + Math.sin(a) * rho * 0.9, spine[0].z + tan0.z * d + side0.z * Math.cos(a) * rho]); } return o; };
+    const seg = (pts) => pts.slice(1).flatMap((q, k) => [pts[k], q]);
+    breath.add(kit.lines(seg(ring(30, 68, 0, 180, 0)), 'mid')); breath.add(kit.lines(seg(ring(62, 80, 0, 180, 1)), 'lo')); breath.add(kit.lines(seg(ring(92, 82, 0, 180, 2)), 'lo'));
+  }
+  const tail = kit.solid(loft(T, tailPts, (t) => 25 - 11 * Math.pow(t, 1.4), { flat: 0.95, ring: 14, cap: 0.07 }), 0, 0, 0, { smooth: true });
+  const tl = []; for (let i = 8; i < tN - 3; i += 4) { const p = tailPts[i], q = tailPts[i + 1], tan = V().subVectors(q, p).normalize(), side = V().crossVectors(V(0, 1, 0), tan).normalize(); tl.push([p.x + side.x * 9, 38, p.z + side.z * 9], [p.x - side.x * 9, 38, p.z - side.z * 9]); }
   const root = kit.group(), parts = { breath: kit.merge(breath), tail: kit.merge(kit.group().add(tail, kit.lines(tl, 'lo'))), front: kit.merge(front), ears: hd0.ears };
   root.add(breath, parts.tail, front); root.scale.setScalar(SIZE);
   const fy = front.position.y;
-  const spheres = [[7, 62], [16, 62], [26, 60], [34, 60], [42, 62]].map(([i, r]) => ({ c: [spine[i].x, spine[i].y, spine[i].z], r })).concat([{ c: [headAt.x, 52, headAt.z], r: 52 }, { c: [tailPts[14].x, 22, tailPts[14].z], r: 24 }, { c: [tailPts[24].x, 22, tailPts[24].z], r: 22 }]);
+  const spheres = [[6, 70], [15, 66], [26, 60], [34, 60], [42, 62]].map(([i, r]) => ({ c: [spine[i].x, spine[i].y, spine[i].z], r })).concat([{ c: [headAt.x, 52, headAt.z], r: 52 }, { c: [tailPts[14].x, 22, tailPts[14].z], r: 24 }, { c: [tailPts[24].x, 22, tailPts[24].z], r: 22 }]);
   return {
     group: root, parts, spheres,
     breathe(x) { const k = 0.5 - 0.5 * Math.cos(x * Math.PI * 2); breath.scale.set(1 + 0.012 * k, 1 + 0.06 * k, 1 + 0.012 * k); front.position.y = fy + 3 * k; },
