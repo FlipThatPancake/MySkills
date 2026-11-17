@@ -59,7 +59,7 @@ export function breadBin(kit, { w = 380, d = 250, h = 210, form = 'roll', seed =
   const g = kit.group(), R = rnd(seed), pts = [];
   g.add(kit.rbox(-w / 2, 0, d / 2, w, h * 0.78, d, 16));
   if (form === 'roll') {
-    g.add(kit.cyl(-w / 2 + 6, h * 0.78 - 4, 0, d * 0.5 - 2, w - 12, { axis: 'x', seg: 28, tone: 'mid' }));   // the tambour
+    g.add(kit.cyl(-w / 2 + 6, h * 0.78 - 4, 0, d * 0.5 - 2, w - 12, { axis: 'x', seg: 28, tone: 'mid', through: true }));   // the tambour, half sunk in the body
     for (let i = 1; i < 6; i++) { const a = (i / 6) * 3.1416; pts.push([-w / 2 + 12, h * 0.78 - 4 + Math.sin(a) * (d * 0.5), Math.cos(a) * (d * 0.5) + 0.6], [w / 2 - 12, h * 0.78 - 4 + Math.sin(a) * (d * 0.5), Math.cos(a) * (d * 0.5) + 0.6]); }
     g.add(kit.cyl(0, h * 0.45, d / 2 + 6, 9, 14, { axis: 'z', seg: 10, tone: 'lo' }));
   } else {
@@ -137,7 +137,7 @@ export function spiceRack(kit, { w = 480, rows = 2, seed = 6, style = 'jars' } =
   const g = kit.group(), R = rnd(seed), pts = [], rh = 150, d = 90;
   for (let r = 0; r < rows; r++) {
     const y = 30 + r * rh; g.add(kit.box(-w / 2, y, d, w, 14, d, lo)); g.add(kit.box(-w / 2, y + 14, d, w, 16, 8, lo));
-    let x = -w / 2 + 40; while (x < w / 2 - 40) { const hh = style === 'tins' ? 40 + R() * 14 : 70 + R() * 30, rr = style === 'tins' ? 38 + R() * 6 : 26 + R() * 6; g.add(kit.cyl(x + rr, y + 30, d / 2 + 6, rr, hh, { seg: 16 })); g.add(kit.cyl(x + rr, y + 30 + hh, d / 2 + 6, rr + 2, 12, { seg: 16, tone: 'lo' })); pts.push([x + rr - rr * 0.6, y + 30 + hh * 0.3, d / 2 + 6 + rr + 0.6], [x + rr + rr * 0.6, y + 30 + hh * 0.3, d / 2 + 6 + rr + 0.6]); x += rr * 2 + 14 + R() * 10; }
+    let x = -w / 2 + 40; while (x < w / 2 - 40) { const hh = style === 'tins' ? 40 + R() * 14 : 70 + R() * 30, rr = style === 'tins' ? 38 + R() * 6 : 26 + R() * 6; if (x + rr * 2 + 6 > w / 2 - 7) break; g.add(kit.cyl(x + rr, y + 30, d / 2 + 6, rr, hh, { seg: 16 })); g.add(kit.cyl(x + rr, y + 30 + hh, d / 2 + 6, rr + 2, 12, { seg: 16, tone: 'lo' })); pts.push([x + rr - rr * 0.6, y + 30 + hh * 0.3, d / 2 + 6 + rr + 0.6], [x + rr + rr * 0.6, y + 30 + hh * 0.3, d / 2 + 6 + rr + 0.6]); x += rr * 2 + 14 + R() * 10; }
   }
   for (const s of [-1, 1]) g.add(kit.box(s * (w / 2) - 7, 20, d, 14, (rows - 1) * rh + 130, d, lo));
   g.add(kit.lines(pts, 'faint'));

@@ -34,7 +34,7 @@ export function windowSeat(kit, { w = 1500, d = 520, h = 440, form = 'storage', 
   if (cushion === 'striped') { const ln = []; for (let x = -cw2 / 2 + 60; x < cw2 / 2 - 40; x += 90) ln.push([x, cy + cuH * 0.6, 14 + cd / 2 + 8], [x, cy + cuH * 0.1, 14 + cd / 2 + 8]); g.add(kit.lines(ln, 'mid')); }
   const pw = [-1, 1, 0].slice(0, Math.max(0, Math.min(3, pillows)));
   pw.forEach((s, i) => { const p = softBox(kit, 340 - i * 20, 330 - i * 20, 110, { r: 50, bulge: 22, dent: 12, piping: 'edge', tone: i % 2 ? 'lo' : 'mid' }); p.position.set(s * (cw2 / 2 - 260) + (R() - 0.5) * 60, cy + cuH + 130, -d / 2 + 90 + 70); p.rotation.x = -(0.30 + R() * 0.16); p.rotation.z = (R() - 0.5) * 0.35; g.add(p); });
-  if (throwOn === 'yes') { const t = foldedThrow(kit, { w: 700, d: 360, layers: 3, tone: 'lo' }); t.position.set(cw2 / 2 - 480, cy + cuH, 50); t.rotation.y = 0.08; g.add(t); }
+  if (throwOn === 'yes') { const t = foldedThrow(kit, { w: 700, d: 200, layers: 3, tone: 'lo' }); t.position.set(cw2 / 2 - 480, cy + cuH, 125);  t.rotation.y = 0.08; g.add(t); }
   return kit.merge(g);
 }
 

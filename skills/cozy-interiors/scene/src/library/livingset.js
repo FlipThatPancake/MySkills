@@ -20,7 +20,7 @@ export function chair(kit, { shape = 'wing', legs: legsOpt, w = 840, d = 860, to
     const back = softBox(kit, w - 150, 780, 190, { r: 80, bulge: 26, tone, piping: 'edge' }); back.position.set(0, y0 + 360, -d / 2 + 150); back.rotation.x = -8 * DEG; g.add(back);
     for (const s of [-1, 1]) {
       g.add(kit.rbox(s * (w / 2 - 75) - 75, y0 - 20, d / 2 - 30, 150, 400, d - 70, 36, { tone }));   // the arm
-      g.add(kit.cyl(s * (w / 2 - 75), y0 + 360, d / 2 - 30, 78, d - 90, { axis: 'z', seg: 20, tone }));   // its roll
+      g.add(kit.cyl(s * (w / 2 - 75), y0 + 360, d / 2 - 30, 78, d - 90, { axis: 'z', seg: 20, tone, through: true }));   // its roll
       const wing = softBox(kit, 150, 520, 230, { r: 60, bulge: 16, tone }); wing.position.set(s * (w / 2 - 80), y0 + 520, -d / 2 + 190); wing.rotation.y = -s * 14 * DEG; g.add(wing);
     }
     const pad = softBox(kit, w - 330, d - 330, 140, { r: 52, bulge: 18, tone, dent: 8 }); pad.rotation.x = -Math.PI / 2; pad.position.set(0, y0 + 70, 20); g.add(pad);
@@ -47,7 +47,7 @@ export function chair(kit, { shape = 'wing', legs: legsOpt, w = 840, d = 860, to
       g.add(kit.lines(pts, 'faint'));
     }
     const pad = softBox(kit, w - 130, d - 130, 110, { r: 42, bulge: 14, tone, dent: 6 }); pad.rotation.x = -Math.PI / 2; pad.position.set(0, sh + 62, 0); g.add(pad);
-    if (back === 'loose') { const cu = softBox(kit, w - 260, 300, 110, { r: 50, bulge: 22, tone, piping: 'edge' }); cu.position.set(0, sh + 190, -Z + 50); cu.rotation.x = -12 * DEG; g.add(cu); }
+    if (back === 'loose') { const cu = softBox(kit, w - 260, 300, 110, { r: 50, bulge: 22, tone, piping: 'edge' }); cu.position.set(0, sh + 190, -Z + 50); cu.rotation.x = -12 * DEG; g.add(kit.through(cu)); }
   } else {   // a sling: a leather seat-and-back hung from a bent frame
     const sh = 360, X = w / 2 - 40, Z = d / 2 - 30;
     for (const sx of [-1, 1]) { const pts = [[sx * X, 8, Z], [sx * X, sh * 0.8, Z - 30], [sx * X, sh, -Z + 160], [sx * X, 700, -Z - 60]]; for (let i = 0; i < 3; i++) g.add(rod(kit, pts[i], pts[i + 1], 15, 15, 'mid')); g.add(rod(kit, [sx * X, 8, -Z + 120], [sx * X, 8, Z], 14, 14, 'mid')); }
@@ -119,7 +119,7 @@ export function logBasket(kit, { r = 270, h = 400, logs = 7, seed = 3, weave = '
     for (let tries = 0; tries < 80; tries++) {
       const a = R() * 6.2832, rd = Math.sqrt(R()) * (r - wall - 70), x = Math.cos(a) * rd, z = Math.sin(a) * rd, lr = 40 + R() * 22, len = h * 0.9 + 80 + R() * 160;
       const la = R() * 6.2832, lean = leanP * (0.3 + R() * 1.4) * (k % 3 === 0 ? 2.3 : 1); let u = [Math.cos(la) * lean, 1, Math.sin(la) * lean]; const m = Math.hypot(...u); u = u.map((q) => q / m);
-      const A = [x, 44, z], B = [x + u[0] * len, 44 + u[1] * len, z + u[2] * len];
+      const y0 = 44 + lr * Math.hypot(u[0], u[2]) + 1, A = [x, y0, z], B = [x + u[0] * len, y0 + u[1] * len, z + u[2] * len];   // a leaning log's end disc dips lr * sin(tilt) below its axis: lift it onto the basket floor
       if (!fits(A, B, lr)) continue;
       placed.push({ A, B, lr }); logRod(A, B, lr); break;
     }
@@ -173,7 +173,8 @@ export function recordPlayer(kit, { w = 760, d = 400, h = 520, seed = 4, records
   // records: sleeves standing in the bay, the last few leaning
   const iy0 = cy0 + th, inner = cy1 - iy0 - 26; let x = ix0 + 8, k = 0; const bayW = ix1 - ix0;
   while (k < records && x < ix1 - 40) {
-    const t = 20 + R() * 14, hh = Math.min(inner, 270 + R() * 20), lean = x > ix1 - 120 ? 0.28 + R() * 0.1 : 0;
+    const t = 20 + R() * 14, hh = Math.min(inner, 270 + R() * 20), lean = x > ix1 - 120 ? 0.3 : 0;   // the last ones lean together at one angle, and stop where the divider is
+    if (lean && x + hh * Math.sin(lean) + t / 2 + 4 > ix1) break;
     const m = kit.group(); m.add(kit.box(-t / 2, 0, 160, t, hh, 310, R() < 0.5 ? lo : {})); m.position.set(x, iy0, 0); if (lean) m.rotation.z = -lean; g.add(m);
     pts.push([x - t / 2 + 1, iy0 + hh * 0.7, d / 2 - 10], [x + t / 2 - 1, iy0 + hh * 0.7, d / 2 - 10]);
     x += t + 3 + R() * 5; k++;
