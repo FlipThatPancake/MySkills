@@ -90,7 +90,7 @@
       "width": 900,
       "height": 2100,
       "hinge": "r",
-      "at": 1500
+      "at": 2300
      }
     ]
    },
@@ -176,7 +176,7 @@
       }
      ]
     },
-    "group": "kitchen:run",
+    "group": "kitchen:cook",
     "hero": true,
     "area": "kitchen"
    },
@@ -294,14 +294,10 @@
        "w": 400,
        "kind": "door",
        "hinge": "r"
-      },
-      {
-       "w": 300,
-       "kind": "filler"
       }
      ]
     },
-    "group": "kitchen:run",
+    "group": "kitchen:sink",
     "area": "kitchen"
    },
    {
@@ -338,16 +334,15 @@
     "id": "kitchen-fridge",
     "asset": "fridge",
     "at": [
-     640,
+     5850,
      0,
-     3400
+     640
     ],
-    "turn": 90,
     "mount": "floor",
     "params": {
      "form": 1
     },
-    "group": "kitchen:sink",
+    "group": "kitchen:arch",
     "area": "kitchen"
    },
    {
@@ -399,7 +394,7 @@
      ],
      "form": 0
     },
-    "group": "kitchen:cook",
+    "group": "kitchen:wall",
     "area": "kitchen"
    },
    {
@@ -412,29 +407,7 @@
     ],
     "mount": "wall",
     "params": {},
-    "group": "kitchen:cook",
-    "area": "kitchen"
-   },
-   {
-    "id": "kitchen-jars",
-    "asset": "wallRun",
-    "at": [
-     320,
-     0,
-     1000
-    ],
-    "turn": 90,
-    "mount": "wall",
-    "params": {
-     "modules": [
-      {
-       "w": 600,
-       "kind": "open"
-      }
-     ],
-     "form": 1
-    },
-    "group": "kitchen:sink",
+    "group": "kitchen:wall",
     "area": "kitchen"
    },
    {
@@ -447,7 +420,7 @@
     ],
     "mount": "floor",
     "params": {},
-    "group": "kitchen:cook",
+    "group": "kitchen:wall",
     "area": "kitchen"
    },
    {
@@ -460,8 +433,8 @@
     ],
     "mount": "floor",
     "params": {
-     "w": 2340,
-     "d": 2340
+     "w": 1900,
+     "d": 1900
     },
     "group": "kitchen:floor",
     "area": "kitchen"
@@ -558,6 +531,27 @@
     "area": "kitchen"
    },
    {
+    "id": "kitchen-bt-jug",
+    "asset": "jug",
+    "at": [
+     5350,
+     757,
+     2850
+    ],
+    "mount": "on",
+    "params": {
+     "r": 79,
+     "h": 200,
+     "form": "straight",
+     "band": "plain",
+     "handle": "none"
+    },
+    "group": "kitchen:breakfast",
+    "area": "kitchen",
+    "dx": -250,
+    "dz": 150
+   },
+   {
     "id": "kitchen-fp",
     "asset": "floorPlant",
     "at": [
@@ -586,6 +580,21 @@
     "area": "kitchen"
    },
    {
+    "id": "kitchen-stool",
+    "asset": "stool",
+    "at": [
+     4300,
+     0,
+     2900
+    ],
+    "mount": "floor",
+    "params": {
+     "form": 2
+    },
+    "group": "kitchen:breakfast",
+    "area": "kitchen"
+   },
+   {
     "id": "dining-rug",
     "asset": "rug",
     "at": [
@@ -595,8 +604,8 @@
     ],
     "mount": "floor",
     "params": {
-     "w": 3300,
-     "d": 2200
+     "w": 2800,
+     "d": 1800
     },
     "group": "dining:floor",
     "area": "dining"
@@ -624,7 +633,7 @@
     "id": "dining-dt-chair-1",
     "asset": "chair",
     "at": [
-     12850,
+     12700,
      7,
      1940
     ],
@@ -638,7 +647,7 @@
     "id": "dining-dt-chair-2",
     "asset": "chair",
     "at": [
-     12850,
+     12700,
      7,
      3460
     ],
@@ -653,7 +662,7 @@
     "id": "dining-dt-chair-3",
     "asset": "chair",
     "at": [
-     13750,
+     13300,
      7,
      1940
     ],
@@ -667,7 +676,36 @@
     "id": "dining-dt-chair-4",
     "asset": "chair",
     "at": [
-     13750,
+     13300,
+     7,
+     3460
+    ],
+    "turn": 180,
+    "mount": "floor",
+    "params": {},
+    "group": "dining:table set",
+    "area": "dining",
+    "lift": 7
+   },
+   {
+    "id": "dining-dt-chair-5",
+    "asset": "chair",
+    "at": [
+     13900,
+     7,
+     1940
+    ],
+    "mount": "floor",
+    "params": {},
+    "group": "dining:table set",
+    "area": "dining",
+    "lift": 7
+   },
+   {
+    "id": "dining-dt-chair-6",
+    "asset": "chair",
+    "at": [
+     13900,
      7,
      3460
     ],
@@ -777,7 +815,7 @@
     "id": "dining-side",
     "asset": "sideboard",
     "at": [
-     14100,
+     13600,
      0,
      210
     ],
@@ -790,15 +828,15 @@
     "id": "dining-mirror",
     "asset": "mirror",
     "at": [
-     14100,
+     13600,
      1150,
      0
     ],
     "mount": "wall",
     "params": {
      "shape": "round",
-     "w": 800,
-     "h": 800
+     "w": 700,
+     "h": 700
     },
     "group": "dining:sideboard",
     "area": "dining"
@@ -807,7 +845,7 @@
     "id": "dining-pot",
     "asset": "plant",
     "at": [
-     13500,
+     13000,
      800,
      60
     ],
@@ -817,6 +855,26 @@
     },
     "group": "dining:sideboard",
     "area": "dining"
+   },
+   {
+    "id": "dining-jug",
+    "asset": "jug",
+    "at": [
+     14100,
+     800,
+     150
+    ],
+    "mount": "on",
+    "params": {
+     "r": 62,
+     "h": 190,
+     "form": "belly",
+     "band": "banded",
+     "handle": "loop"
+    },
+    "group": "dining:sideboard",
+    "area": "dining",
+    "off": 150
    },
    {
     "id": "dining-fp1",
@@ -837,31 +895,31 @@
     "id": "dining-pic",
     "asset": "picture",
     "at": [
-     15750,
+     16975,
      1300,
-     606.2
+     2728
     ],
     "turn": -60,
     "mount": "wall",
     "params": {
      "form": 0
     },
-    "group": "dining:corner",
+    "group": "dining:floor",
     "area": "dining"
    },
    {
-    "id": "dining-fp2",
-    "asset": "floorPlant",
+    "id": "dining-logs2",
+    "asset": "basket",
     "at": [
-     15200,
+     15050,
      0,
-     520
+     480
     ],
     "mount": "floor",
     "params": {
-     "form": 2
+     "form": 1
     },
-    "group": "dining:corner",
+    "group": "dining:sideboard",
     "area": "dining"
    },
    {
@@ -887,8 +945,8 @@
     ],
     "mount": "floor",
     "params": {
-     "w": 2800,
-     "d": 1900
+     "w": 2000,
+     "d": 1300
     },
     "group": "living:extra",
     "area": "living"
@@ -971,7 +1029,7 @@
     "asset": "vase",
     "at": [
      23700,
-     387,
+     437,
      2450
     ],
     "mount": "on",
@@ -1146,7 +1204,7 @@
     ],
     "mount": "floor",
     "params": {
-     "form": 0
+     "form": 3
     },
     "group": "living:stove",
     "area": "living"
@@ -1215,14 +1273,14 @@
      {
       "name": "cook",
       "from": [
-       5900,
+       6500,
        1100,
-       4800
+       5700
       ],
       "look": [
-       2903,
-       1100,
-       -182
+       2251,
+       900,
+       847
       ],
       "fov": 40,
       "subject": "kitchen:cook"
@@ -1230,46 +1288,31 @@
      {
       "name": "table",
       "from": [
-       800,
        1700,
-       4800
+       1700,
+       5700
       ],
       "look": [
-       5453,
-       1100,
-       1753
+       5761,
+       300,
+       2986
       ],
-      "fov": 34,
+      "fov": 30,
       "subject": "kitchen:breakfast"
-     },
-     {
-      "name": "sink",
-      "from": [
-       5600,
-       1000,
-       6000
-      ],
-      "look": [
-       740,
-       900,
-       1385
-      ],
-      "fov": 34,
-      "subject": "kitchen:sink"
      },
      {
       "name": "arch",
       "from": [
-       4400,
-       1100,
-       3600
+       2300,
+       1000,
+       4800
       ],
       "look": [
-       5975,
-       300,
-       493
+       5185,
+       900,
+       -181
       ],
-      "fov": 30,
+      "fov": 34,
       "subject": "kitchen:arch"
      }
     ]
@@ -1297,7 +1340,7 @@
       600,
       1600
      ],
-     "az": 8,
+     "az": 0,
      "el": 22,
      "fit": "objects"
     },
@@ -1320,47 +1363,32 @@
      {
       "name": "window",
       "from": [
-       12700,
-       2100,
-       4800
+       12100,
+       1900,
+       5400
       ],
       "look": [
-       11101,
+       11258,
        249,
-       369
+       260
       ],
-      "fov": 34,
+      "fov": 36,
       "subject": "dining:window"
      },
      {
       "name": "sideboard",
       "from": [
-       15400,
-       700,
-       5400
+       16900,
+       1000,
+       5100
       ],
       "look": [
-       13592,
-       975,
-       337
+       13501,
+       900,
+       711
       ],
       "fov": 34,
       "subject": "dining:sideboard"
-     },
-     {
-      "name": "tight",
-      "from": [
-       10900,
-       1100,
-       6300
-      ],
-      "look": [
-       12988,
-       700,
-       2492
-      ],
-      "fov": 30,
-      "subject": "dining:table set"
      }
     ]
    }
@@ -1415,9 +1443,9 @@
        4200
       ],
       "look": [
-       26848,
+       26897,
        500,
-       925
+       934
       ],
       "fov": 34,
       "subject": "living:stove"
@@ -1425,14 +1453,14 @@
      {
       "name": "window",
       "from": [
-       26200,
-       700,
-       6300
+       28300,
+       850,
+       3900
       ],
       "look": [
-       22408,
-       1100,
-       802
+       22051,
+       1204,
+       705
       ],
       "fov": 34,
       "subject": "living:window"
@@ -1441,15 +1469,15 @@
       "name": "coffee",
       "from": [
        22000,
-       1100,
-       5400
+       1250,
+       6300
       ],
       "look": [
-       23499,
-       300,
-       2266
+       24137,
+       900,
+       2608
       ],
-      "fov": 28,
+      "fov": 30,
       "subject": "living:coffee group"
      }
     ]
