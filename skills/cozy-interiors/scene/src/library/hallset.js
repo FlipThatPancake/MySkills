@@ -11,10 +11,10 @@ const ringXZ = (cx, y, cz, r, n = 28) => { const p = []; for (let i = 0; i < n; 
 
 // shoes standing on a shelf top at y: a mix of sneakers, ankle boots and a slipper pair; one pair heel-out, one askew, gaps left; light shells
 function shoesOn(kit, g, R, x0, x1, y, z, { fill = 0.8, L = 265, xs } = {}) {
-  for (const x of xs || Array.from({ length: Math.max(0, Math.floor((x1 - x0 - 190) / 190) + 1) }, (_, i) => x0 + 95 + i * 190)) {
+  for (const x of xs || Array.from({ length: Math.max(0, Math.floor((x1 - x0 - 215) / 215) + 1) }, (_, i) => x0 + 108 + i * 215)) {
     if (R() > fill) continue;
-    const q = R(), kind = q < 0.55 ? 'sneaker' : q < 0.8 ? 'boot' : 'slipper', turn = R() < 0.12 ? Math.PI : 0, ro = turn + (R() < 0.25 ? (R() - 0.5) * 1.2 : (R() - 0.5) * 0.22), dx = (R() - 0.5) * 24, LL = (kind === 'slipper' ? 235 : L) * (0.9 + R() * 0.15);
-    for (const s of [-1, 1]) { const sh = shoe(kit, 0, 0, LL, { kind: kind === 'boot' ? 'boot' : 'sneaker', tone: kind === 'sneaker' ? (R() < 0.5 ? 'lo' : undefined) : 'lo', light: true }); if (kind === 'slipper') sh.scale.y = 0.62; const c = new kit.THREE.Group(); c.add(sh); c.position.set(x + dx + s * 46 * (turn ? -1 : 1), y, z); c.rotation.y = ro + s * 0.04; g.add(kit.content(c)); }
+    const q = R(), kind = q < 0.55 ? 'sneaker' : q < 0.8 ? 'boot' : 'slipper', turn = R() < 0.12 ? Math.PI : 0, ro = turn + (R() < 0.25 ? (R() - 0.5) * 0.5 : (R() - 0.5) * 0.22), dx = (R() - 0.5) * 24, LL = (kind === 'slipper' ? 235 : L) * (0.9 + R() * 0.15);
+    for (const s of [-1, 1]) { const sh = shoe(kit, 0, 0, LL, { kind: kind === 'boot' ? 'boot' : 'sneaker', tone: kind === 'sneaker' ? (R() < 0.5 ? 'lo' : undefined) : 'lo', light: true }); if (kind === 'slipper') sh.scale.y = 0.62; const c = new kit.THREE.Group(); c.add(sh); c.position.set(x + dx + s * 52 * (turn ? -1 : 1), y, z); c.rotation.y = ro + s * 0.04; g.add(kit.content(c)); }
   }
 }
 
