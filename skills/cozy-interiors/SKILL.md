@@ -12,12 +12,13 @@ Beautiful views of home areas on one page: paper-white fills, thin grey lines, s
 - Area: an open, spacious space backed by one wall or two at an angle. One area in focus at a time; the page glides between areas.
 - Each area is a picture of its own: a hero piece, groups at floor, waist and wall height, something living, something soft. Every object belongs to a group and stands where its owner would use it: [placement.md](references/placement.md).
 - Openings give a wall character, as the roll deals them: two-sash, tall-pair, bay, picture and window-wall windows, glass doors, and passages (arch, cased opening, pass-through, portal, pocket door); thick frames, slightly open, a view outside. A way through shows floor running on beyond it.
+- Open plan, as the roll deals it: two or three areas share one floor and back wall, in a row or round a corner. Join them with `H.join`, give each its floor with `H.floorZones`, and mark each seam with a separator piece (`sep`), at least one of them furniture.
 - Living things move in each area, as the roll deals them: [motion.md](references/motion.md).
 - Each home differs in layout and object choice: follow the roll.
 
 ## Build
 Run from `scene/` with Node, global esbuild (`npm i -g esbuild`) and Playwright (Pillow for shots.mjs). Keep the spec, scene json and page in the user's project.
-1. `node roll.mjs <seed> <kinds...>`: this home's choices, including where each plant lives, each area's foreground piece and the accent textile. A kind the tables lack: add it to tables.json.
+1. `node roll.mjs [seed] <kinds...>`: this home's choices, including where each plant lives, each area's foreground piece and the accent textile. For a new home leave the seed out: the roll picks one and prints it. A kind the tables lack: add it to tables.json.
 2. `node assets.mjs`: every asset with origin, size, mount, params and forms. Missing: a new generator in `src/library/` in the same style, registered in index.js and meta.js.
 3. A spec script importing compose.mjs (its header lists the calls) writes the scene json, calling `a.alive(roll.areas[id].motion)` for each area; start from `example.spec.mjs`.
 4. `node check-home.mjs <scene.json>`: fix every layout issue; shot issues wait for step 5. `--quick` skips the slow renders while you work; run it in full before delivering.
