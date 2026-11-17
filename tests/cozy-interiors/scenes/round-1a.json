@@ -567,7 +567,7 @@
     "params": {
      "form": 1
     },
-    "group": "kitchen:arch",
+    "group": "kitchen:wall",
     "area": "kitchen"
    },
    {
@@ -587,9 +587,9 @@
     "id": "kitchen-stool",
     "asset": "stool",
     "at": [
-     4300,
+     4880,
      0,
-     2900
+     2700
     ],
     "mount": "floor",
     "params": {
@@ -884,9 +884,9 @@
     "id": "dining-fp1",
     "asset": "floorPlant",
     "at": [
-     11100,
+     11300,
      0,
-     3700
+     2700
     ],
     "mount": "floor",
     "params": {
@@ -943,14 +943,14 @@
     "id": "living-rug",
     "asset": "rug",
     "at": [
-     23800,
+     23200,
      0,
-     2300
+     1800
     ],
     "mount": "floor",
     "params": {
-     "w": 2000,
-     "d": 1300
+     "w": 3300,
+     "d": 2700
     },
     "group": "living:extra",
     "area": "living"
@@ -1189,7 +1189,7 @@
     "at": [
      22200,
      0,
-     3350
+     3650
     ],
     "mount": "floor",
     "params": {
@@ -1292,32 +1292,17 @@
      {
       "name": "table",
       "from": [
-       1700,
-       1700,
-       5700
+       2900,
+       2100,
+       6000
       ],
       "look": [
-       5761,
+       6026,
        300,
-       2986
+       2815
       ],
       "fov": 30,
       "subject": "kitchen:breakfast"
-     },
-     {
-      "name": "arch",
-      "from": [
-       2300,
-       1000,
-       4800
-      ],
-      "look": [
-       5185,
-       900,
-       -181
-      ],
-      "fov": 34,
-      "subject": "kitchen:arch"
      }
     ]
    }
@@ -1352,14 +1337,14 @@
      {
       "name": "table",
       "from": [
-       11200,
-       1250,
-       6600
+       10300,
+       1100,
+       6000
       ],
       "look": [
-       12888,
+       12953,
        900,
-       2478
+       2385
       ],
       "fov": 36,
       "subject": "dining:table set"
@@ -1367,29 +1352,29 @@
      {
       "name": "window",
       "from": [
-       12100,
-       1900,
-       5400
+       12400,
+       2100,
+       4800
       ],
       "look": [
-       11258,
-       249,
-       260
+       12500,
+       1100,
+       144
       ],
-      "fov": 36,
+      "fov": 32,
       "subject": "dining:window"
      },
      {
       "name": "sideboard",
       "from": [
-       16900,
-       1000,
+       16300,
+       700,
        5100
       ],
       "look": [
-       13501,
+       13500,
        900,
-       711
+       638
       ],
       "fov": 34,
       "subject": "dining:sideboard"
@@ -1427,14 +1412,14 @@
      {
       "name": "sofa",
       "from": [
-       23500,
+       23200,
        1100,
        5400
       ],
       "look": [
        23222,
        900,
-       415
+       380
       ],
       "fov": 40,
       "subject": "living:sofa"
@@ -1444,10 +1429,10 @@
       "from": [
        21700,
        1700,
-       4200
+       4500
       ],
       "look": [
-       26897,
+       26867,
        500,
        934
       ],
@@ -1472,16 +1457,16 @@
      {
       "name": "coffee",
       "from": [
-       22000,
+       25300,
        1250,
-       6300
+       6000
       ],
       "look": [
-       24137,
-       900,
-       2608
+       23364,
+       300,
+       2634
       ],
-      "fov": 30,
+      "fov": 28,
       "subject": "living:coffee group"
      }
     ]

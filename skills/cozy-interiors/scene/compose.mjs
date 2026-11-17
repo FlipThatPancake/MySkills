@@ -10,6 +10,9 @@
 //   back.place('fridge', 'fridge', 5100);   back.place('sofa', 'sofa', 3200, { y: 7, lift: 7, params: { seats: 2 } });   back.place('pic', 'picture', 2000, { y: 1400 });   options: y, turn (added to facing out from the wall), params, off (override), group, hero, shadow
 //   A cabinet run with slots:  const R = a.run(back, 'run', 1650, [modules], { group: 'run' });  R.on('hob', 'hob');  R.on('hob', 'hood');  R.on('hob', 'pan');  R.on('sink', 'kettle');  (the thing goes on the middle of that module)
 //   A table set:  const T = a.table('dining', { at: [2800, 2800], r: 650 | w: 1700, d: 900, chairs: 4, rug: true, cloth: false | true | 'accent' });  T.over('pendantLamp');  T.on('vase')
+//   What roll.mjs deals, and how a spec uses it:  plantAt (distinct places: sill, shelf, worktop, hanging, floor; one floor plant at most) -> place each plant there;  foreground (the near-camera piece, from the area's own use) -> put it by the shot's near edge;
+//     accent {name, hex} for the home -> new Home({ accent: hex });  accentOn (the textile that carries it) -> give that piece params: { tone: 'accent' } (cushion, foldedThrow, cloth, tablecloth, teaTowel, benchCushion, floorCushion, runner, tableRunner, duvetCloth).
+//   Soft things:  a.seatSoft('sofa', { tone: 'accent' | 'lo' | 'mid', throw: 'drape' | 'band' | false, group })  one leaning cushion per seat end and a throw dropped on the arm or folded across the seat (armchairs get one cushion);  a.table(id, { cloth: true | 'accent' }) puts a cloth shaped to the table.
 //   a.topOf(id): the height of the top of something placed (its dealt h included), for y of a thing that stands on it.
 //   Anywhere:  a.put(id, asset, [x, z], turn, { y, mount, group, hero, params, ... })  (the object's own origin at [x, z]; see assets.mjs).  a.view({ target, az, el }), a.shot(name, from, look, fov, group)
 // Every object has a `group` (its run, table set, seating group or wall arrangement) and hero: true marks the area's main piece.
@@ -131,10 +134,10 @@ class Area {
     const T = (this.h.kit ||= createKit()).THREE, g0 = REGISTRY[tgt.asset](this.h.kit, { ...(tgt.params || {}) }); g0.updateMatrixWorld(true);
     const lb = new T.Box3().setFromObject(g0), tn = (tgt.turn || 0) + this.psi, th = rad(tn), W = lb.max.x - lb.min.x, D = lb.max.z - lb.min.z, cx = (lb.min.x + lb.max.x) / 2, cz = (lb.min.z + lb.max.z) / 2;
     const { tris, all } = this.targetTris('seatSoft', targetId), c = all.getCenter(new T.Vector3()), org = [c.x - (cx * Math.cos(th) + cz * Math.sin(th)), c.z - (-cx * Math.sin(th) + cz * Math.cos(th))];   // the object's origin in the area's frame, from where its parts really stand
-    const toArea = (lx, lz) => [org[0] + lx * Math.cos(th) + lz * Math.sin(th), org[1] - lx * Math.sin(th) + lz * Math.cos(th)], f = heightField(tris), zo = lb.min.z + 300;
+    const toArea = (lx, lz) => [org[0] + lx * Math.cos(th) + lz * Math.sin(th), org[1] - lx * Math.sin(th) + lz * Math.cos(th)], f = heightField(tris), zo = lb.min.z + 420;
     const seats = tgt.params?.seats || (tgt.asset === 'armchair' ? 1 : 2), n = cushions ?? (tgt.asset === 'armchair' ? 1 : Math.max(1, seats - 1)), grp = group || tgt.group;
-    for (let i = 0; i < n; i++) { const lx = n === 1 ? cx + (tgt.asset === 'armchair' ? 0 : W / 2 - 330) : cx - (W / 2 - 330) + i * (W - 660) / (n - 1), [px, pz] = toArea(lx, zo), [sx, sz] = toArea(lx, zo + 320), y = Math.round(f(sx, sz));   // the seat height is read in front of the back
-      this.put(`${targetId}-cushion${i + 1}`, 'cushion', [px, pz], tn + (i % 2 ? -6 : 8), { group: grp, y, mount: 'on', params: { lean: 18 + 4 * (i % 2), tone } }); }
+    for (let i = 0; i < n; i++) { const lx = n === 1 ? cx + (tgt.asset === 'armchair' ? 0 : W / 2 - 330) : cx - (W / 2 - 330) + i * (W - 660) / (n - 1), [px, pz] = toArea(lx, zo), [sx, sz] = toArea(lx, zo + 120), y = Math.round(f(sx, sz));   // the seat height is read in front of the back
+      this.put(`${targetId}-cushion${i + 1}`, 'cushion', [px, pz], tn + (i % 2 ? -6 : 8), { group: grp, y, mount: 'on', params: { w: 400, h: 320, thick: 130, lean: 14 + 4 * (i % 2), tone } }); }
     if (thr === 'drape') { try { const [ax, az] = toArea(cx - (W / 2 - 420), zo + 330); this.drapeOver(`${targetId}-throw`, targetId, { w: 1000, d: 700, wave: 10, at: [ax, az], spin: tn + 20, tone: throwTone, group: grp }); } catch (e) { if (process.env.SOFT_DEBUG) console.error(e.message); thr = 'band'; } }
     if (thr === 'band') { const [bx, bz] = toArea(cx + (W / 2 - 360), zo + 330); this.bandOn(`${targetId}-throw`, targetId, { w: 700, d: 380, at: [bx, bz], spin: tn, tone: throwTone, group: grp }); }
   }
@@ -164,7 +167,7 @@ class Area {
     const round = !!r, p = this, TW = round ? 2 * r : w, TD = round ? 2 * r : d;
     if (rug) p.put(`${id}-rug`, 'rug', at, 0, { group, params: { w: TW + 1100, d: TD + 1100 } });
     p.put(id, round ? 'roundTable' : 'table', at, 0, { y: 7, lift: 7, group, hero, params: round ? { r, h } : { w, d, h } });
-    if (cloth) p.put(`${id}-cloth`, 'tablecloth', at, 0, { y: h + 7, mount: 'on', group, params: { ...(round ? { r } : { w, d }), drop: round ? 260 : 300, ...(cloth === 'accent' ? { tone: 'accent' } : {}) } });   // cloth: true | 'accent': a cloth whose shape follows the table (round skirt, or a rectangle that hangs over the long sides)
+    if (cloth) p.put(`${id}-cloth`, 'tablecloth', at, 0, { y: h + 7, mount: 'on', group, params: { ...(round ? { r } : { w: w + 90, d: d + 90 }), drop: round ? 260 : 300, ...(cloth === 'accent' ? { tone: 'accent' } : {}) } });   // cloth: true | 'accent': a cloth whose shape follows the table (round skirt, or a rectangle that hangs over the long sides)
     const spots = round ? [[0, -1], [1, 0], [0, 1], [-1, 0]].slice(0, Math.min(4, chairs)).map(([a, b]) => [a * (r + 230), b * (r + 230)])
       : (() => { const per = Math.ceil(chairs / 2), out = []; for (let i = 0; i < per; i++) for (const s of [-1, 1]) { if (out.length < chairs) out.push([(i - (per - 1) / 2) * (w / per), s * (d / 2 + 310)]); } return out; })();
     spots.forEach(([dx, dz], i) => { const q = [at[0] + dx, at[1] + dz]; p.put(`${id}-chair-${i + 1}`, 'chair', q, deg(Math.atan2(at[0] + (round ? 0 : dx) - q[0], at[1] - q[1])), { y: 7, lift: 7, group }); });

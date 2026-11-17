@@ -36,7 +36,7 @@ export function cushion(kit, { w = 440, h = 420, thick = 120, tone = 'mid', pipi
   if (pattern === 'stripes') { const yy = [-0.34, 0, 0.34].map((f) => f * h); face(yy.flatMap((y) => [[-w / 2 + m, y], [w / 2 - m, y]])); }
   else if (pattern === 'inset') face(loop(w / 2 - m * 1.4, h / 2 - m * 1.4));
   else if (pattern === 'diamond') face([[-w / 2 + m, 0], [0, h / 2 - m], [0, h / 2 - m], [w / 2 - m, 0], [w / 2 - m, 0], [0, -h / 2 + m], [0, -h / 2 + m], [-w / 2 + m, 0]]);
-  else if (pattern === 'tufted') { face([[-10, 0], [10, 0], [0, -10], [0, 10]], 2); for (const [x, y] of [[-0.3, -0.3], [0.3, -0.3], [-0.3, 0.3], [0.3, 0.3]]) face([[0, 0], [x * w * 0.9, y * h * 0.9]].map(([a, b]) => [a * 0.25, b * 0.25]), 6); }
+  else if (pattern === 'tufted') { const bp = (x, y) => [x, y + h / 2, pz(x, y) + 1.5]; for (let k = 0; k < 12; k++) { const a0 = k / 12 * 6.2832, a1 = (k + 1) / 12 * 6.2832; P.push(bp(Math.cos(a0) * 8, Math.sin(a0) * 8), bp(Math.cos(a1) * 8, Math.sin(a1) * 8)); } const L = Math.min(w, h) * 0.2; for (let k = 0; k < 6; k++) { const a = k / 6 * 6.2832 + 0.4, mid = L * 0.55; P.push(bp(Math.cos(a) * 14, Math.sin(a) * 14), bp(Math.cos(a + 0.12) * mid, Math.sin(a + 0.12) * mid), bp(Math.cos(a + 0.12) * mid, Math.sin(a + 0.12) * mid), bp(Math.cos(a) * L, Math.sin(a) * L)); } }   // a button with soft pleats radiating from its dimple
   if (P.length) g.add(kit.lines(P, 'lo'));
   const out = kit.merge(g); out.rotation.x = -lean * Math.PI / 180; return out;
 }

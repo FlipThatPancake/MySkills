@@ -106,20 +106,29 @@ export function hangGrid({ bx, bz, cx, cz, nx = 56, ny = 40, y = 0, fold = 7, am
 // A tablecloth: origin the middle of the table top at the surface (y 0 = the top). w, d: the table's top; drop: how far it hangs.
 export function tablecloth(kit, { w = 1600, d = 900, r = 0, drop = 400, fold = 6, amp = 64, tone = 'lo', seed = 1 } = {}) {
   if (r) return roundCloth(kit, { r, drop: Math.min(drop, 300), fold: fold + 2, amp: Math.min(amp, 44), tone, seed });   // r: a round table's radius, the cloth falls in a skirt all round
-  const hx = w / 2, hz = d / 2, grid = hangGrid({ bx: [-hx, hx], bz: [-hz, hz], cx: [-hx - drop, hx + drop], cz: [-hz - drop, hz + drop], y: 3, fold, amp, seed, nx: Math.round((w + 2 * drop) / 40), ny: Math.round((d + 2 * drop) / 40) });
-  return cloth(kit, { ...grid, thick: 5, tone });
+  const hx = w / 2, hz = d / 2, grid = hangGrid({ bx: [-hx, hx], bz: [-hz, hz], cx: [-hx - drop, hx + drop], cz: [-hz - drop, hz + drop], y: 16, fold, amp, seed, nx: Math.round((w + 2 * drop) / 40), ny: Math.round((d + 2 * drop) / 40) });
+  return cloth(kit, { ...grid, thick: 5, tone, folds: false });
 }
 // A round tablecloth: flat over the top (radius r), then a skirt of folds that widens as it falls. The seam of the grid is turned to the back of the table.
 export function roundCloth(kit, { r: rt = 520, drop = 260, fold = 8, amp = 40, tone = 'lo', seed = 1 } = {}) {
-  const r = rt + 30, nx = 72, top = 7, hang = 11, ny = top + hang, pts = [], ph = Math.sin(seed * 12.9898) * 3;
-  for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
-    const a = -Math.PI / 2 + (i / (nx - 1)) * Math.PI * 2;
-    let rr, y;
-    if (j < top) { rr = Math.max(r * 0.06, r * j / (top - 1) * 0.999); y = 9 + 1.2 * Math.sin(a * 3 + ph) * (j / top); }
-    else { const t = (j - top + 1) / hang; rr = r + drop * 0.1 * t + amp * 0.5 * Math.sin(a * fold + ph + t * 2) * Math.min(1, t * 2.5) + amp * 0.18 * Math.sin(a * fold * 2.3 + 2 * ph) * t; y = 9 - drop * t * (1 + 0.04 * Math.sin(a * fold + ph)); }
-    pts.push(Math.cos(a) * rr, y, Math.sin(a) * rr);
+  const T = kit.THREE, r = rt + 30, M = 72, top = 6, hang = 11, rings = top + hang, ph = Math.sin(seed * 12.9898) * 3, thick = 5, pos = [0, 16, 0];   // vertex 0 is the centre; ring k holds M points; the grid wraps, so the top is one plain sheet with no seam
+  for (let k = 1; k <= rings; k++) for (let m = 0; m < M; m++) {
+    const a = (m / M) * Math.PI * 2; let rr, y;
+    if (k <= top) { rr = r * k / top; y = 16 + 1.2 * Math.sin(a * 3 + ph) * (k / top) * (k / top); }
+    else { const t = (k - top) / hang; rr = r + drop * 0.1 * t + amp * 0.5 * Math.sin(a * fold + ph + t * 2) * Math.min(1, t * 2.5) + amp * 0.18 * Math.sin(a * fold * 2.3 + 2 * ph) * t; y = 16 - drop * t * (1 + 0.04 * Math.sin(a * fold + ph)); }
+    pos.push(Math.cos(a) * rr, y, Math.sin(a) * rr);
   }
-  return cloth(kit, { nx, ny, pts, thick: 5, tone, folds: false, relax: 0 });
+  const N = pos.length / 3, id = (k, m) => 1 + (k - 1) * M + (m % M), idx = [];
+  for (let m = 0; m < M; m++) idx.push(0, id(1, m + 1), id(1, m));
+  for (let k = 1; k < rings; k++) for (let m = 0; m < M; m++) { const a = id(k, m), b = id(k, m + 1), c = id(k + 1, m), d = id(k + 1, m + 1); idx.push(a, b, c, b, d, c); }
+  const top3 = new T.BufferGeometry(); top3.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); top3.setIndex(idx); top3.computeVertexNormals();
+  const nrm = top3.attributes.normal, all = [...idx], P = new Float32Array(N * 6); P.set(pos);
+  for (let v = 0; v < N; v++) for (let c = 0; c < 3; c++) P[(N + v) * 3 + c] = pos[v * 3 + c] - nrm.getComponent(v, c) * thick;
+  for (let t = 0; t < idx.length; t += 3) all.push(N + idx[t], N + idx[t + 2], N + idx[t + 1]);
+  for (let m = 0; m < M; m++) { const a = id(rings, m), b = id(rings, m + 1); all.push(a, b, N + a, b, N + b, N + a); }   // the hem
+  const geo = new T.BufferGeometry(); geo.setAttribute('position', new T.BufferAttribute(P, 3)); geo.setIndex(all); geo.computeVertexNormals();
+  const g = kit.group(); g.add(kit.solid(geo, 0, 0, 0, { smooth: true, tone, crease: 100 })); g.userData.size = { w: 1, d: 1, h: 1 };
+  return g;
 }
 // A table runner: a linen strip along the table's length, thick at its edge, hanging 200-300 mm over both short ends. rw: its width.
 export function tableRunner(kit, { w = 1600, d = 900, rw = 400, drop = 280, fold = 3, amp = 26, tone = 'lo', seed = 1 } = {}) {

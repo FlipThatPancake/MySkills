@@ -18,13 +18,13 @@ B.on('sink', 'kettle', { group: 'sink' }); B.on('door', 'herbs', { group: 'sink'
 back.place('wc1', 'wallRun', 2900, { group: 'cook', params: { modules: [{ w: 500, kind: 'door' }] } });
 left.place('shelf', 'openShelf', 800, { group: 'sink' });
 // A table set: a round table with two chairs and a rug, standing in open floor within reach of the cooking.
-const T = a.table('bt', { at: [3600, 2600], r: 520, chairs: 2, group: 'breakfast' });
+const T = a.table('bt', { at: [3200, 2600], r: 520, chairs: 2, group: 'breakfast' });
 T.on('jug', { y: 757 }); T.on('candlesticks', { y: 757, dx: 230 });
 // A seating group: an armchair, a side table and a floor lamp, in the free corner by the window.
 a.put('chair', 'armchair', [5700, 2300], -35, { group: 'nook', y: 7, lift: 7 });
 a.put('side', 'sideTable', [5700, 3150], 0, { group: 'nook' });
 // Shots: a.shot(name, from, look, fov, group). fitshots.mjs finds the cameras; its numbers go in here.
 a.shot('cook', [2600, 1100, 4800], [1710, 1300, 393], 36, 'cook');
-a.shot('table', [6200, 1700, 6900], [3144, 681, 2876], 36, 'breakfast');
+a.shot('table', [6200, 2100, 6900], [2737, 681, 2923], 36, 'breakfast');
 a.view({ target: [3300, 700, 1800], az: 20, el: 16 });
 H.write(process.argv[2] || 'example.json', fs);
