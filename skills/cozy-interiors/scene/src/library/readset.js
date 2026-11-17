@@ -90,15 +90,15 @@ export function readShelf(kit, { form = 'ledge', w = 800, seed = 1 } = {}) {   /
   const g = kit.group(), R = rnd(seed), B = bx(kit), Rb = rb(kit), T = kit.THREE, dz = form === 'ledge' ? 46 : form === 'floating' ? 130 : 110;   // the parts are built about the board's middle; the whole is shifted so its back lies on the wall (z 0)
   if (form === 'ledge') {
     g.add(B(0, 0, 0, w, 24, 90)); g.add(B(0, 24, -45 + 8, w, 40, 16, lo)); let x = -w / 2 + 50;
-    for (let i = 0; i < 3; i++) { const bw = 140 + R() * 40, bh = 190 + R() * 60, b = kit.rbox(-bw / 2, 0, 10, bw, bh, 22, 3, { tone: i % 2 ? 'lo' : 'mid' }); b.position.set(x + bw / 2, 24, 26); b.rotation.x = -0.16; g.add(b); x += bw + 30; }
-    const fw = 200, fh = 260, fr = kit.rbox(0, 0, 10, fw, fh, 18, 3); fr.position.set(w / 2 - 150, 24, 28); fr.rotation.x = -0.14; g.add(fr); g.add(kit.lines([[w / 2 - 150 - fw / 2 + 20, 24 + 20, 50], [w / 2 - 150 + fw / 2 - 20, 24 + 20, 50], [w / 2 - 150 + fw / 2 - 20, 24 + 20, 50], [w / 2 - 150 + fw / 2 - 20, 24 + fh - 24, 50], [w / 2 - 150 + fw / 2 - 20, 24 + fh - 24, 50], [w / 2 - 150 - fw / 2 + 20, 24 + fh - 24, 50], [w / 2 - 150 - fw / 2 + 20, 24 + fh - 24, 50], [w / 2 - 150 - fw / 2 + 20, 24 + 20, 50]], 'mid'));
+    for (let i = 0; i < 3; i++) { const bw = 140 + R() * 40, bh = 190 + R() * 60; if (x + bw > w / 2 - 270) break; const b = kit.rbox(-bw / 2, 0, 10, bw, bh, 22, 3, { tone: i % 2 ? 'lo' : 'mid' }); b.position.set(x + bw / 2, 24, 26); b.rotation.x = -0.16; g.add(kit.content(b)); x += bw + 30; }
+    const fw = 200, fh = 260, fr = kit.rbox(0, 0, 10, fw, fh, 18, 3); fr.position.set(w / 2 - 150, 24, 28); fr.rotation.x = -0.14; g.add(kit.content(fr)); g.add(kit.lines([[w / 2 - 150 - fw / 2 + 20, 24 + 20, 50], [w / 2 - 150 + fw / 2 - 20, 24 + 20, 50], [w / 2 - 150 + fw / 2 - 20, 24 + 20, 50], [w / 2 - 150 + fw / 2 - 20, 24 + fh - 24, 50], [w / 2 - 150 + fw / 2 - 20, 24 + fh - 24, 50], [w / 2 - 150 - fw / 2 + 20, 24 + fh - 24, 50], [w / 2 - 150 - fw / 2 + 20, 24 + fh - 24, 50], [w / 2 - 150 - fw / 2 + 20, 24 + 20, 50]], 'mid'));
   } else if (form === 'floating') {
-    g.add(Rb(0, 0, 0, w, 48, 260, 6)); let y = 48; for (let i = 0; i < 5; i++) { const hh = 24 + R() * 20; g.add(book(kit, -w / 2 + 200 + (R() - 0.5) * 24, y, 120, 210 + R() * 40, hh, 150 + R() * 30, (R() - 0.5) * 0.3, i % 2 ? 'lo' : 'mid')); y += hh; }
+    g.add(Rb(0, 0, 0, w, 48, 260, 6)); let y = 48; for (let i = 0; i < 5; i++) { const hh = 24 + R() * 20; g.add(kit.content(book(kit, -w / 2 + 200 + (R() - 0.5) * 24, y, 120, 210 + R() * 40, hh, 150 + R() * 30, (R() - 0.5) * 0.3, i % 2 ? 'lo' : 'mid'))); y += hh; }
     g.add(kit.cyl(w / 2 - 160, 48, 130, 46, 100, { rTop: 46, seg: 22, ...lo })); g.add(kit.lines([[w / 2 - 160 + 4, 150, 130], [w / 2 - 160 + 8, 172, 130], [w / 2 - 160 + 8, 172, 130], [w / 2 - 160, 190, 130]], 'mid')); g.add(kit.cyl(w / 2 - 160, 148, 130, 3, 40, { seg: 8, ...lo })); g.add(kit.solid(new T.SphereGeometry(7, 8, 6), w / 2 - 160, 190, 130, { smooth: true, ...lo }));
   } else if (form === 'double') {   // two boards on side uprights: books on the lower, mugs and a jar on the upper
     for (const y of [0, 380]) g.add(Rb(0, y, 0, w, 24, 200, 3));
     for (const s of [-1, 1]) g.add(Rb(s * (w / 2 - 12), 24, 0, 24, 356, 200, 3, lo));
-    let x = -w / 2 + 60; for (let i = 0; i < 6 && x < w / 2 - 200; i++) { const bw = 30 + R() * 20, bh = 200 + R() * 70; g.add(kit.rbox(x, 24, 150, bw, bh, 150, 2, { tone: i % 2 ? 'lo' : 'mid' })); x += bw + 2; }
+    let x = -w / 2 + 60; for (let i = 0; i < 6 && x < w / 2 - 200; i++) { const bw = 30 + R() * 20, bh = 200 + R() * 70; g.add(kit.content(kit.rbox(x, 24, 150, bw, bh, 150, 2, { tone: i % 2 ? 'lo' : 'mid' }))); x += bw + 2; }
     for (let i = 0; i < 2; i++) g.add(kit.cyl(-w / 2 + 120 + i * 130, 404, 100, 40, 84, { rTop: 44, seg: 22 })); g.add(kit.cyl(w / 2 - 130, 404, 100, 54, 130, { rTop: 40, seg: 22, ...lo }));
   } else if (form === 'pegs') {   // a peg rail with a hung cloth and a hung bag
     g.add(Rb(0, 0, 0, w, 90, 24, 4)); const k = Math.max(3, Math.round(w / 220));
@@ -106,7 +106,7 @@ export function readShelf(kit, { form = 'ledge', w = 800, seed = 1 } = {}) {   /
       if (i === k - 1) { g.add(kit.rbox(x - 75, -280, 162, 150, 250, 46, 18)); g.add(kit.lines([[x - 8, 45, 108], [x - 62, -30, 140], [x + 8, 45, 108], [x + 62, -30, 140]], 'lo')); g.add(kit.rbox(x - 56, -40, 152, 34, 130, 26, 2, lo)); g.add(kit.rbox(x - 8, -40, 152, 30, 105, 26, 2)); g.add(kit.rbox(x + 26, -40, 152, 26, 118, 26, 2, lo)); } }   // a tote with books standing in it
   } else {
     g.add(Rb(0, 0, 0, w, 28, 220, 4)); for (const s of [-1, 1]) { const x = s * (w / 2 - 110); g.add(B(x, -150, -103, 22, 170, 14, lo)); g.add(rod(kit, [x, -140, -96], [x, -10, 80], 8, 8, 'lo')); g.add(B(x, -22, -10, 22, 22, 200, lo)); }
-    let x = -w / 2 + 60; for (let i = 0; i < 7 && x < w / 2 - 330; i++) { const bw = 30 + R() * 22, bh = 170 + R() * 80; g.add(kit.rbox(x, 28, 130, bw, bh, 150, 2, { tone: i % 2 ? 'lo' : 'mid' })); x += bw + 2; }
+    let x = -w / 2 + 60; for (let i = 0; i < 7 && x < w / 2 - 330; i++) { const bw = 30 + R() * 22, bh = 170 + R() * 80; g.add(kit.content(kit.rbox(x, 28, 130, bw, bh, 150, 2, { tone: i % 2 ? 'lo' : 'mid' }))); x += bw + 2; }
     g.add(kit.cyl(w / 2 - 170, 28, 110, 48, 120, { rTop: 56, seg: 22 })); g.add(kit.lines(ringXZ(w / 2 - 170, 34, 110, 48.5, 22), 'mid'));
   }
   const root = kit.group(); g.position.z = dz; root.add(g); return kit.merge(root);
