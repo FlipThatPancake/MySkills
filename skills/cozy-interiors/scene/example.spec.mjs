@@ -19,7 +19,7 @@ back.place('wc1', 'wallRun', 2900, { group: 'cook', params: { modules: [{ w: 500
 left.place('shelf', 'openShelf', 800, { group: 'sink' });
 // A table set: a round table with two chairs and a rug, standing in open floor within reach of the cooking.
 const T = a.table('bt', { at: [3200, 2600], r: 520, chairs: 2, group: 'breakfast' });
-T.on('jug', { y: 757 }); T.on('candlesticks', { y: 757, dx: 230 });
+T.on('jug', { y: 757, dx: -180 }); T.on('candlesticks', { y: 757, dx: 260 });
 // A seating group: an armchair, a side table and a floor lamp, in the free corner by the window.
 a.put('chair', 'armchair', [5700, 2300], -35, { group: 'nook', y: 7, lift: 7 });
 a.put('side', 'sideTable', [5700, 3150], 0, { group: 'nook' });

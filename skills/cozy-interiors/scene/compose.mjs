@@ -14,6 +14,7 @@
 //     accent {name, hex} for the home -> new Home({ accent: hex });  accentOn (the textile that carries it) -> give that piece params: { tone: 'accent' } (cushion, foldedThrow, cloth, tablecloth, teaTowel, benchCushion, floorCushion, runner, tableRunner, duvetCloth).
 //   Soft things:  a.seatSoft('sofa', { tone: 'accent' | 'lo' | 'mid', throw: 'drape' | 'band' | false, group })  one leaning cushion per seat end and a throw dropped on the arm or folded across the seat (armchairs get one cushion);  a.table(id, { cloth: true | 'accent' }) puts a cloth shaped to the table.
 //   a.topOf(id): the height of the top of something placed (its dealt h included), for y of a thing that stands on it.
+//   Things on one top:  a.onTop('desk', [{ id, asset, params }, ...], { at: 'back' | 'centre' | 'front', margin: 50 })  spaces them along the top, every footprint inside its edge (refuses when they do not fit); use it instead of placing by fractions.
 //   Anywhere:  a.put(id, asset, [x, z], turn, { y, mount, group, hero, params, ... })  (the object's own origin at [x, z]; see assets.mjs).  a.view({ target, az, el }), a.shot(name, from, look, fov, group)
 // Every object has a `group` (its run, table set, seating group or wall arrangement) and hero: true marks the area's main piece.
 import { ASSETS, SPACE } from './src/library/meta.js';
@@ -128,6 +129,23 @@ class Area {
     { const hf = res.pts.filter((_, i) => i % 3 === 1), tops = hf0; if (Math.max(...hf) > tops.top + 40) throw new Error(`drapeOver('${id}'): the cloth rests ${Math.round(Math.max(...hf) - tops.top)} mm above the top of '${targetId}': move it (at or dx/dz) onto the seat, arm or bed, not the back`); }
     this.put(id, 'cloth', [0, 0], 0, { group, y, mount, params: { nx, ny, pts: res.pts, thick, tone } });
   }
+  // spaced things on one top: a.onTop('desk', [{ id: 'lamp', asset: 'lamp' }, { id: 'books', asset: 'bookStack', params }, ...], { at: 'back' | 'centre' | 'front', margin: 50, group, turn })
+  // lays the things in a row along the longer side of the top, in the order given, with equal gaps of at least `margin` mm between them and the edges, every footprint inside the edge; 'back' is the side nearer the area's back wall (lower z). It refuses with the length it needs when they do not fit.
+  onTop(surfaceId, things, { at = 'centre', margin = 50, group, turn = 0 } = {}) {
+    const { tris, all } = this.targetTris('onTop', surfaceId), hf = heightField(tris), x0 = all.min.x, x1 = all.max.x, z0 = all.min.z, z1 = all.max.z, alongX = (x1 - x0) >= (z1 - z0), L = alongX ? x1 - x0 : z1 - z0, W = alongX ? z1 - z0 : x1 - x0;
+    const grp = group || this.h.S.home.objects.find((q) => q.id === `${this.id}-${surfaceId}`)?.group.split(':')[1];
+    const items = things.map((t) => { const params = vary(this.h, t.asset, t.params, this.id), { w, d } = sizeOf(t.asset, params); return { ...t, params, a: alongX ? w : d, b: alongX ? d : w }; });
+    const need = items.reduce((q, i) => q + i.a, 0) + (items.length + 1) * margin;
+    if (need > L) throw new Error(`onTop('${surfaceId}'): the things need ${Math.round(need)} mm along the top and it is ${Math.round(L)} mm long: drop one or use a smaller piece`);
+    const deep = items.find((i) => i.b + 2 * margin > W); if (deep) throw new Error(`onTop('${surfaceId}'): '${deep.id}' is ${Math.round(deep.b)} mm deep and the top is ${Math.round(W)} mm: it would hang over the edge`);
+    const gap = (L - items.reduce((q, i) => q + i.a, 0)) / (items.length + 1); let p = (alongX ? x0 : z0) + gap;
+    for (const i of items) {
+      const along = p + i.a / 2, perp = at === 'back' ? (alongX ? z0 : x0) + margin + i.b / 2 : at === 'front' ? (alongX ? z1 : x1) - margin - i.b / 2 : (alongX ? (z0 + z1) / 2 : (x0 + x1) / 2), [px, pz] = alongX ? [along, perp] : [perp, along];
+      let y = 0; for (const [dx, dz] of [[0, 0], [1, 1], [1, -1], [-1, 1], [-1, -1]]) y = Math.max(y, hf(px + dx * (alongX ? i.a : i.b) / 2, pz + dz * (alongX ? i.b : i.a) / 2));
+      this.put(i.id, i.asset, [px, pz], i.turn ?? turn, { y: Math.round(y), mount: 'on', group: i.group || grp, params: i.params, ...(i.hero ? { hero: true } : {}) });
+      p += i.a + gap;
+    }
+  }
   // a folded throw laid across a placed thing: layers stacked like a folded blanket, resting on the highest point under it. a.bandOn('throw', 'bed', { w: 1500, d: 380, at: [x, z] or dx/dz, layers: 3, tone, group })
   bandOn(id, targetId, { w = 1400, d = 380, at, dx = 0, dz = 0, layers = 3, tone = 'lo', group, spin = 0 } = {}) {
     const { tris, all, T } = this.targetTris('bandOn', targetId), f = heightField(tris), c = all.getCenter(new T.Vector3()), p = at || [c.x + dx, c.z + dz];
@@ -159,7 +177,12 @@ class Area {
       length, left, depth, mods, F,
       mod: (kind, nth = 0) => { const m = mods.filter((q) => q.kind === kind)[nth]; if (!m) throw new Error(`run "${id}" has no ${kind} module #${nth}`); return m; },
       on(kind, asset, oo = {}) {
-        const m = this.mod(kind, oo.nth || 0), meta = ASSETS[asset], top = params.top || 900, wall = meta.mount === 'wall';
+        if (kind === 'sink' && !['hob', 'hood'].includes(asset) && ASSETS[asset].mount !== 'wall') {   // the basin takes the sink module's top: a thing goes on the worktop beside it (the next module that is not a hob), else the call refuses
+          const i = mods.findIndex((q) => q.kind === 'sink' && mods.filter((r) => r.kind === 'sink').indexOf(q) === (oo.nth || 0)), nb = [mods[i - 1], mods[i + 1]].filter((q) => q && !['hob', 'sink'].includes(q.kind));
+          if (!nb.length) throw new Error(`R.on('sink', '${asset}'): the basin fills the sink module and no flat module stands beside it: put it on another module (R.on('doors' | 'drawers' | 'filler', ...))`);
+          nb.sort((p, q) => (p.used || 0) - (q.used || 0)); return this.on(nb[0].kind, asset, { ...oo, nth: mods.filter((q) => q.kind === nb[0].kind).indexOf(nb[0]) });   // the emptier neighbour first
+        }
+        const m = this.mod(kind, oo.nth || 0); m.used = (m.used || 0) + 1; const meta = ASSETS[asset], top = params.top || 900, wall = meta.mount === 'wall';
         const xc = m.xc + (oo.dx || 0), oid = oo.id || `${id}-${asset}${n++ || ''}`;
         const o2 = { group, ...oo, params: oo.params }; delete o2.nth; delete o2.dx; delete o2.id;
         if (asset === 'hob' || asset === 'hood') return F.place(oid, asset, xc, { ...o2, depth });
