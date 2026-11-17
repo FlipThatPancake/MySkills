@@ -35,7 +35,7 @@ export function applyRules(Q, list) {
     if (depth > tol) { const a = O[x] ? x : y, b = a === x ? y : x; find.push({ rule: 'penetrates', id: a, other: b, assets: [asset(a), asset(b)], depth: +depth.toFixed(1), soft, text: `${name(a)} is ${Math.round(depth)} mm inside ${name(b)}${soft ? ' (soft pair, tolerance 30 mm)' : ''}` }); }
   }
   // ---------- floating, overhangs, sunk: one pass per free object
-  const bySupporter = {};
+  const bySupporter = {}, supportPolys = {};
   for (const o of Q.loadedObjects) {
     if (!isFree(o)) continue;
     const cs = list.filter((c) => c.a.owner === o.id || c.b.owner === o.id);
@@ -46,6 +46,9 @@ export function applyRules(Q, list) {
       if (c.d <= TOL.floatGap) sup.push({ c, other });
       if (c.d < 0) { const kk = other.owner; if (!deepest[kk] || c.d < deepest[kk]) deepest[kk] = c.d; }
     }
+    // a leg on a rug sinks into its pile: when the object also touches a rug, the floor within the rug's height still holds it (a sofa with its front legs on a rug)
+    const rugs = sup.filter((x) => RUG.test(asset(x.other.owner))).map((x) => x.other.mx[1]);
+    if (rugs.length) for (const c of cs) { const mine = c.a.owner === o.id ? 'a' : 'b', other = mine === 'a' ? c.b : c.a; if (other.owner === 'floor' && supports(c, mine) && c.d > TOL.floatGap && c.d <= Math.max(...rugs) + TOL.floatGap) sup.push({ c, other }); }
     if (!sup.length) { find.push({ rule: 'floating', id: o.id, asset: o.asset, gap: gap === Infinity ? null : +gap.toFixed(1), text: `${o.id} (${o.asset}): nothing holds it up${gap === Infinity ? '' : ` (the nearest surface below is ${Math.round(gap)} mm away)`}` }); continue; }
     bySupporter[o.id] = sup;
     // sunk: how deep its foot is inside a soft or rugged supporter
@@ -63,9 +66,10 @@ export function applyRules(Q, list) {
     const polys = [];
     for (const e of tops) { const top = hull2(ptsNear([e.part], y0, 4)); if (top.length >= 3) polys.push(top); }
     if (PAN.test(o.asset)) for (const id of names) if (/^hob$/.test(asset(id))) { const ho = O[id], all = []; for (const p of ho.parts) for (let i = 0; i < p.tris.length; i += 3) all.push([p.tris[i], p.tris[i + 2]]); polys.push(hull2(all)); }   // a pan stands anywhere inside the hob's outline
-    if (onFloor) cover = Ba; else for (const top of polys) cover += parea(clip(base, top));
+    const held = []; if (onFloor) { cover = Ba; held.push(...base); } else for (const top of polys) { const c = clip(base, top); cover += parea(c); held.push(...c); }
+    supportPolys[o.id] = hull2(held);
     const over = 1 - Math.min(1, cover / Ba);
     if (over > TOL.overhang) find.push({ rule: 'overhangs', id: o.id, asset: o.asset, pct: Math.round(over * 100), on: [...names], text: `${o.id} (${o.asset}): ${Math.round(over * 100)}% of its base reaches past what it stands on (${[...names].join(', ')})` });
   }
-  return { find, supporters: bySupporter };
+  return { find, supporters: bySupporter, supportPolys };
 }

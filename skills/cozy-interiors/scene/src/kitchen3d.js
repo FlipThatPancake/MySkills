@@ -176,6 +176,7 @@ export function createKit() {
     // (so real edges show and gentle curves do not). `smooth: true` adds the silhouette too.
     outline(mesh, opts = {}) {
       if (opts.smoothShade) smoothNormals(mesh.geometry);
+      if (kit.noLines) return mesh;   // scene/geom/load.mjs wants the solid parts only: no outline lines
       if (!opts.tone) opts = { ...opts, tone: autoTone(mesh.geometry) };
       const edges = new THREE.EdgesGeometry(mesh.geometry, opts.crease ?? CREASE);
       if (edges.attributes.position.count) {

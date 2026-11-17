@@ -26,7 +26,8 @@ const near = (a, b, m) => a.mn[0] <= b.mx[0] + m && a.mx[0] >= b.mn[0] - m && a.
 const ok = (a, b) => a.owner !== b.owner && !(a.role !== 'object' && b.role !== 'object');   // the surroundings are not tested against each other
 
 // every pair of parts of different owners within `within` mm: { a, b (entries), d (mm; negative = inside), normal (on b, pointing toward a), pointA, pointB (mm, world), approx }
-export function contacts(Q, { within = 5 } = {}) {
+// within: how far apart two parts may be and still be listed (a leg 7 mm above the floor beside a rug still counts)
+export function contacts(Q, { within = 12 } = {}) {
   const all = [...Q.entries].sort((a, b) => a.mn[0] - b.mn[0]), out = []; let unsupported = 0;
   for (let i = 0; i < all.length; i++) {
     const A = all[i];

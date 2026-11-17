@@ -14,7 +14,7 @@ export const fixtures = [
     build({ Home }) { const { H, a } = room(Home); const T = a.table('dt', { at: [3000, 2200], r: 650, chairs: 4, cloth: true }); T.over('pendantLamp'); return H; } },
   { name: 'good-books-on-shelf-top', from: 'a book stack resting on top of a shelf', kind: 'good',
     build({ Home }) { const { H, a } = room(Home); a.put('shelf', 'shelf', [3000, 185], 0, { group: 'g', params: { h: 1800 } }); a.restOn('stack', 'bookStack', 'shelf', { group: 'g' }); return H; } },
-  { name: 'good-plant-on-sill', from: 'round-2 tester: a pot on a window sill is supported (onSill)', kind: 'good',
+  { name: 'good-plant-on-sill', from: 'round-2 tester: a pot on a window sill is supported (onSill). Known (geometry core, Nov 17): the pot stands half off the sill front and 18 mm into the window casing, a real finding: back.onSill should centre the pot on the sill depth (fixer)', kind: 'good', known: true,
     build({ Home }) { const { H, back } = room(Home, { openings: [{ kind: 'window', x: 3000, width: 1400, height: 1200, sill: 900, sash: 'fixed' }] }); back.onSill('herbs', 'plant', 3000, { group: 'g' }); return H; } },
   { name: 'good-rotated-rugs-apart', from: 'round-2 E7: two rugs turned 45 degrees whose axis-aligned boxes overlap but whose footprints do not', kind: 'good',
     build({ Home }) { const { H, a } = room(Home); a.put('rug1', 'rug', [2000, 1800], 45, { group: 'g', params: { w: 1600, d: 600 } }); a.put('rug2', 'rug', [2566, 2366], 45, { group: 'g', params: { w: 1600, d: 600 } }); return H; } },

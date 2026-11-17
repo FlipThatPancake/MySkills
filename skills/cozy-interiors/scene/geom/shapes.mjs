@@ -35,13 +35,14 @@ export function meshDesc(t, c) {
 }
 // the shape of one part: convex parts as a hull, everything else (and a convex part whose hull fails) as a mesh. Never dropped silently: { how: 'failed' } says so.
 export function partDesc(p, c) {
-  if (p.kind === 'convex') { const h = hullDesc(p.tris, c); if (h) return h; const m = meshDesc(p.tris, c); if (m) return { ...m, how: 'mesh', fallback: true }; }
-  else { const m = meshDesc(p.tris, c); if (m) return m; const h = hullDesc(p.tris, c); if (h) return { ...h, fallback: true }; }
+  const pts = p.verts || p.tris;
+  if (p.kind === 'convex') { const h = hullDesc(pts, c); if (h) return h; const m = meshDesc(p.tris, c); if (m) return { ...m, how: 'mesh', fallback: true }; }
+  else { const m = meshDesc(p.tris, c); if (m) return m; const h = hullDesc(pts, c); if (h) return { ...h, fallback: true }; }
   return { d: null, how: 'failed' };
 }
 
 // classify the triangles of one mesh: flat (a decal under 1.5 mm thick), open (not watertight: a vessel, a shade), convex (its hull volume is within 3 %), or concave
-export function classify(t) {
+export function classify(t, verts) {
   const m = new Map(), pts = [], ids = [];
   for (let i = 0; i < t.length; i += 3) { const k = Math.round(t[i] * 100) + ',' + Math.round(t[i + 1] * 100) + ',' + Math.round(t[i + 2] * 100); let j = m.get(k); if (j === undefined) { j = pts.length; m.set(k, j); pts.push([t[i], t[i + 1], t[i + 2]]); } ids.push(j); }
   const edges = new Map(); let vol = 0, area = 0; const mn = [Infinity, Infinity, Infinity], mx = [-Infinity, -Infinity, -Infinity];
@@ -57,7 +58,7 @@ export function classify(t) {
   const ext = mx.map((v, i) => v - mn[i]), closed = open === 0; vol = Math.abs(vol);
   if (Math.min(...ext) < 1.5) return { kind: 'flat', vol, area, ext, mn, mx };
   if (!closed) return { kind: 'open', vol, area, ext, mn, mx };
-  const hv = hullVolumeMm3(t);
+  const hv = hullVolumeMm3(verts || t);
   return { kind: hv && vol / hv > 0.97 ? 'convex' : 'concave', vol, area, ext, mn, mx };
 }
 function hullVolumeMm3(t) { const c = [0, 0, 0]; let n = 0; for (let i = 0; i < t.length; i += 3) { c[0] += t[i]; c[1] += t[i + 1]; c[2] += t[i + 2]; n++; } c[0] /= n; c[1] /= n; c[2] /= n; const h = hullDesc(t, c); return h ? h.volume / (M * M * M) : 0; }

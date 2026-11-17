@@ -5,7 +5,8 @@ const box8 = (c, ux, uz, hw, hd, y0, y1) => { const out = []; for (const sx of [
 // a box as 12 triangles (for the settle world and the mesh-free paths all parts are triangles, hulls are built from their points)
 const hullTris = (p) => { const t = []; const idx = [[0, 2, 6, 4], [1, 3, 7, 5], [0, 1, 3, 2], [4, 5, 7, 6], [0, 1, 5, 4], [2, 3, 7, 6]]; const P = (i) => [p[i * 3], p[i * 3 + 1], p[i * 3 + 2]]; for (const f of idx) for (const k of [[0, 1, 2], [0, 2, 3]]) for (const i of k) t.push(...P(f[i])); return new Float64Array(t); };
 const mk = (p, extra) => { const tris = hullTris(p), I = classify(tris); return { tris, kind: 'convex', content: false, through: false, box: { mn: I.mn, mx: I.mx }, vol: I.vol, area: I.area, type: 'wall', ...extra }; };
-export function floorPart() { return mk(box8([0, 0], [1, 0], [0, 1], 1e5, 1e5, -300, 0), { role: 'floor' }); }
+// the floor is as wide as the home needs (a 200 m slab makes thin bodies jitter in the solver)
+export function floorPart(box = { mn: [-1e5, 0, -1e5], mx: [1e5, 0, 1e5] }) { const hx = (box.mx[0] - box.mn[0]) / 2 + 3000, hz = (box.mx[2] - box.mn[2]) / 2 + 3000; return mk(box8([(box.mn[0] + box.mx[0]) / 2, (box.mn[2] + box.mx[2]) / 2], [1, 0], [0, 1], hx, hz, -300, 0), { role: 'floor' }); }
 export function wallSlabs(walls, H) {
   const out = [];
   for (const w of walls) {
@@ -17,4 +18,5 @@ export function wallSlabs(walls, H) {
   }
   return out;
 }
-export const environment = (loaded) => [floorPart(), ...wallSlabs(loaded.walls, loaded.height), ...loaded.env.map((p) => ({ ...p, role: 'opening' }))];
+const extent = (loaded) => { const mn = [Infinity, 0, Infinity], mx = [-Infinity, 0, -Infinity]; for (const o of loaded.objects) for (const p of o.parts) for (const a of [0, 2]) { mn[a] = Math.min(mn[a], p.box.mn[a]); mx[a] = Math.max(mx[a], p.box.mx[a]); } for (const w of loaded.walls) for (const q of [w.from, w.to]) { mn[0] = Math.min(mn[0], q[0]); mx[0] = Math.max(mx[0], q[0]); mn[2] = Math.min(mn[2], q[1]); mx[2] = Math.max(mx[2], q[1]); } return Number.isFinite(mn[0]) ? { mn, mx } : undefined; };
+export const environment = (loaded) => [floorPart(extent(loaded)), ...wallSlabs(loaded.walls, loaded.height), ...loaded.env.map((p) => ({ ...p, role: 'opening' }))];

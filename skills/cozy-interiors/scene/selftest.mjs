@@ -1,7 +1,6 @@
 #!/usr/bin/env node
-// node selftest.mjs [asset ...] [--variants=3] → lays out every asset (or the named ones) in a few dealt variants on a bare floor, builds the page and runs physics.mjs --parts: reports assets whose own parts pass deep (20 mm) into each other
+// node selftest.mjs [asset ...] [--variants=3] → lays out every asset (or the named ones) in a few dealt variants on a bare floor and asks the geometry core (geom/parts.mjs, Node only, no page) which assets have a part passing right through another (20 mm)
 // (a magazine through the sling of its rack, a book through a shelf board). Each finding names the asset and the parts; fix the asset, never one home.
-import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import { join, dirname } from 'node:path';
@@ -18,8 +17,6 @@ for (const a of list) for (let k = 0; k < K; k++) {
 }
 const dir = fs.mkdtempSync(join(os.tmpdir(), 'selftest-')), json = join(dir, 'sheet.json');
 H.write(json, fs);
-execSync(`node ${join(here, 'build.mjs')} ${json}`, { stdio: 'ignore' });
-const out = execSync(`node ${join(here, 'physics.mjs')} ${join(dir, 'sheet.html')} --parts`, { encoding: 'utf8', maxBuffer: 1 << 26, timeout: 590000 });
-if (process.env.SELF_DEBUG) console.log(out.split("\n").slice(0, 3).join("\n"));
-const hits = out.split('\n').filter((l) => l.startsWith('[parts]'));
-console.log(hits.join('\n') || 'no part passes 20 mm into another'); console.log(`${hits.length} asset variant(s) with parts through each other, of ${i} checked`);
+const { checkParts } = await import('./geom/parts.mjs');
+const found = await checkParts(json);
+console.log(found.map((f) => `[parts] ${f.text}`).join('\n') || 'no part passes 20 mm into another'); console.log(`${found.length} asset variant(s) with parts through each other, of ${i} checked`);

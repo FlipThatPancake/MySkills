@@ -11,6 +11,6 @@ const rack = (tag) => (kit) => {
 const resting = (kit) => { const g = kit.group(), B = (cx, y, cz, w, h, d) => kit.box(cx - w / 2, y, cz + d / 2, w, h, d); g.add(B(0, 0, 0, 400, 20, 300)); g.add(kit.content(B(0, 20, 0, 150, 280, 40))); return kit.merge(g); };   // the magazine stands on the base, touching, nothing crossing
 export const fixtures = [
   { name: 'asset-magazine-through-sling-tagged', from: 'Paul 13: magazines through the rack (kit.content tag set, as selftest expects)', kind: 'bug', asset: { meta, make: rack(true) }, expect: { rules: ['parts'], ids: [] } },
-  { name: 'asset-magazine-through-sling-untagged', from: 'ledger Nov 17 06:43 watch: the assembly rule can hide a real pass-through inside one asset (Paul: "square things penetrate the object they are in")', kind: 'bug', known: true, asset: { meta, make: rack(false) }, expect: { rules: ['parts'], ids: [] } },
+  { name: 'asset-magazine-through-sling-untagged', from: 'ledger Nov 17 06:43 watch: the assembly rule can hide a real pass-through inside one asset (Paul: "square things penetrate the object they are in")', kind: 'bug', asset: { meta, make: rack(false) }, expect: { rules: ['parts'], ids: [] } },
   { name: 'asset-magazine-resting-on-base', from: 'control: parts that only touch', kind: 'good', asset: { meta, make: resting } },
 ];

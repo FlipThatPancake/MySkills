@@ -11,12 +11,12 @@ import { applyRules } from './rules.mjs';
 export async function checkScene(scene, { settle = true, parts = false, src } = {}) {
   const t0 = performance.now(), L = await loadScene(scene, { src }), t1 = performance.now();
   const Q = queryWorld(L), t2 = performance.now(), C = contacts(Q), t3 = performance.now();
-  const { find, supporters } = applyRules(Q, C.list), t4 = performance.now();
+  const { find, supporters, supportPolys } = applyRules(Q, C.list), t4 = performance.now();
   const findings = [...find];
   for (const f of Q.failed) findings.push({ rule: 'shape-failed', id: f.owner, text: `${f.owner}: part ${f.k} (${f.type}, ${f.kind}) could not be made into a shape` });
   if (parts) { const { checkParts } = await import('./parts.mjs'); findings.push(...(await checkParts(L))); }
   let t5 = t4;
-  if (settle) { const { settleScene } = await import('./settle.mjs'); findings.push(...settleScene(Q, C.list)); t5 = performance.now(); }
+  if (settle) { const { settleScene } = await import('./settle.mjs'); findings.push(...settleScene(Q, C.list, {}, supportPolys)); t5 = performance.now(); }
   // an object pushed or slid out of a rug or a neighbour (or carried by one that is) is already named by the sunk or penetrates finding
   const named = new Set(find.filter((f) => f.rule === 'sunk' || f.rule === 'penetrates').flatMap((f) => [f.id, f.other]));
   const carried = (id, seen = new Set()) => { if (named.has(id)) return true; if (seen.has(id)) return false; seen.add(id); return (supporters[id] || []).some((s) => carried(s.other.owner, seen)); };
