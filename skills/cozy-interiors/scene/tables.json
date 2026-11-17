@@ -1118,7 +1118,7 @@
    "openShelf": { "furniture": true, "w": 2, "say": "an open shelf unit seen from both sides" },
    "rug": { "w": 3, "say": "a rug whose edge lies on the seam" },
    "hangingLight": { "w": 3, "needs": "dining", "say": "a hanging light over the dining table, which stands by the seam" },
-   "halfWall": { "w": 2, "say": "a half wall about 1000 mm high" },
+   "halfWall": { "w": 0, "say": "a half wall about 1000 mm high (not built yet: weight 0 until the page draws it)" },
    "floorChange": { "only": "second", "w": 3, "say": "a floor change: tiles in one area and boards beyond, in one straight line by the other separator" }
   },
   "note": "roll.mjs deals openPlan (about 2 homes in 5 with at least two joinable areas). chain = the joined areas in order, layout row (one long back wall) or corner (turns 90 degrees at seam `turn`), seams[i].separators (at least one furniture) and overlap mm. Each joined area's `backing` is set so no side wall stands on a seam. See openplan.mjs and compose.mjs H.join."

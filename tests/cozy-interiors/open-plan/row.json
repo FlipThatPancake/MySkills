@@ -943,7 +943,24 @@
      "el": 13,
      "fit": "objects"
     },
-    "shots": []
+    "shots": [
+     {
+      "name": "across the island",
+      "from": [
+       2200,
+       1400,
+       5700
+      ],
+      "look": [
+       4050,
+       750,
+       1750
+      ],
+      "fov": 36,
+      "subject": "kitchen:island",
+      "across": "dining"
+     }
+    ]
    }
   },
   {

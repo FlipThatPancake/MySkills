@@ -21,6 +21,7 @@ let k, d, l;
   a.put('iplant', 'plant', [4400, 2300], 0, { y: a.topOf('island'), mount: 'on', group: 'island', params: { form: 1 } });
   back.place('kclock', 'wallClock', 4450, { y: 1800, group: 'stove', shadow: false });
 
+  a.across('across the island', [2200, 1400, 5700], [4050, 750, 1750], 36, 'island', 'dining');
   a.view({ target: [2400, 800, 1800], az: 6, el: 13 });
 }
 { // ---------- dining (the middle: no side wall)
