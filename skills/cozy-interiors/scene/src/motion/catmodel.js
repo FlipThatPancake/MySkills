@@ -53,7 +53,7 @@ export function head(kit, { eyes = 'closed', ears = true } = {}) {
   const nose = wedge(0, -0.08, 0.995); g.add(kit.solid(ellipsoid(T, 7, 5, 5, 10), nose[0], nose[1] + 1, nose[2], { smooth: true, ...lo }));
   const earMeshes = [];
   if (ears) for (const sx of [-1, 1]) {
-    const prof = [[0, 0], [17, 0], [15.5, 6], [11, 13], [6.5, 18], [3.5, 21], [0, 22.5]].map(([x, y]) => new T.Vector2(x, y)), eg = new T.LatheGeometry(prof, 14); eg.scale(1, 1, 0.72);   // a small cone with a rounded tip, about 22 mm tall in sketch units
+    const prof = [[0, 0], [19, 0], [15, 7], [10.5, 14], [6, 20], [2.5, 24], [0, 26]].map(([x, y]) => new T.Vector2(x, y)), eg = new T.LatheGeometry(prof, 14); eg.scale(1, 1, 0.42);   // a small cone with a rounded tip, about 22 mm tall in sketch units
     const m = kit.solid(eg, sx * 34, 30, -6, { smooth: true, crease: 40 }); m.rotation.set(-0.1, 0, -sx * 0.5); m.rotation.order = 'YXZ';
     g.add(m); earMeshes.push(m);
   }
@@ -76,7 +76,7 @@ export function sleeper(kit, { seed = 1 } = {}) {
   const surfY = (x, z) => Math.max(0, ...masses.map(({ c, r }) => { const q = 1 - Math.pow((x - c[0]) / r[0], 2) - Math.pow((z - c[2]) / r[2], 2); return q > 0 ? c[1] + r[1] * Math.sqrt(q) : 0; }));
   const mass = (c, r, seg = 26) => breath.add(kit.solid(ellipsoid(T, ...r, seg), ...c, { smooth: true }));
   masses.forEach(({ c, r }) => mass(c, r, 34));   // one oval; the haunch is only a soft contour drawn inside its outline
-  { const arc = []; for (let k = 0; k <= 16; k++) { const a = (-30 + 250 * k / 16) * rad, x = -84 + 64 * Math.cos(a), z = -10 + 70 * Math.sin(a); arc.push([x, surfY(x, z) + 1.2, z]); } breath.add(kit.lines(arc.slice(1).flatMap((q, k) => [arc[k], q]), 'lo')); }
+  { const arc = []; for (let k = 0; k <= 16; k++) { const a = (-30 + 250 * k / 16) * rad, x = -80 + 56 * Math.cos(a), z = -10 + 64 * Math.sin(a), y = surfY(x, z); arc.push(y > 8 ? [x, y + 1.2, z] : null); } breath.add(kit.lines(arc.slice(1).flatMap((q, k) => (q && arc[k] ? [arc[k], q] : [])), 'lo')); }
   // tabby: a few broad soft bands over the top of the back, tapering at both ends
   const band = (x0, w) => {
     const n = 9, pos = [], idx = [];
@@ -87,17 +87,17 @@ export function sleeper(kit, { seed = 1 } = {}) {
   };
   for (const [x, w] of [[-52, 15], [-26, 15], [0, 15], [26, 14], [50, 13]]) breath.add(band(x, w));
   // head at the front edge, nose toward -x; forepaws under the chin; tail along the front edge
-  const front = kit.group(); front.position.set(112, 52, 100); front.rotation.y = -Math.PI / 2 + 0.25; front.scale.setScalar(1.2);
+  const front = kit.group(); front.position.set(84, 52, 68); front.rotation.y = -Math.PI / 2 + 0.3; front.scale.setScalar(1.2);
   for (const [x, z] of [[44, 0], [48, 26]]) { /* placeholder to keep indices simple */ void x; void z; }
-  const hd0 = head(kit, {}); hd0.group.rotation.x = 0.15; hd0.group.rotation.z = 0.9; front.add(hd0.group);   // the cheek rests on the paws, the face turned up toward the viewer
-  const paws = kit.group(); for (const [x, y, z] of [[52, 15, 78], [54, 15, 100]]) paws.add(kit.solid(ellipsoid(T, 38, 15, 16, 14), x, y, z, { smooth: true }));
-  paws.add(kit.lines([[20, 20, 72], [14, 17, 76], [20, 20, 94], [14, 17, 98]], 'lo'));
+  const hd0 = head(kit, {}); hd0.group.rotation.x = -0.95; hd0.group.rotation.z = 0.35; front.add(hd0.group);   // the cheek rests on the paws, the face turned up toward the viewer
+  const paws = kit.group(); for (const [x, y, z] of [[40, 15, 92], [44, 15, 112]]) paws.add(kit.solid(ellipsoid(T, 38, 15, 16, 14), x, y, z, { smooth: true }));
+  paws.add(kit.lines([[10, 20, 86], [4, 17, 90], [14, 20, 106], [8, 17, 110]], 'lo'));
   const cv = new T.CatmullRomCurve3([V(-112, 34, 6), V(-126, 22, 52), V(-104, 17, 98), V(-52, 15, 126), V(0, 14, 134), V(36, 14, 128)], false, 'centripetal'), tailPts = []; for (let i = 0; i < 30; i++) tailPts.push(cv.getPoint(i / 29));
   const tail = kit.solid(loft(T, tailPts, (t) => 17.5 - 8.5 * t, { flat: 0.95, ring: 14, cap: 0.07 }), 0, 0, 0, { smooth: true });
   const root = kit.group(), parts = { breath: kit.merge(breath), paws: kit.merge(paws), tail: kit.merge(kit.group().add(tail)), front: kit.merge(front), ears: hd0.ears };
   root.add(breath, paws, parts.tail, front); root.scale.setScalar(SIZE);
   const fy = front.position.y;
-  const spheres = [[-92, 58, -12, 68], [-20, 62, -6, 66], [62, 56, 6, 64], [110, 50, 98, 56], [-118, 24, 40, 26], [-52, 17, 126, 20], [10, 17, 132, 20], [52, 15, 92, 24]].map(([x, y, z, r]) => ({ c: [x, y, z], r }));
+  const spheres = [[-92, 58, -12, 68], [-20, 62, -6, 66], [62, 56, 6, 64], [84, 52, 68, 56], [-118, 24, 40, 26], [-52, 17, 126, 20], [10, 17, 132, 20], [42, 15, 102, 26]].map(([x, y, z, r]) => ({ c: [x, y, z], r }));
   return {
     group: root, parts, spheres,
     breathe(x) { const k = 0.5 - 0.5 * Math.cos(x * Math.PI * 2); breath.scale.set(1 + 0.012 * k, 1 + 0.06 * k, 1 + 0.012 * k); front.position.y = fy + 3 * k; },
