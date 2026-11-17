@@ -16,7 +16,7 @@ function book(kit, x, y, z, w, h, d, ang, tone) {
   g.position.set(x, y, z); g.rotation.y = ang; return g;
 }
 
-export function windowSeat(kit, { w = 1500, d = 520, h = 440, form = 'storage', cushion = 'plain', pillows = 2, throwOn = 'yes', seed = 1 } = {}) {   // a built-in seat under a window: a box with drawers, a frame with open cubbies, or a slatted bench on legs; a long cushion, pillows leaning on the wall, a folded throw. Back at -z.
+export function windowSeat(kit, { w = 1500, d = 520, h = 440, form = 'storage', cushion = 'plain', pillows = 2, throwOn = 'yes', pillowMax = 400, seed = 1 } = {}) {   // a built-in seat under a window: a box with drawers, a frame with open cubbies, or a slatted bench on legs; a long cushion, pillows leaning on the wall, a folded throw. Back at -z.
   const g = kit.group(), R = rnd(seed), B = bx(kit), Rb = rb(kit), pts = [], z = d / 2 + 0.6, cuH = 70;
   if (form === 'storage') {
     g.add(Rb(0, 70, 0, w, h - 70 - 20, d, 5)); g.add(B(0, 0, 14, w - 40, 70, d - 40, lo)); g.add(Rb(0, h - 20, 10, w + 20, 20, d + 20, 4));
@@ -32,8 +32,8 @@ export function windowSeat(kit, { w = 1500, d = 520, h = 440, form = 'storage', 
   if (pts.length) g.add(kit.lines(pts, 'lo'));
   const cw2 = w - 50, cd = d - 60, cy = h, cs = softBox(kit, cw2, cuH, cd, { r: 24, bulge: 8, piping: cushion === 'tufted' ? 'none' : 'edge', tone: 'mid', tufts: cushion === 'tufted' ? Array.from({ length: Math.max(2, Math.round(cw2 / 260)) }, (_, i) => [-cw2 / 2 + (i + 0.5) * cw2 / Math.max(2, Math.round(cw2 / 260)), 0]) : undefined }); cs.position.set(0, cy + cuH / 2, 14); g.add(cs);
   if (cushion === 'striped') { const ln = []; for (let x = -cw2 / 2 + 60; x < cw2 / 2 - 40; x += 90) ln.push([x, cy + cuH * 0.6, 14 + cd / 2 + 8], [x, cy + cuH * 0.1, 14 + cd / 2 + 8]); g.add(kit.lines(ln, 'mid')); }
-  const pw = [-1, 1, 0].slice(0, Math.max(0, Math.min(3, pillows)));
-  pw.forEach((s, i) => { const p = softBox(kit, 340 - i * 20, 330 - i * 20, 110, { r: 50, bulge: 22, dent: 12, piping: 'edge', tone: i % 2 ? 'lo' : 'mid' }); p.position.set(s * (cw2 / 2 - 260) + (R() - 0.5) * 60, cy + cuH + 130, -d / 2 + 90 + 70); p.rotation.x = -(0.30 + R() * 0.16); p.rotation.z = (R() - 0.5) * 0.35; g.add(p); });
+  const ps = Math.min(1, pillowMax / 330), pw = ps < 0.55 ? [] : [-1, 1, 0].slice(0, Math.max(0, Math.min(3, pillows)));   // pillowMax: how tall pillows may stand (under a low sill they shrink or go)
+  pw.forEach((s, i) => { const p = softBox(kit, (340 - i * 20) * ps, (330 - i * 20) * ps, 110 * ps, { r: 50, bulge: 22, dent: 12, piping: 'edge', tone: i % 2 ? 'lo' : 'mid' }); p.position.set(s * (cw2 / 2 - 260) + (R() - 0.5) * 60, cy + cuH + 130 * ps, -d / 2 + 90 + 70); p.rotation.x = -(0.30 + R() * 0.16); p.rotation.z = (R() - 0.5) * 0.35; g.add(p); });
   if (throwOn === 'yes') { const t = foldedThrow(kit, { w: 700, d: 200, layers: 3, tone: 'lo' }); t.position.set(cw2 / 2 - 480, cy + cuH, 125);  t.rotation.y = 0.08; g.add(t); }
   return kit.merge(g);
 }
