@@ -40,7 +40,7 @@ export function breadBasket(kit, { r = 150, h = 95, bread = 'loaf', seed = 3, cl
   g.add(kit.solid(new T.LatheGeometry([[r * 0.6, 0], [r * 0.7, 6], [r * 0.95, h * 0.7], [r, h], [r - 12, h], [r * 0.85, h * 0.7], [r * 0.5, 14], [0.01, 14]].map(([a, b]) => new T.Vector2(a, b)), 32), 0, 0, 0, { smooth: true, tone: 'lo' }));
   for (const f of [0.3, 0.6, 0.85]) pts.push(...ringXZ(0, h * f, 0, r * (0.7 + 0.3 * f) + 1.5, 32));
   g.add(kit.lines(pts, 'mid'));
-  if (cloth === 'yes') g.add(kit.rbox(-r * 0.8, 20, r * 0.75, r * 1.6, 8, r * 1.5, 4, { linen: true }));   // a cloth lining
+  if (cloth === 'yes') g.add(kit.rbox(-r * 0.8, 20, r * 0.75, r * 1.6, 8, r * 1.5, 4, { linen: true, through: true }));   // a cloth lining
   if (rim === 'rolled') g.add(kit.cyl(0, h - 6, 0, r + 4, 14, { seg: 32, tone: 'lo', open: true }));
   if (bread === 'rolls') { const rr = Math.max(68, r * 0.45), sr = Math.min(48, rr * 0.69); for (let i = 0; i < 4; i++) { const a = i * 1.57 + R() * 0.3; g.add(kit.content(kit.solid(new T.SphereGeometry(sr, 14, 10), Math.cos(a) * rr, 22 + sr, Math.sin(a) * rr, { smooth: true, tone: 'lo', linen: false }))); } }
   else if (bread === 'baguette') for (const [o, a0, len] of [[-40, 0.05, 2.05], [38, -0.05, 1.9]]) {   // a baguette: a long lathe that is fullest in the middle and tapers to both ends, bowed a little, with diagonal slashes
@@ -83,7 +83,14 @@ export function glazedCabinet(kit, { w = 1000, h = 1800, d = 420, shelves = 3, d
   g.add(kit.box(-w / 2 + 22, uy - 4, -d / 2 + 30, w - 44, uh + 8, 14, lo)); g.add(kit.rbox(-w / 2 - 12, h - 40, d / 2 + 12, w + 24, 40, d + 12, 6)); if (crown === 'cornice') g.add(kit.rbox(-w / 2 - 26, h - 8, d / 2 + 26, w + 52, 26, d + 26, 5));
   for (let s = 0; s < shelves; s++) {   // shelves with plates standing and a stack of bowls
     const y = uy + (s + 0.5) * uh / shelves - uh / (shelves * 2) + 6; g.add(kit.box(-w / 2 + 22, y, d / 2 - 20, w - 44, 16, d - 60, lo));
-    let x = -w / 2 + 50; while (true) { const rr = 90 + R() * 22, plate = R() < 0.7, ri = plate ? rr : 90; if (x + 2 * ri > w / 2 - 50) break; if (plate) { const p = kit.group(); p.add(kit.cyl(0, rr, 0, rr, 8, { axis: 'z', seg: 28 })); p.position.set(x + ri, y + 16, 0); p.rotation.x = -0.14; g.add(kit.content(p)); } else g.add(kit.content(kit.cyl(x + ri, y + 16, 0, 70, 90, { rTop: 90, seg: 24 }))); x += 2 * ri + 16; }
+    const sty = ['plates', 'plates', 'plates', 'mixed', 'mixed', 'mixed', 'bowls', 'bowls', 'cups'][Math.floor(R() * 9)];   // each shelf holds its own kind: plates and bowls, a row of cups, a mix with jugs, or stacked bowls
+    let x = -w / 2 + 50; while (true) {
+      const rr = 90 + R() * 22, q = R(), kind = sty === 'cups' ? 'cup' : sty === 'bowls' ? 'bowl' : sty === 'mixed' ? (q < 0.35 ? 'plate' : q < 0.7 ? 'bowl' : 'jug') : (q < 0.8 ? 'plate' : 'bowl'), ri = kind === 'plate' ? rr : kind === 'cup' ? 44 : kind === 'jug' ? 52 : 90; if (x + 2 * ri > w / 2 - 50) break;
+      if (kind === 'plate') { const p = kit.group(); p.add(kit.cyl(0, rr, 0, rr, 8, { axis: 'z', seg: 28 })); p.position.set(x + ri, y + 16, 0); p.rotation.x = -0.14; g.add(kit.content(p)); }
+      else if (kind === 'cup') g.add(kit.content(kit.cyl(x + ri, y + 16, 0, 36, 78, { rTop: 44, seg: 20 })));
+      else if (kind === 'jug') g.add(kit.content(kit.cyl(x + ri, y + 16, 0, 44, 190, { rTop: 34, seg: 20, tone: 'lo' })));
+      else { g.add(kit.content(kit.cyl(x + ri, y + 16, 0, 70, 90, { rTop: 90, seg: 24 }))); if (sty === 'bowls' && R() < 0.5) g.add(kit.content(kit.cyl(x + ri, y + 16 + 90, 0, 62, 80, { rTop: 80, seg: 24 }))); }
+      x += 2 * ri + 16; }
   }
   const cw = (w - 56) / doors;
   for (let i = 0; i < doors; i++) { const x0 = -w / 2 + 28 + i * cw + 3, x1 = x0 + cw - 6, y0 = uy + 6, y1 = uy + uh - 6, mid = (x0 + x1) / 2; for (const sx of [x0, x1 - 22]) g.add(kit.box(sx, y0, z + 3, 22, y1 - y0, 18, lo)); for (const sy of [y0, y1 - 22]) g.add(kit.box(x0, sy, z + 3, x1 - x0, 22, 18, lo)); pts.push([x0, y0, z], [x1, y0, z], [x1, y0, z], [x1, y1, z], [x1, y1, z], [x0, y1, z], [x0, y1, z], [x0, y0, z], [x0 + 22, y0 + 22, z], [x1 - 22, y0 + 22, z], [x1 - 22, y0 + 22, z], [x1 - 22, y1 - 22, z], [x1 - 22, y1 - 22, z], [x0 + 22, y1 - 22, z], [x0 + 22, y1 - 22, z], [x0 + 22, y0 + 22, z], [mid, y0 + 22, z], [mid, y1 - 22, z]); g.add(kit.cyl(i % 2 ? x0 + 26 : x1 - 26, (y0 + y1) / 2, z + 4, 7, 14, { axis: 'z', seg: 10, tone: 'lo' })); }
@@ -122,7 +129,7 @@ export function wallPlates(kit, { n = 5, r = 110, seed = 4, layout = 'cluster' }
 // a pendant lamp for over a table: the shade's lower rim at `rim` above the floor, a cord up to 2700. form: dome | globe | cone | cluster | rattan | linear
 export function pendantForm(kit, { form = 'dome', rim = 1950, r = 220, seed = 1, canopy = 'disc' } = {}) {
   const g = kit.group(), T = kit.THREE, R = rnd(seed), top = 2700;
-  const cord = (x, y0, z) => g.add(rod(kit, [x, y0, z], [x, top, z], 4, 4, 'lo'));
+  const cord = (x, y0, z) => g.add(rod(kit, [x, y0, z], [x, top, z], 4, 4, 'lo', true));
   if (form === 'globe') { g.add(kit.solid(new T.SphereGeometry(r * 0.8, 28, 20), 0, rim + r * 0.8, 0, { smooth: true })); cord(0, rim + r * 1.6, 0); }
   else if (form === 'cone') { g.add(kit.cyl(0, rim, 0, r, r * 0.9, { rTop: r * 0.18, seg: 36 })); g.add(kit.cyl(0, rim + r * 0.9, 0, r * 0.2, r * 0.12, { seg: 16, tone: 'lo' })); cord(0, rim + r * 1.02, 0); }
   else if (form === 'cluster') for (let i = 0; i < 3; i++) { const x = (i - 1) * r * 0.85, rr = r * (0.38 + 0.12 * ((i * 5) % 3)), y = rim + (i === 1 ? r * 0.5 : 0); g.add(kit.solid(new T.SphereGeometry(rr, 20, 14), x, y + rr, 0, { smooth: true })); cord(x, y + rr * 2, 0); }

@@ -7,7 +7,7 @@
 //   const left = a.left(4200, [openings], angle);     // meeting the back's left end; angle 90 (default) or 120 between the two walls; its left end is the front one
 //   const right = a.right(4200, [openings], angle);   // meeting the back's right end; its left end is the back one
 //   Placing on a wall (xc is where the middle of the thing is along the wall, measured like an opening's x; the distance out from the wall comes from the asset, see assets.mjs):
-//   back.place('fridge', 'fridge', 5100);   back.place('sofa', 'sofa', 3200, { y: 7, lift: 7, params: { seats: 2 } });   back.place('pic', 'picture', 2000, { y: 1400 });   onSill: back.onSill('herbs', 'plant', 2400, { params })  a pot or small thing on a window's sill (xc inside a window of that wall; it stands at the sill + 30 mm);   options: y, turn (added to facing out from the wall), params, off (override), group, hero, shadow
+//   back.place('fridge', 'fridge', 5100);   back.place('sofa', 'sofa', 3200, { y: 7, lift: 7, params: { seats: 2 } });   back.place('pic', 'picture', 2000, { y: 1400 });   onSill: back.onSill('herbs', 'plant', 2400, { params })  a pot or small thing on a window's sill (xc inside a window of that wall; it stands at the sill + 30 mm, its front inside the 110 mm lip);   options: y, turn (added to facing out from the wall), params, off (override), group, hero, shadow
 //   A cabinet run with slots:  const R = a.run(back, 'run', 1650, [modules], { group: 'run' });  R.on('hob', 'hob');  R.on('hob', 'hood');  R.on('hob', 'pan');  R.on('sink', 'kettle');  (the thing goes on the middle of that module)
 //   A table set:  const T = a.table('dining', { at: [2800, 2800], r: 650 | w: 1700, d: 900, chairs: 4, chairForm: 'ladder'|'spindle'|'bentwood'|'upholstered' (dealt per table if left out), rug: true, cloth: false | true | 'accent' });  T.over('pendantLamp');  T.on('vase')
 //   What roll.mjs deals, and how a spec uses it:  plantAt (distinct places: sill (wall.onSill), shelf, worktop, hanging, floor; one floor plant at most) -> place each plant there;  foreground (the near-camera piece, from the area's own use) -> put it by the shot's near edge;
@@ -15,14 +15,17 @@
 //   Soft things:  a.seatSoft('sofa', { tone: 'accent' | 'lo' | 'mid', throw: 'drape' | 'band' | false, group })  one leaning cushion per seat end and a throw dropped on the arm or folded across the seat (armchairs get one cushion);  a.table(id, { cloth: true | 'accent' }) puts a cloth shaped to the table.
 //   a.topOf(id): the height of the top of something placed (its dealt h included), for y of a thing that stands on it.
 //   Things on one top:  a.onTop('desk', [{ id, asset, params }, ...], { at: 'back' | 'centre' | 'front', margin: 50 })  spaces them along the top, every footprint inside its edge (refuses when they do not fit); use it instead of placing by fractions.
+//   Living things:  a.alive(roll.areas[id].motion)  (after the walls: the roll's 2 or 3 kinds; refuses one whose needs the walls do not meet, e.g. a flier with no open window).  See src/motion/index.js.
 //   Anywhere:  a.put(id, asset, [x, z], turn, { y, mount, group, hero, params, ... })  (the object's own origin at [x, z]; see assets.mjs).  a.view({ target, az, el }), a.shot(name, from, look, fov, group)
 // Every object has a `group` (its run, table set, seating group or wall arrangement) and hero: true marks the area's main piece.
 import { ASSETS, SPACE } from './src/library/meta.js';
 import { dealParams } from './src/library/space.js';
 import { dropCloth, heightField } from './src/cloth.js';
 import { createKit } from './src/kitchen3d.js';
+import { restOn as geomRestOn, fits as geomFits } from './geom/place.mjs';
 import { REGISTRY } from './src/library/index.js';
 import { joinAreas, seamLine, zoneList } from './openplan.mjs';
+import { checkAlive, pickVia, MOTION } from './motion-roll.mjs';
 const rad = (d) => d * Math.PI / 180, deg = (r) => r * 180 / Math.PI, r0 = (v) => Math.round(v * 10) / 10;
 export const GAP = 3000;
 export class Home {
@@ -81,13 +84,17 @@ class Area {
       put(oid, asset, ox, off, { turn = 0, ...o } = {}) { return p.put(oid, asset, F.at(ox, off), -phi + turn, o); },   // turn is added to the facing out from the wall (it never reaches the object as its own `turn`)   // low level: the object's origin at ox along, off out
       onSill(oid, asset, xc, o = {}) {   // a pot or small thing on a window's sill: xc is its middle along the wall (it must lie within a window of this wall); stands at the sill's height + 30 mm
         const W = openings.find((q) => q.kind === 'window' && Math.abs(q.x - xc) <= q.width / 2 - 40); if (!W) throw new Error(`onSill('${oid}'): xc ${xc} is not over a window of this wall`);
-        return F.place(oid, asset, xc, { ...o, y: (W.sill ?? 1000) + 30, mount: 'on', onSill: true, off: o.off ?? 40 });
+        const prm = vary(p.h, asset, o.params, p.id), pd = Math.min(sizeOf(asset, prm).d, o.potD ?? 100);   // the pot, not the leaves: a plant's footprint counts its spread, the sill carries only the pot (potD, 100 mm unless said)
+        return F.place(oid, asset, xc, { ...o, params: prm, y: (W.sill ?? 1000) + 30, mount: 'on', onSill: true, off: o.off ?? 110 - pd / 2 + 15 });   // the pot's front stands 15 mm past the sill's front lip so its leaves clear the sash (the sill reaches 110 mm into the room): centred on the free depth, not on the lip
       },
       place(oid, asset, xc, o = {}) {   // by the asset's own origin and size: xc is its middle along the wall
+        if (asset === 'windowSeat') { const W = openings.find((q) => q.kind === 'window' && Math.abs(q.x - xc) <= q.width / 2 + 300); if (W) { const h = o.params?.h ?? Math.min(480, Math.max(400, (W.sill ?? 1000) - 130)); o = { ...o, params: { ...o.params, h, pillowMax: (W.sill ?? 1000) - (h + 70) - 30, throwOn: 'no' }, dropThrow: o.params?.throwOn !== 'no' }; } }   // under a window the seat is as tall as the sill allows (its cushion top within 100 of the sill: a sill of 530-610 fits h 400-480; a higher sill leaves a gap the placement check names)
         o = { ...o, params: vary(p.h, asset, o.params, p.id) }; const { w, d, m } = sizeOf(asset, o.params), mount = o.mount || m.mount; if (o.y === undefined && m.y === 'top') throw new Error(`place('${oid}', '${asset}'): give y, the height of the surface it stands on in mm (for example y: 520 on a bedside table, 740 on a desk)`); const y = o.y ?? (typeof m.y === 'number' ? m.y : 0);
         const off = o.off ?? (m.origin === 'centre' ? d / 2 : m.origin === 'front-left' ? (o.depth ?? d) : m.origin === 'front-centre' ? (o.depth ?? 600) : 0);
         const ox = m.origin === 'front-left' ? xc - w / 2 : xc;
-        return F.put(oid, asset, ox, off, { ...o, y, mount });
+        const { dropThrow, ...o3 } = o, res = F.put(oid, asset, ox, off, { ...o3, y, mount });
+        if (dropThrow) { try { p.drapeOver(`${oid}-throw`, oid, { w: 900, d: 520, dx: Math.min(w, 2000) / 2 - 520, dz: 110, spin: 4, wave: 0, tone: 'lo', group: o.group }); } catch (e) { if (process.env.DEBUG_THROW) console.log(e.message); } }   // the throw is a cloth dropped on the cushion, not a stack of slabs
+        return res;
       },
     };
     return F;
@@ -100,6 +107,18 @@ class Area {
     if (SIGN[asset]) this.h.sign(this.id, SIGN[asset]); if (params?.ajar) this.h.sign(this.id, 'drawer ajar'); if (asset === 'bed' && params?.duvet === 'unmade') this.h.sign(this.id, 'unmade bed'); if (asset === 'cushion' && params?.crease === 'soft') this.h.sign(this.id, 'pillow creased');
     const [wx, wz] = this.P([x, z]);
     this.h.S.home.objects.push({ id: `${this.id}-${id}`, asset, at: [wx, y, wz], ...(turn - this.psi ? { turn: r0(turn - this.psi) } : {}), mount: mount || ASSETS[asset].mount, ...(params ? { params } : {}), group: `${this.id}:${group}`, ...(hero ? { hero: true } : {}), area: this.id, ...rest });
+  }
+  thingTris(asset, params) {   // a thing's triangles in its own frame (origin at its placed point), for geom.restOn / geom.fits
+    const kit = (this.h.kit ||= createKit()), g = REGISTRY[asset](kit, { ...(params || {}) }), tris = [], a = new kit.THREE.Vector3(), b = new kit.THREE.Vector3(), c = new kit.THREE.Vector3(); g.updateMatrixWorld(true);
+    g.traverse((o) => { if (!o.isMesh || o.isLineSegments2 || o.userData.lines || o.material.isMeshBasicMaterial || kit.hulls.includes(o.material) || o.material === kit.depth) return; const p = o.geometry.attributes.position, ix = o.geometry.index;
+      for (let t = 0, n = ix ? ix.count : p.count; t < n; t += 3) { const [i, j, k] = ix ? [ix.getX(t), ix.getX(t + 1), ix.getX(t + 2)] : [t, t + 1, t + 2]; a.fromBufferAttribute(p, i).applyMatrix4(o.matrixWorld); b.fromBufferAttribute(p, j).applyMatrix4(o.matrixWorld); c.fromBufferAttribute(p, k).applyMatrix4(o.matrixWorld); tris.push([a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z]); } });
+    return tris;
+  }
+  // the geometry core decides the height and the overhang: the thing's base must rest on real surface (at least 85% of it), else the call refuses
+  settleOn(label, id, asset, tris, params, [px, pz], turn) {
+    const thing = this.thingTris(asset, params), y = geomRestOn(tris, thing, [px, pz], turn), share = geomFits(tris, thing, [px, pz], turn);
+    if (share < 0.85) throw new Error(`${label}('${id}'): only ${Math.round(share * 100)}% of the ${asset} base would lie over the surface (it needs 85%): move it inward (at or dx/dz), or use a smaller piece`);
+    return Math.round(y);
   }
   targetTris(label, targetId) {   // the triangles of a placed thing in this area's frame, for resting things on it
     const T = (this.h.kit ||= createKit()).THREE, tgt = this.h.S.home.objects.find((q) => q.id === `${this.id}-${targetId}`);
@@ -135,7 +154,7 @@ class Area {
   // spaced things on one top: a.onTop('desk', [{ id: 'lamp', asset: 'lamp' }, { id: 'books', asset: 'bookStack', params }, ...], { at: 'back' | 'centre' | 'front', margin: 50, group, turn })
   // lays the things in a row along the longer side of the top, in the order given, with equal gaps of at least `margin` mm between them and the edges, every footprint inside the edge; 'back' is the side nearer the area's back wall (lower z). It refuses with the length it needs when they do not fit.
   onTop(surfaceId, things, { at = 'centre', margin = 50, group, turn = 0 } = {}) {
-    const { tris, all } = this.targetTris('onTop', surfaceId), hf = heightField(tris), x0 = all.min.x, x1 = all.max.x, z0 = all.min.z, z1 = all.max.z, alongX = (x1 - x0) >= (z1 - z0), L = alongX ? x1 - x0 : z1 - z0, W = alongX ? z1 - z0 : x1 - x0;
+    const { tris, all } = this.targetTris('onTop', surfaceId), x0 = all.min.x, x1 = all.max.x, z0 = all.min.z, z1 = all.max.z, alongX = (x1 - x0) >= (z1 - z0), L = alongX ? x1 - x0 : z1 - z0, W = alongX ? z1 - z0 : x1 - x0;
     const grp = group || this.h.S.home.objects.find((q) => q.id === `${this.id}-${surfaceId}`)?.group.split(':')[1];
     const items = things.map((t) => { const params = vary(this.h, t.asset, t.params, this.id), { w, d } = sizeOf(t.asset, params); return { ...t, params, a: alongX ? w : d, b: alongX ? d : w }; });
     const need = items.reduce((q, i) => q + i.a, 0) + (items.length + 1) * margin;
@@ -144,8 +163,8 @@ class Area {
     const gap = (L - items.reduce((q, i) => q + i.a, 0)) / (items.length + 1); let p = (alongX ? x0 : z0) + gap;
     for (const i of items) {
       const along = p + i.a / 2, perp = at === 'back' ? (alongX ? z0 : x0) + margin + i.b / 2 : at === 'front' ? (alongX ? z1 : x1) - margin - i.b / 2 : (alongX ? (z0 + z1) / 2 : (x0 + x1) / 2), [px, pz] = alongX ? [along, perp] : [perp, along];
-      let y = 0; for (const [dx, dz] of [[0, 0], [1, 1], [1, -1], [-1, 1], [-1, -1]]) y = Math.max(y, hf(px + dx * (alongX ? i.a : i.b) / 2, pz + dz * (alongX ? i.b : i.a) / 2));
-      this.put(i.id, i.asset, [px, pz], i.turn ?? turn, { y: Math.round(y), mount: 'on', group: i.group || grp, params: i.params, ...(i.hero ? { hero: true } : {}) });
+      const y = this.settleOn('onTop', i.id, i.asset, tris, i.params, [px, pz], i.turn ?? turn);
+      this.put(i.id, i.asset, [px, pz], i.turn ?? turn, { y, mount: 'on', group: i.group || grp, params: i.params, ...(i.hero ? { hero: true } : {}) });
       p += i.a + gap;
     }
   }
@@ -170,7 +189,7 @@ class Area {
   }
   // ---- a cabinet run with slots: R.on('hob', 'pan') puts a pan on the middle of the first hob module
   run(F, id, left, modules, o = {}) {
-    const { group = 'run', depth = 600, hero, ...params } = o, mods = []; let x = left;
+    const { group = 'run', depth = 600, hero, ...params } = o, mods = [], p = this; let x = left;
     for (const m of modules) { mods.push({ ...m, xc: x + m.w / 2 }); x += m.w; }
     const length = x - left;
     F.put(id, 'baseRun', left, depth, { group, hero, params: { ...params, depth, modules } });
@@ -186,11 +205,19 @@ class Area {
           nb.sort((p, q) => (p.used || 0) - (q.used || 0)); return this.on(nb[0].kind, asset, { ...oo, nth: mods.filter((q) => q.kind === nb[0].kind).indexOf(nb[0]) });   // the emptier neighbour first
         }
         const m = this.mod(kind, oo.nth || 0); m.used = (m.used || 0) + 1; const meta = ASSETS[asset], top = params.top || 900, wall = meta.mount === 'wall';
-        const xc = m.xc + (oo.dx || 0), oid = oo.id || `${id}-${asset}${n++ || ''}`;
+        let dx0 = oo.dx || 0;
+        if (!wall && !['hob', 'hood', 'pan'].includes(asset)) {   // a second or third thing on one module slides along the worktop to a free stretch (never on top of the first); the call refuses when the module is full
+          const aw = sizeOf(asset, oo.params).w, items = (m.items ||= []), clash = (x) => items.some((q) => Math.abs(x - q.x) < (aw + q.w) / 2 + 20);
+          if (oo.dx === undefined) { const xs = []; for (let x = -m.w / 2 + aw / 2 + 20; x <= m.w / 2 - aw / 2 - 20; x += 20) xs.push(x); xs.sort((p, q) => Math.abs(p) - Math.abs(q)); const fx = xs.find((x) => !clash(x)); if (fx === undefined) throw new Error(`R.on('${kind}', '${asset}'): the ${kind} module (${m.w} mm) has no free stretch for a ${Math.round(aw)} mm piece: put it on another module`); dx0 = fx; }
+          else if (clash(dx0)) throw new Error(`R.on('${kind}', '${asset}', { dx: ${dx0} }): it would stand on another piece of that module: change dx or the module`);
+          items.push({ x: dx0, w: aw });
+        }
+        const xc = m.xc + dx0, oid = oo.id || `${id}-${asset}${n++ || ''}`;
         const o2 = { group, ...oo, params: oo.params }; delete o2.nth; delete o2.dx; delete o2.id;
         if (asset === 'hob' || asset === 'hood') return F.place(oid, asset, xc, { ...o2, depth });
         if (asset === 'pan') return F.place(oid, asset, xc + m.w * 0.2, { ...o2, y: 940, off: depth - 160, turn: o2.turn ?? -35 });
-        return F.place(oid, asset, xc, { ...o2, y: o2.y ?? top, off: o2.off ?? depth * 0.55, ...(wall ? { off: 0, y: o2.y ?? meta.y } : {}) });
+        const bk = meta.backed && (vary(p.h, asset, o2.params, p.id).form ?? (meta.backed.byDefault ? meta.backed.form : null)) === meta.backed.form ? meta.backed.off : undefined;   // a board leaning on the wall stands against it
+        return F.place(oid, asset, xc, { ...o2, y: o2.y ?? top, off: o2.off ?? bk ?? depth * 0.55, ...(wall ? { off: 0, y: o2.y ?? meta.y } : {}) });
       },
     };
   }
@@ -205,10 +232,13 @@ class Area {
     const cnt = (this.h.counts ||= {}), nx = cnt.tableSet = (cnt.tableSet ?? this.h.S.seed % 4) + 1, cf = chairForm || ['ladder', 'spindle', 'bentwood', 'upholstered'][nx % 4];   // one chair form for the whole set
     spots.forEach(([dx, dz], i) => { const q = [at[0] + dx, at[1] + dz]; p.put(`${id}-chair-${i + 1}`, 'chair', q, deg(Math.atan2(at[0] + (round ? 0 : dx) - q[0], at[1] - q[1])), { y: 7, lift: 7, group, params: { form: cf } }); });
     return {
-      at, over: (asset = 'pendantLamp', { dx = 0, dz = 0, ...o } = {}) => p.put(`${id}-${asset}`, asset, [at[0] + dx, at[1] + dz], 0, { mount: 'ceiling', group, ...o }),   // dx / dz slide it off the table's middle (up to a third of the table's length) to clear a window in the home view
+      at, over: (asset = 'pendantLamp', { dx = 0, dz = 0, ...o } = {}) => p.put(`${id}-${asset}`, asset, [at[0] + dx, at[1] + dz], 0, { mount: 'ceiling', group, ...o, params: { rim: h + 825, ...o.params } }),   // the shade rim hangs 825 above the table top (750-900 is the rule) unless rim is given   // dx / dz slide it off the table's middle (up to a third of the table's length) to clear a window in the home view
       on: (asset, o = {}) => p.put(`${id}-${asset}`, asset, [at[0] + (o.dx || 0), at[1] + (o.dz || 0)], 0, { y: h + 7, mount: 'on', group, ...o }),
     };
   }
+  // what the roll named: a.rolled('vase', 'candlesticks') lists the assets the roll dealt to this area; a.skip('vase', 'why') says one is left out (the check 'rolled' wants every rolled asset present or skipped)
+  rolled(...assets) { const r = ((this.h.S.home.rolled ||= {})[this.id] ||= { rolled: [], skipped: [] }); r.rolled.push(...assets.flat()); }
+  skip(asset, why) { if (!why) throw new Error(`skip('${asset}'): say why it is left out`); const r = ((this.h.S.home.rolled ||= {})[this.id] ||= { rolled: [], skipped: [] }); r.skipped.push({ asset, why }); }
   topOf(id) { const o = this.h.S.home.objects.find((q) => q.id === `${this.id}-${id}`); if (!o) throw new Error(`topOf('${id}'): place it first`); return o.at[1] + (o.params?.h ?? ASSETS[o.asset].size[2]); }   // the height of the top of a placed thing: stand something on it with y: a.topOf('side-table')
   view({ target, az = 20, el = 15, dist, fit = 'objects' }) { this.cam = { target: this.P3(target), az: az - this.psi, el, fit, ...(dist ? { dist } : {}) }; }
   shot(name, from, look, fov = 30, subject) { this.shots.push({ name, from: this.P3(from), look: this.P3(look), fov, ...(subject ? { subject: `${this.id}:${subject}` } : {}) }); }
@@ -224,10 +254,20 @@ class Area {
   }
   // a small thing resting on the highest surface under it: a.restOn('cat', 'cat', 'seat', { dx, dz | at, turn, params, group }): a cat on a seat, a cushion on a chair, a book on a pile
   restOn(id, asset, targetId, { at, dx = 0, dz = 0, turn = 0, params, group } = {}) {
-    const { tris, all, T } = this.targetTris('restOn', targetId), hf = heightField(tris), c = all.getCenter(new T.Vector3()), p = at || [c.x + dx, c.z + dz], pr = vary(this.h, asset, params, this.id), { w, d } = sizeOf(asset, pr);
-    let y = 0; for (const [a, b] of [[0, 0], [1, 1], [1, -1], [-1, 1], [-1, -1]]) y = Math.max(y, hf(p[0] + a * w / 3, p[1] + b * d / 3));
-    this.put(id, asset, p, turn, { y: Math.round(y), mount: 'on', group: group || this.h.S.home.objects.find((q) => q.id === `${this.id}-${targetId}`)?.group.split(':')[1], params: pr });
+    const { tris, all, T } = this.targetTris('restOn', targetId), c = all.getCenter(new T.Vector3()), p = at || [c.x + dx, c.z + dz], pr = vary(this.h, asset, params, this.id), { w, d } = sizeOf(asset, pr);
+    const y = this.settleOn('restOn', id, asset, tris, pr, p, turn);
+    this.put(id, asset, p, turn, { y, mount: 'on', group: group || this.h.S.home.objects.find((q) => q.id === `${this.id}-${targetId}`)?.group.split(':')[1], params: pr });
   }
-  out() { this.liftOnRugs(); const b = this.worldBounds(); return { id: this.id, name: this.name, ...(this.group ? { group: this.group } : {}), O: this.O, psi: this.psi, bounds: { ...b, top: this.top }, camera: { home: this.cam, shots: this.shots } }; }
+  // things on a tablecloth rise by the cloth's thickness (16 mm), so their bases rest on the cloth, not in it: every `on` piece whose middle lies over a cloth's table top and whose base is at the cloth's base height
+  liftOnCloths() {
+    const objs = this.h.S.home.objects.filter((o) => o.area === this.id), done = new Set();
+    for (const c of objs.filter((o) => o.asset === 'tablecloth')) for (const q of objs) {
+      if (q === c || q.mount !== 'on' || q.asset === 'tablecloth' || Math.abs(q.at[1] - c.at[1]) > 3 || done.has(q)) continue;
+      const dx = q.at[0] - c.at[0], dz = q.at[2] - c.at[2], r = c.params?.r;
+      if (r ? Math.hypot(dx, dz) < r : Math.abs(dx) < ((c.params?.w ?? 1600) - 90) / 2 && Math.abs(dz) < ((c.params?.d ?? 900) - 90) / 2) { q.at[1] += 16; done.add(q); }
+    }
+  }
+  alive(list) { checkAlive(this.id, this.h.S.home.walls.filter((w) => w.id.startsWith(this.id + '-')), list); const ws = this.h.S.home.walls.filter((w) => w.id.startsWith(this.id + '-')); this.motion = list.map(({ kind }) => { const k = MOTION.kinds[kind]; return { kind, needs: k.needs, ...(k.needs.includes('openWindow') ? { via: pickVia(ws, k.flies) } : {}) }; }); return this; }   // living things (roll's `motion`; src/motion/index.js)
+  out() { this.liftOnRugs(); this.liftOnCloths(); const b = this.worldBounds(); return { id: this.id, name: this.name, ...(this.motion?.length ? { motion: this.motion } : {}), ...(this.group ? { group: this.group } : {}), O: this.O, psi: this.psi, bounds: { ...b, top: this.top }, camera: { home: this.cam, shots: this.shots } }; }
 }
 export const facing = (from, to) => deg(Math.atan2(to[0] - from[0], to[1] - from[1]));   // the turn that makes an object at `from` face `to`, in local x/z

@@ -15,10 +15,10 @@ export function sideTable(kit, { r = 230, h = 520, top = 'round', legs = 'splay'
   else for (const sx of [-1, 1]) for (const sz of [-1, 1]) pts.push([sx * (r - 38), sz * (r - 38)]);
   g.add(legParts(kit, legs, pts, h - T + 4, { r: 20, out: [0, 0] }));
   const ls = Math.min(170, h * 0.32);
-  if (shelf === 'low' && legs !== 'sled') { if (round) g.add(kit.cyl(0, ls, 0, lr + 40, 18, { seg: 36, tone: 'lo' })); else g.add(kit.rbox(-r + 22, ls, r - 22, 2 * r - 44, 18, 2 * r - 44, 6, { tone: 'lo' })); }
+  if (shelf === 'low' && legs !== 'sled') { if (round) g.add(kit.cyl(0, ls, 0, lr + 40, 18, { seg: 36, tone: 'lo', through: true })); else g.add(kit.rbox(-r + 22, ls, r - 22, 2 * r - 44, 18, 2 * r - 44, 6, { tone: 'lo', through: true })); }
   if (drawer !== 'none' && !round) {
     const dr = kit.group(), a = r - 26, dh = Math.min(110, h * 0.2);
-    dr.add(kit.rbox(-a, h - T - dh, a, 2 * a, dh, 2 * a, 6, { tone: 'lo' }));
+    dr.add(kit.rbox(-a, h - T - dh, a, 2 * a, dh, 2 * a, 6, { tone: 'lo', through: true }));
     dr.add(kit.lines([[-a + 8, h - T - dh + 8, a + 1], [a - 8, h - T - dh + 8, a + 1], [a - 8, h - T - 8, a + 1], [-a + 8, h - T - 8, a + 1], [-a + 8, h - T - 8, a + 1], [-a + 8, h - T - dh + 8, a + 1], [a - 8, h - T - 8, a + 1], [a - 8, h - T - dh + 8, a + 1]], 'lo'));
     dr.add(handle(kit, drawer, 0, h - T - dh / 2, a, { w: Math.min(90, a) }));
     dr.position.z = ajar; g.add(dr);   // ajar: how far the drawer is pulled out, in mm

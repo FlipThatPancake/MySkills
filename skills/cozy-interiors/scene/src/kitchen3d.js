@@ -147,7 +147,7 @@ export function createKit() {
     setFade(centre, half, r0, r1) { fadeFill.uniforms.uC.value.copy(centre); fadeFill.uniforms.uH.value.copy(half); fadeFill.uniforms.uR.value.set(r0, r1); },
     // The window size in CSS pixels; call it on every resize so lines stay 1 px.
     // The home's accent colour (a hex string): the line takes it as is, the fill a soft tint of it. Textiles ask for it with tone: 'accent'.
-    setAccent(hex) { const c = new THREE.Color(hex), hsl = {}; c.getHSL(hsl); lineAccent.color.copy(new THREE.Color().setHSL(hsl.h, Math.min(0.55, hsl.s), Math.min(0.46, hsl.l))); const t = new THREE.Color().setHSL(hsl.h, Math.min(0.5, hsl.s), 0.86); accentFill.uniforms.uTint.value.set(t.r, t.g, t.b); },
+    setAccent(hex) { const c = new THREE.Color(hex), hsl = {}; c.getHSL(hsl); lineAccent.color.copy(new THREE.Color().setHSL(hsl.h, Math.min(0.55, hsl.s), Math.min(0.46, hsl.l))); const t = new THREE.Color().setHSL(hsl.h, Math.min(0.5, hsl.s * 0.7), Math.min(0.76, hsl.l + 0.27)); accentFill.uniforms.uTint.value.set(t.r, t.g, t.b); },   // close to the hex itself (a rust stays rust, not pink), a little lighter so the line work still reads
     setResolution(w, h) { lineFaint.resolution.set(w, h); lineMid.resolution.set(w, h); lineLo.resolution.set(w, h); seamLine.resolution.set(w, h); fadables.forEach((fa) => { fa.mid.resolution.set(w, h); fa.lo.resolution.set(w, h); fa.seam.resolution.set(w, h); }); lineGreen.resolution.set(w, h); lineAccent.resolution.set(w, h); loopMat.resolution.set(w, h); hullU.uRes.value.set(w, h); },
     // 0..1, fills and lines together. Only a fade is transparent; at 1 everything is opaque,
     // so three.js does not sort the meshes every frame.
@@ -176,6 +176,7 @@ export function createKit() {
     // (so real edges show and gentle curves do not). `smooth: true` adds the silhouette too.
     outline(mesh, opts = {}) {
       if (opts.smoothShade) smoothNormals(mesh.geometry);
+      if (kit.noLines) return mesh;   // scene/geom/load.mjs wants the solid parts only: no outline lines
       if (!opts.tone) opts = { ...opts, tone: autoTone(mesh.geometry) };
       const edges = new THREE.EdgesGeometry(mesh.geometry, opts.crease ?? CREASE);
       if (edges.attributes.position.count) {
@@ -194,7 +195,7 @@ export function createKit() {
     // Fill a geometry and outline it, at (x, y, z) — the position of the geometry's own origin.
     solid(geometry, x = 0, y = 0, z = 0, opts = {}) {
       const m = new THREE.Mesh(geometry, opts.leaf ? leafFill : opts.soil ? soilFill : opts.linen ? linenFill : opts.grey ? greyFill : opts.tone === 'accent' ? accentFill : fill);   // soil: true draws earth in warm grey-brown; leaf: true draws foliage in the sage fill with a green outline
-      m.position.set(x, y, z);
+      m.position.set(x, y, z); if (opts.through) m.userData.through = opts.through;   // through: this part may pass through others of its asset (a trolley post through its trays); scene/geom/parts.mjs
       return kit.outline(m, opts);
     },
     // A box by its left-bottom-front corner and size; it reaches back (-z) by d.
@@ -215,6 +216,7 @@ export function createKit() {
     // A cylinder standing on (x, y, z), axis up; `axis: 'z'` lays it front-to-back, 'x' left-to-right
     // (then (x, y, z) is the centre of its first end).
     // content(obj): mark a thing as a separate body inside an asset (a magazine, a log, a plate, a hat): scene/selftest.mjs checks that it does not pass through anything else of the asset. Parts left unmarked are one rigid assembly (joinery may overlap).
+    through(obj, held) { obj.traverse((m) => { if (m.isMesh) m.userData.through = held ? 'held' : true; }); return obj; },   // through(obj, held): every part of obj may pass through other parts of its asset; held ('held'): it stands in a holder (a pen in a pot, an umbrella in a stand) and may not poke out below the asset's lowest part (a garment on a hanger, a pen in a pot); scene/geom/parts.mjs
     content(obj) { obj.traverse((m) => { if (m.isMesh) m.userData.content = true; }); return obj; },
     cyl(x, y, z, r, h, opts = {}) {
       const g = new THREE.CylinderGeometry(opts.rTop ?? r, r, h, opts.seg ?? 32, 1, !!opts.open);   // open: no end caps (a pipe whose top fades out)

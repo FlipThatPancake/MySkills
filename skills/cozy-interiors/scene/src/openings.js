@@ -70,7 +70,7 @@ export function opening(kit, op, vis = null) {
     else {
       const CW = 45, STOOL = Y0 + 30;
       g.add(ext([[Z0 - CW, STOOL], [Z0 - CW, Y1 + CW], [Z1 + CW, Y1 + CW], [Z1 + CW, STOOL], [Z1, STOOL], [Z1, Y1], [Z0, Y1], [Z0, STOOL]], null, 0, 12));
-      g.add(kit.box(XB, STOOL - 30, Z1 + 70, DEPTH + 40, 30, w + 140, mid), kit.box(0, STOOL - 90, Z1 + 40, 11, 60, w + 80, mid));   // sill and apron
+      g.add(kit.box(XB, STOOL - 30, Z1 + 70, DEPTH + 110, 30, w + 140, mid), kit.box(0, STOOL - 90, Z1 + 40, 11, 60, w + 80, mid));   // sill and apron
     }
     const fz0 = Z0 + L, fz1 = Z1 - L, fy0 = Y0 + L, fy1 = Y1 - L, iz0 = fz0 + FW, iz1 = fz1 - FW, iy0 = fy0 + (wl ? 90 : FW), iy1 = fy1 - FW, MUL = 36;   // a wall's bottom rail is 90 mm
     const holes = [], tz = top ? iy1 - top : iy1;
@@ -141,7 +141,7 @@ export function opening(kit, op, vis = null) {
     g.add(ext(rectPts(Z0, Y0, Z1, Y1), [rectPts(Z0 + L, Y0 + L, Z1 - L, Y1 - L)], XB, DEPTH));   // the reveal: a tunnel through the wall, 6 mm linings
     const CW = 50;   // surround casing: an upside-down U, 50 mm wide, 12 mm proud
     g.add(ext([[Z0 - CW, STOOL], [Z0 - CW, Y1 + CW], [Z1 + CW, Y1 + CW], [Z1 + CW, STOOL], [Z1, STOOL], [Z1, Y1], [Z0, Y1], [Z0, STOOL]], null, 0, 12));
-    g.add(kit.box(XB, STOOL - 30, Z1 + 70, DEPTH + 40, 30, w + 140, mid));          // the sill (stool), 40 mm into the room
+    g.add(kit.box(XB, STOOL - 30, Z1 + 70, DEPTH + 110, 30, w + 140, mid));          // the sill (stool), 110 mm into the room, 160 mm free between sash and lip
     g.add(kit.box(0, STOOL - 90, Z1 + 40, 11, 60, w + 80, mid));                      // the apron under it
     const FW = 44, fy0 = STOOL, fy1 = Y1 - L, fz0 = Z0 + L, fz1 = Z1 - L, XF = -50;   // the frame: one ring, set 50 mm back
     g.add(ext(rectPts(fz0, fy0, fz1, fy1), [rectPts(fz0 + FW, fy0 + FW, fz1 - FW, fy1 - FW)], XF - 45, 45));
@@ -229,5 +229,6 @@ export function opening(kit, op, vis = null) {
       g.add(kit.cyl(20, 1000, op.slid === 'l' ? Z0 + lw - 70 : Z1 - lw + 70, 40, 10, { axis: 'x', seg: 20, tone: 'mid' }));
       g.add(kit.lines([[19, 40, z0], [19, h - 40, z0], [19, h - 40, z0 + lw], [19, 40, z0 + lw]], 'lo')); }
   }
+  g.traverse((o) => { if (o.isMesh && !o.material.isMeshBasicMaterial && !o.userData.kitLine) o.userData.solid = true; });   // the checks (scene/geom) treat these as the opening's physical frame, sill and sashes
   return { group: g, hole, width: w, height: h, sill: Y0, openables, hit, kind: op.kind };
 }

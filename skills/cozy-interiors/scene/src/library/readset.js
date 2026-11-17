@@ -16,7 +16,7 @@ function book(kit, x, y, z, w, h, d, ang, tone) {
   g.position.set(x, y, z); g.rotation.y = ang; return g;
 }
 
-export function windowSeat(kit, { w = 1500, d = 520, h = 440, form = 'storage', cushion = 'plain', pillows = 2, throwOn = 'yes', seed = 1 } = {}) {   // a built-in seat under a window: a box with drawers, a frame with open cubbies, or a slatted bench on legs; a long cushion, pillows leaning on the wall, a folded throw. Back at -z.
+export function windowSeat(kit, { w = 1500, d = 520, h = 440, form = 'storage', cushion = 'plain', pillows = 2, throwOn = 'yes', pillowMax = 400, seed = 1 } = {}) {   // a built-in seat under a window: a box with drawers, a frame with open cubbies, or a slatted bench on legs; a long cushion, pillows leaning on the wall, a folded throw. Back at -z.
   const g = kit.group(), R = rnd(seed), B = bx(kit), Rb = rb(kit), pts = [], z = d / 2 + 0.6, cuH = 70;
   if (form === 'storage') {
     g.add(Rb(0, 70, 0, w, h - 70 - 20, d, 5)); g.add(B(0, 0, 14, w - 40, 70, d - 40, lo)); g.add(Rb(0, h - 20, 10, w + 20, 20, d + 20, 4));
@@ -32,9 +32,9 @@ export function windowSeat(kit, { w = 1500, d = 520, h = 440, form = 'storage', 
   if (pts.length) g.add(kit.lines(pts, 'lo'));
   const cw2 = w - 50, cd = d - 60, cy = h, cs = softBox(kit, cw2, cuH, cd, { r: 24, bulge: 8, piping: cushion === 'tufted' ? 'none' : 'edge', tone: 'mid', tufts: cushion === 'tufted' ? Array.from({ length: Math.max(2, Math.round(cw2 / 260)) }, (_, i) => [-cw2 / 2 + (i + 0.5) * cw2 / Math.max(2, Math.round(cw2 / 260)), 0]) : undefined }); cs.position.set(0, cy + cuH / 2, 14); g.add(cs);
   if (cushion === 'striped') { const ln = []; for (let x = -cw2 / 2 + 60; x < cw2 / 2 - 40; x += 90) ln.push([x, cy + cuH * 0.6, 14 + cd / 2 + 8], [x, cy + cuH * 0.1, 14 + cd / 2 + 8]); g.add(kit.lines(ln, 'mid')); }
-  const pw = [-1, 1, 0].slice(0, Math.max(0, Math.min(3, pillows)));
-  pw.forEach((s, i) => { const p = softBox(kit, 340 - i * 20, 330 - i * 20, 110, { r: 50, bulge: 22, dent: 12, piping: 'edge', tone: i % 2 ? 'lo' : 'mid' }); p.position.set(s * (cw2 / 2 - 260) + (R() - 0.5) * 60, cy + cuH + 130, -d / 2 + 90 + 70); p.rotation.x = -(0.30 + R() * 0.16); p.rotation.z = (R() - 0.5) * 0.35; g.add(p); });
-  if (throwOn === 'yes') { const t = foldedThrow(kit, { w: 700, d: 360, layers: 3, tone: 'lo' }); t.position.set(cw2 / 2 - 480, cy + cuH, 50); t.rotation.y = 0.08; g.add(t); }
+  const ps = Math.min(1, pillowMax / 330), pw = ps < 0.55 ? [] : [-1, 1, 0].slice(0, Math.max(0, Math.min(3, pillows)));   // pillowMax: how tall pillows may stand (under a low sill they shrink or go)
+  pw.forEach((s, i) => { const p = softBox(kit, (340 - i * 20) * ps, (330 - i * 20) * ps, 110 * ps, { r: 50, bulge: 22, dent: 12, piping: 'edge', tone: i % 2 ? 'lo' : 'mid' }); p.position.set(s * (cw2 / 2 - 260) + (R() - 0.5) * 60, cy + cuH + 130 * ps, -d / 2 + 90 + 70); p.rotation.x = -(0.30 + R() * 0.16); p.rotation.z = (R() - 0.5) * 0.35; g.add(p); });
+  if (throwOn === 'yes') { const t = foldedThrow(kit, { w: 700, d: 200, layers: 3, tone: 'lo' }); t.position.set(cw2 / 2 - 480, cy + cuH, 125);  t.rotation.y = 0.08; g.add(t); }
   return kit.merge(g);
 }
 
@@ -44,14 +44,14 @@ export function readingLamp(kit, { form = 'arc', h = 1700, shade = 'drum', seed 
   if (form === 'arc') {
     g.add(Rb(0, 0, 0, 300, 60, 220, 14, lo)); g.add(kit.cyl(-60, 60, 0, 16, h * 0.6, { seg: 12, ...lo }));
     const n = 16, p0 = [-60, 60 + h * 0.6]; let prev = [p0[0], p0[1], 0]; for (let i = 1; i <= n; i++) { const t = i / n, a = t * Math.PI * 0.55, cx2 = -60 + Math.sin(a) * 620, cy2 = p0[1] + (1 - Math.cos(a)) * 260 + t * 90; const cur = [cx2, cy2 - (t > 0.8 ? (t - 0.8) * 120 : 0), 0]; g.add(rod(kit, prev, cur, 9, 9, 'lo')); prev = cur; }
-    const s = sh(180, 190); s.position.set(prev[0], prev[1] - 30, 0); g.add(s); g.add(rod(kit, prev, [prev[0], prev[1] - 28, 0], 4, 4, 'lo'));
+    const s = sh(180, 190); s.position.set(prev[0], prev[1] - 30, 0); g.add(kit.through(s)); g.add(rod(kit, prev, [prev[0], prev[1] - 28, 0], 4, 4, 'lo'));
   } else if (form === 'tripod') {
     for (let i = 0; i < 3; i++) { const a = i / 3 * 6.2832 + 0.5; g.add(rod(kit, [Math.cos(a) * 30, h * 0.55, Math.sin(a) * 30], [Math.cos(a) * 250, 0, Math.sin(a) * 250], 14, 10, 'lo')); }
-    g.add(kit.cyl(0, h * 0.5, 0, 12, h * 0.25, { seg: 10, ...lo })); const s = sh(190, 240); s.position.set(0, h * 0.75 + 240, 0); g.add(s); g.add(kit.cyl(0, h * 0.75, 0, 8, 230, { seg: 8, ...lo }));
+    g.add(kit.cyl(0, h * 0.5, 0, 12, h * 0.25, { seg: 10, ...lo })); const s = sh(190, 240); s.position.set(0, h * 0.75 + 240, 0); g.add(kit.through(s)); g.add(kit.cyl(0, h * 0.75, 0, 8, 230, { seg: 8, ...lo }));
   } else {   // pharmacy
     g.add(kit.cyl(0, 0, 0, 140, 22, { rTop: 130, seg: 32, ...lo })); g.add(kit.cyl(0, 22, 0, 13, h - 400, { seg: 12 })); const top = [0, h - 380, 0];
     g.add(rod(kit, top, [260, h - 250, 0], 8, 8, 'lo')); g.add(rod(kit, [260, h - 250, 0], [380, h - 330, 0], 8, 8, 'lo')); g.add(kit.solid(new T.SphereGeometry(14, 10, 8), 260, h - 250, 0, { smooth: true, ...lo }));
-    const s = sh(105, 140); s.position.set(380, h - 330 + 10, 0); s.rotation.z = 0.3; g.add(s);
+    const s = sh(105, 140); s.position.set(380, h - 330 + 10, 0); s.rotation.z = 0.3; g.add(kit.through(s));
   }
   return kit.merge(g);
 }
@@ -61,7 +61,7 @@ export function floorBooks(kit, { n = 6, form = 'stack', topper = 'none', seed =
   const pile = (cx, cz, k, wob) => { let y = 0; for (let i = 0; i < k; i++) { const w = 190 + R() * 110, d = 130 + R() * 90, hh = 24 + R() * 30; g.add(book(kit, cx + (R() - 0.5) * wob, y, cz + (R() - 0.5) * wob * 0.5, w, hh, d, (R() - 0.5) * 0.4, tones[i % 2])); y += hh; } return y; };
   let top;
   if (form === 'pair') { top = Math.max(pile(-130, 0, Math.ceil(n / 2), 24), 0); pile(150, 20, Math.floor(n / 2), 28); }
-  else if (form === 'tower') { top = pile(0, 0, n, 50); const lb = book(kit, 150, 0, 0, 230, 34, 160, 0, 'mid'); lb.rotation.z = 0.5; lb.position.set(190, 40, 0); g.add(lb); }
+  else if (form === 'tower') { top = pile(0, 0, n, 50); const lb = book(kit, 150, 0, 0, 230, 34, 160, 0, 'mid'); lb.rotation.z = 0.5; lb.position.set(190, 56, 0); kit.through(lb); g.add(lb); }
   else top = pile(0, 0, n, 26);
   if (topper === 'cup') { const T = kit.THREE; g.add(kit.cyl(10, top, 0, 38, 82, { rTop: 42, seg: 20, ...lo })); g.add(kit.cyl(10, top + 80, 0, 32, 3, { seg: 18, linen: true })); g.add(rod(kit, [48, top + 62, 0], [72, top + 40, 0], 5, 5, 'lo')); }
   else if (topper === 'glasses') { const T = kit.THREE, gl = kit.group(); for (const s of [-1, 1]) { const rg = kit.solid(new T.TorusGeometry(24, 2.2, 6, 20), s * 32, 0, 0, { smooth: true }); rg.rotation.x = Math.PI / 2; gl.add(rg); } gl.add(rod(kit, [-8, 0, 0], [8, 0, 0], 2, 2, 'lo')); gl.position.set(0, top + 3, 10); gl.rotation.y = 0.5; g.add(gl); }

@@ -126,7 +126,7 @@ function sink(kit, add, cx, depth, top) {
   add(kit.box(bx0 + t, BY, z0 - t, W - 2 * t, t, D - 2 * t));
   add(kit.cyl(cx, BY + t, (z0 + z1) / 2, 32, 2, { seg: 24 }));
   // tap: base, post, arched spout
-  const TZ = -depth + 50, seg = (a, b, r) => { const A = new T.Vector3(...a), B = new T.Vector3(...b), d = B.clone().sub(A), m = kit.solid(new T.CylinderGeometry(r, r, d.length(), 14), 0, 0, 0, { smooth: true }); m.position.copy(A).add(B).multiplyScalar(0.5); m.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), d.normalize()); add(m); };
+  const TZ = -depth + 135, seg = (a, b, r) => { const A = new T.Vector3(...a), B = new T.Vector3(...b), d = B.clone().sub(A), m = kit.solid(new T.CylinderGeometry(r, r, d.length(), 14), 0, 0, 0, { smooth: true }); m.position.copy(A).add(B).multiplyScalar(0.5); m.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), d.normalize()); add(m); };
   add(kit.cyl(cx, top, TZ, 30, 14, { seg: 24 }));
   const PT = top + 330, R = 140, pts = [];
   add(kit.cyl(cx, top + 14, TZ, 15, PT - top - 14, { seg: 20 }));

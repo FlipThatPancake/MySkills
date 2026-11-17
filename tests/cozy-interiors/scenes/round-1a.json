@@ -227,21 +227,21 @@
     "id": "kitchen-run-cuttingBoard3",
     "asset": "cuttingBoard",
     "at": [
-     1200,
+     1190,
      900,
-     330
+     111
     ],
     "mount": "on",
     "params": {},
     "group": "kitchen:cook",
     "area": "kitchen",
-    "off": 330
+    "off": 111
    },
    {
     "id": "kitchen-run-fruitBowl4",
     "asset": "fruitBowl",
     "at": [
-     2700,
+     2690,
      900,
      330
     ],
@@ -306,7 +306,7 @@
     "at": [
      330,
      900,
-     2500
+     2510
     ],
     "turn": 90,
     "mount": "on",
@@ -531,7 +531,7 @@
     "asset": "plant",
     "at": [
      5600,
-     757,
+     773,
      2700
     ],
     "mount": "on",
@@ -546,7 +546,7 @@
     "asset": "jug",
     "at": [
      5350,
-     757,
+     773,
      2850
     ],
     "mount": "on",
@@ -753,7 +753,9 @@
      2700
     ],
     "mount": "ceiling",
-    "params": {},
+    "params": {
+     "rim": 1575
+    },
     "group": "dining:floor",
     "area": "dining"
    },
@@ -880,7 +882,7 @@
     "at": [
      13000,
      800,
-     60
+     130
     ],
     "mount": "on",
     "params": {

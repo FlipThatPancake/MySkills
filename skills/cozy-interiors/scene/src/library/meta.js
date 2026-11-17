@@ -1,6 +1,7 @@
 // @js:library-meta — what each asset in the registry is: where its origin sits, how big it is, how it is mounted, what it takes. Plain data (no three.js), read by compose.mjs and assets.mjs.
 // origin: 'centre' (the middle of the footprint, on the floor or on its foot), 'front-left' (the left end of its front, body behind it: runs, fridge, wall cabinets), 'front-centre' (the middle of its front, sitting in a run's slot: hob, hood), 'wall-centre' (the middle of its back, on a wall face, bottom edge at y).
 // size: [width, depth, height] mm with the default params (width runs along the wall). mount: 'floor' | 'on' (stands on something: give y) | 'wall' | 'ceiling'. y: the height it sits at when mounted `on` or `wall`.
+// backed: { form, off }: with that form the thing leans on the wall, so R.on stands its origin off mm from the wall instead of mid-worktop.
 // facing: all floor pieces face +z (turn them), a bed has its head toward -z. slot: what it goes into.
 const A = (origin, size, mount, params, extra = {}) => ({ origin, size, mount, params, ...extra });
 export const ASSETS = {
@@ -10,10 +11,10 @@ export const ASSETS = {
   hob: A('front-left', [900, 600, 20], 'on', '-', { y: 0, slot: 'hob', note: 'sits in the worktop over a hob module: y 0' }),
   hood: A('front-left', [900, 500, 900], 'wall', '-', { y: 0, slot: 'hob', note: 'over a hob module: y 0' }),
   pan: A('centre', [260, 260, 60], 'on', '-', { y: 940, slot: 'hob' }),
-  cuttingBoard: A('centre', [300, 40, 400], 'on', 'form leaning|flat|hanging|stacked (roll.board says which)', { y: 904, note: 'leaning: against the wall at y 904. flat or stacked: lies on a worktop or the table (460 x 300 on the top: put it with y at the surface). hanging: upright on a wall rail or hook, y 1100' }),
+  cuttingBoard: A('centre', [300, 40, 400], 'on', 'form leaning|flat|hanging|stacked (roll.board says which)', { y: 904, backed: { form: 'leaning', off: 111, byDefault: true }, note: 'leaning: against the wall at y 904. flat or stacked: lies on a worktop or the table (460 x 300 on the top: put it with y at the surface). hanging: upright on a wall rail or hook, y 1100' }),
   fruitBowl: A('centre', [300, 300, 120], 'on', '-', { y: 'top' }),
-  plant: A('centre', [120, 120, 300], 'on', '-', { y: 'top', note: 'a pot on a surface; for the floor use floorPlant' }),
-  floorPlant: A('centre', [560, 560, 950], 'floor', 'h 950, seed'),
+  plant: A('centre', [260, 260, 300], 'on', '-', { y: 'top', note: 'a pot on a surface; for the floor use floorPlant' }),
+  floorPlant: A('centre', [700, 700, 950], 'floor', 'h 950, seed'),
   jars: A('centre', [460, 130, 260], 'on', 'n 3', { y: 'top' }),
   kettle: A('centre', [300, 220, 260], 'on', '-', { y: 'top', note: 'on a worktop or a hob' }),
   herbs: A('centre', [360, 100, 170], 'on', 'n 3', { y: 'top' }),
@@ -38,7 +39,7 @@ export const ASSETS = {
   console: A('centre', [1100, 330, 800], 'floor', 'w 1100, d 330, h 800'),
   bench: A('centre', [1200, 380, 450], 'floor', 'w 1200, d 380, h 450, form plank|slatted|upholstered|trestle'),
   stool: A('centre', [370, 370, 650], 'floor', 'h 650'),
-  picture: A('wall-centre', [600, 52, 800], 'wall', 'w 600, h 800, seed', { y: 1300 }),
+  picture: A('wall-centre', [600, 52, 800], 'wall', 'w 600, h 800, seed', { y: 1100, note: 'on open wall its middle stands at 1500: y = 1500 - h / 2 (1100 for h 800); over furniture 150-250 above its top, about 0.5-0.8 of its width' }),
   mirror: A('wall-centre', [700, 56, 1000], 'wall', 'w 700, h 1000, shape arch|round|pill', { y: 800 }),
   wallShelf: A('wall-centre', [900, 230, 280], 'wall', 'w 900, seed', { y: 1300, note: 'books, a pot and a bowl on it' }),
   curtain: A('wall-centre', [1500, 200, 2300], 'wall', 'w 1500, h 2300, panels 2', { y: 0 }),
@@ -69,7 +70,7 @@ export const ASSETS = {
   hungHat: A('wall-centre', [300, 140, 300], 'wall', 'form brim|beanie, tone', { y: 1650, note: 'brings its own peg; hangs below y; keep 400 mm from the next hook' }),
   hungBag: A('wall-centre', [320, 200, 520], 'wall', 'form satchel|tote|basket, w, h', { y: 1650, note: 'brings its own peg; hangs below y; keep 400 mm from the next hook' }),
   boots: A('centre', [520, 340, 400], 'floor', 'kind wellington|ankle|hiker', { note: 'a pair by the door, toes to +z' }),
-  runner: A('centre', [850, 3110, 9], 'floor', 'w 560-860, l 1800-3200, form stripe|bands|check', { y: 0, note: 'long axis along z: turn 90 to run along a wall; items on it get lift 9' }),
+  runner: A('centre', [850, 3110, 9], 'floor', 'w 560-860, l 1800-3200, form stripe|bands|check, tone accent|lo', { y: 0, note: 'long axis along z: turn 90 to run along a wall; items on it get lift 9' }),
   letterTray: A('centre', [330, 240, 190], 'on', 'form tray|caddy, n', { y: 'top', note: 'on a console by the door' }),
   wallClock: A('wall-centre', [340, 60, 360], 'wall', 'r 170, form round|square, seed', { y: 1900 }),
   cookbookStand: A('centre', [300, 160, 320], 'on', 'w 300, seed', { y: 'top', note: 'an open book tilted on a wooden stand' }),
@@ -114,8 +115,8 @@ export const ASSETS = {
   bed: A('centre', [2040, 2230, 1300], 'floor', 'w 1600, l 2100, head 1000 (headboard height; keep 300 + head at least 150 mm below a window sill)', { note: 'head toward -z: back it onto a wall' }),
   bedsideTable: A('centre', [450, 380, 520], 'floor', 'w 450, d 380, h 520'),
   wardrobe: A('centre', [1200, 600, 2100], 'floor', 'w 1200, h 2100, d 600'),
-  desk: A('centre', [1660, 790, 740], 'floor', 'w 1100-1700, d 600-800, h 720-760, form pedestal|trestle|writing, legs (writing)'),
-  windowSeat: A('centre', [1960, 590, 440], 'floor', 'w 1100-2000, d 440-580, h 400-480, form storage|open|legs, cushion plain|striped|tufted, pillows 0-3, throwOn yes|no', { note: 'back it onto the wall under a window; the cushion and pillows are included' }),
+  desk: A('centre', [1660, 790, 740], 'floor', 'w 1100-1700, d 600-800, h 720-760, form pedestal|trestle|writing, legs (writing), drawer shut|ajar (pedestal, writing)'),
+  windowSeat: A('centre', [1960, 590, 440], 'floor', 'w 1100-2000, d 440-580, h 400-480, form storage|open (legs reads as a bench: ask for it only by name), cushion plain|striped|tufted, pillows 0-3, throwOn yes|no', { note: 'back it onto the wall under a window with a sill of 530-610 (compose sets its height from the sill; its cushion top stands within 100 of the sill); the cushion and pillows are included' }),
   readingLamp: A('centre', [900, 300, 1700], 'floor', 'form arc|tripod|pharmacy, h 1500-1800, shade drum|cone|dome', { note: 'arc: the shade hangs 600 mm to +x of the base; put it behind a chair' }),
   floorBooks: A('centre', [330, 240, 260], 'floor', 'n 3-9, form stack|tower|pair, topper none|cup|glasses', { note: 'beside a reading chair' }),
   teaSet: A('centre', [260, 190, 160], 'on', 'form cup|pot, saucer yes|no, biscuit yes|no, steam yes|no', { y: 'top', note: 'on a side table or the window seat' }),
@@ -124,7 +125,7 @@ export const ASSETS = {
   monitor: A('centre', [560, 420, 420], 'on', 'w 480-700, stand foot|bar|arm, kb yes|no', { y: 'top', note: 'on a desk, screen toward +z; the keyboard sits in front when kb yes' }),
   notebook: A('centre', [150, 210, 24], 'on', 'form closed|open|spiral|ledger|pad, w 130-190, pens 0-3', { y: 'top' }),
   pinboard: A('wall-centre', [900, 60, 600], 'wall', 'w 600-1200, h 450-800, notes 4-9, frame wood|none', { y: 1300 }),
-  binders: A('centre', [400, 290, 310], 'on', 'n 3-8, h 280-320, form row|stack|slim|open', { y: 'top', note: 'on a shelf or desk; row spines face +z' }),
+  binders: A('centre', [400, 290, 310], 'on', 'n 3-8, h 280-320, form row|stack|slim|open, tone accent|mid', { y: 'top', note: 'on a shelf or desk; row spines face +z' }),
   deskOrganiser: A('centre', [330, 250, 220], 'on', 'form cups|pots|tiered, n 2-4, tall, pens, tone', { y: 'top' }),
   printer: A('centre', [430, 340, 200], 'on', 'w 380-480, h 150-240, form inkjet|laser, lid flat|raised, paper stack|none', { y: 'top', note: 'on a desk or a shelf; the output tray faces +z' }),
   globe: A('centre', [260, 260, 400], 'on', 'r 90-160, stand arc|cradle|tripod, tilt, tone', { y: 'top' }),
@@ -150,8 +151,8 @@ export const SPACE = {
   shelf: { w: [600, 1000], h: [1200, 2100], d: [260, 380], shelves: [3, 6], base: ['plinth', 'legs', 'feet'], back: ['closed', 'open'], fill: ['books', 'boxes', 'mixed'], seed: [1, 90] },
   pot: { r: [60, 220], tall: [0.8, 1.9], profile: ['straight', 'tapered', 'belly', 'tulip', 'urn'], saucer: ['yes', 'no'], plant: ['sprig', 'bush'], tone: ['mid', 'lo'], seed: [1, 90] },
   shoes: { kind: ['sneaker', 'boot'] },
-  desk: { w: [1100, 1700], d: [600, 800], h: [720, 760], form: ['pedestal', 'trestle', 'writing'], legs: ['tapered', 'turned', 'hairpin', 'block'], seed: [1, 90] },
-  windowSeat: { w: [1100, 2000], d: [440, 580], h: [400, 480], form: ['storage', 'open', 'legs'], cushion: ['plain', 'striped', 'tufted'], pillows: [0, 3], throwOn: ['yes', 'no'], seed: [1, 90] },
+  desk: { w: [1100, 1700], d: [600, 800], h: [720, 760], form: ['pedestal', 'trestle', 'writing'], legs: ['tapered', 'turned', 'hairpin', 'block'], drawer: ['shut', 'ajar'], seed: [1, 90] },
+  windowSeat: { w: [1100, 2000], d: [440, 580], h: [400, 480], form: ['storage', 'open'], cushion: ['plain', 'striped', 'tufted'], pillows: [0, 3], throwOn: ['yes', 'no'], seed: [1, 90] },
   readingLamp: { form: ['arc', 'tripod', 'pharmacy'], h: [1500, 1800], shade: ['drum', 'cone', 'dome'], seed: [1, 90] },
   floorBooks: { n: [3, 9], form: ['stack', 'tower', 'pair'], topper: ['none', 'cup', 'glasses'], seed: [1, 90] },
   teaSet: { form: ['cup', 'pot'], saucer: ['yes', 'no'], biscuit: ['yes', 'no'], steam: ['yes', 'no'], seed: [1, 90] },

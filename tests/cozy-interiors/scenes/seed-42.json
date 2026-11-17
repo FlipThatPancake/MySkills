@@ -543,7 +543,7 @@
     "asset": "sideTable",
     "at": [
      13050,
-     0,
+     7,
      1500
     ],
     "mount": "floor",
@@ -557,14 +557,15 @@
      "tone": "mid"
     },
     "group": "reading:chair side",
-    "area": "reading"
+    "area": "reading",
+    "lift": 7
    },
    {
     "id": "reading-tea",
     "asset": "teaSet",
     "at": [
      13050,
-     540,
+     547,
      1500
     ],
     "mount": "on",
@@ -583,7 +584,7 @@
     "asset": "mug",
     "at": [
      12950,
-     540,
+     547,
      1450
     ],
     "mount": "on",
@@ -596,7 +597,7 @@
     "asset": "floorBooks",
     "at": [
      12950,
-     0,
+     7,
      2150
     ],
     "turn": 15,
@@ -608,7 +609,8 @@
      "seed": 40
     },
     "group": "reading:chair side",
-    "area": "reading"
+    "area": "reading",
+    "lift": 7
    },
    {
     "id": "reading-basket",
@@ -688,7 +690,7 @@
     "at": [
      9200,
      0,
-     280
+     350
     ],
     "mount": "floor",
     "params": {

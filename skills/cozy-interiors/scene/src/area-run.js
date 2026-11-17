@@ -11,6 +11,7 @@ import { buildHome, FADE } from './home.js';
 import { bakeLight } from './lightbake.js';
 import { VIEW } from './sheet.js';
 import { createTour } from './tour.js';
+import { createMotion } from './motion/index.js';
 
 const rad = THREE.MathUtils.degToRad, deg = THREE.MathUtils.radToDeg, FOV = 30, GLIDE_S = 1.6, SPAN = 80;
 const smooth = (k) => k * k * (3 - 2 * k);
@@ -199,6 +200,15 @@ export function createAreaScene(canvas, S) {
     get glide() { return glide; }, objects: home.objects, openables: home.openables,
     openAll(on) { home.openables.forEach((f) => { f.userData.open.target = on ? 1 : 0; }); moveFronts(1, true); },
   };
+  api.motion = createMotion(kit, home, S);   // living things (motion/index.js): what the roll dealt each area
+  {   // the cameras fliers keep away from: an area's home view (its fitted view is known once the area is on show) and its tour shot cameras; the live camera too on the page (not in ?check)
+    const home0 = {}, shotsOf = (id) => (areas[id].camera?.shots || []).map((x) => new THREE.Vector3(...x.from)), plain = /[?&]check\b/.test(location.search);
+    api.motion.cameraOf = (id) => {
+      if (api.area !== id) return shotsOf(id);
+      if (!home0[id]) { const v = viewOf(areas[id]); home0[id] = [new THREE.Vector3(...v.target).add(sph(v.dist, v.az, v.el)), ...shotsOf(id)]; }
+      return plain ? home0[id] : [...home0[id], camera.position];
+    };
+  }
   resize();
   arrive(q.get('area') || order[0]);
   renderer.setAnimationLoop((now) => {
@@ -206,6 +216,7 @@ export function createAreaScene(canvas, S) {
     if (glide) { lastInput = now; if (!glide.hold) glideAt((now - glide.t0) / 1000 / GLIDE_S); }
     else if (!tour.update(now, now - lastInput)) controls.update();
     for (const g of Object.values(home.objects)) { g.userData.tick?.(dt); g.userData.update?.(dt); }
+    api.motion.update(dt, api.area);
     moveFronts(dt);
     home.update(camera, tour.look || controls.target);
     renderer.render(scene, camera);
