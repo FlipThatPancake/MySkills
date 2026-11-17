@@ -40,7 +40,7 @@ let d, k;
   right.place('rshelf', 'wallShelf', 3500, { y: 1500, group: 'shelfwall', shadow: false, params: { w: 800 } });
   a.across('across the island', [5400, 1250, 4000], [1526, 1100, 1454], 36, 'island', 'dining');
   a.view({ target: [2500, 800, 1500], az: 8, el: 13, dist: 5600 });
-  a.shot('island', [5100, 700, 1900], [1155, 557, 1690], 32, 'island'); a.shot('trolley', [1050, 1100, 3700], [4734, 900, 760], 40, 'trolley');
+  a.shot('island', [6000, 1900, 1900], [1165, 1100, 1709], 36, 'island'); a.shot('trolley', [1350, 850, 3850], [4071, 925, 125], 40, 'trolley');
 }
 { // the dining area's right wall is the stretch beside the kitchen, built by H.join(d, k, { layout: 'corner' }): hang things on it after the join
   d.cornerWall.place('rshelf2', 'wallShelf', 3900, { y: 1500, group: 'rwall', shadow: false, params: { w: 900 } });

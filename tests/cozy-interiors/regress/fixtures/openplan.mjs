@@ -28,4 +28,6 @@ export const fixtures = [
     build({ Home }) { const H = home(Home); H.list[1].shot('table', [2700, 1100, 6600], [2700, 400, 2600], 34, 'table set'); return H; } },
   { name: 'good-table-nearest-chair-cut-by-edge', from: 'round 3 lead: a table shot from a corner: the nearest chair is cut by the frame edge and is the foreground (the shot rules are not counted for good fixtures; this one guards the other rules)', kind: 'good',
     build({ Home }) { const H = home(Home); H.list[1].shot('table', [5200, 1100, 6000], [2500, 400, 2600], 34, 'table set'); return H; } },
+  { name: 'shot-foreground-shelf-unit-too-big', from: 'round 3 lead: a shelf unit stands in front of the camera and fills far more than 10% of the frame; fitshots now measures this the same way as check-home (any nearer piece, not only small ones)', kind: 'bug', expect: { rules: ['shot'], ids: [] },
+    build({ Home }) { const H = home(Home), d = H.list[1]; d.put('shelfunit', 'shelf', [2700, 4200], 0, { group: 'shelfwall', params: { w: 900, h: 1800 } }); d.shot('table', [2700, 1100, 6300], [2700, 400, 2600], 34, 'table set'); return H; } },
 ];
