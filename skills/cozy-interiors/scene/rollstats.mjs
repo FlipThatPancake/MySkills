@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 // node rollstats.mjs [count = 200] [kinds...] → rolls `count` seeds and prints how often each pick and each pair of picks comes up, so a lopsided table shows.
 import { roll } from './roll.mjs';
+import { FURNITURE } from './openplan.mjs';
 const args = process.argv.slice(2), N = /^\d+$/.test(args[0] || '') ? Number(args.shift()) : 200, kinds = args.length ? args : ['kitchen', 'dining', 'living'];
 const tally = {}, bump = (k, v) => { (tally[k] ||= {})[v] = (tally[k][v] || 0) + 1; };
 for (let seed = 1; seed <= N; seed++) {
   const r = roll(seed, kinds); bump('floor', r.floor);
+  bump('open plan', r.openPlan ? 'yes' : 'no');
+  if (r.openPlan) { const o = r.openPlan; bump('open plan layout', o.layout); bump('open plan chain', o.chain.join(' - ')); bump('open plan areas joined', o.chain.length); for (const q of o.seams) { bump('open plan separators', q.separators.join(' + ')); bump('open plan overlap mm', q.overlap); if (!q.separators.some((k) => FURNITURE.includes(k))) bump('open plan seams WITHOUT furniture', 'BAD'); } }
   for (const [k, a] of Object.entries(r.areas)) {
     bump(`${k} backing`, a.backing); bump(`${k} hero`, a.hero); bump(`${k} openings`, a.openings.map((o) => `${o.kind}/${o.on}`).join(' + ')); bump(`${k} plants`, a.plants);
     for (const x of a.accents) bump(`${k} accent`, x);
