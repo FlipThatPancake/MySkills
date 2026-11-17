@@ -305,9 +305,9 @@
     "id": "dining-cm1",
     "asset": "mug",
     "at": [
-     4740,
+     4700,
      820,
-     450
+     440
     ],
     "mount": "on",
     "params": {},
@@ -762,64 +762,34 @@
     },
     "shots": [
      {
-      "name": "table",
+      "name": "cart",
       "from": [
-       2600,
-       1250,
-       8400
+       2900,
+       2100,
+       4800
       ],
       "look": [
-       2637,
-       300,
-       3437
+       4275,
+       700,
+       221
       ],
-      "fov": 40,
-      "subject": "dining:table set"
-     },
-     {
-      "name": "table-side",
-      "from": [
-       -100,
-       1700,
-       8400
-      ],
-      "look": [
-       2567,
-       500,
-       3074
-      ],
-      "fov": 36,
-      "subject": "dining:table set"
+      "fov": 32,
+      "subject": "dining:cart"
      },
      {
       "name": "cabinet",
       "from": [
-       5300,
-       700,
-       4800
+       5150,
+       850,
+       3600
       ],
       "look": [
-       2100,
+       2492,
        900,
-       595
+       -154
       ],
-      "fov": 34,
+      "fov": 40,
       "subject": "dining:cabinet"
-     },
-     {
-      "name": "cart",
-      "from": [
-       1200,
-       1300,
-       4300
-      ],
-      "look": [
-       4800,
-       600,
-       450
-      ],
-      "fov": 34,
-      "subject": "dining:cart"
      }
     ]
    }
@@ -856,62 +826,47 @@
      {
       "name": "across the island",
       "from": [
-       2100,
        1400,
-       10100
+       1250,
+       10200
       ],
       "look": [
-       3400,
-       600,
-       6000
+       3946,
+       1100,
+       6326
       ],
-      "fov": 38,
+      "fov": 36,
       "subject": "kitchen:island",
       "across": "dining"
      },
      {
-      "name": "stove",
-      "from": [
-       3000,
-       1000,
-       500
-      ],
-      "look": [
-       2880,
-       1300,
-       4556
-      ],
-      "fov": 34,
-      "subject": "kitchen:stove"
-     },
-     {
       "name": "island",
       "from": [
-       -300,
-       1100,
-       2900
+       3500,
+       700,
+       9900
       ],
       "look": [
-       4242,
+       3710,
        557,
-       3156
+       5955
       ],
-      "fov": 30,
+      "fov": 32,
       "subject": "kitchen:island"
      },
      {
       "name": "trolley",
       "from": [
-       -800,
+       1700,
        1100,
-       2300
+       5850
       ],
       "look": [
-       2000,
-       600,
-       4200
+       4640,
+       900,
+       9534
       ],
-      "fov": 34,
+      "fov": 40,
       "subject": "kitchen:trolley"
      }
     ]
