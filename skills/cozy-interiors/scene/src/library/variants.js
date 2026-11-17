@@ -41,8 +41,11 @@ export function plant(kit, { form = 0, seed = 6 } = {}) {   // the small pot on 
   if (form === 1) {   // a small round bush
     g.add(kit.cyl(0, 0, 0, 46, 70, { rTop: 56, seg: 20, ...lo }));rimTop(kit, g, 56, 70);
     for (let k = 0; k < 12; k++) { const a = R() * 6.28, r = R() * 40; pts.push([0, 70, 0], [Math.sin(a) * r, 110 + R() * 70, Math.cos(a) * r]); g.add(leafAt(kit, Math.sin(a) * r, 130 + R() * 60, Math.cos(a) * r, 24, 28, R() - 0.5, R() - 0.5)); }
-  } else if (form === 2) {   // a cactus
-    g.add(kit.cyl(0, 0, 0, 44, 60, { rTop: 52, seg: 20, ...lo }));rimTop(kit, g, 52, 60); g.add(kit.cyl(0, 60, 0, 28, 160, { rTop: 24, seg: 20 })); g.add(kit.cyl(32, 118, 0, 12, 60, { rTop: 11, seg: 12 })); g.add(kit.cyl(-30, 100, 0, 12, 46, { rTop: 11, seg: 12 }));
+  } else if (form === 2) {   // a cactus: a ribbed green column with two arms and a few spines
+    g.add(kit.cyl(0, 0, 0, 44, 60, { rTop: 52, seg: 20, ...lo }));rimTop(kit, g, 52, 60);
+    const arm = (x, y, hh, r) => { g.add(kit.cyl(x, y, 0, r, hh, { rTop: r * 0.92, seg: 20, leaf: true })); for (let k = 0; k < 6; k++) { const a = k / 6 * 6.2832; pts.push([x + Math.cos(a) * r, y + 4, Math.sin(a) * r], [x + Math.cos(a) * r * 0.95, y + hh - 4, Math.sin(a) * r * 0.95]); } };   // the ribs: lines along the column
+    arm(0, 60, 170, 28); g.add(kit.cyl(0, 230, 0, 24, 6, { rTop: 14, seg: 20, leaf: true })); arm(30, 118, 66, 12); g.add(kit.cyl(30 - 18, 126, 0, 8, 22, { axis: 'x', seg: 12, leaf: true })); arm(-30, 100, 50, 11);
+    for (let k = 0; k < 14; k++) { const a = k * 2.4, y = 80 + (k * 37) % 140; pts.push([Math.cos(a) * 28, y, Math.sin(a) * 28], [Math.cos(a) * 36, y + 4, Math.sin(a) * 36]); }   // a few spines
   } else {   // trailing leaves hanging over the rim
     g.add(kit.cyl(0, 0, 0, 50, 80, { rTop: 58, seg: 20, ...lo }));rimTop(kit, g, 58, 80);
     for (let k = 0; k < 8; k++) { const a = k / 8 * 6.28, x = Math.sin(a) * 58, z = Math.cos(a) * 58; pts.push([0, 90, 0], [x * 0.6, 150, z * 0.6], [x * 0.6, 150, z * 0.6], [x * 1.2, 40 + R() * 40, z * 1.2]); g.add(leafAt(kit, x * 1.2, 50, z * 1.2, 20, 26, 0.4, 0.4)); }

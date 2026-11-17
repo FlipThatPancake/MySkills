@@ -1346,5 +1346,48 @@
    "window with a curtain (curtain)"
   ]
  }
-}
+},
+ "motion": {
+  "note": "Living, moving things dealt per area by motion-roll.mjs (read there and in src/motion/index.js). Each kind: say (plain words), needs (openWindow: the area has a window or glass door rendered open; plant: the area has a plant), in (area kinds), weight. flies: it passes through the opening, so that window is opened wide enough (rules.js VISITOR_OPEN). Count: how many kinds one area gets (never the same kind twice). Add a kind here, in src/motion/<kind>.js and in the PLUGINS map of src/motion/index.js.",
+  "count": [
+   2,
+   3
+  ],
+  "kinds": {
+   "wind": {
+    "say": "a plant stirs in a breeze from the open window",
+    "needs": [
+     "openWindow",
+     "plant"
+    ],
+    "in": [
+     "kitchen",
+     "dining",
+     "living",
+     "bedroom",
+     "reading-corner",
+     "hallway",
+     "home-office"
+    ],
+    "weight": 3
+   },
+   "butterfly": {
+    "say": "a butterfly drifts in through the open window, wanders, perches, and leaves again",
+    "needs": [
+     "openWindow"
+    ],
+    "in": [
+     "kitchen",
+     "dining",
+     "living",
+     "bedroom",
+     "reading-corner",
+     "hallway",
+     "home-office"
+    ],
+    "weight": 2,
+    "flies": true
+   }
+  }
+ }
 }

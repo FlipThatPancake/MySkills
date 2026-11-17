@@ -58,6 +58,13 @@ export async function openPlanIssues(page, sceneFile, { quick = false } = {}) {
       if (d !== null && d > ISLAND_GAP[1] + 150) out.push({ rule: 'open-island', what: `${id} is ${Math.round(d)} mm from the nearest run: too far to serve it (${ISLAND_GAP[0]} to ${ISLAND_GAP[1]} mm)` });
     }
   }
+  // ---- floor change: the zones of the two areas differ, and a furniture separator stands by the line
+  for (const G of S.groups) for (const q of G.seams) if (q.kinds?.includes('floorChange')) {
+    const Z = S.home.floor?.zones || [], mid = (b) => [(b.x0 + b.x1) / 2, (b.z0 + b.z1) / 2], at = (id) => { const c = mid(area[id].bounds); return Z.find((z) => c[0] >= z.rect[0] && c[0] <= z.rect[2] && c[1] >= z.rect[1] && c[1] <= z.rect[3]); }, za = at(q.a), zb = at(q.b);
+    if (!za || !zb || za.style === zb.style) out.push({ rule: 'open-floor', what: `${q.a} | ${q.b}: floorChange dealt, but the two areas have the same floor style (H.floorZones({ ${q.a}: 'tiles', ${q.b}: 'boards' }))` });
+    const fur = Object.values(B).some((b) => FURNITURE.includes(b.sep || '') && distSeg(b, q.p0, q.p1) <= 500);
+    if (!fur) out.push({ rule: 'open-floor', what: `${q.a} | ${q.b}: the floor changes on the seam line, but no furniture separator stands within 500 mm of it` });
+  }
   // ---- glide: nothing switches on or off between areas of one group
   for (const G of S.groups) for (let i = 0; i + 1 < G.areas.length; i++) {
     const r = await page.evaluate(([a, b]) => {
@@ -83,7 +90,33 @@ export async function openPlanIssues(page, sceneFile, { quick = false } = {}) {
       }
     }
   }
+  // ---- light: with the light baked, the floor's brightness on both sides of a seam differs by a few percent at most (one floor sheet per group)
+  if (!quick) for (const G of S.groups) for (const q of G.seams) {
+    const r = await lightAcross(page, q, Object.values(B).filter((b) => b.mount !== 'wall' && b.mount !== 'lines' && b.mount !== 'ceiling' && b.asset !== 'rug').map((b) => [b.min[0], b.min[2], b.max[0], b.max[2]]));
+    if (r === null) continue;
+    if (r > 8) out.push({ rule: 'open-light', what: `${q.a} | ${q.b}: the floor is ${(100 * r / 255).toFixed(1)}% brighter on one side of the seam (under 3%): the light bake shows a step` });
+  }
   return out;
+}
+// the mean floor brightness 300 to 900 mm either side of a seam, from a top-down frame of the baked page with every object hidden
+async function lightAcross(page, q, feet) {   // feet: footprints of the objects; a sample point within 900 mm of one is skipped (the baked contact shadows reach that far) (its contact shadow is no step)
+  const url = page.url().replace(/\?check.*$/, ''), ctx = await page.context().browser().newContext(), p2 = await ctx.newPage(); await p2.setViewportSize({ width: 1200, height: 750 });
+  try {
+    await p2.goto(url); await p2.waitForFunction(() => window.cozyScene && window.cozyBaked, null, { timeout: 240000 });
+    await p2.evaluate(() => { const c = window.cozyScene; c.setArea(c.areaIds[0], true); c.controls.enabled = false; c.tour.update = () => false; for (const g of Object.values(c.objects)) { g.visible = false; g.userData.tick = null; g.userData.update = null; } for (const w of c.home.walls) w.node.visible = false; });
+    const mid = [(q.p0[0] + q.p1[0]) / 2, (q.p0[1] + q.p1[1]) / 2], len = Math.hypot(q.p1[0] - q.p0[0], q.p1[1] - q.p0[1]), n = q.normal;
+    await p2.evaluate(([mid, len]) => { const c = window.cozyScene; c.camera.fov = 30; c.camera.up.set(0, 0, -1); c.camera.position.set(mid[0], len * 2.2 + 3000, mid[1]); c.camera.lookAt(mid[0], 0, mid[1]); c.camera.updateProjectionMatrix(); c.camera.updateMatrixWorld(true); }, [mid, len]);
+    await p2.waitForTimeout(500);
+    const png = (await p2.screenshot()).toString('base64');
+    return await p2.evaluate(async ([png, q, n, feet]) => {
+      const c = window.cozyScene, T = c.kit.THREE, im = await new Promise((r) => { const i = new Image(); i.onload = () => r(i); i.src = 'data:image/png;base64,' + png; }), cv = document.createElement('canvas'); cv.width = im.width; cv.height = im.height; const x = cv.getContext('2d'); x.drawImage(im, 0, 0);
+      const lum = (wx, wz) => { const v = new T.Vector3(wx, 0, wz).project(c.camera), px = (v.x + 1) / 2 * im.width, py = (1 - v.y) / 2 * im.height, d = x.getImageData(Math.max(0, px - 6), Math.max(0, py - 6), 12, 12).data; let s = 0; for (let i = 0; i < d.length; i += 4) s += 0.3 * d[i] + 0.59 * d[i + 1] + 0.11 * d[i + 2]; return s / (d.length / 4); };
+      const e = [q.p1[0] - q.p0[0], q.p1[1] - q.p0[1]], L = Math.hypot(...e); let sa = 0, sb = 0, k = 0;
+      const free = (px, pz) => !feet.some((f) => px > f[0] - 900 && px < f[2] + 900 && pz > f[1] - 900 && pz < f[3] + 900);
+      for (let i = 1; i < 20; i++) for (const off of [300, 500, 700, 900]) { const bx = q.p0[0] + e[0] * i / 20, bz = q.p0[1] + e[1] * i / 20, ax = bx - n[0] * off, az = bz - n[1] * off, cx = bx + n[0] * off, cz = bz + n[1] * off; if (!free(ax, az) || !free(cx, cz)) continue; sa += lum(ax, az); sb += lum(cx, cz); k++; }
+      return k < 4 ? null : Math.abs(sa - sb) / k;
+    }, [png, q, n, feet]);
+  } finally { await ctx.close(); }
 }
 // one view of area `id`: per neighbour, counts of its pixels at the left edge, the right edge and the middle
 async function glimpse(page, id, group, idx, v) {

@@ -69,30 +69,35 @@ export function curvedStem(kit, g, from, dir, len, bend, n = 6, r = 5) {
   const e = pts[n], pr = pts[n - 1], dd = [e[0] - pr[0], e[1] - pr[1], e[2] - pr[2]]; return { pts, end: e, dir: dd };
 }
 
-// a monstera leaf in the x/y plane: the stalk joins at the origin, the tip points along +y about L away. A broad heart with slits that run from the edge in toward the midrib (leaning back toward the stalk, as the veins do),
-// a row of oval holes beside the midrib, the midrib and a vein up each lobe. `slits` on each side (0 = a young whole leaf); fold lifts the two halves, bow droops the tip (negative).
-export function monsteraLeaf(kit, L, { slits = 5, depth = 0.7, seed = 3, fold = 0.14, bow = -0.15, N = 84, M = 54 } = {}) {
+// a monstera leaf in the x/y plane: the stalk joins at the origin, the tip points along +y about L away. A broad heart with a rounded base and a notch at the stalk, slits that run from the edge in toward the midrib (leaning back toward the stalk, as the veins do),
+// oval holes beside the midrib, the midrib and a vein up each lobe. The cuts are smooth: every triangle is clipped where a cutter's distance crosses zero. `slits` on each side (0 = a young whole leaf); fold lifts the two halves, bow droops the tip (negative).
+export function monsteraLeaf(kit, L, { slits = 5, depth = 0.7, seed = 3, fold = 0.14, bow = -0.15, N = 72, M = 46 } = {}) {
   const T = kit.THREE, g = kit.group(), rr = (() => { let r = seed * 7 + 3; return () => { r = (r * 9301 + 49297) % 233280; return r / 233280; }; })();
-  const W = PROFILE.mheart, half = (u) => W(u) * L * 0.5, X = (u, v) => v * half(u), Y = (u) => L * 1.08 * u;
-  const cuts = [];   // thin cutters: a segment (x0,y0,x1,y1) with its half-width at each end
+  const U0 = -0.14, Wf = (u) => u >= 0.1 ? PROFILE.mheart(u) : 0.67 * Math.sqrt(Math.max(0, 1 - Math.pow((0.1 - u) / 0.24, 2))), half = (u) => Wf(u) * L * 0.5, Y = (u) => L * 1.08 * u, X = (u, v) => v * half(u);
+  const cuts = [[0, 0, 0, -0.2 * L, 3, 12]];   // the notch at the stalk; then thin cutters: a segment (x0,y0,x1,y1) with its half-width at each end
   for (const s of [-1, 1]) for (let k = 0; k < slits; k++) {
     const ue = 0.3 + 0.58 * (k + 0.5 + 0.25 * (rr() - 0.5)) / slits, ui = ue - 0.2 - 0.06 * rr(), vi = 1 - depth * (0.9 + 0.2 * rr());
     cuts.push([s * X(ui, vi), Y(ui), s * X(ue, 1.12), Y(ue), 3.5, 8 + 4 * rr()]);
     if (k < slits - 1 || slits > 3) { const uh = (ui + ue) / 2 + 0.09, vh = 0.2 + 0.12 * rr(); cuts.push([s * X(uh, vh), Y(uh), s * X(uh, vh) + s * 4, Y(uh) + 6, 6, 5]); }   // an oval hole near the midrib
   }
-  const cut = (x, y) => cuts.some(([x0, y0, x1, y1, w0, w1]) => { const dx = x1 - x0, dy = y1 - y0, t = Math.max(0, Math.min(1, ((x - x0) * dx + (y - y0) * dy) / (dx * dx + dy * dy || 1))); return Math.hypot(x - x0 - dx * t, y - y0 - dy * t) < w0 + (w1 - w0) * t; });
-  const pos = [], idx = [], P3 = (u, v) => { const x = X(u, v), y = Y(u); return [x, y, Math.abs(x) * fold + bow * L * u * u]; };
-  for (let i = 0; i <= N; i++) for (let j = 0; j <= M; j++) pos.push(...P3(i / N, -1 + 2 * j / M));
+  const sd = (x, y) => { let m = 1e9; for (const [x0, y0, x1, y1, w0, w1] of cuts) { const dx = x1 - x0, dy = y1 - y0, t = Math.max(0, Math.min(1, ((x - x0) * dx + (y - y0) * dy) / (dx * dx + dy * dy || 1))); m = Math.min(m, Math.hypot(x - x0 - dx * t, y - y0 - dy * t) - (w0 + (w1 - w0) * t)); } return m; };
+  const P3 = (u, v) => { const x = X(u, v), y = Y(u); return [x, y, Math.abs(x) * fold + bow * L * Math.max(0, u) * Math.max(0, u)]; };
+  const V = [], S = []; for (let i = 0; i <= N; i++) for (let j = 0; j <= M; j++) { const p = P3(U0 + (1 - U0) * i / N, -1 + 2 * j / M); V.push(p); S.push(sd(p[0], p[1])); }
+  const tri = [], at = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+  const clip = (ia, ib, ic) => {   // keep the part of a triangle where sd >= 0
+    const q = [ia, ib, ic].map((i) => ({ p: V[i], s: S[i] })), out = [];
+    for (let k = 0; k < 3; k++) { const c = q[k], n = q[(k + 1) % 3]; if (c.s >= 0) out.push(c.p); if ((c.s >= 0) !== (n.s >= 0)) out.push(at(c.p, n.p, c.s / (c.s - n.s))); }
+    for (let k = 1; k + 1 < out.length; k++) tri.push(out[0], out[k], out[k + 1]);
+  };
   for (let i = 0; i < N; i++) for (let j = 0; j < M; j++) {
-    const a = i * (M + 1) + j, b = a + 1, c = a + M + 1, d = c + 1, cx = (pos[3 * a] + pos[3 * d]) / 2, cy = (pos[3 * a + 1] + pos[3 * d + 1]) / 2;
-    if (half((i + 0.5) / N) < 1) continue; if (cut(cx, cy) || ((i + 0.5) / N < 0.1 && Math.abs(-1 + 2 * (j + 0.5) / M) < 0.16)) continue;   // the notch where the stalk joins
-    idx.push(a, d, b, a, c, d);
+    const a = i * (M + 1) + j, b = a + 1, c = a + M + 1, d = c + 1; if (V[a][0] === V[b][0] && V[a][0] === V[c][0] && V[c][0] === V[d][0] && Math.abs(V[a][0]) < 1e-6) continue;
+    for (const t of [[a, d, b], [a, c, d]]) { if (t.every((i2) => half(U0 + (1 - U0) * Math.floor(i2 / (M + 1)) / N) < 0.5)) continue; clip(...t); }
   }
-  const base = idx.length, n0 = pos.length / 3; for (let q = 0; q < n0; q++) pos.push(pos[3 * q], pos[3 * q + 1], pos[3 * q + 2] - 1.4);
-  for (let q = 0; q < base; q += 3) idx.push(n0 + idx[q], n0 + idx[q + 2], n0 + idx[q + 1]);
-  const ge = new T.BufferGeometry(); ge.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); ge.setIndex(idx); ge.computeVertexNormals();
-  g.add(kit.solid(ge, 0, 0, 0, { leaf: true, crease: 70 }));
-  const Ln = []; for (let i = 0; i < 16; i++) { const a = P3(0.05 + 0.9 * i / 16, 0), b = P3(0.05 + 0.9 * (i + 1) / 16, 0); Ln.push([a[0], a[1], a[2] + 1.3], [b[0], b[1], b[2] + 1.3]); }   // the midrib
+  const pos = []; for (const p of tri) pos.push(...p); const n0 = pos.length / 3;
+  for (let q = 0; q < tri.length; q += 3) pos.push(tri[q][0], tri[q][1], tri[q][2] - 1.4, tri[q + 2][0], tri[q + 2][1], tri[q + 2][2] - 1.4, tri[q + 1][0], tri[q + 1][1], tri[q + 1][2] - 1.4);   // the back face, set 1.4 mm behind and wound the other way
+  const ge = new T.BufferGeometry(); ge.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); ge.computeVertexNormals();
+  g.add(kit.solid(ge, 0, 0, 0, { leaf: true, crease: 75 }));
+  const Ln = []; for (let i = 0; i < 16; i++) { const a = P3(0.04 + 0.92 * i / 16, 0), b = P3(0.04 + 0.92 * (i + 1) / 16, 0); Ln.push([a[0], a[1], a[2] + 1.3], [b[0], b[1], b[2] + 1.3]); }   // the midrib
   for (const s of [-1, 1]) for (let k = 0; k <= slits; k++) { const ue = 0.24 + 0.64 * (k + 0.5) / (slits + 1), a = P3(ue - 0.2, 0), b = P3(ue, 0.8 * s); let p = a; for (let i = 1; i <= 4; i++) { const q = [a[0] + (b[0] - a[0]) * i / 4, a[1] + (b[1] - a[1]) * i / 4, a[2] + (b[2] - a[2]) * i / 4]; Ln.push([p[0], p[1], p[2] + 1.3], [q[0], q[1], q[2] + 1.3]); p = q; } }
   g.add(kit.lines(Ln, 'green'));
   return g;
