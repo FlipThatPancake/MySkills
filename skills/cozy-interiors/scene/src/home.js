@@ -116,8 +116,9 @@ export function buildHome(kit, home, registry, areas = []) {
   let floorDraw = null;   // pencil seams (tiles or boards): redrawn as the camera moves, so lines that bunch up fade out
   if (style === 'tiles' || style === 'boards') {
     const F = home.floor || {};
-    floorDraw = floorLines(kit, { style, bb, M, tone, seed: F.seed || 1, board: F.board || 120 + 20 * ((F.seed || 1) % 4), angle: (F.angle || 0) * Math.PI / 180, cell: home.tiles?.size || 600, origin: home.tiles?.origin });
-    group.add(floorDraw.object);
+    const zones = F.zones || [], base = { bb, M, tone, seed: F.seed || 1, board: F.board || 120 + 20 * ((F.seed || 1) % 4), angle: (F.angle || 0) * Math.PI / 180, cell: home.tiles?.size || 600, origin: home.tiles?.origin };
+    const draws = [floorLines(kit, { ...base, style, except: zones.map((z) => z.rect) }), ...zones.map((z) => floorLines(kit, { ...base, style: z.style, clip: z.rect, edge: z.edge }))];   // open plan: a zone carries its own floor style, cut clean at the seam
+    floorDraw = { update: (camera) => draws.forEach((d) => d.update(camera)) }; for (const d of draws) group.add(d.object);
   }
 
   // ---- contact shadows, generated from each object's footprint and mount

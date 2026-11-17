@@ -24,7 +24,7 @@ let k, d, l;
   a.view({ target: [2400, 800, 1800], az: 6, el: 13 });
 }
 { // ---------- dining (the middle: no side wall)
-  const a = d = H.area('dining', 'Dining', { rect: [0, 0, 4400, 4800] }); H.join(k, d, { layout: 'row', share: 750, separators: ['island'] });
+  const a = d = H.area('dining', 'Dining', { rect: [0, 0, 4400, 4800] }); H.join(k, d, { layout: 'row', share: 750, separators: ['island', 'floorChange'] });
   const back = a.back(4400, [{ kind: 'window', x: 3500, width: 1200, height: 1200, sill: 900 }]);
   a.put('rug', 'rug', [2700, 2600], 0, { group: 'table set', params: { w: 2500, d: 2500, form: 'round', fringe: 'ends', border: 40 } });
   const T = a.table('dining', { at: [2700, 2600], r: 700, chairs: 4, rug: false, group: 'table set', hero: true });
@@ -53,5 +53,6 @@ let k, d, l;
   a.put('mug', 'mug', [2200, 2300], 0, { group: 'seating', y: a.topOf('coffee'), mount: 'on' });
   a.view({ target: [2400, 800, 2000], az: 14, el: 14 });
 }
+H.floorZones({ kitchen: 'tiles', dining: 'boards', living: 'boards' });
 H.write(new URL('./row.json', import.meta.url).pathname, fs);
 console.log('wrote row.json');

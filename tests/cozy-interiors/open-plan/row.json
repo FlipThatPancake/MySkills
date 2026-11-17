@@ -6,7 +6,46 @@
   "accent": "#d1a53c",
   "floor": {
    "style": "tiles",
-   "seed": 87
+   "seed": 87,
+   "zones": [
+    {
+     "style": "tiles",
+     "rect": [
+      -1500,
+      -1500,
+      4425,
+      5500
+     ]
+    },
+    {
+     "style": "boards",
+     "rect": [
+      4425,
+      -1500,
+      8950,
+      6300
+     ],
+     "edge": [
+      [
+       4425,
+       0
+      ],
+      [
+       4425,
+       4800
+      ]
+     ]
+    },
+    {
+     "style": "boards",
+     "rect": [
+      8950,
+      -1500,
+      16100,
+      6300
+     ]
+    }
+   ]
   },
   "tiles": {
    "origin": [
@@ -995,7 +1034,8 @@
       0
      ],
      "kinds": [
-      "island"
+      "island",
+      "floorChange"
      ]
     },
     {
