@@ -10,14 +10,14 @@ const lo = { tone: 'lo' };
 export function vase(kit, { h = 280, stems = 5, seed = 3 } = {}) {   // a bottle vase with branches: thin curved lines with a few leaves
   const g = kit.group(), R = rnd(seed), pts = [];
   g.add(kit.cyl(0, 0, 0, 70, h * 0.62, { rTop: 80, seg: 24 })); g.add(kit.cyl(0, h * 0.62, 0, 80, h * 0.38, { rTop: 30, seg: 24 }));
+  const T = kit.THREE, bud = (x, y, a, L) => { const ge = new T.SphereGeometry(1, 10, 7); ge.scale(5.5, L, 5.5); const m = kit.solid(ge, x, y, 0, { smooth: true, leaf: true }); m.rotation.z = -a; m.position.set(x + Math.sin(a) * L * 0.8, y + Math.cos(a) * L * 0.8, 0); g.add(m); };   // a bud: a small pointed ellipsoid along the twig's direction
+  const twig = (x, y, a, len, bow, n, depth) => {   // a gently curved twig: its direction turns a little at every step; it ends in a bud
+    for (let i = 1; i <= n; i++) { const nx = x + Math.sin(a) * len / n, ny = y + Math.cos(a) * len / n; pts.push([x, y, 0], [nx, ny, 0]); x = nx; y = ny; a += bow / n; if (depth && i > 1 && i < n - 1 && i % 3 === 1) twig(x, y, a + (i % 2 ? 0.62 : -0.62) + (R() - 0.5) * 0.2, len * 0.3, (i % 2 ? -0.25 : 0.25), 4, 0); }
+    bud(x, y, a, 15 + R() * 8);
+  };
   for (let s = 0; s < stems; s++) {
-    const lean = (s - (stems - 1) / 2) * 0.24 + (R() - 0.5) * 0.14, len = 420 + R() * 380;
-    let x = 0, y = h, z = 0, a = lean; const n = 7;
-    for (let i = 1; i <= n; i++) {
-      const nx = x + Math.sin(a) * len / n, ny = y + Math.cos(a) * len / n; pts.push([x, y, z], [nx, ny, z]);
-      if (i > 2 && i % 2 === 1) { const side = i % 4 === 1 ? 1 : -1; pts.push([nx, ny, z], [nx + side * 52, ny + 26, z], [nx + side * 52, ny + 26, z], [nx + side * 10, ny + 62, z]); }
-      x = nx; y = ny; a += 0.05;
-    }
+    const lean = (s - (stems - 1) / 2) * 0.24 + (R() - 0.5) * 0.14, len = 420 + R() * 380, bow = (R() - 0.5) * 0.9;
+    twig(0, h, lean, len, bow, 16, 1);
   }
   g.add(kit.lines(pts, 'mid'));
   return kit.merge(g);
@@ -66,17 +66,25 @@ export function cat(kit, { scale = 1 } = {}) {   // a cat asleep in a ring with 
   }
   const m = kit.merge(g); if (scale !== 1) m.scale.setScalar(scale); return m;
 }
-export function floorPlant(kit, { h = 950, seed = 6 } = {}) {   // a large pot with tall stems and broad leaves, about 950 mm high
-  const T = kit.THREE, g = kit.group(), R = rnd(seed), pts = [];
+// A leaf with a midrib: an ellipsoid of length len and width wid, folded along its midrib (a shallow V) and bowed along its length, with the midrib drawn. Origin at its base, pointing along +y.
+export function foldedLeaf(kit, len, wid, { fold = 0.22, bow = 0.18 } = {}) {
+  const T = kit.THREE, ge = new T.SphereGeometry(1, 14, 12), pos = ge.attributes.position, g = kit.group();
+  for (let i = 0; i < pos.count; i++) { const x = pos.getX(i) * wid, y = (pos.getY(i) + 1) / 2 * len, z = pos.getZ(i) * wid * 0.09; pos.setXYZ(i, x, y, z + Math.abs(x) * fold + bow * len * Math.pow(y / len, 2)); }
+  ge.computeVertexNormals(); g.add(kit.solid(ge, 0, 0, 0, { smooth: true, leaf: true }));
+  const rib = []; for (let k = 0; k < 8; k++) { const y0 = k / 8 * len, y1 = (k + 1) / 8 * len; rib.push([0, y0, bow * len * Math.pow(y0 / len, 2) + wid * 0.09 + 1], [0, y1, bow * len * Math.pow(y1 / len, 2) + wid * 0.09 + 1]); }
+  g.add(kit.lines(rib, 'green')); return g;
+}
+export function floorPlant(kit, { h = 950, seed = 6 } = {}) {   // a large pot with tall stems (visible, each with its own leaf, folded along its midrib), about 950 mm high
+  const T = kit.THREE, g = kit.group(), R = rnd(seed);
   g.add(kit.cyl(0, 0, 0, 170, 380, { rTop: 215, seg: 32, ...lo })); { const t = potTop(kit, 215); t.position.y = 380; g.add(t); }
+  const stem = (a, b) => { const d = new T.Vector3(b[0] - a[0], b[1] - a[1], b[2] - a[2]), L = d.length(), cg = new T.CylinderGeometry(4, 5, L, 6), m = kit.solid(cg, (a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2, { smooth: true, leaf: true }); m.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), d.normalize()); g.add(m); };
   for (let k = 0; k < 9; k++) {
-    const a = k / 9 * Math.PI * 2 + R(), lean = 0.25 + R() * 0.45, len = h - 380 - 80 - R() * 260, sx = Math.sin(a) * Math.sin(lean), sz = Math.cos(a) * Math.sin(lean), cy = Math.cos(lean);
-    let px = 0, py = 400, pz = 0; const n = 6;
-    for (let i = 1; i <= n; i++) { const t = i / n, nx = sx * len * t * t * 0.9 + 0, nz = sz * len * t * t * 0.9, ny = 400 + cy * len * t; pts.push([px, py, pz], [nx, ny, nz]); px = nx; py = ny; pz = nz; }
-    const ge = new T.SphereGeometry(1, 16, 10); ge.scale(70 + R() * 30, 150 + R() * 50, 14);
-    const leaf = kit.solid(ge, px, py + 60, pz, { smooth: true, leaf: true }); leaf.rotation.set(Math.cos(a) * lean * 0.9, 0, -Math.sin(a) * lean * 0.9); g.add(leaf);
+    const a = k / 9 * Math.PI * 2 + R(), lean = 0.25 + R() * 0.45, len = h - 380 - 80 - R() * 300, sx = Math.sin(a) * Math.sin(lean), sz = Math.cos(a) * Math.sin(lean), cy = Math.cos(lean);
+    let px = 0, py = 400, pz = 0; const n = 5;
+    for (let i = 1; i <= n; i++) { const t = i / n, nx = sx * len * t * t * 0.9, nz = sz * len * t * t * 0.9, ny = 400 + cy * len * t; stem([px, py, pz], [nx, ny, nz]); px = nx; py = ny; pz = nz; }
+    const lf = foldedLeaf(kit, 190 + R() * 70, 70 + R() * 26, { fold: 0.16 + R() * 0.16, bow: 0.14 + R() * 0.12 }), up = new T.Vector3(sx * 0.9, 1.2, sz * 0.9).normalize();
+    lf.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), up); lf.rotateY(R() * 6.28 * 0.2); lf.position.set(px, py, pz); g.add(lf);
   }
-  g.add(kit.lines(pts, 'green'));
   return kit.merge(g);
 }
 export function basket(kit, { r = 230, h = 320 } = {}) {   // a woven basket with a blanket folded over the rim
