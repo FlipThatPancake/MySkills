@@ -934,6 +934,52 @@
   }
  ],
  "passageNote": "roll gives each arch an opening style from `passages`; a counter style (pass, widepass) sits on a wall that has a counter or sideboard in front of it and is not a way through, so give it no `to`, or use the arch/cased kind for a connection. Style goes in the opening: { kind: 'arch', style, x }.",
+ "windows": [
+  {
+   "style": "sash",
+   "weight": {
+    "kitchen": 6,
+    "default": 4
+   },
+   "say": "two-sash window (the old kitchen's: thick frame, slightly open)"
+  },
+  {
+   "style": "picture",
+   "weight": {
+    "kitchen": 2,
+    "default": 3
+   },
+   "say": "picture window (one large fixed pane, slim frame; 2100 x 1400 mm, sill 650)"
+  },
+  {
+   "style": "wall",
+   "weight": {
+    "kitchen": 0,
+    "hallway": 0,
+    "default": 2
+   },
+   "say": "window wall (floor-level lights between slim mullions with a transom; 3800 x 2300 mm, sill 100; it takes the whole wall, so no other opening beside it)"
+  },
+  {
+   "style": "french",
+   "kind": "door",
+   "weight": {
+    "hallway": 0,
+    "default": 1
+   },
+   "say": "french glass doors to the outside (two leaves ajar, 1500 x 2250 mm; keep 1000 x 1500 mm of floor clear in front)"
+  },
+  {
+   "style": "slider",
+   "kind": "door",
+   "weight": {
+    "hallway": 0,
+    "default": 1
+   },
+   "say": "sliding glass doors to the outside (two panels, one half slid, 2400 x 2250 mm; keep the floor in front clear)"
+  }
+ ],
+ "windowsNote": "roll gives each window a style from `windows`; at most one wall, french or slider per area, and a window with sash 'fixed' (over a sink) stays a two-sash window. Style goes in the opening: { kind: 'window', style: 'picture' | 'wall', x } or { kind: 'door', style: 'french' | 'slider', x }; width, height and sill default from the style (opening.js STYLE). A glass door or wall of glass counts as an opening for the 1200 mm of clear wall rule, and its sheet of daylight lights the area.",
  "boardPlaces": [
   {
    "id": "flat with a loaf",

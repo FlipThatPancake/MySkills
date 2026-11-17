@@ -101,7 +101,7 @@ export async function bakeLight({ THREE: T, renderer, scene, kit, walls, areas, 
     }
     // window lights: jittered samples across each opening, a little outside the wall so the wall's own hole frames the light
     for (const W of ws) for (const op of W.openings || []) {
-      if (op.kind !== 'window') continue;
+      if (op.kind !== 'window' && !(op.kind === 'door' && op.style)) continue;   // a window, or a glass door (style french | slider)
       const xc = W.len - op.at, nx = Math.max(3, Math.round(WIN_N[0] * quality)), ny = Math.max(2, Math.round(WIN_N[1] * quality));
       for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
         const x = xc + ((i + R()) / nx - 0.5) * op.width, y = (op.sill || 900) + ((j + R()) / ny) * (op.height || 1100), p = W.node.localToWorld(new T.Vector3(x, y, -80));
