@@ -28,14 +28,14 @@ let k, d, l;
 { // ---------- dining (the middle: no side wall)
   const a = d = H.area('dining', 'Dining', { rect: [0, 0, 4400, 4800] }); H.join(k, d, { layout: 'row', share: 750, separators: ['island', 'floorChange'] });
   const back = a.back(4400, [{ kind: 'window', x: 3500, width: 1200, height: 1200, sill: 900 }]);
-  a.put('rug', 'rug', [2700, 2600], 0, { group: 'table set', params: { w: 2500, d: 2500, form: 'round', fringe: 'ends', border: 40 } });
+  a.put('rug', 'rug', [2700, 2600], 0, { group: 'dining rug', params: { w: 2500, d: 2500, form: 'round', fringe: 'ends', border: 40 } });
   const T = a.table('dining', { at: [2700, 2600], r: 700, chairs: 4, rug: false, group: 'table set', hero: true });
   T.over('pendantLamp', { group: 'table light', params: { rim: 1582 } }); T.on('jug', { dx: -120 }); T.on('breadBasket', { dx: 220 });
   back.place('side', 'sideboard', 750, { group: 'wall', params: { w: 1400, h: 800 } });
   a.onTop('side', [{ id: 'side-vase', asset: 'jug' }, { id: 'side-books', asset: 'bookStack' }], { at: 'back', group: 'wall' });
   back.place('pic', 'picture', 750, { y: 1250, group: 'wall', shadow: false, params: { w: 700, h: 500 } });
   a.put('fplant', 'floorPlant', [1800, 700], 0, { group: 'wall' });
-  a.put('basket', 'basket', [3950, 3450], 10, { group: 'table set' });
+  a.put('basket', 'basket', [3450, 3500], 10, { group: 'table set' });
   a.view({ target: [2300, 800, 2000], az: 7, el: 14 });
   a.shot('table', [-1450, 1250, 3900], [2699, 300, 2092], 40, 'table set'); a.shot('table-side', [4550, 2100, 7200], [2350, 500, 2785], 36, 'table set'); a.shot('wall', [650, 700, 5100], [550, 875, 403], 34, 'wall');
 }
@@ -45,18 +45,18 @@ let k, d, l;
   // the sofa, the separator: its back to the dining area, its front toward the room
   a.put('sofa', 'sofa', [650, 2400], 90, { group: 'seating', hero: true, sep: 'sofaBack', y: 8, lift: 8, params: { seats: 3 } });
   a.seatSoft('sofa', { cushions: 1, throw: 'drape', tone: 'accent', group: 'seating' });
-  a.put('rug', 'rug', [2500, 2400], 0, { group: 'seating', params: { w: 2800, d: 2400, form: 'striped', fringe: 'none', border: 90, w: 3000, d: 2200 } });
-  a.put('coffee', 'coffeeTable', [2600, 2400], 90, { group: 'seating', y: 7, lift: 7 });
-  a.put('arm', 'armchair', [3500, 1900], facing([3500, 1900], [2200, 2400]), { group: 'seating', y: 8, lift: 8 });
+  a.put('rug', 'rug', [2500, 2400], 0, { group: 'living rug', params: { w: 2800, d: 2400, form: 'striped', fringe: 'none', border: 90, w: 3000, d: 2200 } });
+  a.put('coffee', 'coffeeTable', [2600, 2400], 90, { group: 'coffee set', y: 7, lift: 7 });
+  a.put('arm', 'armchair', [3500, 1900], facing([3500, 1900], [2200, 2400]), { group: 'coffee set', y: 8, lift: 8 });
   back.place('shelf', 'sideboard', 4800, { group: 'shelves', params: { w: 1100, h: 800 } });
   a.onTop('shelf', [{ id: 'shelf-vase', asset: 'jug' }, { id: 'shelf-books', asset: 'bookStack' }], { at: 'back', group: 'shelves' });
   back.place('spic', 'picture', 4800, { y: 1200, group: 'shelves', shadow: false, params: { w: 800, h: 600 } });
   a.put('flamp', 'floorLamp', [700, 950], 0, { group: 'window' });
   a.put('lplant', 'floorPlant', [650, 4300], 0, { group: 'window' });
-  a.put('pouf', 'pouf', [3000, 3500], 0, { group: 'seating', y: 8, lift: 8 });
-  a.put('mug', 'mug', [2600, 2300], 0, { group: 'seating', y: a.topOf('coffee'), mount: 'on' });
+  a.put('pouf', 'pouf', [1500, 3300], 0, { group: 'seating', y: 8, lift: 8 });
+  a.put('mug', 'mug', [2600, 2300], 0, { group: 'coffee set', y: a.topOf('coffee'), mount: 'on' });
   a.view({ target: [2400, 800, 2000], az: 6, el: 14 });
-  a.shot('sofa', [6900, 1100, 4200], [2467, 440, 1562], 40, 'seating'); a.shot('shelves', [4500, 1700, 5700], [4036, 300, 168], 32, 'shelves'); a.shot('window', [4200, 1000, 7500], [1083, 700, 2340], 34, 'window');
+  a.shot('sofa', [6900, 1100, 4200], [2467, 440, 1562], 40, 'seating'); a.shot('coffee', [3600, 1300, 4400], [2600, 500, 2200], 34, 'coffee set'); a.shot('shelves', [4500, 1700, 5700], [4036, 300, 168], 32, 'shelves'); a.shot('window', [4200, 1000, 7500], [1083, 700, 2340], 34, 'window');
 }
 H.floorZones({ kitchen: 'tiles', dining: 'boards', living: 'boards' });
 H.write(new URL('./row.json', import.meta.url).pathname, fs);

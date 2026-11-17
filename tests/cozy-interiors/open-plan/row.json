@@ -425,7 +425,7 @@
      "fringe": "ends",
      "border": 40
     },
-    "group": "dining:table set",
+    "group": "dining:dining rug",
     "area": "dining"
    },
    {
@@ -655,9 +655,9 @@
     "id": "dining-basket",
     "asset": "basket",
     "at": [
-     8750,
-     0,
-     3450
+     8250,
+     7,
+     3500
     ],
     "turn": 10,
     "mount": "floor",
@@ -665,7 +665,8 @@
      "form": 1
     },
     "group": "dining:table set",
-    "area": "dining"
+    "area": "dining",
+    "lift": 7
    },
    {
     "id": "living-sofa",
@@ -755,7 +756,7 @@
      "fringe": "none",
      "border": 90
     },
-    "group": "living:seating",
+    "group": "living:living rug",
     "area": "living"
    },
    {
@@ -774,7 +775,7 @@
      "h": 350,
      "shape": "frame"
     },
-    "group": "living:seating",
+    "group": "living:coffee set",
     "area": "living",
     "lift": 7
    },
@@ -801,7 +802,7 @@
      "piping": "edge",
      "tone": "lo"
     },
-    "group": "living:seating",
+    "group": "living:coffee set",
     "area": "living",
     "lift": 8
    },
@@ -905,9 +906,9 @@
     "id": "living-pouf",
     "asset": "pouf",
     "at": [
-     12200,
+     10700,
      8,
-     3500
+     3300
     ],
     "mount": "floor",
     "params": {},
@@ -925,7 +926,7 @@
     ],
     "mount": "on",
     "params": {},
-    "group": "living:seating",
+    "group": "living:coffee set",
     "area": "living"
    }
   ]
@@ -1126,6 +1127,21 @@
       ],
       "fov": 40,
       "subject": "living:seating"
+     },
+     {
+      "name": "coffee",
+      "from": [
+       12800,
+       1300,
+       4400
+      ],
+      "look": [
+       11800,
+       500,
+       2200
+      ],
+      "fov": 34,
+      "subject": "living:coffee set"
      },
      {
       "name": "shelves",
