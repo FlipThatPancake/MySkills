@@ -4,7 +4,7 @@
 //   style (window, more): 'pair' (two tall narrow casements side by side, one column of panes each, a post between) | 'bay' (three angled panes projecting 500 mm (op.proud) outside, a seat at the sill)
 //   style (door): 'french' (two glass leaves ajar inward, lights: rows of panes) | 'slider' (two glass panels, one slid half over the other); both open onto the outside. Plain wood door: no style.
 //   style (arch): round (default) | cased | pass | widepass | portal | pocket, see STYLE.
-//   sash: 'fixed' (a window whose sashes stay shut: it can stand over a sink) | default inward-opening.
+//   sash: 'fixed' (a window whose sashes stay shut: it can stand over a sink) | 'out' (opens outward: a pot may stand on the sill) | default inward-opening.
 //   -> { group, hole, openables, hit }. `openables` are the leaf / sashes (userData.open: click cycles states ajar -> wide -> shut); `hit` is a clear plane over a door or arch for a click that goes to another area (op.to). Built in the wall's own frame: the wall face is x = 0, the room is +x, z runs along the wall, y is up, the opening is centred on z = 0.
 //   `hole` is the outline [z, y] of the cut in the wall (set.js cuts it). Nothing here is a real light or a real view: the view outside and the daylight are painted.
 import { canvasOf, sheet, glow } from './sheet.js';
@@ -102,12 +102,12 @@ export function opening(kit, op, vis = null) {
         for (let j = 0; j < rows; j++) { const y0 = iy0 + BR + j * (rh + BAR); panes.push(rectPts(Math.min(Zs(ST), Zs(W - ST)), y0, Math.max(Zs(ST), Zs(W - ST)), y0 + rh)); }
         p.add(ext(rectPts(Math.min(0, Zs(W)), iy0, Math.max(0, Zs(W)), iy1), panes, -SD / 2, SD));
         [iy0 + 160, iy1 - 200].forEach((y) => { p.add(kit.box(SD / 2, y, Math.max(Zs(8), Zs(26)), 2.5, 80, 18, lo)); p.add(kit.cyl(SD / 2 + 3, y, Zs(17), 3.5, 80, { seg: 10, ...lo })); });
-        p.position.set(XF - 22, 0, hinge); p.rotation.y = dir * rad(ajar);
+        p.position.set(XF - 22, 0, hinge); p.rotation.y = OUT * dir * rad(ajar);
         return p;
       };
       const sA = leaf(iz0, 1), sB = leaf(iz1, -1);
       sA.add(kit.rbox(SD / 2, 950, W - ST / 2 - 8, 16, 150, 2.5, 4, lo), kit.cyl(SD / 2 + 2.5, 1000, W - ST / 2 - 2, 3, 28, { axis: 'z', seg: 10, ...lo }));   // a long handle plate and a lever
-      for (const [sx, dir] of [[sA, 1], [sB, -1]]) { sx.userData.open = { kind: 'door', dir, max: 75, v: ajar / 75, target: ajar / 75, states: [ajar / 75, 1, 0], i: 0, pair: [sA, sB] }; openables.push(sx); }
+      for (const [sx, dir] of [[sA, 1], [sB, -1]]) { sx.userData.open = { kind: 'door', dir: OUT * dir, max: 75, v: ajar / 75, target: ajar / 75, states: [ajar / 75, 1, 0], i: 0, pair: [sA, sB] }; openables.push(sx); }
       g.add(sA, sB);
     }
   } else if (op.kind === 'window' && op.style === 'bay') {   // three angled panes projecting outside, a seat at the sill (op.proud = how far out, op.centre = the front pane's share of the width)
@@ -147,7 +147,7 @@ export function opening(kit, op, vis = null) {
     g.add(ext(rectPts(fz0, fy0, fz1, fy1), [rectPts(fz0 + FW, fy0 + FW, fz1 - FW, fy1 - FW)], XF - 45, 45));
     // two sashes meeting in the middle, 2 x 3 panes each, hinged at the outer sides and ajar inward
     const iz0 = fz0 + FW, iz1 = fz1 - FW, iy0 = fy0 + FW, iy1 = fy1 - FW, W = (iz1 - iz0) / 2 - 2, SD = 30, ST = 34, BAR = 20;
-    const pair = op.style === 'pair', NC = pair ? 1 : 2, NR = pair ? 5 : 3, cw = (W - 2 * ST - (NC - 1) * BAR) / NC, rh = (iy1 - iy0 - 2 * ST - (NR - 1) * BAR) / NR, ajar = op.sash === 'fixed' ? 0 : (op.open ?? 26);
+    const pair = op.style === 'pair', NC = pair ? 1 : 2, NR = pair ? 5 : 3, cw = (W - 2 * ST - (NC - 1) * BAR) / NC, rh = (iy1 - iy0 - 2 * ST - (NR - 1) * BAR) / NR, ajar = op.sash === 'fixed' ? 0 : (op.open ?? 26), OUT = op.sash === 'out' ? -1 : 1;   // sash: 'out': the sashes open outward (nothing sweeps the room, a pot may stand on the sill)
     const sash = (hinge, dir) => {
       const p = kit.group(), Zs = (u) => dir * u, panes = [];
       for (let i = 0; i < NC; i++) for (let j = 0; j < NR; j++) {
@@ -159,13 +159,13 @@ export function opening(kit, op, vis = null) {
         p.add(kit.box(SD / 2, y, Math.max(Zs(8), Zs(26)), 2.5, 80, 18, lo));
         p.add(kit.cyl(SD / 2 + 3, y, Zs(17), 3.5, 80, { seg: 10, ...lo }));
       });
-      p.position.set(XF - 22, 0, hinge); p.rotation.y = dir * rad(ajar);
+      p.position.set(XF - 22, 0, hinge); p.rotation.y = OUT * dir * rad(ajar);
       return p;
     };
     const sA = sash(iz0, 1), sB = sash(iz1, -1);
     sA.add(kit.rbox(SD / 2, (iy0 + iy1) / 2 - 30, W - ST / 2 - 8, 16, 60, 2.5, 4, lo));   // latch plate and lever on the free stile
     sA.add(kit.cyl(SD / 2 + 2.5, (iy0 + iy1) / 2, W - ST / 2 - 2, 3, 28, { axis: 'z', seg: 10, ...lo }));
-    if (op.sash !== 'fixed') for (const [sx, dir] of [[sA, 1], [sB, -1]]) { sx.userData.open = { kind: 'door', dir, max: 75, v: ajar / 75, target: ajar / 75, states: [ajar / 75, 1, 0], i: 0, pair: [sA, sB] }; openables.push(sx); }
+    if (op.sash !== 'fixed') for (const [sx, dir] of [[sA, 1], [sB, -1]]) { sx.userData.open = { kind: 'door', dir: OUT * dir, max: 75, v: ajar / 75, target: ajar / 75, states: [ajar / 75, 1, 0], i: 0, pair: [sA, sB] }; openables.push(sx); }
     g.add(sA, sB);
   } else if (op.kind === 'door') {
     const DEPTH = 120, L = 16, CW = 70, hinge = op.hinge === 'l' ? -1 : 1, ajar = op.open ?? 25;

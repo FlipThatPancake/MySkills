@@ -66,4 +66,6 @@ export const fixtures = [
     build({ Home }) { const { H, a } = room(Home); a.put('shelf', 'shelf', [3000, 185], 0, { group: 'g' }); a.put('lamp', 'floorLamp', [3000, 800], 0, { group: 'g' }); return H; } },
   { name: 'lamp-in-front-of-console', from: 'hidden rule (console, desk, sideboard, wardrobe hidden in the home view); control for the shelf case', kind: 'bug', expect: { rules: ['hidden', 'front'], ids: ['t-lamp'] },
     build({ Home }) { const { H, a } = room(Home); a.put('console', 'console', [3000, 165], 0, { group: 'g' }); a.put('lamp', 'floorLamp', [3000, 700], 0, { group: 'g' }); return H; } },
+  { name: 'message-x-in-the-place-frame', from: 'round 3 tester: wall messages printed the opening position as len minus x, the other end from the x wall.place takes; mirrored positions twice', kind: 'bug', expect: { rules: ['swing'], ids: ['window on t-back at 1000'] },
+    build({ Home }) { const { H } = room(Home, { openings: [{ kind: 'window', x: 1000, width: 900, sill: 1000 }, { kind: 'window', x: 1700, width: 900, sill: 1000 }] }); return H; } },
 ];

@@ -16,7 +16,7 @@ const here = dirname(fileURLToPath(import.meta.url)), args = process.argv.slice(
 const dir = resolve(opt('dir', join(here, '../../../tests/cozy-interiors/regress/fixtures'))), jobs = Number(opt('jobs', 4)), only = opt('only', '').split(',').filter(Boolean), jsonOut = args.includes('--json') ? args[args.indexOf('--json') + 1] : null;
 // composition rules say whether a home looks rich enough or well framed: a bare fixture room always breaks them, so they are not what a fixture tests
 const COMP = new Set(['interest', 'frame', 'bare', 'fill', 'depth', 'shot', 'ghost', 'variety', 'accent', 'foreground', 'group', 'lone', 'units']), COMP_TEXT = /has no furniture on it|empty floor fills|shows its back to the home camera|a sofa backs onto a wall/;
-const physical = (f) => !COMP.has(f.rule) && !COMP_TEXT.test(f.text);
+const physical = (f, x = {}) => (!COMP.has(f.rule) || (x.counts || []).includes(f.rule)) && !COMP_TEXT.test(f.text);   // a good fixture may name composition rules that count for it: counts: ['variety']
 // rules that existed when the corpus was written: a 'pending' fixture counts as caught only by a rule name outside this list (the placement rules to come)
 const OLD_RULES = new Set(['accent', 'bare', 'casing', 'cushion', 'depth', 'fill', 'floating', 'floor', 'foreground', 'frame', 'front', 'ghost', 'group', 'hidden', 'interest', 'kettle', 'lamps', 'lone', 'on-overlap', 'openings', 'overlap', 'path', 'physics', 'rug', 'rug-edge', 'rugs', 'sash', 'seat', 'seating', 'shot', 'sill', 'stool', 'support', 'surface', 'swing', 'table', 'tabletop', 'towel', 'units', 'variety', 'wall', 'overhangs', 'sunk', 'penetrates', 'parts', 'moves', 'shape-failed']);
 const files = fs.readdirSync(dir).filter((f) => f.endsWith('.mjs') && f !== 'common.mjs').sort();
@@ -47,10 +47,10 @@ let bad = 0; const rows = [];
 for (const { x, findings, error } of results) {
   let status, shown;
   if (error) { status = 'ERROR'; shown = [{ rule: 'error', text: error }]; bad++; }
-  else if (x.kind === 'good') { shown = findings.filter(physical); status = shown.length ? (x.known ? 'XFAIL-ALARM' : 'BAD-ALARM') : x.known ? 'XPASS' : 'OK'; if (status === 'BAD-ALARM') bad++; }
+  else if (x.kind === 'good') { shown = findings.filter((f) => physical(f, x)); status = shown.length ? (x.known ? 'XFAIL-ALARM' : 'BAD-ALARM') : x.known ? 'XPASS' : 'OK'; if (status === 'BAD-ALARM') bad++; }
   else { shown = findings.filter((f) => hit(x, f)); const caught = shown.length > 0;
     status = x.kind === 'pending' ? (caught ? 'NOW-CAUGHT' : 'PENDING') : caught ? (x.known ? 'XPASS' : 'CAUGHT') : x.known ? 'XFAIL' : 'MISSED'; if (status === 'MISSED') bad++;
-    if (!caught) shown = findings.filter(physical); }
+    if (!caught) shown = findings.filter((f) => physical(f, x)); }
   rows.push({ name: x.name, kind: x.kind, status, from: x.from, rules: [...new Set(shown.map((f) => f.rule))], first: shown[0]?.text.slice(0, 160) || '' });
   console.log(`${status.padEnd(10)} ${x.name}${shown.length ? '  <- ' + shown.slice(0, 2).map((f) => `[${f.rule}] ${f.text.slice(0, 110)}`).join(' | ') : ''}`);
 }
