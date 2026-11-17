@@ -5,6 +5,7 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { dealOpenPlan } from './openplan.mjs';
 const T = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'tables.json'), 'utf8'));
 export const KINDS = Object.keys(T).filter((k) => T[k]?.hero);
 export function roll(seed, kinds = ['kitchen', 'dining', 'living']) {
@@ -23,6 +24,11 @@ export function roll(seed, kinds = ['kitchen', 'dining', 'living']) {
   const some = (a, n) => { const c = a.slice(), out = []; while (out.length < n && c.length) out.push(c.splice(Math.floor(rnd() * c.length), 1)[0]); return out; };
   const out = { seed, floor: pick(T.floor), accent: null, use: 'plantAt: place each plant at those places (one floor plant at most). foreground: the near-camera piece of the shots. accent: new Home({ accent: hex }); accentOn: put params { tone: \'accent\' } on that textile. Soft things: a.seatSoft(id, { tone }), a.table(id, { cloth: true }). See compose.mjs.', areas: {} }, used = new Set(), usedAcc = new Set(), ONE = ['basket', 'pouf', 'trolley'];   // signs dealt so far: none repeats in a home; a basket, pouf or trolley appears in one area of a home at most (check-home's variety rule)
   const acc = T.accentTones[(Math.imul(seed >>> 0, 2654435761) >>> 0) % T.accentTones.length]; out.accent = { name: acc.id, hex: acc.hex };   // one warm accent for the whole home (from the seed itself, so no other pick moves)
+  const describe = (id, a) => {   // the choices of one area in plain words
+    const b = T.backing.find((x) => x.id === a.backing);
+    const wall = (on) => (on === 'second' ? `the ${b.second} wall` : 'the back wall'), shape2 = b.walls === 1 ? 'one backing wall' : `two backing walls at ${b.angle} degrees, the second wall on the ${b.second}`;
+    return `${id}: ${a.hero}; ${shape2}; ${a.openings.map((o) => `${o.kind === 'arch' ? 'arch ' + (a.passages[a.openings.filter((q) => q.kind === 'arch').indexOf(o)] || 'round') : o.kind} on ${wall(o.on)}`).join(', ')}; accents: ${a.accents.join(', ')}${a.more.length ? `, ${a.more.join(', ')}` : ''}; plants: ${a.plantAt.map((x) => T.plantPlaces.find((p) => p.id === x).say).join('; ')}; foreground piece: ${a.foreground}; light: ${a.light}; ${a.board ? 'cutting board: ' + T.boardPlaces.find((p) => p.id === a.board).say + '; ' : ''}accent (${out.accent.name}) on the ${a.accentOn}; pieces: ${(a.pieces || []).join(', ') || 'as the hero needs'}; signs of life: ${a.signs.join(', ')}`;   // the choices in plain words
+  };
   for (const id of kinds) {
     if (!KINDS.includes(id)) throw new Error(`unknown area kind "${id}"; known: ${KINDS.join(', ')}`);
     const t = T[id], shape = id === 'kitchen' ? pick(t.shape) : null;
@@ -40,10 +46,10 @@ export function roll(seed, kinds = ['kitchen', 'dining', 'living']) {
     a.signs = some(T.signs.filter((x) => x.in.includes(id) && !used.has(x.id)), 2 + Math.floor(rnd() * 2)); a.signs.forEach((x) => used.add(x.id)); a.signs = a.signs.map((x) => x.id);
     if (t.pieces) a.pieces = t.pieces;
     if (shape) { a.shape = shape; a.shapeNote = t.shapeNotes[shape]; }
-    const wall = (on) => (on === 'second' ? `the ${b.second} wall` : 'the back wall'), shape2 = b.walls === 1 ? 'one backing wall' : `two backing walls at ${b.angle} degrees, the second wall on the ${b.second}`;
-    a.say = `${id}: ${a.hero}; ${shape2}; ${a.openings.map((o) => `${o.kind === 'arch' ? 'arch ' + (a.passages[a.openings.filter((q) => q.kind === 'arch').indexOf(o)] || 'round') : o.kind} on ${wall(o.on)}`).join(', ')}; accents: ${a.accents.join(', ')}${a.more.length ? `, ${a.more.join(', ')}` : ''}; plants: ${a.plantAt.map((x) => T.plantPlaces.find((p) => p.id === x).say).join('; ')}; foreground piece: ${a.foreground}; light: ${a.light}; ${a.board ? 'cutting board: ' + T.boardPlaces.find((p) => p.id === a.board).say + '; ' : ''}accent (${out.accent.name}) on the ${a.accentOn}; pieces: ${(a.pieces || []).join(', ') || 'as the hero needs'}; signs of life: ${a.signs.join(', ')}`;   // the choices in plain words
+    a.say = describe(id, a);
     out.areas[id] = a;
   }
+  dealOpenPlan(out, seed, kinds, describe);   // open plan (openplan.mjs): about 2 homes in 5 with two joinable areas; its own random stream, so no older pick moves
   return out;
 }
 if (process.argv[1] && process.argv[1].endsWith('roll.mjs')) {

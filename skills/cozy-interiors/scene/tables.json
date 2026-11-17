@@ -1036,5 +1036,28 @@
    }
   ]
  },
- "lightNote": "area.light is the one lamp of the area. pendant: hang a.table(...).over('pendantLamp') (or over an island or a chair) so it reads in the home view; the roll deals one in most kitchens, dining areas and reading corners, so a pendant is a decision, not an extra. If the lamp would overlap the window in the home view, slide it along the table (over('pendantLamp', { dx })) rather than dropping it."
+ "lightNote": "area.light is the one lamp of the area. pendant: hang a.table(...).over('pendantLamp') (or over an island or a chair) so it reads in the home view; the roll deals one in most kitchens, dining areas and reading corners, so a pendant is a decision, not an extra. If the lamp would overlap the window in the home view, slide it along the table (over('pendantLamp', { dx })) rather than dropping it.",
+ "openPlan": {
+  "chance": 0.4,
+  "joinable": ["kitchen", "dining", "living"],
+  "nook": { "reading-corner": "living" },
+  "nookChance": 0.7,
+  "wholeChainChance": 0.5,
+  "pairs": [{ "of": ["kitchen", "dining"], "w": 3 }, { "of": ["dining", "living"], "w": 3 }, { "of": ["kitchen", "living"], "w": 2 }],
+  "orders": [{ "of": ["kitchen", "dining", "living"], "w": 5 }, { "of": ["dining", "kitchen", "living"], "w": 1 }, { "of": ["kitchen", "living", "dining"], "w": 1 }],
+  "layouts": { "row": 1, "corner": 1 },
+  "overlap": [0, 250, 500, 750, 1000],
+  "secondChance": 0.5,
+  "separators": {
+   "island": { "furniture": true, "w": 4, "needs": "kitchen", "say": "a kitchen island facing the neighbour (the kitchen's shape is island)" },
+   "peninsula": { "furniture": true, "w": 3, "needs": "kitchen", "say": "a kitchen peninsula reaching toward the neighbour (the kitchen's shape is peninsula)" },
+   "sofaBack": { "furniture": true, "w": 4, "needs": "living", "say": "a sofa or armchair with its back to the neighbour" },
+   "openShelf": { "furniture": true, "w": 2, "say": "an open shelf unit seen from both sides" },
+   "rug": { "w": 3, "say": "a rug whose edge lies on the seam" },
+   "hangingLight": { "w": 3, "needs": "dining", "say": "a hanging light over the dining table, which stands by the seam" },
+   "halfWall": { "w": 2, "say": "a half wall about 1000 mm high" },
+   "floorChange": { "only": "second", "w": 3, "say": "a floor change: tiles in one area and boards beyond, in one straight line by the other separator" }
+  },
+  "note": "roll.mjs deals openPlan (about 2 homes in 5 with at least two joinable areas). chain = the joined areas in order, layout row (one long back wall) or corner (turns 90 degrees at seam `turn`), seams[i].separators (at least one furniture) and overlap mm. Each joined area's `backing` is set so no side wall stands on a seam. See openplan.mjs and compose.mjs H.join."
+ }
 }
