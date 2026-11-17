@@ -406,7 +406,11 @@
      0
     ],
     "mount": "wall",
-    "params": {},
+    "params": {
+     "hang": 330,
+     "stripes": "none",
+     "seed": 51
+    },
     "group": "kitchen:wall",
     "area": "kitchen"
    },

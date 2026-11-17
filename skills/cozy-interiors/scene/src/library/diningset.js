@@ -43,8 +43,19 @@ export function breadBasket(kit, { r = 150, h = 95, bread = 'loaf', seed = 3, cl
   if (cloth === 'yes') g.add(kit.rbox(-r * 0.8, 20, r * 0.75, r * 1.6, 8, r * 1.5, 4, { linen: true }));   // a cloth lining
   if (rim === 'rolled') g.add(kit.cyl(0, h - 6, 0, r + 4, 14, { seg: 32, tone: 'lo' }));
   if (bread === 'rolls') for (let i = 0; i < 4; i++) { const a = i * 1.57 + R(); g.add(kit.solid(new T.SphereGeometry(48, 14, 10), Math.cos(a) * 62, 70, Math.sin(a) * 62, { smooth: true, tone: 'lo', linen: false })); }
-  else if (bread === 'baguette') for (const o of [-34, 20]) { const m = kit.cyl(0, 0, 0, 30, r * 2.1, { axis: 'x', seg: 14, tone: 'lo' }); m.position.set(-r * 1.05, h * 0.65, o); m.rotation.y = (o > 0 ? 1 : -1) * 0.12; g.add(m); }
-  else { const lf = kit.solid(new T.SphereGeometry(r * 0.78, 20, 14), 0, h * 0.55, 0, { smooth: true, tone: 'lo' }); lf.scale.set(1.15, 0.6, 0.68); g.add(lf); const sl = []; for (let i = -1; i <= 1; i++) { const x = i * r * 0.3; sl.push([x - 22, h * 0.55 + r * 0.46 - Math.abs(i) * 8, r * 0.2], [x + 22, h * 0.55 + r * 0.5 - Math.abs(i) * 8, r * 0.05]); } g.add(kit.lines(sl, 'mid')); }   // a loaf with three scoring slashes
+  else if (bread === 'baguette') for (const [o, a0, len] of [[-36, 0.1, 2.05], [24, -0.14, 1.9]]) {   // a baguette: a long lathe that is fullest in the middle and tapers to both ends, bowed a little, with diagonal slashes
+    const L = r * len, N = 14, prof = []; for (let k = 0; k <= N; k++) { const t = k / N; prof.push(new T.Vector2(Math.max(0.01, 30 * Math.pow(Math.sin(Math.PI * Math.min(0.98, Math.max(0.02, t))), 0.55)), (t - 0.5) * L)); }
+    const bg = new T.LatheGeometry(prof, 16); bg.rotateZ(Math.PI / 2); const m = kit.solid(bg, 0, 0, 0, { smooth: true, tone: 'lo' }); m.scale.set(1, 0.92, 1);
+    const wrap = kit.group(); wrap.add(m); const sl = []; for (let k = -2; k <= 2; k++) { const x = k * L * 0.17; sl.push([x - 12, 27, -9], [x + 12, 27, 7]); } wrap.add(kit.lines(sl, 'mid'));
+    wrap.position.set(0, h * 0.98, o); wrap.rotation.y = a0; g.add(wrap);
+  }
+  else {   // a loaf: an oval or a round boule, domed, scored
+    const boule = R() < 0.45, rx = r * (boule ? 0.62 : 0.8), rz = r * (boule ? 0.62 : 0.5), ry = r * (boule ? 0.6 : 0.5);
+    const lf = kit.solid(new T.SphereGeometry(1, 24, 14, 0, Math.PI * 2, 0, Math.PI * 0.62), 0, h * 0.55, 0, { smooth: true, tone: 'lo' }); lf.scale.set(rx, ry, rz); g.add(lf);
+    const sl = []; if (boule) { for (const q of [-1, 1]) sl.push([-rx * 0.5 * q, h * 0.55 + ry * 0.86, -rx * 0.5], [rx * 0.5 * q, h * 0.55 + ry * 0.86, rx * 0.5]); }
+    else for (let i = -1; i <= 1; i++) { const x = i * rx * 0.4; sl.push([x - 20, h * 0.55 + ry * 0.9, rz * 0.4], [x + 20, h * 0.55 + ry * 0.95, -rz * 0.25]); }
+    g.add(kit.lines(sl, 'mid'));
+  }
   return kit.merge(g);
 }
 

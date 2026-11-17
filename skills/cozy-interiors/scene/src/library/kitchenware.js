@@ -1,5 +1,6 @@
 // @js:library-kitchenware — small kitchen things, drawn like the rest. Origins: the middle of the foot (jars, kettle, herbs, trolley); teaTowel at the middle of its rail on the wall face.
 // jars({ n = 3 }), kettle(), herbs({ n = 3 }), trolley({ w = 650, d = 400, h = 820 }), teaTowel({ w = 480 }).
+import { drape } from './soft.js';
 const lo = { tone: 'lo' };
 export function jars(kit, { n = 3 } = {}) {   // canisters of different heights, each with a lid and a knob
   const g = kit.group(), hs = [190, 150, 220, 170];
@@ -30,13 +31,16 @@ export function trolley(kit, { w = 650, d = 400, h = 820 } = {}) {   // a kitche
   g.add(kit.cyl(-w / 2 + 25, h - 120, d / 2 - 10, 7, w - 50, { axis: 'x', seg: 12 }));
   return kit.merge(g);
 }
-export function teaTowel(kit, { w = 480 } = {}) {   // a rail on the wall with a tea towel folded over it; the rail is at the bottom of the piece, the cloth hangs below it
-  const g = kit.group();
+export function teaTowel(kit, { w = 480, cw = 0, hang = 400, tone = 'lo', stripes = 'band', seed = 2 } = {}) {   // a rail on the wall with a tea towel folded over it: a front panel and a shorter back panel joined at a soft fold over the rail. The rail is at the bottom of the piece, the cloth hangs below it. tone accent|lo, stripes none|band|check
+  const g = kit.group(), cWid = cw || w * 0.46, ph = seed * 1.7;
   for (const sx of [-1, 1]) g.add(kit.cyl(sx * (w / 2 - 20), 0, 60, 10, 60, { axis: 'z', seg: 12, ...lo }));
   g.add(kit.cyl(-w / 2, 0, 60, 10, w, { axis: 'x', seg: 14 }));
-  g.add(kit.rbox(-w * 0.2, -400, 78, w * 0.4, 410, 10, 4));
-  g.add(kit.rbox(-w * 0.2, -300, 66, w * 0.4, 310, 10, 4, lo));
-  const pts = []; for (const y of [-60, -120, -180, -260, -320, -380]) pts.push([-w * 0.2 + 12, y, 89], [w * 0.2 - 12, y, 89]);   // woven stripes so the cloth reads against the wall
-  g.add(kit.lines(pts, 'mid'));
+  const fr = drape(kit, cWid, hang, { folds: 2.5, depth: 22, thick: 7, flare: 0.03, phase: ph, nx: 24, ny: 12, tone }); fr.position.set(0, 12, 76); g.add(fr);   // the front panel
+  const bk = drape(kit, cWid, hang * 0.72, { folds: 2, depth: 12, thick: 6, flare: 0.03, phase: ph + 1.3, nx: 18, ny: 8, tone }); bk.position.set(0, 12, 46); g.add(bk);   // the shorter back panel
+  const fold = kit.cyl(-cWid / 2, 0, 61, 15.5, cWid, { axis: 'x', seg: 16, tone }); g.add(fold);   // the cloth over the rail: a soft fold
+  const pts = [];
+  if (stripes === 'band') for (const y of [-hang * 0.62, -hang * 0.66, -hang * 0.9, -hang * 0.94]) pts.push([-cWid / 2 * 1.02, y, 94], [cWid / 2 * 1.02, y, 94]);
+  else if (stripes === 'check') { for (let k = -2; k <= 2; k++) pts.push([k * cWid * 0.18, -hang * 0.1, 95], [k * cWid * 0.18, -hang * 0.96, 95]); for (let y = -hang * 0.2; y > -hang * 0.95; y -= hang * 0.18) pts.push([-cWid / 2 * 0.95, y, 95], [cWid / 2 * 0.95, y, 95]); }
+  if (pts.length) g.add(kit.lines(pts, tone === 'accent' ? 'accent' : 'mid'));
   return kit.merge(g);
 }
