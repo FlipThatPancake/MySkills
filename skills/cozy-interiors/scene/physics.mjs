@@ -66,7 +66,7 @@ const res = await page.evaluate((PARTS) => {
   const GAP = 12, SLAB = 12, UP = 60, SINK = 5;   // a few mm of sinking is allowed
   const BUILT_IN = /^(hob|sink|tap|baseRun|wallRun)$/, DRAPE = /cloth|throw|towel|curtain|cushion|pillow|blanket/i;
   for (const id of list) {
-    const A = O[id]; if (/^(wall|ceiling|lines)/.test(A.mount) || A.mount.startsWith('in')) continue;
+    const A = O[id]; if (/^(wall|ceiling|lines)/.test(A.mount) || A.mount.startsWith('in') || sc(id).onSill) continue;   // a sill plant rests on the window's sill: check-home's support rule checks that
     if (/rug|scuff|leaf|scratch/.test(A.asset || '') || BUILT_IN.test(A.asset || '') || DRAPE.test(A.asset || '')) continue;
     const y0 = A.b[1], pts = new Map();
     for (let i = 0; i < A.t.length; i += 3) if (A.t[i + 1] < y0 + SLAB) pts.set(Math.round(A.t[i] / 15) + ',' + Math.round(A.t[i + 2] / 15), [A.t[i], A.t[i + 2]]);
@@ -84,8 +84,8 @@ const res = await page.evaluate((PARTS) => {
     }
     const area = (q) => Math.max(q[2] - q[0], 1) * Math.max(q[3] - q[1], 1), over = ok ? 1 - area(sb) / area(bb) : 1;
     const softPair = sinkInto && (soft(id) || (sinkInto !== 'floor' && soft(sinkInto) && !/rug/.test(O[sinkInto].asset || '')));
-    if (!ok) out.push({ rule: 'floating', id, asset: A.asset, drop: Math.round(drop), y: Math.round(y0) });
-    else if (over > 0.15 && A.asset !== 'pan') out.push({ rule: 'overhangs', id, asset: A.asset, over: Math.round(over * 100), on: Object.keys(under), y: Math.round(y0) });
+    if (!ok) out.push({ rule: 'floating', id, asset: A.asset, drop: Math.round(drop), y: Math.round(y0) });   // (a pan may hang up to half off the hob: past that its centre of mass is over nothing and it tips)
+    else if (over > (A.asset === 'pan' ? 0.5 : 0.15)) out.push({ rule: 'overhangs', id, asset: A.asset, over: Math.round(over * 100), on: Object.keys(under), y: Math.round(y0) });
     if (ok && sink > (softPair ? 30 : SINK)) out.push({ rule: 'sunk', id, asset: A.asset, into: sinkInto, depth: Math.round(sink), y: Math.round(y0) });
   }
   // ---------- penetration: sampled points of A inside the solid of B (ray parity agrees in three directions)

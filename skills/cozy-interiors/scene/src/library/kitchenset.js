@@ -106,17 +106,17 @@ export function mokaPot(kit, { r = 62, h = 210, sides = 8, handle = 'black' } = 
 
 // ---- on the wall ---------------------------------------------------------------------------------------------------------------------------------
 export function potRail(kit, { w = 900, n = 4, seed = 4, mix = 'mixed' } = {}) {   // a rail with S-hooks: ladle, skillet, saucepan, sieve
-  const g = kit.group(), R = rnd(seed), T = kit.THREE, yR = 520, z = 60;
-  for (const s of [-1, 1]) g.add(rod(kit, [s * (w / 2 - 20), yR, 0], [s * (w / 2 - 20), yR, z], 8, 8, 'lo'));
+  const g = kit.group(), R = rnd(seed), T = kit.THREE, yR = 520, z = 70;
+  for (const s of [-1, 1]) g.add(rod(kit, [s * (w / 2 - 20), yR, 8], [s * (w / 2 - 20), yR, z], 8, 8, 'lo'));   // the brackets start 8 mm off the wall (the saucepans reach 64 mm behind the rail, so the rail stands at 70)
   g.add(kit.cyl(-w / 2, yR, z, 8, w, { axis: 'x', seg: 12, tone: 'lo' }));
   const kinds = mix === 'pans' ? ['skillet', 'saucepan', 'skillet', 'saucepan'] : mix === 'tools' ? ['ladle', 'sieve', 'ladle', 'sieve'] : ['skillet', 'ladle', 'saucepan', 'sieve']; let x = -w / 2 + 120;
   for (let i = 0; i < n && x < w / 2 - 80; i++) {
     const k = kinds[(i + Math.floor(R() * 4)) % 4], hook = (xx) => g.add(rod(kit, [xx, yR + 6, z], [xx, yR - 40, z], 3.5, 3.5, 'lo'));
     hook(x);
     if (k === 'ladle') { g.add(rod(kit, [x, yR - 40, z], [x, yR - 290, z + 6], 6, 6, 'lo')); g.add(kit.cyl(x, yR - 330, z + 18, 46, 20, { axis: 'z', seg: 24, tone: 'lo' })); g.add(kit.cyl(x, yR - 330, z + 20, 34, 6, { axis: 'z', seg: 22 })); g.add(kit.lines(ringXY(x, yR - 330, 30, z + 21, 20), 'lo')); x += 150; }   // a ladle: a round bowl facing out
-    else if (k === 'skillet') { const r = 105 + R() * 25; g.add(rod(kit, [x, yR - 40, z], [x, yR - 160, z], 7, 7, 'lo')); g.add(kit.cyl(x, yR - 160 - r, z + 8, r, 22, { axis: 'z', seg: 30, tone: 'lo' })); g.add(kit.lines(ringXY(x, yR - 160 - r, r * 0.78, z + 9, 26), 'mid')); x += r * 2 + 40; }
-    else if (k === 'saucepan') { const r = 80; g.add(rod(kit, [x, yR - 40, z], [x, yR - 130, z], 7, 7, 'lo')); g.add(kit.cyl(x, yR - 130 - r * 1.5, z + 6, r, 70, { axis: 'z', seg: 28 })); g.add(kit.lines(ringXY(x, yR - 130 - r * 1.5, r * 0.8, z + 7, 24), 'mid')); x += r * 2 + 50; }
-    else { const r = 70; g.add(rod(kit, [x, yR - 40, z], [x, yR - 110, z], 5, 5, 'lo')); g.add(kit.cyl(x, yR - 110 - r, z + 6, r, 26, { axis: 'z', seg: 26, tone: 'lo' })); g.add(kit.lines(ringXY(x, yR - 110 - r, r * 0.8, z + 7, 26), 'lo')); x += r * 2 + 40; }   // a sieve: a plain disc with a rim line
+    else if (k === 'skillet') { const r = 105 + R() * 25; g.add(rod(kit, [x, yR - 40, z], [x, yR - 166, z], 7, 7, 'lo')); g.add(kit.cyl(x, yR - 160 - r, z + 8, r, 22, { axis: 'z', seg: 30, tone: 'lo' })); g.add(kit.lines(ringXY(x, yR - 160 - r, r * 0.78, z + 9, 26), 'mid')); x += r * 2 + 40; }
+    else if (k === 'saucepan') { const r = 80; g.add(rod(kit, [x, yR - 40, z], [x, yR - 176, z], 7, 7, 'lo')); g.add(kit.cyl(x, yR - 130 - r * 1.5, z + 6, r, 70, { axis: 'z', seg: 28 })); g.add(kit.lines(ringXY(x, yR - 130 - r * 1.5, r * 0.8, z + 7, 24), 'mid')); x += r * 2 + 50; }
+    else { const r = 70; g.add(rod(kit, [x, yR - 40, z], [x, yR - 116, z], 5, 5, 'lo')); g.add(kit.cyl(x, yR - 110 - r, z + 6, r, 26, { axis: 'z', seg: 26, tone: 'lo' })); g.add(kit.lines(ringXY(x, yR - 110 - r, r * 0.8, z + 7, 26), 'lo')); x += r * 2 + 40; }   // a sieve: a plain disc with a rim line
   }
   return kit.merge(g);
 }
