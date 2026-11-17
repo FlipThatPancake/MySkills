@@ -303,7 +303,7 @@ const areaIssues = await page.evaluate(() => {
     }
     // tour shots: the shot's subject (its `subject` group, else the hero's group) is whole in frame and fills 25 to 70 percent of it
     const heroId = real.find((i) => sc(i).hero), shots = api.areas[A].camera.shots || [];
-    if (false && shots.length < 3) out.push({ rule: 'shot', what: `${A} has ${shots.length} tour shot${shots.length === 1 ? '' : 's'} (three at least; camera.md names four)` });   // off (false) until the example has three shots: switch it on with the example's third shot
+    if (shots.length < 3) out.push({ rule: 'shot', what: `${A} has ${shots.length} tour shot${shots.length === 1 ? '' : 's'} (three at least; camera.md names four)` });  
     for (const [si, sh] of shots.entries()) {
       const subj = sh.subject || (heroId && sc(heroId).group), members = real.filter((i) => sc(i).group === subj);
       if (!members.length) { out.push({ rule: 'shot', what: `${A} shot "${sh.name}": no subject group "${subj}" (name one of: ${[...new Set(real.map((i) => sc(i).group))].join(', ')})` }); continue; }

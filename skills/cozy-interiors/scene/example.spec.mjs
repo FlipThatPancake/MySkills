@@ -24,7 +24,8 @@ T.on('jug', { y: 757, dx: -180 }); T.on('candlesticks', { y: 757, dx: 260 });
 a.put('chair', 'armchair', [5700, 2300], -35, { group: 'nook' });
 a.put('side', 'sideTable', [5700, 3150], 0, { group: 'nook' });
 // Shots: a.shot(name, from, look, fov, group). fitshots.mjs finds the cameras; its numbers go in here.
-a.shot('cook', [2600, 1100, 4800], [1710, 1300, 393], 36, 'cook');
+a.shot('cook', [2600, 1100, 4800], [1705, 1300, 393], 36, 'cook');
 a.shot('table', [6200, 2100, 6900], [2737, 681, 2923], 36, 'breakfast');
+a.shot('nook', [3800, 850, 6000], [5222, 700, 2273], 32, 'nook');
 a.view({ target: [3300, 700, 1800], az: 20, el: 16 });
 H.write(process.argv[2] || 'example.json', fs);
