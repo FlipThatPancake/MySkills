@@ -10,8 +10,9 @@ const rect = (x0, y0, x1, y1, z) => [[x0, y0, z], [x1, y0, z], [x1, y0, z], [x1,
 const ringXZ = (cx, y, cz, r, n = 24) => { const p = []; for (let i = 0; i < n; i++) { const a = i / n * 6.2832, b = (i + 1) / n * 6.2832; p.push([cx + Math.cos(a) * r, y, cz + Math.sin(a) * r], [cx + Math.cos(b) * r, y, cz + Math.sin(b) * r]); } return p; };
 
 // the desk forms: pedestal (a side panel and a drawer unit), trestle (two splayed trestles under a thick top), writing (slim top on an apron with a centre drawer and four legs)
-export function deskFrame(kit, { w = 1400, d = 700, h = 740, form = 'pedestal', legs = 'tapered', seed = 1 } = {}) {
-  const g = kit.group(), B = bx(kit), R = rb(kit), pts = [];
+export function deskFrame(kit, { w = 1400, d = 700, h = 740, form = 'pedestal', legs = 'tapered', drawer = 'shut', seed = 1 } = {}) {
+  const g = kit.group(), B = bx(kit), R = rb(kit), pts = [], ajar = drawer === 'ajar';
+  const tray = (cx, y, zf, wd, ht, pull) => { g.add(B(cx, y, zf, wd, ht, 18, { through: true })); for (const sx of [-1, 1]) g.add(B(cx + sx * (wd / 2 - 8), y + 4, zf - pull / 2 - 9, 12, ht - 22, pull + 60, { ...lo, through: true })); g.add(B(cx, y + 4, zf - pull / 2 - 9, wd - 20, 8, pull + 60, { ...lo, through: true })); };   // a drawer pulled out: its front, two sides and a floor reaching back into the desk (a through part)
   if (form === 'trestle') {
     const TT = 44; g.add(R(0, h - TT, 0, w, TT, d, 8));
     for (const s of [-1, 1]) { const x = s * (w / 2 - 170); for (const f of [-1, 1]) g.add(rod(kit, [x, h - TT, f * (d / 2 - 90)], [x + s * 30, 0, f * (d / 2 - 40)], 24, 20, 'lo')); g.add(rod(kit, [x + s * 12, 300, -(d / 2 - 60)], [x + s * 12, 300, d / 2 - 60], 14, 14, 'lo')); }
@@ -19,12 +20,12 @@ export function deskFrame(kit, { w = 1400, d = 700, h = 740, form = 'pedestal', 
   } else if (form === 'writing') {
     const TT = 26, ap = 80; g.add(R(0, h - TT, 0, w, TT, d, 5));
     g.add(B(0, h - TT - ap, d / 2 - 50, w - 120, ap, 20, lo)); g.add(B(0, h - TT - ap, -d / 2 + 50, w - 120, ap, 20, lo)); for (const s of [-1, 1]) g.add(B(s * (w / 2 - 60), h - TT - ap, 0, 20, ap, d - 100, lo));
-    const dw = Math.min(520, w * 0.4); g.add(B(0, h - TT - ap + 6, d / 2 - 38, dw, ap - 12, 14, {})); pts.push(...rect(-dw / 2, h - TT - ap + 6, dw / 2, h - TT - 6, d / 2 - 30)); g.add(kit.cyl(0, h - TT - ap / 2, d / 2 - 28, 14, 20, { axis: 'z', seg: 12, ...lo }));
+    const dw = Math.min(520, w * 0.4), pull = ajar ? 90 : 0; if (ajar) tray(0, h - TT - ap + 6, d / 2 - 38 + pull, dw, ap - 12, 160); else g.add(B(0, h - TT - ap + 6, d / 2 - 38, dw, ap - 12, 14, {})); pts.push(...rect(-dw / 2, h - TT - ap + 6, dw / 2, h - TT - 6, d / 2 - 30 + pull)); g.add(kit.cyl(0, h - TT - ap / 2, d / 2 - 28 + pull, 14, 20, { axis: 'z', seg: 12, ...lo }));
     const lp = []; for (const sx of [-1, 1]) for (const sz of [-1, 1]) lp.push([sx * (w / 2 - 70), sz * (d / 2 - 60)]); g.add(legParts(kit, legs, lp, h - TT - ap + 2, { r: 24 }));
   } else {   // pedestal
     const TT = 30, z = d / 2 + 0.6; g.add(R(0, h - TT, 0, w, TT, d, 6)); g.add(B(-w / 2 + 25, 0, 0, 30, h - TT, d - 60)); g.add(R(w / 2 - 230, 0, 0, 440, h - TT, d - 40, 4)); g.add(B(0, 450, -d / 2 + 80, w - 80, 20, 20, { ...lo, through: true }));
     const rows = Math.max(2, Math.round((h - TT) / 250)), rh = (h - TT - 60) / rows;
-    for (let i = 0; i < rows; i++) { const y = 30 + i * rh; pts.push(...rect(w / 2 - 440, y + 6, w / 2 - 30, y + rh - 6, z - 20)); g.add(kit.cyl(w / 2 - 230, y + rh / 2, z - 12, 12, 20, { axis: 'z', seg: 10, ...lo })); }
+    for (let i = 0; i < rows; i++) { const y = 30 + i * rh, pull = ajar && i === rows - 1 ? 110 : 0; if (pull) tray(w / 2 - 235, y + 6, z - 12 + pull, 396, rh - 12, 170); pts.push(...rect(w / 2 - 440, y + 6, w / 2 - 30, y + rh - 6, z - 20 + pull)); g.add(kit.cyl(w / 2 - 230, y + rh / 2, z - 12 + pull, 12, 20, { axis: 'z', seg: 10, ...lo })); }
   }
   if (pts.length) g.add(kit.lines(pts, 'lo'));
   return kit.merge(g);

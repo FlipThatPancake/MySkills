@@ -125,7 +125,7 @@ const issues = await page.evaluate(() => {
   const things = Object.keys(objs).filter((id) => !['rug', 'curtain'].includes(sc(id).asset)).map((id) => ({ id, box: boxes[id] }));
   for (const id of Object.keys(objs)) {   // each tap is a thing of its own
     const o = objs[id]; if (sc(id).asset !== 'baseRun') continue;
-    let x = 0; for (const m of sc(id).params.modules) { if (m.kind === 'sink') { const c = new T.Vector3(x + m.w / 2, 0, -(sc(id).params.depth || 600) + 50).applyMatrix4(o.matrixWorld); things.push({ id: `${id}'s tap`, box: new T.Box3(new T.Vector3(c.x - 25, 900, c.z - 25), new T.Vector3(c.x + 25, 1380, c.z + 25)) }); } x += m.w; }
+    let x = 0; for (const m of sc(id).params.modules) { if (m.kind === 'sink') { const c = new T.Vector3(x + m.w / 2, 0, -(sc(id).params.depth || 600) + 135).applyMatrix4(o.matrixWorld); things.push({ id: `${id}'s tap`, box: new T.Box3(new T.Vector3(c.x - 25, 900, c.z - 25), new T.Vector3(c.x + 25, 1380, c.z + 25)) }); } x += m.w; }
   }
   for (const W of home.walls) for (const b of W.built) {   // a window stays fixed only where something stands in its sweep (the roll deals fixed windows for sinks and runs): over open floor it opens
     if (b.op.kind !== 'window' || b.op.sash !== 'fixed' || ['picture', 'wall', 'bay'].includes(b.op.style)) continue;
@@ -166,8 +166,8 @@ const issues = await page.evaluate(() => {
   for (const id of Object.keys(objs)) {
     const m = sc(id).mount, b = boxes[id];
     if (m === 'on' && sc(id).onSill) {   // a pot on a window sill: the sill is the window's own ledge; its centre must be over a window, at the sill's height
-      const ok = home.walls.some((W) => { const l = toLocal(W, b); return (W.built || []).some((q) => { if (q.op.kind !== 'window') return false; const xc = W.len - q.op.at, y0 = (q.op.sill ?? 1000) + 30; return (l.z0 + l.z1) / 2 < 22 && l.z0 < 160 && (l.x0 + l.x1) / 2 > xc - q.op.width / 2 && (l.x0 + l.x1) / 2 < xc + q.op.width / 2 && Math.abs(b.min.y - y0) < 40; }); });
-      if (!ok) out.push({ rule: 'support', what: `${id} is marked onSill but does not rest on a window's sill (centre over the window, bottom at sill + 30 mm, its middle no further than 20 mm from the wall: the sill reaches 40 mm into the room, so a pot hangs off it past that)` });
+      const ok = home.walls.some((W) => { const l = toLocal(W, b); return (W.built || []).some((q) => { if (q.op.kind !== 'window') return false; const xc = W.len - q.op.at, y0 = (q.op.sill ?? 1000) + 30; return (l.z0 + l.z1) / 2 < 84 && l.z0 < 160 && (l.x0 + l.x1) / 2 > xc - q.op.width / 2 && (l.x0 + l.x1) / 2 < xc + q.op.width / 2 && Math.abs(b.min.y - y0) < 40; }); });
+      if (!ok) out.push({ rule: 'support', what: `${id} is marked onSill but does not rest on a window's sill (centre over the window, bottom at sill + 30 mm, its middle no further than 80 mm from the wall: the sill reaches 110 mm into the room, so a pot hangs off it past that)` });
     }
     if (m === 'wall') {
       const near = home.walls.some((W) => { let lo = 1e9, hi = -1e9, s0 = 1e9, s1 = -1e9; for (const { x, z } of b.pts) { const dx = x - W.to[0], dz = z - W.to[1], d = dx * W.n[0] + dz * W.n[1], s = -(dx * W.d[0] + dz * W.d[1]); lo = Math.min(lo, d); hi = Math.max(hi, d); s0 = Math.min(s0, s); s1 = Math.max(s1, s); } return lo > -12 && lo < 90 && s1 > 0 && s0 < W.len; });

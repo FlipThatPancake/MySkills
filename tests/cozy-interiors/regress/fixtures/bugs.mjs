@@ -26,7 +26,7 @@ export const fixtures = [
     patch(S) { S.home.objects.find((o) => o.id === 't-chair').at[1] = -18; },
     build({ Home }) { const { H, a } = room(Home); a.put('rug', 'rug', [2000, 2000], 0, { group: 'g', params: { w: 2400, d: 1700 } }); a.put('chair', 'deskChair', [2000, 2000], 180, { group: 'g', y: 7 }); return H; } },
   { name: 'pot-hanging-off-sill', from: 'checks research Nov 17: onSill put the pot centre on the sill front edge (half a 116 mm pot over nothing); physics skips onSill, so the support rule must still see an overhang', kind: 'bug', expect: { rules: SUPPORT, ids: ['t-herbs'] },
-    build({ Home }) { const { H, back } = room(Home, { openings: [{ kind: 'window', x: 3000, width: 1400, height: 1200, sill: 900, sash: 'fixed' }] }); back.onSill('herbs', 'plant', 3000, { group: 'g', off: 110 }); return H; } },
+    build({ Home }) { const { H, back } = room(Home, { openings: [{ kind: 'window', x: 3000, width: 1400, height: 1200, sill: 900, sash: 'fixed' }] }); back.onSill('herbs', 'plant', 3000, { group: 'g', off: 170 }); return H; } },
   { name: 'mug-inside-tablecloth', from: 'checks research Nov 17: jug and mug on a kitchen tablecloth stand on the table top, 16 mm inside the cloth', kind: 'bug', expect: { rules: ['sunk', 'penetrates', 'support', 'cloth'], ids: ['t-dining-mug'] },
     patch(S) { S.home.objects.find((o) => o.id === 't-dining-mug').at[1] = 757; },
     build({ Home }) { const { H, a } = room(Home); const T = a.table('dining', { at: [3000, 2000], w: 1600, d: 900, chairs: 2, cloth: true }); T.on('mug', { dx: 100 }); return H; } },
