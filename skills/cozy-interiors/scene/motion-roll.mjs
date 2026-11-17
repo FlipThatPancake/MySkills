@@ -12,7 +12,7 @@ export function dealMotion(out, seed, say) {
   let s = (seed ^ 0x1b873593) >>> 0;
   const rnd = () => { s = (s + 0x6d2b79f5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
   for (const [id, a] of Object.entries(out.areas)) {
-    const has = { openWindow: a.openings.some(openable), plant: (a.plantAt || []).length > 0 }, widest = Math.max(0, ...a.openings.filter(openable).map((op) => op.width || 1000));
+    const has = { openWindow: a.openings.some(openable), plant: (a.plantAt || []).length > 0, curtain: /curtain/.test(JSON.stringify(a)) }, widest = Math.max(0, ...a.openings.filter(openable).map((op) => op.width || 1000));
     const pool = Object.entries(T.kinds).filter(([, k]) => k.in.includes(id) && k.needs.every((n) => has[n]) && (typeof k.flies !== 'number' || widest >= k.flies)).map(([kind, k]) => ({ kind, k }));
     const want = T.count[0] + Math.floor(rnd() * (T.count[1] - T.count[0] + 1)), picked = [];
     while (picked.length < want && pool.length) {

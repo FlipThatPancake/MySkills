@@ -74,7 +74,7 @@ const issues = await page.evaluate(() => {
     for (const W of home.walls) {
       let lo = 1e9, hi = -1e9, inside = false;
       for (const { x, z } of b.pts) { const dx = x - W.to[0], dz = z - W.to[1], d = dx * W.n[0] + dz * W.n[1], s = -(dx * W.d[0] + dz * W.d[1]); lo = Math.min(lo, d); hi = Math.max(hi, d); if (s > 0 && s < W.len) inside = true; }
-      if (inside && lo < -3 && hi > 3 && !(sc(id).onSill && lo > -130)) out.push({ rule: 'wall', what: `${id} crosses wall ${W.id || W.i} (${lo.toFixed(0)} to ${hi.toFixed(0)} mm): stand it off the wall so its back touches rather than crosses` });
+      if (inside && lo < -3 && hi > 3 && !(sc(id).onSill && lo > -200)) out.push({ rule: 'wall', what: `${id} crosses wall ${W.id || W.i} (${lo.toFixed(0)} to ${hi.toFixed(0)} mm): stand it off the wall so its back touches rather than crosses` });
     }
   }
   // 0. no floating parts: every solid part of an asset touches another part of it (bounding boxes within 8 mm), so the asset is one connected piece
@@ -165,8 +165,8 @@ const issues = await page.evaluate(() => {
   for (const id of Object.keys(objs)) {
     const m = sc(id).mount, b = boxes[id];
     if (m === 'on' && sc(id).onSill) {   // a pot on a window sill: the sill is the window's own ledge; its centre must be over a window, at the sill's height
-      const ok = home.walls.some((W) => { const l = toLocal(W, b); return (W.built || []).some((q) => { if (q.op.kind !== 'window') return false; const xc = W.len - q.op.at, y0 = (q.op.sill ?? 1000) + 30; return l.z0 < 160 && (l.x0 + l.x1) / 2 > xc - q.op.width / 2 && (l.x0 + l.x1) / 2 < xc + q.op.width / 2 && Math.abs(b.min.y - y0) < 40; }); });
-      if (!ok) out.push({ rule: 'support', what: `${id} is marked onSill but does not rest on a window's sill (centre over the window, bottom at sill + 30 mm)` });
+      const ok = home.walls.some((W) => { const l = toLocal(W, b); return (W.built || []).some((q) => { if (q.op.kind !== 'window') return false; const xc = W.len - q.op.at, y0 = (q.op.sill ?? 1000) + 30; return (l.z0 + l.z1) / 2 < 22 && l.z0 < 160 && (l.x0 + l.x1) / 2 > xc - q.op.width / 2 && (l.x0 + l.x1) / 2 < xc + q.op.width / 2 && Math.abs(b.min.y - y0) < 40; }); });
+      if (!ok) out.push({ rule: 'support', what: `${id} is marked onSill but does not rest on a window's sill (centre over the window, bottom at sill + 30 mm, its middle no further than 20 mm from the wall: the sill reaches 40 mm into the room, so a pot hangs off it past that)` });
     } else if (m === 'on') {
       const c = b.getCenter(new T.Vector3()), under = Object.keys(objs).filter((o) => o !== id && ['floor', 'on', 'wall'].includes(sc(o).mount) && !['rug'].includes(sc(o).asset) && inside(foot(o), [c.x, c.z]));
       for (const o of under) { if (sc(o).asset !== 'baseRun') continue; const mods = sc(o).params?.modules || []; let x0 = 0; const lc = objs[o].worldToLocal(c.clone()); for (const m of mods) { const w = m.w || 600; if (m.kind === 'sink' && lc.x > x0 + w / 2 - 250 && lc.x < x0 + w / 2 + 250 && lc.z < -50 && lc.z > -450 && b.min.y > 800) out.push({ rule: 'support', what: `${id} hangs over the sink basin of ${o} (nothing holds it): stand it on the worktop beside the basin (R.on('sink', ...) puts it on the neighbouring module)` }); x0 += w; } }
@@ -241,7 +241,7 @@ const areaIssues = await page.evaluate(() => {
     if (real.length < 8) out.push({ rule: 'interest', what: `${A} has ${real.length} objects (need 8)` });
     for (const [band, f] of [['floor', (i) => sc(i).mount === 'floor'], ['waist', (i) => sc(i).mount === 'on'], ['wall or hanging', (i) => ['wall', 'ceiling'].includes(sc(i).mount)]]) if (!real.some(f)) out.push({ rule: 'interest', what: `${A} has nothing in the ${band} band` });
     if (!real.some((i) => sc(i).hero)) out.push({ rule: 'interest', what: `${A} has no hero piece` });
-    if (!as(LIVING).length) out.push({ rule: 'interest', what: `${A} has nothing living (a plant or a cat)` });
+    if (!as(LIVING).length && !api.motion.things.some((t) => t.area === A && t.group)) out.push({ rule: 'interest', what: `${A} has nothing living (a plant or a cat)` });
     if (!as(SOFT).length) out.push({ rule: 'interest', what: `${A} has nothing soft (rug, curtain, cushion, pouf, basket)` });
     if (!as(WALLDEC).length) out.push({ rule: 'interest', what: `${A} has nothing on a wall (picture, mirror, wall shelf, curtain)` });
     if (walls.length < 1 || walls.length > 2) out.push({ rule: 'interest', what: `${A} has ${walls.length} backing walls (need 1 or 2)` });

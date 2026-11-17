@@ -15,14 +15,19 @@
 //   opening = { id, W, op, centre: [x, z], n: [nx, nz] (into the room), u: [ux, uz] (along the wall), width, height, sill, open() 0 shut .. 1 wide, gap() the clear width at the middle now (mm), usable(r) gap >= 2 r + 30 }
 // Rule for every plug-in: anything that comes in from outside uses `ctx.via` and goes only while via.usable(r) holds (the window is open); nothing passes through furniture at any frame.
 // Fliers (butterfly, bee, bird) share their flight, perches and window rules in flight.js: a new flier builds its body and calls createFlight(ctx, group, { R, flap, ...numbers }); see the header there.
-// To add a kind: tables.json motion.kinds (say, needs, in, weight, flies), the module here, PLUGINS below; then `node check-motion.mjs` is part of check-home.
+// To add a kind:
+//   1. tables.json motion.kinds: say, needs ('openWindow', 'plant'; none for a cat), in (area kinds), weight, flies (true if it comes through the window; a number is the narrowest window in mm it can use).
+//   2. src/motion/<kind>.js: export default { sampled: true, build(ctx) } as above; chance only from ctx.rnd; bodies() lists the spheres it fills (a paw from a cabinet lists the sphere it sweeps).
+//   3. Register it in PLUGINS below. check-motion.mjs (part of check-home) then replays it for 240 s and names any crossing of furniture, walls or a shut window.
 import * as THREE from '../vendor/three/three.module.js';
 import { openable, gapOf } from './rules.js';
 import butterfly from './butterfly.js';
 import bee from './bee.js';
 import bird from './bird.js';
 import wind from './wind.js';
-export const PLUGINS = { wind, butterfly, bee, bird };
+import cat from './cat.js';
+import paw from './paw.js';
+export const PLUGINS = { wind, butterfly, bee, bird, cat, paw };
 
 const hash = (s) => { let h = 2166136261 >>> 0; for (const c of String(s)) h = Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0; return h; };
 const seeded = (seed) => { let s = seed >>> 0; return (a = 0, b = 1) => { s = (s + 0x6d2b79f5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return a + (b - a) * (((t ^ (t >>> 14)) >>> 0) / 4294967296); }; };
