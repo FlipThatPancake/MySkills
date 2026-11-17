@@ -9,6 +9,23 @@ import { dealOpenPlan } from './openplan.mjs';
 import { dealMotion } from './motion-roll.mjs';
 const T = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'tables.json'), 'utf8'));
 export const KINDS = Object.keys(T).filter((k) => T[k]?.hero);
+
+// the deal must not break the checks or contradict itself (rollstats.mjs counts every case): nothing twice in one area, one lamp, the cutting board once, a plant corner counts as the floor plant
+function consistent(a, id) {
+  const t = T.stillLife[id], used = new Set(), asset = (x) => (x.match(/\(([A-Za-z]+)\)\s*$/) || [])[1];
+  const lampGroup = (a.groups || []).find((g) => /\blamp\b/.test(g));
+  if (lampGroup) a.light = /floor lamp/.test(lampGroup) ? 'floor lamp' : 'table lamp';   // a group that stands its own lamp is the area's light
+  for (const [i, st] of (a.still || []).entries()) {
+    const pool = (t.tops.find((q) => q.id === st.top) || { things: [] }).things;
+    const ok = (y, res) => !(asset(y) === 'readingLamp' && a.light) && !(asset(y) === 'cuttingBoard' && a.board) && !used.has(asset(y)) && !res.some((r) => asset(r) === asset(y)), res = [];
+    for (const x of st.things) { if (ok(x, res)) res.push(x); else { const y = pool.find((q) => ok(q, res) && !st.things.some((r) => asset(r) === asset(q))); if (y) res.push(y); } }
+    st.things = res;
+    for (const x of st.things) used.add(asset(x));
+  }
+  { const L = T.groups?.list[id] || [], lampAt = (a.groups || []).map((g, k) => (/\blamp\b/.test(g) ? k : -1)).filter((k) => k >= 0);   // two groups that both stand a lamp: the later one is another group of the list
+    for (const k of lampAt.slice(1)) { const at = a.groups[k].lastIndexOf(', on the '), place = at < 0 ? '' : a.groups[k].slice(at + 2), pick = L.find((q) => !/\blamp\b/.test(q) && !a.groups.some((g) => g.startsWith(q))); if (pick) a.groups[k] = place ? `${pick}, ${place}` : pick; } }
+  if ((a.groups || []).some((g) => /floor plant/.test(g)) && !a.plantAt.includes('floor')) { a.plantAt = [...a.plantAt, 'floor']; a.plants = a.plantAt.length; }
+}
 export function roll(seed, kinds = ['kitchen', 'dining', 'living']) {
   let s = seed >>> 0;
   const rnd = () => { s = (s + 0x6d2b79f5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
@@ -52,10 +69,11 @@ export function roll(seed, kinds = ['kitchen', 'dining', 'living']) {
     a.passages = a.openings.filter((o) => o.kind === 'arch').map(() => { return pick3(T.passages).style; });   // each arch's style (a counter style, pass or widepass, is a hatch with a ledge: put the counter or worktop under it)
     if (id === 'kitchen') a.board = pick3(T.boardPlaces).id;
     if (id === 'kitchen') { a.above = pick6(t.above); a.produce = pick6(t.produce); a.accents = a.accents.map((x) => x === 'basket of vegetables' ? a.produce : x); if (a.foreground === 'basket of vegetables') a.foreground = a.produce; if (!a.accents.concat(a.foreground).some((x) => /vegetables|crate/.test(x))) a.produce = null; }   // the run always gets something above it, and a produce basket or crate is named by form   // where the cutting board is
-    { const SL = T.stillLife[id]; if (SL) { a.still = SL.tops.map((tp) => ({ top: tp.id, say: tp.say, things: some6(tp.things, 2 + Math.floor(rnd6() * 2)) })); a.wallArr = pick6(SL.wall); } }   // 2 or 3 things for each waist-high top and one wall arrangement (the bare-top and bare-wall checks want them)
+    { const SL = T.stillLife[id]; if (SL) { a.still = SL.tops.map((tp) => ({ top: tp.id, say: tp.say, things: some6(tp.things, 2 + Math.floor(rnd6() * 2)).slice(0, 2) })); a.wallArr = pick6(SL.wall); } }   // 2 things for each waist-high top (the draw of 2 or 3 stays, so no later pick moves; one centrepiece and one small item is the tabletop rule) and one wall arrangement
     a.side = sideNow; sideNow = sideNow === 'left' ? 'right' : 'left';   // the side of the home view the hero group sits on: it alternates from area to area, so a home is not all one-sided
     { const G = T.groups, L = G?.list[id]; if (L) { const pl = some7(G.places, 2), gr = some7(L, 2); a.groups = [`${a.hero} (the hero group, on the ${a.side} of the home view)`, ...gr.map((g, i) => `${g}, ${pl[i].say}`)]; } }   // at least three shootable groups, each a compact subject for one tour shot, on different walls so the shots can differ by 25 degrees (tables.json groups)
     a.light = light(id);   // the area's one light (a pendant over the table, island or chair in most kitchens, dining areas and reading corners)
+    consistent(a, id);
     a.accentOn = pick3(t.accentOn);   // the textile in this area that carries the home's accent
     a.foreground = pick3(t.foreground);   // the near-camera piece comes from the area's own use
     a.signs = some(T.signs.filter((x) => x.in.includes(id) && !used.has(x.id)), 2 + Math.floor(rnd() * 2)); a.signs.forEach((x) => used.add(x.id)); a.signs = a.signs.map((x) => x.id);
@@ -66,6 +84,7 @@ export function roll(seed, kinds = ['kitchen', 'dining', 'living']) {
   }
   dealMotion(out, seed);   // living things (motion-roll.mjs): 2 or 3 kinds per area, from tables.json motion; its own random stream, so no older pick moves
   dealOpenPlan(out, seed, kinds, describe);   // open plan (openplan.mjs): about 2 homes in 5 with two joinable areas; its own random stream, so no older pick moves
+  for (const b of out.openPlan?.behind || []) { const a = out.areas[b]; if (a && !(a.passages || []).length) { a.openings = [...a.openings, { kind: 'arch', on: 'first' }]; a.passages = [T.passages[0].style]; a.say += `; arch ${a.passages[0]} on the ${a.side} wall (the passage this area is behind)`; } }   // an area behind a passage has the arch of its own (it is the way through)
   return out;
 }
 if (process.argv[1] && process.argv[1].endsWith('roll.mjs')) {

@@ -18,6 +18,8 @@ export const fixtures = [
     build({ Home }) { const { H, a } = room(Home); a.put('sofa', 'sofa', [3000, 600], 0, { group: 'seating', hero: true, params: { seats: 3, arms: 'rolled', back: 'tight' } }); a.seatSoft('sofa', { cushions: 2, throw: 'band', tone: 'accent', group: 'seating' }); return H; } },
   { name: 'good-sill-pot-on-outward-window', from: 'round 3 tester: a pot on the sill forced sash: fixed (the sash rule forbids anything in an inward sweep, the window rule wants fixed windows to have something in the sweep); an outward-opening window keeps the window slightly open and the pot on its sill', kind: 'good',
     build({ Home }) { const { H, back } = room(Home, { openings: [{ kind: 'window', x: 3000, width: 1400, height: 1200, sill: 900, sash: 'out' }] }); back.onSill('herbs', 'plant', 3000, { group: 'g' }); return H; } },
+  { name: 'good-sill-pot-switches-inward-window-to-outward', from: 'round 3 lead: a spec author should not need to know sash: out; onSill on an inward window switches it itself (the sash rule would otherwise flag the pot in the sweep)', kind: 'good',
+    build({ Home }) { const { H, back } = room(Home, { openings: [{ kind: 'window', x: 3000, width: 1400, height: 1200, sill: 900 }] }); back.onSill('herbs', 'plant', 3000, { group: 'g' }); return H; } },
   { name: 'good-jug-off-centre-round-table', from: 'round-2 example (Nov 17): a jug 180 mm off the middle of a round table tipped in the settle test because a round hull top gave one contact point (now a cylinder)', kind: 'good',
     build({ Home }) { const { H, a } = room(Home); const T = a.table('bt', { at: [3200, 2600], r: 520, chairs: 2, group: 'breakfast' }); T.on('jug', { y: 757, dx: -180 }); return H; } },
   { name: 'good-leaning-board', from: 'a cutting board leaning on the wall through R.on stands against it (round-2 example: it used to land mid-worktop and tip)', kind: 'good',
@@ -40,4 +42,6 @@ export const fixtures = [
     build({ Home }) { const { H, back } = room(Home, { openings: [{ kind: 'window', x: 3000, width: 1400, height: 1200, sill: 900, sash: 'fixed' }] }); back.onSill('herbs', 'plant', 3000, { group: 'g' }); return H; } },
   { name: 'good-rotated-rugs-apart', from: 'round-2 E7: two rugs turned 45 degrees whose axis-aligned boxes overlap but whose footprints do not', kind: 'good',
     build({ Home }) { const { H, a } = room(Home); a.put('rug1', 'rug', [2000, 1800], 45, { group: 'g', params: { w: 1600, d: 600 } }); a.put('rug2', 'rug', [2566, 2366], 45, { group: 'g', params: { w: 1600, d: 600 } }); return H; } },
+  { name: 'good-roll-left-out-with-reasons', from: 'round 3 E8: every roll item the scene leaves out says why (a.skip), so the check stays silent', kind: 'good',
+    build({ Home }) { const { H, a } = room(Home); H.roll({ seed: 1, accent: { name: 'honey', hex: '#d9a85c' }, areas: { t: { still: [{ top: 'coffee table', things: ['vase (vase)'] }], groups: ['a', 'b', 'c'], plantAt: ['floor'], passages: [] } }, openPlan: { behind: [] } }); a.skip('vase', 'a vase cannot stand on this top'); a.skip('floor', 'no corner is free'); a.skip('groups', 'a small test room'); return H; } },
 ];

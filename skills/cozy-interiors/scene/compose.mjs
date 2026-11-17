@@ -36,6 +36,14 @@ export class Home {
     if (!O) { const prev = this.list[this.list.length - 1], b = a.worldBounds(), x0 = prev ? prev.worldBounds().x1 + GAP : 0; a.O = [r0(x0 - b.x0), r0(-b.z0)]; }
     this.list.push(a); return a;
   }
+  // the whole roll: H.roll(rollJson) keeps what roll.mjs dealt (still-life assets, groups, plant places, passages, the accent), so the check 'rolled' can compare every dealt thing with the scene; the home's accent is the roll's unless the constructor got one. a.skip(what, 'why') leaves one out: an asset name, 'groups', 'passage', or a plant place (sill, shelf, worktop, hanging, floor)
+  roll(json) {
+    const R = typeof json === 'string' ? JSON.parse(json) : json, home = this.S.home, asset = (x) => (x.match(/\(([A-Za-z]+)\)\s*$/) || [])[1], areas = {};
+    for (const [id, a] of Object.entries(R.areas || {})) areas[id] = { still: (a.still || []).flatMap((st) => st.things.map(asset).filter(Boolean)), groups: (a.groups || []).length, plantAt: a.plantAt || [], passages: (a.passages || []).length };
+    home.roll = { seed: R.seed, accent: R.accent?.hex, behind: R.openPlan?.behind || [], areas };
+    if (!home.accent && R.accent?.hex) home.accent = R.accent.hex;
+    return this;
+  }
   join(a, b, o) { return joinAreas(this, a, b, o); }   // open plan: b joins a on one floor (openplan.mjs): H.join(a, b, { layout: 'row' | 'corner', share: 0 to 1000 mm })
   floorZones(styles) { this.zoneStyles = styles; }   // open plan floor change: H.floorZones({ kitchen: 'tiles', dining: 'boards', living: 'boards' }) (openplan.mjs)
   sign(areaId, kind) { (this.signs ||= {})[areaId] = [...(this.signs[areaId] || []), kind]; }
@@ -85,6 +93,7 @@ class Area {
       put(oid, asset, ox, off, { turn = 0, ...o } = {}) { return p.put(oid, asset, F.at(ox, off), -phi + turn, o); },   // turn is added to the facing out from the wall (it never reaches the object as its own `turn`)   // low level: the object's origin at ox along, off out
       onSill(oid, asset, xc, o = {}) {   // a pot or small thing on a window's sill: xc is its middle along the wall (it must lie within a window of this wall); stands at the sill's height + 30 mm
         const W = openings.find((q) => q.kind === 'window' && Math.abs(q.x - xc) <= q.width / 2 - 40); if (!W) throw new Error(`onSill('${oid}'): xc ${xc} is not over a window of this wall`);
+        if (W.sash === undefined && !['picture', 'wall', 'bay'].includes(W.style)) { W.sash = 'out'; const wo = p.h.S.home.walls.find((w) => w.id === `${p.id}-${id}`)?.openings.find((q) => Math.abs(q.at - (len - W.x)) < 1); if (wo) wo.sash = 'out'; console.log(`onSill('${oid}'): the window on ${p.id}-${id} at ${W.x} opened inward and would sweep the pot: it now opens outward (sash: 'out'); say sash: 'fixed' to keep it shut`); }   // a pot on an inward window's sill: the window opens outward instead of being fixed
         const prm = vary(p.h, asset, o.params, p.id), pd = Math.min(sizeOf(asset, prm).d, o.potD ?? 100);   // the pot, not the leaves: a plant's footprint counts its spread, the sill carries only the pot (potD, 100 mm unless said)
         return F.place(oid, asset, xc, { ...o, params: prm, y: (W.sill ?? 1000) + 30, mount: 'on', onSill: true, off: o.off ?? 110 - pd / 2 + 15 });   // the pot's front stands 15 mm past the sill's front lip so its leaves clear the sash (the sill reaches 110 mm into the room): centred on the free depth, not on the lip
       },
