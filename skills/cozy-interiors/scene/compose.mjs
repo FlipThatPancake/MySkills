@@ -84,7 +84,7 @@ class Area {
       put(oid, asset, ox, off, { turn = 0, ...o } = {}) { return p.put(oid, asset, F.at(ox, off), -phi + turn, o); },   // turn is added to the facing out from the wall (it never reaches the object as its own `turn`)   // low level: the object's origin at ox along, off out
       onSill(oid, asset, xc, o = {}) {   // a pot or small thing on a window's sill: xc is its middle along the wall (it must lie within a window of this wall); stands at the sill's height + 30 mm
         const W = openings.find((q) => q.kind === 'window' && Math.abs(q.x - xc) <= q.width / 2 - 40); if (!W) throw new Error(`onSill('${oid}'): xc ${xc} is not over a window of this wall`);
-        const prm = vary(p.h, asset, o.params, p.id), { d: pd } = sizeOf(asset, prm); if (o.off === undefined && pd > 130) throw new Error(`onSill('${oid}'): the ${asset} is ${Math.round(pd)} mm deep and the sill about 130 mm: use a smaller pot (params) or put it on a shelf`);
+        const prm = vary(p.h, asset, o.params, p.id), pd = Math.min(sizeOf(asset, prm).d, o.potD ?? 100);   // the pot, not the leaves: a plant's footprint counts its spread, the sill carries only the pot (potD, 100 mm unless said)
         return F.place(oid, asset, xc, { ...o, params: prm, y: (W.sill ?? 1000) + 30, mount: 'on', onSill: true, off: o.off ?? 40 - pd / 2 - 4 });   // the pot's front stands 4 mm inside the sill's front lip (the sill reaches 40 mm into the room): centred on the free depth, not on the lip
       },
       place(oid, asset, xc, o = {}) {   // by the asset's own origin and size: xc is its middle along the wall
