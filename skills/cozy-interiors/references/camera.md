@@ -8,7 +8,7 @@ Every view is a composed photograph of one area, taken from inside it.
 
 ## Tour shots (`a.shot`)
 The idle page sways, then cuts between shots every 4 s; any input eases home.
-- Subject group whole, in the middle third; a foreground piece cut at one edge; background for depth.
+- A compact subject group, whole, in the middle third; a small foreground piece (under a tenth of the frame) cut at one edge; the area's things fill at least a third of the frame; background for depth.
 - Leading lines: worktop edges, floorboards, runs.
 - Vary height and lens: low across the floor, eye level along a worktop, high corner; fov 26–40.
 - Window light and plants make good backgrounds.
