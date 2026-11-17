@@ -12,9 +12,9 @@ const left = a.left(4400, [{ kind: 'window', x: 2300, width: 1000, height: 1100,
 // where A's front ends (A's depth 600 + B's width 600). A { kind: 'blind' } module is the corner cabinet over B's dead end.
 const R = a.run(back, 'run', 0, [{ w: 900, kind: 'blind', dead: 'l' }, { w: 600, kind: 'drawers', n: 3, ajar: 0.3 }, { w: 900, kind: 'hob' }, { w: 600, kind: 'doors' }], { group: 'run', hero: true, joins: { side: 'start', length: 2200 } });
 R.on('hob', 'hob', { group: 'cook' }); R.on('hob', 'hood', { group: 'cook' }); R.on('hob', 'pan', { group: 'cook' });
-R.on('drawers', 'cuttingBoard', { group: 'cook' }); R.on('doors', 'fruitBowl', { group: 'cook' }); R.on('doors', 'plant', { group: 'cook', dx: 150 });
+R.on('drawers', 'cuttingBoard', { group: 'cook' }); R.on('doors', 'fruitBowl', { group: 'cook', dx: -170 }); R.on('doors', 'plant', { group: 'cook', dx: 190 });
 const B = a.run(left, 'lrun', 1200, [{ w: 600, kind: 'drawers', n: 3 }, { w: 900, kind: 'sink' }, { w: 400, kind: 'door', hinge: 'r' }], { group: 'run', ownsTop: false });
-B.on('sink', 'kettle', { group: 'sink' }); B.on('door', 'herbs', { group: 'sink' });
+B.on('door', 'kettle', { group: 'sink' });
 back.place('wc1', 'wallRun', 2900, { group: 'cook', params: { modules: [{ w: 500, kind: 'door' }] } });
 left.place('shelf', 'openShelf', 800, { group: 'sink' });
 // A table set: a round table with two chairs and a rug, standing in open floor within reach of the cooking.

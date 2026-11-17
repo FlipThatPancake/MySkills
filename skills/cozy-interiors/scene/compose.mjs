@@ -158,9 +158,9 @@ class Area {
     const T = (this.h.kit ||= createKit()).THREE, g0 = REGISTRY[tgt.asset](this.h.kit, { ...(tgt.params || {}) }); g0.updateMatrixWorld(true);
     const lb = new T.Box3().setFromObject(g0), tn = (tgt.turn || 0) + this.psi, th = rad(tn), W = lb.max.x - lb.min.x, D = lb.max.z - lb.min.z, cx = (lb.min.x + lb.max.x) / 2, cz = (lb.min.z + lb.max.z) / 2;
     const { tris, all } = this.targetTris('seatSoft', targetId), c = all.getCenter(new T.Vector3()), org = [c.x - (cx * Math.cos(th) + cz * Math.sin(th)), c.z - (-cx * Math.sin(th) + cz * Math.cos(th))];   // the object's origin in the area's frame, from where its parts really stand
-    const toArea = (lx, lz) => [org[0] + lx * Math.cos(th) + lz * Math.sin(th), org[1] - lx * Math.sin(th) + lz * Math.cos(th)], f = heightField(tris), zo = lb.min.z + 420;
+    const toArea = (lx, lz) => [org[0] + lx * Math.cos(th) + lz * Math.sin(th), org[1] - lx * Math.sin(th) + lz * Math.cos(th)], f = heightField(tris), zo = lb.min.z + 480;
     const seats = tgt.params?.seats || (tgt.asset === 'armchair' ? 1 : 2), n = cushions ?? (tgt.asset === 'armchair' ? 1 : Math.max(1, seats - 1)), grp = group || tgt.group;
-    for (let i = 0; i < n; i++) { const lx = n === 1 ? cx + (tgt.asset === 'armchair' ? 0 : W / 2 - 330) : cx - (W / 2 - 330) + i * (W - 660) / (n - 1), [px, pz] = toArea(lx, zo), [sx, sz] = toArea(lx, zo + 120), y = Math.round(f(sx, sz));   // the seat height is read in front of the back
+    for (let i = 0; i < n; i++) { const lx = n === 1 ? cx + (tgt.asset === 'armchair' ? 0 : W / 2 - 330) : cx - (W / 2 - 330) + i * (W - 660) / (n - 1), [px, pz] = toArea(lx, zo), [sx, sz] = toArea(lx, zo + 60), y = Math.round(f(sx, sz)) + 6;   // the seat height is read in front of the back
       this.put(`${targetId}-cushion${i + 1}`, 'cushion', [px, pz], tn + (i % 2 ? -6 : 8), { group: grp, y, mount: 'on', params: { w: 400, h: 320, thick: 130, lean: 17 + 4 * (i % 2), tone } }); }
     if (thr === 'drape') { try { const [ax, az] = toArea(cx - (W / 2 - 420), zo + 330); this.drapeOver(`${targetId}-throw`, targetId, { w: 1000, d: 700, wave: 10, at: [ax, az], spin: tn + 20, tone: throwTone, group: grp }); } catch (e) { if (process.env.SOFT_DEBUG) console.error(e.message); thr = 'band'; } }
     if (thr === 'band') { const [bx, bz] = toArea(cx + (W / 2 - 360), zo + 330); this.bandOn(`${targetId}-throw`, targetId, { w: 700, d: 380, at: [bx, bz], spin: tn, tone: throwTone, group: grp }); }
@@ -209,6 +209,20 @@ class Area {
   topOf(id) { const o = this.h.S.home.objects.find((q) => q.id === `${this.id}-${id}`); if (!o) throw new Error(`topOf('${id}'): place it first`); return o.at[1] + (o.params?.h ?? ASSETS[o.asset].size[2]); }   // the height of the top of a placed thing: stand something on it with y: a.topOf('side-table')
   view({ target, az = 20, el = 15, dist, fit = 'objects' }) { this.cam = { target: this.P3(target), az: az - this.psi, el, fit, ...(dist ? { dist } : {}) }; }
   shot(name, from, look, fov = 30, subject) { this.shots.push({ name, from: this.P3(from), look: this.P3(look), fov, ...(subject ? { subject: `${this.id}:${subject}` } : {}) }); }
-  out() { const b = this.worldBounds(); return { id: this.id, name: this.name, O: this.O, psi: this.psi, bounds: { ...b, top: this.top }, camera: { home: this.cam, shots: this.shots } }; }
+  // anything standing on a rug is lifted by its thickness (7 mm), so legs rest on the pile and not in it: done for every floor piece whose middle lies on a rug of this area
+  liftOnRugs() {
+    const objs = this.h.S.home.objects.filter((o) => o.area === this.id), rugs = objs.filter((o) => o.asset === 'rug');
+    for (const o of objs) {
+      if (o.asset === 'rug' || (o.mount || ASSETS[o.asset].mount) !== 'floor' || o.at[1] >= 7 || ['curtain', 'scuff', 'leaf', 'heightChart', 'baseRun', 'wallRun', 'fridge'].includes(o.asset)) continue;
+      if (rugs.some((r) => { const { w, d } = sizeOf('rug', r.params), t = rad(r.turn || 0), dx = o.at[0] - r.at[0], dz = o.at[2] - r.at[2], lx = dx * Math.cos(t) - dz * Math.sin(t), lz = dx * Math.sin(t) + dz * Math.cos(t); return r.params?.form === 'round' ? Math.hypot(lx, lz) < Math.min(w, d) / 2 : Math.abs(lx) < w / 2 && Math.abs(lz) < d / 2; })) { o.at[1] = 7; if (o.lift === undefined) o.lift = 7; const { w: ow, d: od } = sizeOf(o.asset, o.params), to = rad(o.turn || 0); for (const q of objs) { if (q === o || q.mount !== 'on' || q.at[1] < 20) continue; const dx = q.at[0] - o.at[0], dz = q.at[2] - o.at[2], lx = dx * Math.cos(to) - dz * Math.sin(to), lz = dx * Math.sin(to) + dz * Math.cos(to); if (Math.abs(lx) < ow / 2 && Math.abs(lz) < od / 2) q.at[1] += 7; } }   // what stands on it rises with it
+    }
+  }
+  // a small thing resting on the highest surface under it: a.restOn('cat', 'cat', 'seat', { dx, dz | at, turn, params, group }): a cat on a seat, a cushion on a chair, a book on a pile
+  restOn(id, asset, targetId, { at, dx = 0, dz = 0, turn = 0, params, group } = {}) {
+    const { tris, all, T } = this.targetTris('restOn', targetId), hf = heightField(tris), c = all.getCenter(new T.Vector3()), p = at || [c.x + dx, c.z + dz], pr = vary(this.h, asset, params, this.id), { w, d } = sizeOf(asset, pr);
+    let y = 0; for (const [a, b] of [[0, 0], [1, 1], [1, -1], [-1, 1], [-1, -1]]) y = Math.max(y, hf(p[0] + a * w / 3, p[1] + b * d / 3));
+    this.put(id, asset, p, turn, { y: Math.round(y), mount: 'on', group: group || this.h.S.home.objects.find((q) => q.id === `${this.id}-${targetId}`)?.group.split(':')[1], params: pr });
+  }
+  out() { this.liftOnRugs(); const b = this.worldBounds(); return { id: this.id, name: this.name, O: this.O, psi: this.psi, bounds: { ...b, top: this.top }, camera: { home: this.cam, shots: this.shots } }; }
 }
 export const facing = (from, to) => deg(Math.atan2(to[0] - from[0], to[1] - from[1]));   // the turn that makes an object at `from` face `to`, in local x/z

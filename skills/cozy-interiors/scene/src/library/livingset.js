@@ -184,7 +184,7 @@ export function recordPlayer(kit, { w = 760, d = 400, h = 520, seed = 4, records
   return kit.merge(g);
 }
 export function magazineRack(kit, { w = 400, h = 460, seed = 6, form = 'frame' } = {}) {
-  const g = kit.group(), R = rnd(seed), pts = [], d = 250;
+  const g = kit.group(), R = rnd(seed), pts = [], d = form === 'frame' ? 330 : 250;   // the frame is 330 deep (its magazines are 190 wide and lean a few degrees)
   if (form === 'sling') {   // two wooden side frames with a canvas sling hung between them, magazines leaning in it
     const T = kit.THREE, sd = 300, sy = h * 0.82;
     for (const sx of [-1, 1]) { const x = sx * (w / 2 - 12); for (const sz of [-1, 1]) g.add(rod(kit, [x, 0, sz * (sd / 2 - 20)], [x, sy, sz * (sd / 2 - 40)], 12, 10, 'mid')); g.add(rod(kit, [x, sy, -sd / 2 + 40], [x, sy, sd / 2 - 40], 10, 10, 'mid')); g.add(rod(kit, [x, 30, -sd / 2 + 20], [x, 30, sd / 2 - 20], 9, 9, 'mid')); }
@@ -192,7 +192,7 @@ export function magazineRack(kit, { w = 400, h = 460, seed = 6, form = 'frame' }
     const shp = new T.Shape([...prof, ...prof.slice().reverse().map(([a, b]) => [a, b + th])].map(([a, b]) => new T.Vector2(a, b)));
     const geo = new T.ExtrudeGeometry(shp, { depth: w - 20, bevelEnabled: false, curveSegments: 4 }); geo.rotateY(Math.PI / 2); geo.translate(-(w - 20) / 2, 0, 0);
     g.add(kit.solid(geo, 0, 0, 0, { smooth: true, tone: 'lo' }));
-    let x = -w / 2 + 70; for (let i = 0; i < 4 && x < w / 2 - 80; i++) { const t = 16 + R() * 14, m = kit.group(); m.add(kit.box(-t / 2, 0, 90, t, 250 + R() * 40, 190, lo)); m.position.set(x, sy - 20 - h * 0.4 + 12, 0); m.rotation.x = -(8 + R() * 10) * DEG; g.add(m); x += t + 10 + R() * 12; }
+    let x = -w / 2 + 70; for (let i = 0; i < 4 && x < w / 2 - 80; i++) { const t = 16 + R() * 14, m = kit.group(); m.add(kit.box(-t / 2, 0, 90, t, 250 + R() * 40, 190, lo)); const tt2 = 105 / (sd / 2 - 30), hs = sy - 20 - (1 - tt2 * tt2) * h * 0.4 + th + 4; m.position.set(x, hs, 0); m.rotation.x = -(2 + R() * 4) * DEG; g.add(m); x += t + 10 + R() * 12; }   // each magazine rests on the two high edges of the sling's curve (its bottom edge is 190 mm wide), leaning a few degrees
     return kit.merge(g);
   }
   if (form === 'crate') {   // a small slatted crate with magazines standing in it
@@ -206,7 +206,7 @@ export function magazineRack(kit, { w = 400, h = 460, seed = 6, form = 'frame' }
   for (const sx of [-1, 1]) { g.add(rod(kit, [sx * w / 2, 0, d / 2 - 10], [sx * w / 2, h * 0.55, d / 2 - 40], 12, 12, 'mid')); g.add(rod(kit, [sx * w / 2, 0, -d / 2 + 10], [sx * w / 2, h, -d / 2 + 40], 12, 12, 'mid')); g.add(rod(kit, [sx * w / 2, h * 0.55, d / 2 - 40], [sx * w / 2, h, -d / 2 + 40], 11, 11, 'mid')); }
   g.add(rod(kit, [-w / 2, h, -d / 2 + 40], [w / 2, h, -d / 2 + 40], 11, 11, 'mid')); g.add(rod(kit, [-w / 2, h * 0.55, d / 2 - 40], [w / 2, h * 0.55, d / 2 - 40], 11, 11, 'mid')); g.add(rod(kit, [-w / 2, 8, d / 2 - 10], [w / 2, 8, d / 2 - 10], 10, 10, 'mid')); g.add(rod(kit, [-w / 2, 8, -d / 2 + 10], [w / 2, 8, -d / 2 + 10], 10, 10, 'mid'));
   g.add(kit.box(-w / 2 + 14, 4, d / 2 - 20, w - 28, 8, d - 30, lo));   // the base
-  let x = -w / 2 + 40; for (let i = 0; i < 5 && x < w / 2 - 70; i++) { const t = 18 + R() * 18, hh = 300 + R() * 60, m = kit.box(x, 14, 40, t, hh, 210, lo); m.rotation.x = -(10 + R() * 8) * DEG; g.add(m); pts.push([x + t / 2, 70, 44], [x + t / 2, 70 + hh * 0.5, 48]); x += t + 8 + R() * 14; }
+  let x = -w / 2 + 40; for (let i = 0; i < 5 && x < w / 2 - 70; i++) { const t = 18 + R() * 18, hh = 300 + R() * 60, m = kit.box(x, 14, 90, t, hh, 190, lo); m.rotation.x = -(3 + R() * 3) * DEG; g.add(m); pts.push([x + t / 2, 70, 94], [x + t / 2, 70 + hh * 0.5, 96]); x += t + 8 + R() * 14; }
   g.add(kit.lines(pts, 'lo'));
   return kit.merge(g);
 }

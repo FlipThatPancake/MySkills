@@ -595,7 +595,7 @@
     "asset": "stool",
     "at": [
      4880,
-     0,
+     7,
      2700
     ],
     "mount": "floor",
@@ -603,7 +603,8 @@
      "form": 2
     },
     "group": "kitchen:breakfast",
-    "area": "kitchen"
+    "area": "kitchen",
+    "lift": 7
    },
    {
     "id": "dining-rug",
