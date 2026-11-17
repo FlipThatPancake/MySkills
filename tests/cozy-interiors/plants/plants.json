@@ -17,7 +17,7 @@
    {
     "id": "sheet-back",
     "from": [
-     6000,
+     20400,
      0
     ],
     "to": [
@@ -29,145 +29,32 @@
   ],
   "objects": [
    {
-    "id": "sheet-fp0",
-    "asset": "floorPlant",
-    "at": [
-     600,
-     0,
-     1500
-    ],
-    "mount": "floor",
-    "params": {
-     "form": 0,
-     "seed": 6
-    },
-    "group": "sheet:row",
-    "area": "sheet"
-   },
-   {
-    "id": "sheet-fp1",
-    "asset": "floorPlant",
-    "at": [
-     1700,
-     0,
-     1500
-    ],
-    "mount": "floor",
-    "params": {
-     "form": 1,
-     "seed": 6
-    },
-    "group": "sheet:row",
-    "area": "sheet"
-   },
-   {
-    "id": "sheet-fp2",
-    "asset": "floorPlant",
-    "at": [
-     2800,
-     0,
-     1500
-    ],
-    "mount": "floor",
-    "params": {
-     "form": 2,
-     "seed": 6
-    },
-    "group": "sheet:row",
-    "area": "sheet"
-   },
-   {
-    "id": "sheet-fp3",
-    "asset": "floorPlant",
-    "at": [
-     3900,
-     0,
-     1500
-    ],
-    "mount": "floor",
-    "params": {
-     "form": 3,
-     "seed": 6
-    },
-    "group": "sheet:row",
-    "area": "sheet"
-   },
-   {
-    "id": "sheet-fp4",
-    "asset": "floorPlant",
-    "at": [
-     5000,
-     0,
-     1500
-    ],
-    "mount": "floor",
-    "params": {
-     "form": 4,
-     "seed": 6
-    },
-    "group": "sheet:row",
-    "area": "sheet"
-   },
-   {
-    "id": "sheet-p0",
-    "asset": "plant",
-    "at": [
-     700,
-     0,
-     500
-    ],
-    "mount": "floor",
-    "params": {
-     "form": 0,
-     "seed": 6
-    },
-    "group": "sheet:row",
-    "area": "sheet"
-   },
-   {
-    "id": "sheet-p1",
-    "asset": "plant",
-    "at": [
-     1600,
-     0,
-     500
-    ],
-    "mount": "floor",
-    "params": {
-     "form": 1,
-     "seed": 6
-    },
-    "group": "sheet:row",
-    "area": "sheet"
-   },
-   {
-    "id": "sheet-p2",
-    "asset": "plant",
-    "at": [
-     2500,
-     0,
-     500
-    ],
-    "mount": "floor",
-    "params": {
-     "form": 2,
-     "seed": 6
-    },
-    "group": "sheet:row",
-    "area": "sheet"
-   },
-   {
     "id": "sheet-p3",
     "asset": "plant",
     "at": [
-     3400,
+     11700,
      0,
-     500
+     6500
     ],
     "mount": "floor",
     "params": {
      "form": 3,
      "seed": 6
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-ref-p3",
+    "asset": "plant",
+    "at": [
+     12020,
+     0,
+     6500
+    ],
+    "mount": "floor",
+    "params": {
+     "form": 0
     },
     "group": "sheet:row",
     "area": "sheet"
@@ -176,9 +63,9 @@
     "id": "sheet-p4",
     "asset": "plant",
     "at": [
-     4300,
+     15100,
      0,
-     500
+     6500
     ],
     "mount": "floor",
     "params": {
@@ -189,17 +76,47 @@
     "area": "sheet"
    },
    {
+    "id": "sheet-ref-p4",
+    "asset": "plant",
+    "at": [
+     15420,
+     0,
+     6500
+    ],
+    "mount": "floor",
+    "params": {
+     "form": 0
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
     "id": "sheet-p5",
     "asset": "plant",
     "at": [
-     5200,
+     18500,
      0,
-     500
+     6500
     ],
     "mount": "floor",
     "params": {
      "form": 5,
      "seed": 6
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-ref-p5",
+    "asset": "plant",
+    "at": [
+     18820,
+     0,
+     6500
+    ],
+    "mount": "floor",
+    "params": {
+     "form": 0
     },
     "group": "sheet:row",
     "area": "sheet"
@@ -217,9 +134,9 @@
    "psi": 0,
    "bounds": {
     "x0": 0,
-    "x1": 6000,
+    "x1": 20400,
     "z0": 0,
-    "z1": 2400,
+    "z1": 9000,
     "top": 2500
    },
    "camera": {
@@ -227,12 +144,12 @@
      "target": [
       3000,
       400,
-      1000
+      4000
      ],
      "az": 0,
      "el": 10,
      "fit": "objects",
-     "dist": 7000
+     "dist": 9000
     },
     "shots": []
    }
