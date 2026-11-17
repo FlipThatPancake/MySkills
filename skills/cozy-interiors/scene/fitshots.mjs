@@ -31,7 +31,10 @@ const res = await page.evaluate(() => {
       const SMALLFG = ['pouf', 'basket', 'floorPlant', 'plant', 'stool', 'trolley', 'bench', 'footstool', 'sideTable', 'cat', 'crate', 'stepStool', 'wateringCan', 'umbrellaStand', 'shoes', 'wasteBin', 'fileBox'];
       const others = real.filter((i) => !mem.includes(i) && sc(i).mount !== 'wall' && sc(i).asset !== 'rug');
       const test = (from, look, fov) => {
-        api.at(from, look); camera.fov = fov; camera.updateProjectionMatrix(); camera.updateMatrixWorld(true);
+        // the tour plays this exact camera, so place it directly (api.at would clamp it to the orbit limits and score a view nobody sees), then reject points the orbit controls would move
+        const cs = api.controls, off = new T.Vector3(from[0] - look[0], from[1] - look[1], from[2] - look[2]), dd = off.length(), pol = Math.acos(off.y / dd), azi = Math.atan2(off.x, off.z);
+        if (pol < cs.minPolarAngle || pol > cs.maxPolarAngle || dd < cs.minDistance || dd > cs.maxDistance || azi < cs.minAzimuthAngle || azi > cs.maxAzimuthAngle) { stat.orbit = (stat.orbit || 0) + 1; return null; }
+        camera.position.set(...from); camera.lookAt(...look); camera.fov = fov; camera.updateProjectionMatrix(); camera.updateMatrixWorld(true);
         let x0 = 9, x1 = -9, y0 = 9, y1 = -9; for (const i of mem) { const r = rect(boxes[i]); x0 = Math.min(x0, r.x0); x1 = Math.max(x1, r.x1); y0 = Math.min(y0, r.y0); y1 = Math.max(y1, r.y1); }
         const fill = Math.max((x1 - x0) / 2, (y1 - y0) / 2), cx = (x0 + x1) / 2; const ov = Math.max(-0.97 - x0, x1 - 0.97, -0.97 - y0, y1 - 0.97); if (ov > 0 && (!stat.minOv || ov < stat.minOv)) { stat.minOv = +ov.toFixed(2); stat.ext = [x0, x1, y0, y1].map((v) => +v.toFixed(2)); stat.cam = [from[0] | 0, from[1] | 0, from[2] | 0, fov]; } const why = !(x0 >= -0.97 && x1 <= 0.97 && y0 >= -0.97 && y1 <= 0.97) ? 'cut' : !(fill >= 0.28 && fill <= 0.62) ? 'fill' : !(Math.abs(cx) <= 0.33) ? 'third' : ''; if (why) { stat[why] = (stat[why] || 0) + 1; return null; }
         const cp = camera.position, dS = Math.min(...mem.map((i) => cp.distanceTo(boxes[i].getCenter(new T.Vector3()))));
