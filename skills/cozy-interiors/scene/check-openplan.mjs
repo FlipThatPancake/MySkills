@@ -56,6 +56,8 @@ export async function openPlanIssues(page, sceneFile, { quick = false } = {}) {
       const runs = Object.entries(B).filter(([i, r]) => i !== id && r.area === b.area && ['baseRun', 'fridge'].includes(r.asset)), d = runs.length ? Math.min(...runs.map(([, r]) => rectGap(b, r))) : null;
       if (d !== null && d < ISLAND_GAP[0] - 5) out.push({ rule: 'open-island', what: `${id} is ${Math.round(d)} mm from the nearest run (${ISLAND_GAP[0]} to ${ISLAND_GAP[1]} mm clear)` });
       if (d !== null && d > ISLAND_GAP[1] + 150) out.push({ rule: 'open-island', what: `${id} is ${Math.round(d)} mm from the nearest run: too far to serve it (${ISLAND_GAP[0]} to ${ISLAND_GAP[1]} mm)` });
+      // seats at an island or peninsula are counter stools (seat about 650 mm), never a dining chair: a chair beside it that serves no table
+      for (const [ci, c] of Object.entries(B)) if (['chair', 'deskChair', 'armchair'].includes(c.asset) && rectGap(b, c) < 450 && !Object.values(B).some((t) => ['table', 'roundTable', 'desk'].includes(t.asset) && rectGap(t, c) < 600)) out.push({ rule: 'open-island-seat', what: `${ci} is a ${c.asset} at ${id}: seats at an island or peninsula are counter stools (stool, seat about 650 mm)` });
     }
   }
   // ---- floor change: the zones of the two areas differ, and a furniture separator stands by the line
