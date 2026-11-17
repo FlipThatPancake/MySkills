@@ -131,9 +131,10 @@ export function hamper(kit, { r = 215, h = 640, form = 'round', lid = 'ajar', se
   return kit.merge(g);
 }
 // a tall mirror leaning on the wall: origin the middle of its footprint on the floor, the top meeting the wall at z -depth/2 (back the footprint onto the wall)
-export function leaningMirror(kit, { w = 520, h = 1650, shape = 'arch', lean = 8, foot = 'none' } = {}) {
-  const g = kit.group(), ang = lean * DEG, dep = Math.sin(ang) * h + 40, m = mirror(kit, { w, h, shape }); m.rotation.x = -ang; m.position.set(0, foot === 'block' ? 40 : 0, dep / 2 - 30); g.add(m);
+export function leaningMirror(kit, { w = 520, h = 1650, shape = 'arch', lean = 8, foot = 'none', frame = 'thin' } = {}) {
+  const g = kit.group(), ang = lean * DEG, dep = Math.sin(ang) * h + 40, m = mirror(kit, { w, h, shape, frame }); m.rotation.x = -ang; m.position.set(0, foot === 'block' ? 40 : 0, dep / 2 - 30); g.add(m);
   if (foot === 'block') g.add(kit.box(-w * 0.42, 0, dep / 2 + 70, w * 0.84, 40, 150, lo));   // a wooden foot block it stands on
+  else if (foot === 'plinth') { g.add(kit.rbox(-w * 0.6, 0, dep / 2 + 90, w * 1.2, 50, 190, 10, lo)); m.position.y = 50; }   // a low wide plinth
   else if (foot === 'rail') { g.add(kit.cyl(-w * 0.5, 14, dep / 2 + 34, 14, w, { axis: 'x', seg: 12, tone: 'lo' })); }
   else g.add(kit.lines([[-w * 0.35, 4, dep / 2 + 10], [w * 0.35, 4, dep / 2 + 10]], 'lo'));
   return g;

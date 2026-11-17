@@ -51,7 +51,7 @@ const H = new Home({ seed: 41, floor: 'plain' });
   left.put('chart', 'heightChart', 1600, 2, { group: 'arch side', mount: 'lines' });
   a.put('scuff', 'scuff', [400, 3500], 90, { group: 'arch side', mount: 'lines' });
   a.view({ target: [3000, 900, 2000], az: 10, el: 14 });
-  a.shot('table', [3500, 1100, 6900], [3479, 300, 2248], 36, 'table set');
+  a.shot('table', [3500, 1100, 6900], [3479, 700, 2248], 36, 'table set');
   a.shot('bench wall', [2300, 1900, 5100], [1816, 300, 167], 34, 'wall');
 }
 { // ---------- bedroom

@@ -21,7 +21,7 @@ export function buildHome(kit, home, registry, areas = []) {
   for (const o of home.objects || []) {
     const make = registry[o.asset];
     if (!make) throw new Error(`scene.json: unknown asset "${o.asset}" (object "${o.id}"); known assets: ${Object.keys(registry).join(', ')}`);
-    const g = make(kit, { ...o.params });
+    const g = make(kit, { ...o.params, ...(o.asset === 'woodStove' || o.asset === 'hood' ? { ceil: H - (o.at?.[1] || 0) } : {}) });   // a flue or chimney rises to the home's ceiling; the area's top fade thins it out
     g.rotation.y = (o.turn || 0) * Math.PI / 180;
     g.position.set(...(o.at || [0, 0, 0]));
     g.userData.scene = o;

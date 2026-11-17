@@ -56,10 +56,10 @@ export function poufBody(kit, r, h, tone) {
   return g;
 }
 // A cloth frozen in place by cloth.js: a double-skinned sheet through the grid points (area-local mm), edges closed, folds read from the shading.
-export function cloth(kit, { nx = 2, ny = 2, pts = [0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 1], thick = 6, tone = 'lo', folds = [0.3, 0.5, 0.72], linen = false, grey = false } = {}) {
+export function cloth(kit, { nx = 2, ny = 2, pts = [0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 1], thick = 6, tone = 'lo', folds = [0.3, 0.5, 0.72], linen = false, grey = false, relax = 7 } = {}) {
   const T = kit.THREE, g = kit.group(), n = nx * ny, pos = new Float32Array(n * 6), idx = [];
   const P = Float32Array.from(pts);   // relax the frozen grid a little, so a crumpled edge draws as a soft line
-  for (let pass = 0; pass < 7; pass++) { const B = P.slice(); for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) { const k = (j * nx + i) * 3, nb = [[i - 1, j], [i + 1, j], [i, j - 1], [i, j + 1]].filter(([a, b]) => a >= 0 && b >= 0 && a < nx && b < ny); for (let c = 0; c < 3; c++) { let m = 0; for (const [a, b] of nb) m += B[(b * nx + a) * 3 + c]; P[k + c] = B[k + c] * 0.5 + m / nb.length * 0.5; } } }
+  for (let pass = 0; pass < relax; pass++) { const B = P.slice(); for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) { const k = (j * nx + i) * 3, nb = [[i - 1, j], [i + 1, j], [i, j - 1], [i, j + 1]].filter(([a, b]) => a >= 0 && b >= 0 && a < nx && b < ny); for (let c = 0; c < 3; c++) { let m = 0; for (const [a, b] of nb) m += B[(b * nx + a) * 3 + c]; P[k + c] = B[k + c] * 0.5 + m / nb.length * 0.5; } } }
   for (let i = 0; i < n * 3; i++) pos[i] = P[i];
   const geo = new T.BufferGeometry(); geo.setAttribute('position', new T.BufferAttribute(pos, 3));
   for (let j = 0; j < ny - 1; j++) for (let i = 0; i < nx - 1; i++) { const a = j * nx + i, b = a + 1, c = a + nx, d = c + 1; idx.push(a, c, b, b, c, d); }
@@ -104,9 +104,22 @@ export function hangGrid({ bx, bz, cx, cz, nx = 56, ny = 40, y = 0, fold = 7, am
 }
 
 // A tablecloth: origin the middle of the table top at the surface (y 0 = the top). w, d: the table's top; drop: how far it hangs.
-export function tablecloth(kit, { w = 1600, d = 900, drop = 400, fold = 6, amp = 64, tone = 'lo', seed = 1 } = {}) {
+export function tablecloth(kit, { w = 1600, d = 900, r = 0, drop = 400, fold = 6, amp = 64, tone = 'lo', seed = 1 } = {}) {
+  if (r) return roundCloth(kit, { r, drop: Math.min(drop, 300), fold: fold + 2, amp: Math.min(amp, 44), tone, seed });   // r: a round table's radius, the cloth falls in a skirt all round
   const hx = w / 2, hz = d / 2, grid = hangGrid({ bx: [-hx, hx], bz: [-hz, hz], cx: [-hx - drop, hx + drop], cz: [-hz - drop, hz + drop], y: 3, fold, amp, seed, nx: Math.round((w + 2 * drop) / 40), ny: Math.round((d + 2 * drop) / 40) });
   return cloth(kit, { ...grid, thick: 5, tone });
+}
+// A round tablecloth: flat over the top (radius r), then a skirt of folds that widens as it falls. The seam of the grid is turned to the back of the table.
+export function roundCloth(kit, { r: rt = 520, drop = 260, fold = 8, amp = 40, tone = 'lo', seed = 1 } = {}) {
+  const r = rt + 30, nx = 72, top = 7, hang = 11, ny = top + hang, pts = [], ph = Math.sin(seed * 12.9898) * 3;
+  for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+    const a = -Math.PI / 2 + (i / (nx - 1)) * Math.PI * 2;
+    let rr, y;
+    if (j < top) { rr = Math.max(r * 0.06, r * j / (top - 1) * 0.999); y = 9 + 1.2 * Math.sin(a * 3 + ph) * (j / top); }
+    else { const t = (j - top + 1) / hang; rr = r + drop * 0.1 * t + amp * 0.5 * Math.sin(a * fold + ph + t * 2) * Math.min(1, t * 2.5) + amp * 0.18 * Math.sin(a * fold * 2.3 + 2 * ph) * t; y = 9 - drop * t * (1 + 0.04 * Math.sin(a * fold + ph)); }
+    pts.push(Math.cos(a) * rr, y, Math.sin(a) * rr);
+  }
+  return cloth(kit, { nx, ny, pts, thick: 5, tone, folds: false, relax: 0 });
 }
 // A table runner: a linen strip along the table's length, thick at its edge, hanging 200-300 mm over both short ends. rw: its width.
 export function tableRunner(kit, { w = 1600, d = 900, rw = 400, drop = 280, fold = 3, amp = 26, tone = 'lo', seed = 1 } = {}) {

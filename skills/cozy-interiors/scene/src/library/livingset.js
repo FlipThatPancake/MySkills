@@ -122,8 +122,8 @@ export function logBasket(kit, { r = 270, h = 400, logs = 7, seed = 3, weave = '
     logRod([-cx * L / 2, y, -cz * L / 2], [cx * L / 2, y + 30, cz * L / 2], lr); }
   return kit.merge(g);
 }
-export function woodStove(kit, { w = 520, d = 430, h = 600, flueH = 1700, seed = 2, door = 'glass', legs: lg = 'feet' } = {}) {
-  const g = kit.group(), B = bx(kit), R = rb(kit), legH = 110;
+export function woodStove(kit, { w = 520, d = 430, h = 600, flueH = 1700, ceil, seed = 2, door = 'glass', legs: lg = 'feet' } = {}) {   // ceil (the home's ceiling height, set by the home) overrides flueH
+  const g = kit.group(), B = bx(kit), R = rb(kit), legH = 110; if (ceil) flueH = ceil;
   const hw = w + 220, hd = d + 220, hz = 0;   // a thin stone hearth plate under the stove and out in front of it
   g.add(R(0, 0, hz, hw, 14, hd, 4, { tone: 'lo' }));
   { const hp = [], y = 14.6, z0 = hz - hd / 2, z1 = hz + hd / 2; for (const t of [-0.33, 0.33]) hp.push([hw * t, y, z0 + 8], [hw * t, y, z1 - 8]); hp.push([-hw / 2 + 8, y, hz], [hw / 2 - 8, y, hz]); g.add(kit.lines(hp, 'faint')); }

@@ -28,7 +28,7 @@ const H = new Home({ seed: 43, floor: 'plain' });
   a.put('file-box', 'fileBox', [5500, 1900], 0, { group: 'shelf' });
   a.put('pot-floor', 'pot', [900, 700], 0, { mount: 'floor', group: 'window', params: { r: 130, tall: 1.3, profile: 'belly', plant: 'bush', seed: 5 } });
   a.view({ target: [3000, 800, 1300], az: 10, el: 10 });
-  a.shot('desk', [3800, 1100, 5700], [3290, 700, 1075], 38, 'desk');
+  a.shot('desk', [3800, 1100, 5700], [4310, 700, 1075], 38, 'desk');
   a.shot('shelf', [2000, 1700, 4800], [5734, 1100, 1475], 36, 'shelf');
 }
 { // ---------- kitchen
@@ -51,7 +51,7 @@ const H = new Home({ seed: 43, floor: 'plain' });
   a.put('scuff', 'scuff', [3200, 1800], 0, { group: 'larder', mount: 'lines' });
   a.view({ target: [3000, 900, 1700], az: 10, el: 14 });
   a.shot('stove', [3200, 1100, 4800], [4415, 1100, 427], 36, 'stove');
-  a.shot('island', [500, 1700, 6900], [3078, 700, 2774], 34, 'island');
+  a.shot('island', [200, 1900, 6300], [3228, 900, 2816], 34, 'island');
 }
 { // ---------- living
   const a = H.area('living', 'Living room', { rect: [0, 0, 5400, 4200] });

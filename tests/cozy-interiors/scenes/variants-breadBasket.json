@@ -1,0 +1,217 @@
+{
+ "units": "mm",
+ "seed": 7,
+ "home": {
+  "height": 2700,
+  "floor": {
+   "style": "plain",
+   "seed": 7
+  },
+  "tiles": {
+   "origin": [
+    0,
+    0
+   ]
+  },
+  "walls": [
+   {
+    "id": "sheet-back",
+    "from": [
+     2600,
+     0
+    ],
+    "to": [
+     0,
+     0
+    ],
+    "openings": []
+   }
+  ],
+  "objects": [
+   {
+    "id": "sheet-v0",
+    "asset": "breadBasket",
+    "at": [
+     325,
+     0,
+     1200
+    ],
+    "mount": "floor",
+    "params": {
+     "r": 151,
+     "bread": "rolls",
+     "seed": 29,
+     "cloth": "no",
+     "rim": "plain"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-v1",
+    "asset": "breadBasket",
+    "at": [
+     975,
+     0,
+     1200
+    ],
+    "mount": "floor",
+    "params": {
+     "r": 133,
+     "bread": "baguette",
+     "seed": 62,
+     "cloth": "yes",
+     "rim": "rolled"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-v2",
+    "asset": "breadBasket",
+    "at": [
+     1625,
+     0,
+     1200
+    ],
+    "mount": "floor",
+    "params": {
+     "r": 186,
+     "bread": "loaf",
+     "seed": 51,
+     "cloth": "no",
+     "rim": "rolled"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-v3",
+    "asset": "breadBasket",
+    "at": [
+     2275,
+     0,
+     1200
+    ],
+    "mount": "floor",
+    "params": {
+     "r": 177,
+     "bread": "loaf",
+     "seed": 73,
+     "cloth": "yes",
+     "rim": "plain"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-v4",
+    "asset": "breadBasket",
+    "at": [
+     325,
+     0,
+     500
+    ],
+    "mount": "floor",
+    "params": {
+     "r": 168,
+     "bread": "baguette",
+     "seed": 84,
+     "cloth": "no",
+     "rim": "plain"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-v5",
+    "asset": "breadBasket",
+    "at": [
+     975,
+     0,
+     500
+    ],
+    "mount": "floor",
+    "params": {
+     "r": 159,
+     "bread": "rolls",
+     "seed": 40,
+     "cloth": "yes",
+     "rim": "rolled"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-v6",
+    "asset": "breadBasket",
+    "at": [
+     1625,
+     0,
+     500
+    ],
+    "mount": "floor",
+    "params": {
+     "r": 142,
+     "bread": "rolls",
+     "seed": 18,
+     "cloth": "no",
+     "rim": "plain"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-v7",
+    "asset": "breadBasket",
+    "at": [
+     2275,
+     0,
+     500
+    ],
+    "mount": "floor",
+    "params": {
+     "r": 124,
+     "bread": "loaf",
+     "seed": 7,
+     "cloth": "yes",
+     "rim": "rolled"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   }
+  ]
+ },
+ "areas": [
+  {
+   "id": "sheet",
+   "name": "Sheet",
+   "O": [
+    0,
+    0
+   ],
+   "psi": 0,
+   "bounds": {
+    "x0": 0,
+    "x1": 2600,
+    "z0": 0,
+    "z1": 2000,
+    "top": 500
+   },
+   "camera": {
+    "home": {
+     "target": [
+      1300,
+      63,
+      595
+     ],
+     "az": 0,
+     "el": 22,
+     "fit": "none",
+     "dist": 2925
+    },
+    "shots": []
+   }
+  }
+ ]
+}

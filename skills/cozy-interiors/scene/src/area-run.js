@@ -21,6 +21,7 @@ export function createAreaScene(canvas, S) {
   renderer.setClearColor(0xf4f4f1);
   renderer.toneMapping = THREE.NeutralToneMapping;
   const scene = new THREE.Scene(), kit = createKit();
+  if (S.home.accent) kit.setAccent(S.home.accent);
   kit.keepParts = q.has('check');
   const camera = new THREE.PerspectiveCamera(FOV, 1, 10, 400000);
   const home = buildHome(kit, S.home, REGISTRY, S.areas);

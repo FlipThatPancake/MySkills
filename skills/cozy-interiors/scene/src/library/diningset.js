@@ -11,13 +11,16 @@ const ringXZ = (cx, y, cz, r, n = 28) => { const p = []; for (let i = 0; i < n; 
 export function candlesticks(kit, { n = 2, h = 260, form = 'turned', seed = 1 } = {}) {   // n candlesticks of varied height, each with a candle and a flame
   const g = kit.group(), R = rnd(seed), T = kit.THREE, pts = [];
   for (let i = 0; i < n; i++) {
-    const x = (i - (n - 1) / 2) * 120, hh = h * (0.7 + 0.5 * ((i * 37 + seed) % 5) / 4), br = 40;
+    const x = (i - (n - 1) / 2) * 120, br = 40; let hh = h * (0.7 + 0.5 * ((i * 37 + seed) % 5) / 4); const cr = form === 'column' ? 22 : 11;   // column: a short fat pillar holder; chamber: a dish with a ring handle
     if (form === 'turned') g.add(kit.solid(new T.LatheGeometry([[br, 0], [br, 8], [14, 24], [12, hh * 0.35], [26, hh * 0.45], [11, hh * 0.55], [10, hh * 0.85], [22, hh * 0.9], [22, hh]].map(([a, b]) => new T.Vector2(a, b)), 20), x, 0, 0, { smooth: true, tone: 'lo' }));
+    else if (form === 'column') { hh *= 0.45; g.add(kit.cyl(x, 0, 0, 36, hh, { rTop: 34, seg: 22, tone: 'lo' })); }
+    else if (form === 'chamber') { hh = 26 + hh * 0.18; g.add(kit.cyl(x, 0, 0, 58, 12, { seg: 26, tone: 'lo' })); g.add(kit.cyl(x, 12, 0, 20, hh - 12, { rTop: 15, seg: 16, tone: 'lo' })); g.add(kit.lines(ringXY(x + 70, 26, 20, 0, 18), 'lo')); }
     else if (form === 'tapered') g.add(kit.cyl(x, 0, 0, br, hh, { rTop: 14, seg: 16, tone: 'lo' }));
     else { g.add(kit.cyl(x, 0, 0, 38, 14, { seg: 20, tone: 'lo' })); g.add(rod(kit, [x, 10, 0], [x, hh, 0], 8, 8, 'lo')); g.add(kit.cyl(x, hh - 6, 0, 22, 10, { seg: 16, tone: 'lo' })); }   // a slim brass-style stem
-    const ch = 140 + R() * 80; g.add(kit.cyl(x, hh, 0, 11, ch, { seg: 12 }));
+    const ch = (form === 'column' ? 90 : 140) + R() * 80; g.add(kit.cyl(x, hh, 0, cr, ch, { seg: 12 }));
     pts.push([x, hh + ch, 0], [x + 2, hh + ch + 24, 0], [x + 2, hh + ch + 24, 0], [x - 6, hh + ch + 42, 0], [x - 6, hh + ch + 42, 0], [x, hh + ch + 58, 0], [x, hh + ch + 58, 0], [x + 7, hh + ch + 40, 0], [x + 7, hh + ch + 40, 0], [x + 2, hh + ch + 24, 0]);   // the flame
   }
+  if (n > 2) g.add(kit.rbox(-((n - 1) * 60 + 70), 0, 62, (n - 1) * 120 + 140, 12, 124, 5, { tone: 'lo' }));   // three or more stand on a thin tray, so they read as one piece
   g.add(kit.lines(pts, 'mid'));
   return kit.merge(g);
 }
@@ -40,8 +43,19 @@ export function breadBasket(kit, { r = 150, h = 95, bread = 'loaf', seed = 3, cl
   if (cloth === 'yes') g.add(kit.rbox(-r * 0.8, 20, r * 0.75, r * 1.6, 8, r * 1.5, 4, { linen: true }));   // a cloth lining
   if (rim === 'rolled') g.add(kit.cyl(0, h - 6, 0, r + 4, 14, { seg: 32, tone: 'lo' }));
   if (bread === 'rolls') for (let i = 0; i < 4; i++) { const a = i * 1.57 + R(); g.add(kit.solid(new T.SphereGeometry(48, 14, 10), Math.cos(a) * 62, 70, Math.sin(a) * 62, { smooth: true, tone: 'lo', linen: false })); }
-  else if (bread === 'baguette') for (const o of [-34, 20]) { const m = kit.cyl(0, 0, 0, 30, r * 2.1, { axis: 'x', seg: 14, tone: 'lo' }); m.position.set(-r * 1.05, h * 0.65, o); m.rotation.y = (o > 0 ? 1 : -1) * 0.12; g.add(m); }
-  else { const lf = kit.solid(new T.SphereGeometry(r * 0.78, 20, 14), 0, h * 0.55, 0, { smooth: true, tone: 'lo' }); lf.scale.set(1.15, 0.6, 0.68); g.add(lf); const sl = []; for (let i = -1; i <= 1; i++) { const x = i * r * 0.3; sl.push([x - 22, h * 0.55 + r * 0.46 - Math.abs(i) * 8, r * 0.2], [x + 22, h * 0.55 + r * 0.5 - Math.abs(i) * 8, r * 0.05]); } g.add(kit.lines(sl, 'mid')); }   // a loaf with three scoring slashes
+  else if (bread === 'baguette') for (const [o, a0, len] of [[-36, 0.1, 2.05], [24, -0.14, 1.9]]) {   // a baguette: a long lathe that is fullest in the middle and tapers to both ends, bowed a little, with diagonal slashes
+    const L = r * len, N = 14, prof = []; for (let k = 0; k <= N; k++) { const t = k / N; prof.push(new T.Vector2(Math.max(0.01, 30 * Math.pow(Math.sin(Math.PI * Math.min(0.98, Math.max(0.02, t))), 0.55)), (t - 0.5) * L)); }
+    const bg = new T.LatheGeometry(prof, 16); bg.rotateZ(Math.PI / 2); const m = kit.solid(bg, 0, 0, 0, { smooth: true, tone: 'lo' }); m.scale.set(1, 0.92, 1);
+    const wrap = kit.group(); wrap.add(m); const sl = []; for (let k = -2; k <= 2; k++) { const x = k * L * 0.17; sl.push([x - 12, 27, -9], [x + 12, 27, 7]); } wrap.add(kit.lines(sl, 'mid'));
+    wrap.position.set(0, h * 0.98, o); wrap.rotation.y = a0; g.add(wrap);
+  }
+  else {   // a loaf: an oval or a round boule, domed, scored
+    const boule = R() < 0.45, rx = r * (boule ? 0.62 : 0.8), rz = r * (boule ? 0.62 : 0.5), ry = r * (boule ? 0.6 : 0.5);
+    const lf = kit.solid(new T.SphereGeometry(1, 24, 14, 0, Math.PI * 2, 0, Math.PI * 0.62), 0, h * 0.55, 0, { smooth: true, tone: 'lo' }); lf.scale.set(rx, ry, rz); g.add(lf);
+    const sl = []; if (boule) { for (const q of [-1, 1]) sl.push([-rx * 0.5 * q, h * 0.55 + ry * 0.86, -rx * 0.5], [rx * 0.5 * q, h * 0.55 + ry * 0.86, rx * 0.5]); }
+    else for (let i = -1; i <= 1; i++) { const x = i * rx * 0.4; sl.push([x - 20, h * 0.55 + ry * 0.9, rz * 0.4], [x + 20, h * 0.55 + ry * 0.95, -rz * 0.25]); }
+    g.add(kit.lines(sl, 'mid'));
+  }
   return kit.merge(g);
 }
 
@@ -60,13 +74,13 @@ export function placeSetting(kit, { r = 140, glass: gl = true, napkin: nk = true
   return kit.merge(g);
 }
 
-export function glazedCabinet(kit, { w = 1000, h = 1800, d = 420, shelves = 3, doors = 2, seed = 2 } = {}) {   // a tall cabinet on short feet, glass doors on the upper part, dishes visible inside, drawers or cupboards below
-  const g = kit.group(), R = rnd(seed), pts = [], legH = 90, z = d / 2 + 0.8, lowH = h * 0.32, T = kit.THREE;
-  for (const sx of [-1, 1]) for (const sz of [-1, 1]) g.add(kit.cyl(sx * (w / 2 - 50), 0, sz * (d / 2 - 50), 24, legH + 6, { rTop: 18, seg: 10, tone: 'lo' }));
+export function glazedCabinet(kit, { w = 1000, h = 1800, d = 420, shelves = 3, doors = 2, base = 'feet', crown = 'flat', low = 0.32, seed = 2 } = {}) {   // a tall cabinet on short feet, glass doors on the upper part, dishes visible inside, drawers or cupboards below
+  const g = kit.group(), R = rnd(seed), pts = [], legH = base === 'plinth' ? 70 : 90, z = d / 2 + 0.8, lowH = h * low, T = kit.THREE;   // base feet | plinth; crown flat | cornice (a stepped moulding); low = the cupboard's share of the height
+  if (base === 'plinth') g.add(kit.box(-w / 2 + 24, 0, d / 2 - 14, w - 48, legH + 4, d - 28, { tone: 'lo' })); else for (const sx of [-1, 1]) for (const sz of [-1, 1]) g.add(kit.cyl(sx * (w / 2 - 50), 0, sz * (d / 2 - 50), 24, legH + 6, { rTop: 18, seg: 10, tone: 'lo' }));
   g.add(kit.rbox(-w / 2, legH, d / 2, w, lowH, d, 8));   // the lower cupboard
   const uh = h - legH - lowH - 40, uy = legH + lowH;
   for (const sx of [-1, 1]) g.add(kit.box(sx * (w / 2 - 14) - 14, uy - 4, 0 + (d - 30) / 2, 28, uh + 8, d - 30));
-  g.add(kit.box(-w / 2 + 22, uy - 4, -d / 2 + 30, w - 44, uh + 8, 14, lo)); g.add(kit.rbox(-w / 2 - 12, h - 40, d / 2 + 12, w + 24, 40, d + 12, 6));
+  g.add(kit.box(-w / 2 + 22, uy - 4, -d / 2 + 30, w - 44, uh + 8, 14, lo)); g.add(kit.rbox(-w / 2 - 12, h - 40, d / 2 + 12, w + 24, 40, d + 12, 6)); if (crown === 'cornice') g.add(kit.rbox(-w / 2 - 26, h - 8, d / 2 + 26, w + 52, 26, d + 26, 5));
   for (let s = 0; s < shelves; s++) {   // shelves with plates standing and a stack of bowls
     const y = uy + (s + 0.5) * uh / shelves - uh / (shelves * 2) + 6; g.add(kit.box(-w / 2 + 22, y, d / 2 - 20, w - 44, 16, d - 60, lo));
     let x = -w / 2 + 90; while (x < w / 2 - 150) { const rr = 90 + R() * 22; if (R() < 0.7) { const p = kit.group(); p.add(kit.cyl(0, rr, 0, rr, 8, { axis: 'z', seg: 28 })); p.position.set(x, y + 16, 0); p.rotation.x = -0.14; g.add(p); x += 60; } else { g.add(kit.cyl(x, y + 16, 0, 70, 90, { rTop: 90, seg: 24 })); x += 190; } }
@@ -90,9 +104,16 @@ export function benchCushion(kit, { w = 1100, d = 360, thick = 60, tone = 'mid',
 export function wallPlates(kit, { n = 5, r = 110, seed = 4, layout = 'cluster' } = {}) {   // decorative plates on the wall, hung flat: a cluster, a row or a ring; origin bottom middle
   const g = kit.group(), R = rnd(seed), T = kit.THREE, pts = [];
   const spots = [];
-  if (layout === 'row') for (let i = 0; i < n; i++) spots.push([(i - (n - 1) / 2) * (r * 2.3), r, r * (0.8 + 0.5 * R())]);
+  if (layout === 'column') for (let i = 0; i < Math.min(n, 4); i++) spots.push([(R() - 0.5) * r * 0.3, r + i * r * 2.25, r * (0.85 + 0.3 * R())]);   // a vertical stack
+  else if (layout === 'grid') for (let i = 0; i < n; i++) spots.push([((i % 3) - 1) * r * 2.3, r + Math.floor(i / 3) * r * 2.3, r * (0.85 + 0.3 * R())]);   // rows of three
+  else if (layout === 'row') for (let i = 0; i < n; i++) spots.push([(i - (n - 1) / 2) * (r * 2.3), r, r * (0.8 + 0.5 * R())]);
   else if (layout === 'ring') { spots.push([0, r * 2.4, r * 1.1]); for (let i = 0; i < n - 1; i++) { const a = i / (n - 1) * 6.2832; spots.push([Math.cos(a) * r * 2.3, r * 2.4 + Math.sin(a) * r * 2.3, r * 0.6]); } }
   else for (let i = 0; i < n; i++) { const a = i * 2.4 + R(), d = Math.sqrt(i + 0.5) * r * 1.1; spots.push([Math.cos(a) * d, r * 2.5 + Math.sin(a) * d * 0.8, r * (0.6 + 0.6 * R())]); }
+  for (let it = 0; it < 500; it++) for (let i = 0; i < spots.length; i++) for (let j = i + 1; j < spots.length; j++) {   // keep a 30 mm gap between rims
+    const A = spots[i], B = spots[j]; let dx = B[0] - A[0], dy = B[1] - A[1], d = Math.hypot(dx, dy); const need = A[2] + B[2] + 30; if (d >= need) continue;
+    if (d < 1e-3) { dx = 1; dy = 0.3; d = Math.hypot(dx, dy); } const k = (need - d) / 2 / d; A[0] -= dx * k; A[1] -= dy * k; B[0] += dx * k; B[1] += dy * k;
+  }
+  { const x0 = Math.min(...spots.map((s) => s[0] - s[2])), x1 = Math.max(...spots.map((s) => s[0] + s[2])), y0 = Math.min(...spots.map((s) => s[1] - s[2])); for (const s of spots) { s[0] -= (x0 + x1) / 2; s[1] -= y0; } }   // origin: bottom middle
   spots.forEach(([x, y, rr], i) => { g.add(kit.cyl(x, y, 20, rr, 14, { axis: 'z', seg: 32 })); g.add(kit.cyl(x, y, 25, rr * 0.7, 8, { axis: 'z', seg: 28, tone: 'lo' })); pts.push(...ringXY(x, y, rr * 0.82, 26.5, 28)); if (i % 3 === 0) for (let k = 0; k < 8; k++) { const a = k / 8 * 6.2832; pts.push([x + Math.cos(a) * rr * 0.12, y + Math.sin(a) * rr * 0.12, 26.5], [x + Math.cos(a) * rr * 0.5, y + Math.sin(a) * rr * 0.5, 26.5]); } else if (i % 3 === 1) pts.push(...ringXY(x, y, rr * 0.5, 26.5, 20)); });
   g.add(kit.lines(pts, 'lo'));
   return kit.merge(g);

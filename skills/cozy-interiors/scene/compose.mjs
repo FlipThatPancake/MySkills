@@ -1,6 +1,6 @@
 // compose.mjs — helpers for laying a home out in each area's own frame, then writing scene.json. A spec is a small script: scenes/seed-<n>.spec.mjs writes scenes/seed-<n>.json (the helpers are below).
 // Everything is millimetres. An area has a local frame: x to the right, z toward the viewer, its backing wall along z = 0 (see the walls below). Areas are placed side by side with a 3000 mm gap, so no neighbour shows in an area's own view.
-//   const H = new Home({ seed, floor: 'auto' (boards, sometimes tiles) | 'tiles' | 'boards' | 'plain' (rare) });
+//   const H = new Home({ seed, floor: 'auto' (boards, sometimes tiles) | 'tiles' | 'boards' | 'plain' (rare), accent: '#c9775a' (the rolled accent hex; textiles with tone: 'accent' take it) });
 //   const a = H.area('kitchen', 'Kitchen', { rect: [0, 0, 6600, 4200] });      // rect: [x0, z0, x1, z1] of the floor the area owns (its bounds); psi turns the whole area 90, 180 or -90 degrees; O sets its place by hand
 //   Walls (the room is in front of each one). Openings are { kind: 'window' | 'door' | 'arch', x, width, height, sill, sash: 'fixed', hinge: 'l' | 'r', to: <area id>, ... }; x is the opening's middle, measured from the wall's LEFT end as you see it from the room:
 //   const back = a.back(6600, [openings]);            // along the back, z = 0, from x = 0 to the right
@@ -9,7 +9,7 @@
 //   Placing on a wall (xc is where the middle of the thing is along the wall, measured like an opening's x; the distance out from the wall comes from the asset, see assets.mjs):
 //   back.place('fridge', 'fridge', 5100);   back.place('sofa', 'sofa', 3200, { y: 7, lift: 7, params: { seats: 2 } });   back.place('pic', 'picture', 2000, { y: 1400 });   options: y, turn (added to facing out from the wall), params, off (override), group, hero, shadow
 //   A cabinet run with slots:  const R = a.run(back, 'run', 1650, [modules], { group: 'run' });  R.on('hob', 'hob');  R.on('hob', 'hood');  R.on('hob', 'pan');  R.on('sink', 'kettle');  (the thing goes on the middle of that module)
-//   A table set:  const T = a.table('dining', { at: [2800, 2800], r: 650 | w: 1700, d: 900, chairs: 4, rug: true });  T.over('pendantLamp');  T.on('vase')
+//   A table set:  const T = a.table('dining', { at: [2800, 2800], r: 650 | w: 1700, d: 900, chairs: 4, rug: true, cloth: false | true | 'accent' });  T.over('pendantLamp');  T.on('vase')
 //   a.topOf(id): the height of the top of something placed (its dealt h included), for y of a thing that stands on it.
 //   Anywhere:  a.put(id, asset, [x, z], turn, { y, mount, group, hero, params, ... })  (the object's own origin at [x, z]; see assets.mjs).  a.view({ target, az, el }), a.shot(name, from, look, fov, group)
 // Every object has a `group` (its run, table set, seating group or wall arrangement) and hero: true marks the area's main piece.
@@ -21,7 +21,7 @@ import { REGISTRY } from './src/library/index.js';
 const rad = (d) => d * Math.PI / 180, deg = (r) => r * 180 / Math.PI, r0 = (v) => Math.round(v * 10) / 10;
 export const GAP = 3000;
 export class Home {
-  constructor({ seed, floor = 'auto', height = 2700 }) { if (floor === 'auto') floor = seed % 5 === 3 ? 'tiles' : 'boards'; this.S = { units: 'mm', seed, home: { height, floor: { style: floor, seed }, tiles: { origin: [0, 0] }, walls: [], objects: [] }, areas: [] }; this.list = []; }
+  constructor({ seed, floor = 'auto', height = 2700, accent }) { if (floor === 'auto') floor = seed % 5 === 3 ? 'tiles' : 'boards'; this.S = { units: 'mm', seed, home: { height, ...(accent ? { accent } : {}), floor: { style: floor, seed }, tiles: { origin: [0, 0] }, walls: [], objects: [] }, areas: [] }; this.list = []; }
   area(id, name, { O, psi = 0, rect }) {
     const a = new Area(this, id, name, O || [0, 0], psi, rect);
     if (!O) { const prev = this.list[this.list.length - 1], b = a.worldBounds(), x0 = prev ? prev.worldBounds().x1 + GAP : 0; a.O = [r0(x0 - b.x0), r0(-b.z0)]; }
@@ -125,12 +125,26 @@ class Area {
     let top = 0; for (let a = -w / 2; a <= w / 2; a += 40) for (let b = -d / 2; b <= d / 2; b += 40) top = Math.max(top, f(p[0] + a, p[1] + b));
     this.put(id, 'foldedThrow', p, spin, { group, y: Math.round(top), mount: 'on', params: { w, d, layers, tone } });
   }
+  // the soft things of a seat in one call: a.seatSoft('sofa', { cushions: 2, throw: 'drape' | 'band' | false, tone: 'accent' | 'lo' | 'mid', group }). Cushions lean on the back, one per seat end (a sofa: seats - 1, at least 1; an armchair: 1); the throw drops onto the arm end ('drape', frozen cloth) or lies folded across the seat ('band').
+  seatSoft(targetId, { cushions, throw: thr = 'drape', tone = 'lo', throwTone = tone, group } = {}) {
+    const tgt = this.h.S.home.objects.find((q) => q.id === `${this.id}-${targetId}`); if (!tgt) throw new Error(`seatSoft('${targetId}'): place it first`);
+    const T = (this.h.kit ||= createKit()).THREE, g0 = REGISTRY[tgt.asset](this.h.kit, { ...(tgt.params || {}) }); g0.updateMatrixWorld(true);
+    const lb = new T.Box3().setFromObject(g0), tn = (tgt.turn || 0) + this.psi, th = rad(tn), W = lb.max.x - lb.min.x, D = lb.max.z - lb.min.z, cx = (lb.min.x + lb.max.x) / 2, cz = (lb.min.z + lb.max.z) / 2;
+    const { tris, all } = this.targetTris('seatSoft', targetId), c = all.getCenter(new T.Vector3()), org = [c.x - (cx * Math.cos(th) + cz * Math.sin(th)), c.z - (-cx * Math.sin(th) + cz * Math.cos(th))];   // the object's origin in the area's frame, from where its parts really stand
+    const toArea = (lx, lz) => [org[0] + lx * Math.cos(th) + lz * Math.sin(th), org[1] - lx * Math.sin(th) + lz * Math.cos(th)], f = heightField(tris), zo = lb.min.z + 300;
+    const seats = tgt.params?.seats || (tgt.asset === 'armchair' ? 1 : 2), n = cushions ?? (tgt.asset === 'armchair' ? 1 : Math.max(1, seats - 1)), grp = group || tgt.group;
+    for (let i = 0; i < n; i++) { const lx = n === 1 ? cx + (tgt.asset === 'armchair' ? 0 : W / 2 - 330) : cx - (W / 2 - 330) + i * (W - 660) / (n - 1), [px, pz] = toArea(lx, zo), [sx, sz] = toArea(lx, zo + 320), y = Math.round(f(sx, sz));   // the seat height is read in front of the back
+      this.put(`${targetId}-cushion${i + 1}`, 'cushion', [px, pz], tn + (i % 2 ? -6 : 8), { group: grp, y, mount: 'on', params: { lean: 18 + 4 * (i % 2), tone } }); }
+    if (thr === 'drape') { try { const [ax, az] = toArea(cx - (W / 2 - 420), zo + 330); this.drapeOver(`${targetId}-throw`, targetId, { w: 1000, d: 700, wave: 10, at: [ax, az], spin: tn + 20, tone: throwTone, group: grp }); } catch (e) { if (process.env.SOFT_DEBUG) console.error(e.message); thr = 'band'; } }
+    if (thr === 'band') { const [bx, bz] = toArea(cx + (W / 2 - 360), zo + 330); this.bandOn(`${targetId}-throw`, targetId, { w: 700, d: 380, at: [bx, bz], spin: tn, tone: throwTone, group: grp }); }
+  }
   // ---- a cabinet run with slots: R.on('hob', 'pan') puts a pan on the middle of the first hob module
   run(F, id, left, modules, o = {}) {
     const { group = 'run', depth = 600, hero, ...params } = o, mods = []; let x = left;
     for (const m of modules) { mods.push({ ...m, xc: x + m.w / 2 }); x += m.w; }
     const length = x - left;
     F.put(id, 'baseRun', left, depth, { group, hero, params: { ...params, depth, modules } });
+    if (modules.some((m) => m.ajar)) this.h.sign(this.id, 'drawer ajar');   // a module { kind: 'drawers', ajar: 0.4 } leaves its top drawer pulled out 0.4 of its travel
     let n = 0;
     return {
       length, left, depth, mods, F,
@@ -146,10 +160,11 @@ class Area {
     };
   }
   // ---- a table set: a table (round with r, or w x d) with chairs, a rug under it and slots over / on it
-  table(id, { at, r, w = 1600, d = 900, chairs = 4, rug = true, group = 'table set', hero = true, h = 750 } = {}) {
+  table(id, { at, r, w = 1600, d = 900, chairs = 4, rug = true, cloth = false, group = 'table set', hero = true, h = 750 } = {}) {
     const round = !!r, p = this, TW = round ? 2 * r : w, TD = round ? 2 * r : d;
-    if (rug) p.put(`${id}-rug`, 'rug', at, 0, { group, params: { w: TW + 1300, d: TD + 1300 } });
+    if (rug) p.put(`${id}-rug`, 'rug', at, 0, { group, params: { w: TW + 1100, d: TD + 1100 } });
     p.put(id, round ? 'roundTable' : 'table', at, 0, { y: 7, lift: 7, group, hero, params: round ? { r, h } : { w, d, h } });
+    if (cloth) p.put(`${id}-cloth`, 'tablecloth', at, 0, { y: h + 7, mount: 'on', group, params: { ...(round ? { r } : { w, d }), drop: round ? 260 : 300, ...(cloth === 'accent' ? { tone: 'accent' } : {}) } });   // cloth: true | 'accent': a cloth whose shape follows the table (round skirt, or a rectangle that hangs over the long sides)
     const spots = round ? [[0, -1], [1, 0], [0, 1], [-1, 0]].slice(0, Math.min(4, chairs)).map(([a, b]) => [a * (r + 230), b * (r + 230)])
       : (() => { const per = Math.ceil(chairs / 2), out = []; for (let i = 0; i < per; i++) for (const s of [-1, 1]) { if (out.length < chairs) out.push([(i - (per - 1) / 2) * (w / per), s * (d / 2 + 310)]); } return out; })();
     spots.forEach(([dx, dz], i) => { const q = [at[0] + dx, at[1] + dz]; p.put(`${id}-chair-${i + 1}`, 'chair', q, deg(Math.atan2(at[0] + (round ? 0 : dx) - q[0], at[1] - q[1])), { y: 7, lift: 7, group }); });

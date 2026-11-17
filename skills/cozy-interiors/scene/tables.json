@@ -147,7 +147,18 @@
    "U": "an L plus a third run facing the first leg, joined to the back run",
    "peninsula": "a run on the wall with a run reaching out from it at right angles; stools on its far side",
    "island": "a run on the wall and a freestanding island parallel to it, stools on its far side"
-  }
+  },
+  "foreground": [
+   "stool",
+   "basket of vegetables",
+   "trolley",
+   "step stool"
+  ],
+  "accentOn": [
+   "teaTowel",
+   "tablecloth",
+   "runner"
+  ]
  },
  "dining": {
   "hero": [
@@ -217,6 +228,18 @@
    "table (round or long)",
    "chairs",
    "rug"
+  ],
+  "foreground": [
+   "stool",
+   "basket",
+   "bench end",
+   "chair pulled out"
+  ],
+  "accentOn": [
+   "tablecloth",
+   "benchCushion",
+   "tableRunner",
+   "cushion"
   ]
  },
  "living": {
@@ -288,6 +311,17 @@
   ],
   "pieces": [
    "curtain at a window"
+  ],
+  "foreground": [
+   "pouf",
+   "basket",
+   "footstool",
+   "log basket"
+  ],
+  "accentOn": [
+   "cushion",
+   "foldedThrow",
+   "cloth"
   ]
  },
  "bedroom": {
@@ -360,6 +394,17 @@
    "laundry hamper (hamper)",
    "leaning mirror (leaningMirror)",
    "wall sconce (wallSconce)"
+  ],
+  "foreground": [
+   "basket",
+   "bench at the foot of the bed",
+   "clothes chair",
+   "hamper"
+  ],
+  "accentOn": [
+   "duvetCloth",
+   "cushion",
+   "foldedThrow"
   ]
  },
  "reading-corner": {
@@ -431,6 +476,17 @@
    "plant stand (plantStand)",
    "wall sconce (wallSconce)",
    "gallery wall of frames (galleryWall)"
+  ],
+  "foreground": [
+   "footstool",
+   "basket",
+   "floor cushion",
+   "magazine rack"
+  ],
+  "accentOn": [
+   "cushion",
+   "foldedThrow",
+   "floorCushion"
   ]
  },
  "hallway": {
@@ -497,6 +553,16 @@
    "wall clock (wallClock)",
    "wall sconce (wallSconce)",
    "magazine rack (magazineRack)"
+  ],
+  "foreground": [
+   "stool",
+   "shoes",
+   "basket",
+   "umbrella stand"
+  ],
+  "accentOn": [
+   "runner",
+   "hungBag"
   ]
  },
  "home-office": {
@@ -575,6 +641,16 @@
    "wall clock (wallClock)",
    "magazine rack (magazineRack)",
    "plant stand (plantStand)"
+  ],
+  "foreground": [
+   "stool",
+   "waste bin",
+   "file box",
+   "basket"
+  ],
+  "accentOn": [
+   "cushion",
+   "binders"
   ]
  },
  "backingWeights": {
@@ -744,5 +820,89 @@
    ]
   }
  ],
- "signsNote": "roll.mjs deals 2-3 signs per area from `signs` (only those whose `in` lists the area), each at most once in a home, so a home has at most one mug. Name them in the spec with Home.sign or by placing the asset."
+ "signsNote": "roll.mjs deals 2-3 signs per area from `signs` (only those whose `in` lists the area), each at most once in a home, so a home has at most one mug. Name them in the spec with Home.sign or by placing the asset.",
+ "plantPlaces": [
+  {
+   "id": "sill",
+   "say": "a pot on a window sill",
+   "in": [
+    "kitchen",
+    "dining",
+    "living",
+    "bedroom",
+    "reading-corner",
+    "home-office"
+   ]
+  },
+  {
+   "id": "shelf",
+   "say": "a plant on a shelf or a cabinet top",
+   "in": [
+    "dining",
+    "living",
+    "bedroom",
+    "reading-corner",
+    "hallway",
+    "home-office"
+   ]
+  },
+  {
+   "id": "worktop",
+   "say": "herbs or a pot on the worktop",
+   "in": [
+    "kitchen"
+   ]
+  },
+  {
+   "id": "hanging",
+   "say": "a hanging plant from a rail or hook",
+   "in": [
+    "kitchen",
+    "living",
+    "reading-corner",
+    "hallway"
+   ]
+  },
+  {
+   "id": "floor",
+   "say": "a floor plant (at most one in an area)",
+   "in": [
+    "dining",
+    "living",
+    "bedroom",
+    "reading-corner",
+    "hallway",
+    "home-office"
+   ]
+  }
+ ],
+ "plantsNote": "plants is how many; plantPlaces says where each one lives. An area gets distinct places, so at most one floor plant.",
+ "foregroundNote": "Each area's near-camera piece comes from its own use first; a plant only when none of these fits.",
+ "accentTones": [
+  {
+   "id": "terracotta",
+   "hex": "#c9775a"
+  },
+  {
+   "id": "mustard",
+   "hex": "#d1a53c"
+  },
+  {
+   "id": "dusty blue",
+   "hex": "#6f8fb0"
+  },
+  {
+   "id": "rose",
+   "hex": "#cf8f93"
+  },
+  {
+   "id": "olive",
+   "hex": "#8d9457"
+  },
+  {
+   "id": "plum",
+   "hex": "#8a5f7d"
+  }
+ ],
+ "accentNote": "One warm accent per home: hex goes to new Home({ accent }). Each area names the textile that carries it (accentOn); set tone: 'accent' on that piece (cushion, foldedThrow, cloth, tablecloth, teaTowel, benchCushion, floorCushion, runner, tableRunner, duvetCloth)."
 }
