@@ -137,12 +137,12 @@ export function boots(kit, { kind = 'wellington', spread = 176, shaft = 250, ton
   return kit.merge(g);
 }
 
-export function runner(kit, { w = 700, l = 2400, form = 'stripe', fringe = true, fold = true, seed = 1 } = {}) {   // a long hall runner: a flat soft mat with slightly wavy edges, bands or stripes, fringe at both ends, one corner folded over
+export function runner(kit, { w = 700, l = 2400, form = 'stripe', fringe = true, fold = true, tone = 'lo', seed = 1 } = {}) {   // a long hall runner: a flat soft mat with slightly wavy edges, bands or stripes, fringe at both ends, one corner folded over
   const T = kit.THREE, g = kit.group(), R = rnd(seed), th = 9, y = th + 0.5, pts = [], hw = w / 2, hl = l / 2, n = 28;
   const sh = new T.Shape(); const e = (k, a) => Math.sin(k * 0.5 + a) * 3.5 + Math.sin(k * 1.7 + a * 2) * 1.5;
   sh.moveTo(-hw, -hl); sh.lineTo(hw, -hl); for (let k = 1; k <= n; k++) sh.lineTo(hw + e(k, 0.4), -hl + l * k / n); sh.lineTo(-hw, hl); for (let k = n - 1; k >= 0; k--) sh.lineTo(-hw + e(k, 2.1), -hl + l * k / n);
   const geo = new T.ExtrudeGeometry(sh, { depth: th - 4, bevelEnabled: true, bevelThickness: 2, bevelSize: 2, bevelSegments: 2, curveSegments: 4 }); geo.rotateX(Math.PI / 2); geo.translate(0, th - 2, 0);
-  const mat = kit.solid(geo, 0, 0, 0, { smooth: false, ...lo }); g.add(mat);
+  const mat = kit.solid(geo, 0, 0, 0, { smooth: false, ...(tone === 'accent' ? { tone: 'accent' } : lo) }); g.add(mat);
   const inset = (i) => [[-hw + i, y, -hl + 60], [hw - i, y, -hl + 60], [hw - i, y, -hl + 60], [hw - i, y, hl - 60], [hw - i, y, hl - 60], [-hw + i, y, hl - 60], [-hw + i, y, hl - 60], [-hw + i, y, -hl + 60]];
   if (form === 'stripe') { pts.push(...inset(46), ...inset(74)); pts.push([0, y, -hl + 60], [0, y, hl - 60]); }
   else if (form === 'bands') { const bands = Math.max(2, Math.min(4, Math.round(l / 800))); for (let i = 1; i < bands; i++) { const z = -hl + l * i / bands + (R() - 0.5) * 60; pts.push([-hw + 30, y, z], [hw - 30, y, z], [-hw + 30, y, z + 34], [hw - 30, y, z + 34]); } pts.push(...inset(40)); }
