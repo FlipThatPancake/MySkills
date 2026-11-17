@@ -241,7 +241,7 @@ const areaIssues = await page.evaluate(() => {
     if (real.length < 8) out.push({ rule: 'interest', what: `${A} has ${real.length} objects (need 8)` });
     for (const [band, f] of [['floor', (i) => sc(i).mount === 'floor'], ['waist', (i) => sc(i).mount === 'on'], ['wall or hanging', (i) => ['wall', 'ceiling'].includes(sc(i).mount)]]) if (!real.some(f)) out.push({ rule: 'interest', what: `${A} has nothing in the ${band} band` });
     if (!real.some((i) => sc(i).hero)) out.push({ rule: 'interest', what: `${A} has no hero piece` });
-    if (!as(LIVING).length) out.push({ rule: 'interest', what: `${A} has nothing living (a plant or a cat)` });
+    if (!as(LIVING).length && !api.motion.things.some((t) => t.area === A && t.group)) out.push({ rule: 'interest', what: `${A} has nothing living (a plant or a cat)` });
     if (!as(SOFT).length) out.push({ rule: 'interest', what: `${A} has nothing soft (rug, curtain, cushion, pouf, basket)` });
     if (!as(WALLDEC).length) out.push({ rule: 'interest', what: `${A} has nothing on a wall (picture, mirror, wall shelf, curtain)` });
     if (walls.length < 1 || walls.length > 2) out.push({ rule: 'interest', what: `${A} has ${walls.length} backing walls (need 1 or 2)` });

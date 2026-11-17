@@ -1,0 +1,384 @@
+{
+ "units": "mm",
+ "seed": 7,
+ "home": {
+  "height": 2700,
+  "floor": {
+   "style": "boards",
+   "seed": 7
+  },
+  "tiles": {
+   "origin": [
+    0,
+    0
+   ]
+  },
+  "walls": [
+   {
+    "id": "living-back",
+    "from": [
+     6000,
+     0
+    ],
+    "to": [
+     0,
+     0
+    ],
+    "openings": [
+     {
+      "kind": "window",
+      "width": 1300,
+      "height": 1300,
+      "sill": 900,
+      "at": 1400
+     }
+    ]
+   },
+   {
+    "id": "bedroom-back",
+    "from": [
+     14900,
+     0
+    ],
+    "to": [
+     9000,
+     0
+    ],
+    "openings": [
+     {
+      "kind": "window",
+      "width": 1400,
+      "height": 1100,
+      "sill": 1000,
+      "at": 3100
+     }
+    ]
+   },
+   {
+    "id": "dining-back",
+    "from": [
+     23100,
+     0
+    ],
+    "to": [
+     17900,
+     0
+    ],
+    "openings": [
+     {
+      "kind": "window",
+      "width": 1300,
+      "height": 1200,
+      "sill": 1000,
+      "at": 2600
+     }
+    ]
+   }
+  ],
+  "objects": [
+   {
+    "id": "living-sofa",
+    "asset": "sofa",
+    "at": [
+     2400,
+     7,
+     460
+    ],
+    "mount": "floor",
+    "params": {
+     "chaise": "none",
+     "d": 920,
+     "seatN": 2,
+     "legs": "tapered",
+     "arms": "track",
+     "legH": 119,
+     "backH": 800,
+     "back": "tight",
+     "piping": "none",
+     "tone": "lo"
+    },
+    "group": "living:sofa",
+    "hero": true,
+    "area": "living",
+    "lift": 7
+   },
+   {
+    "id": "living-rug",
+    "asset": "rug",
+    "at": [
+     2600,
+     0,
+     2300
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 3000,
+     "d": 2000,
+     "form": "borderless",
+     "border": 95,
+     "fringe": "none"
+    },
+    "group": "living:sofa",
+    "area": "living"
+   },
+   {
+    "id": "living-arm",
+    "asset": "armchair",
+    "at": [
+     4900,
+     7,
+     2600
+    ],
+    "turn": -35,
+    "mount": "floor",
+    "params": {
+     "shape": "cane",
+     "weave": "slats",
+     "w": 970,
+     "d": 890,
+     "legs": "hairpin",
+     "arms": "rolled",
+     "legH": 153,
+     "backH": 870,
+     "back": "loose",
+     "piping": "none",
+     "tone": "lo"
+    },
+    "group": "living:nook",
+    "area": "living",
+    "lift": 7
+   },
+   {
+    "id": "living-side",
+    "asset": "sideTable",
+    "at": [
+     5600,
+     0,
+     3300
+    ],
+    "mount": "floor",
+    "params": {
+     "r": 252,
+     "h": 450,
+     "top": "rounded",
+     "legs": "turned",
+     "shelf": "low",
+     "drawer": "bar",
+     "tone": "lo"
+    },
+    "group": "living:nook",
+    "area": "living"
+   },
+   {
+    "id": "living-curtain",
+    "asset": "curtain",
+    "at": [
+     4600,
+     0,
+     0
+    ],
+    "mount": "wall",
+    "params": {},
+    "group": "living:nook",
+    "area": "living"
+   },
+   {
+    "id": "bedroom-bed",
+    "asset": "bed",
+    "at": [
+     11800,
+     0,
+     1050
+    ],
+    "mount": "floor",
+    "params": {
+     "head": 550,
+     "duvet": "unmade",
+     "frame": "box",
+     "w": 1730,
+     "seed": 7
+    },
+    "group": "bedroom:bed",
+    "hero": true,
+    "area": "bedroom"
+   },
+   {
+    "id": "bedroom-bedside-l",
+    "asset": "bedsideTable",
+    "at": [
+     10550,
+     0,
+     190
+    ],
+    "mount": "floor",
+    "params": {},
+    "group": "bedroom:bed",
+    "area": "bedroom"
+   },
+   {
+    "id": "bedroom-bedside-r",
+    "asset": "bedsideTable",
+    "at": [
+     13050,
+     0,
+     190
+    ],
+    "mount": "floor",
+    "params": {},
+    "group": "bedroom:bed",
+    "area": "bedroom"
+   },
+   {
+    "id": "bedroom-rug",
+    "asset": "rug",
+    "at": [
+     11800,
+     0,
+     2300
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 3200,
+     "d": 2000,
+     "form": "plain",
+     "border": 105,
+     "fringe": "ends"
+    },
+    "group": "bedroom:foot",
+    "area": "bedroom"
+   },
+   {
+    "id": "dining-rug",
+    "asset": "rug",
+    "at": [
+     20500,
+     0,
+     2200
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 2800,
+     "d": 1900,
+     "form": "striped",
+     "border": 45,
+     "fringe": "none"
+    },
+    "group": "dining:rug",
+    "area": "dining"
+   }
+  ]
+ },
+ "areas": [
+  {
+   "id": "living",
+   "name": "Living",
+   "motion": [
+    {
+     "kind": "cat",
+     "needs": []
+    },
+    {
+     "kind": "paw",
+     "needs": [
+      "curtain"
+     ]
+    }
+   ],
+   "O": [
+    0,
+    0
+   ],
+   "psi": 0,
+   "bounds": {
+    "x0": 0,
+    "x1": 6000,
+    "z0": 0,
+    "z1": 4400,
+    "top": 2500
+   },
+   "camera": {
+    "home": {
+     "target": [
+      3000,
+      600,
+      1800
+     ],
+     "az": 15,
+     "el": 14,
+     "fit": "objects"
+    },
+    "shots": []
+   }
+  },
+  {
+   "id": "bedroom",
+   "name": "Bedroom",
+   "motion": [
+    {
+     "kind": "cat",
+     "needs": []
+    }
+   ],
+   "O": [
+    9000,
+    0
+   ],
+   "psi": 0,
+   "bounds": {
+    "x0": 9000,
+    "x1": 14900,
+    "z0": 0,
+    "z1": 4600,
+    "top": 2500
+   },
+   "camera": {
+    "home": {
+     "target": [
+      11800,
+      1000,
+      1800
+     ],
+     "az": 12,
+     "el": 10,
+     "fit": "objects"
+    },
+    "shots": []
+   }
+  },
+  {
+   "id": "dining",
+   "name": "Dining",
+   "motion": [
+    {
+     "kind": "cat",
+     "needs": []
+    }
+   ],
+   "O": [
+    17900,
+    0
+   ],
+   "psi": 0,
+   "bounds": {
+    "x0": 17900,
+    "x1": 23100,
+    "z0": 0,
+    "z1": 4000,
+    "top": 2500
+   },
+   "camera": {
+    "home": {
+     "target": [
+      20500,
+      400,
+      1800
+     ],
+     "az": 15,
+     "el": 14,
+     "fit": "objects"
+    },
+    "shots": []
+   }
+  }
+ ]
+}

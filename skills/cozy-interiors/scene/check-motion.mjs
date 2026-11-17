@@ -2,7 +2,7 @@
 // check-motion.mjs — the rules for living, moving things (check-home calls motionIssues(page, sceneFile); `node check-motion.mjs <scene.json>` runs it alone on the built page next to the json).
 // Static: at most 3 kinds per area, none twice; every thing built (no plug-in error); a thing that needs an open window has one rendered open (via, not shut, wide enough for a flier); wind has a plant.
 // Moving (the page's own physics of motion, 240 s of simulated time in 1/30 s steps, every thing with `sampled`): its bodies stay out of every object's solid, inside the room, and cross a wall only
-// through `via` while it is open wide enough (inside the gap, between sill and head); and with the window shut a fresh thing never shows at all.
+// (a body marked `ground: true`, a cat or a paw near the floor, may be below 300 mm) through `via` while it is open wide enough (inside the gap, between sill and head); and with the window shut a fresh thing never shows at all.
 import { readFileSync, existsSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { execSync } from 'node:child_process';
@@ -51,7 +51,7 @@ export async function motionIssues(page, sceneFile, { seconds = 240 } = {}) {
           else if (ok) inGap = true;
         }
         const A = ctx.area.bounds;
-        if (!inGap && !b.outside && (c.x < A.x0 || c.x > A.x1 || c.z < A.z0 || c.z > A.z1 || c.y < 300 || c.y > (A.top || 2500))) say(tag + 'room', `${tag}: leaves the room (${c.toArray().map(Math.round)}) at ${t.toFixed(1)} s`);
+        if (!inGap && !b.outside && (c.x < A.x0 || c.x > A.x1 || c.z < A.z0 || c.z > A.z1 || c.y < (b.ground ? 0 : 300) || c.y > (A.top || 2500))) say(tag + 'room', `${tag}: leaves the room (${c.toArray().map(Math.round)}) at ${t.toFixed(1)} s`);
       }
     });
     for (const th of motion.things) if (th.sampled && !th.error && !bodiesSeen[`${th.area}: ${th.kind}`]) say(`${th.area}: ${th.kind}never`, `${th.area}: ${th.kind}: never came in during ${seconds} s (the way in may be blocked, or it waits for a window that is shut)`);
