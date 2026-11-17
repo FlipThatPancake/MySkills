@@ -14,7 +14,7 @@ export default {
     const owner = new Map(); for (const o of objects) for (const m of meshesOf(o)) owner.set(m, o);
     const all = [...owner.keys()], ray = new T.Raycaster(), down = new T.Vector3(0, -1, 0), from = new T.Vector3();
     const hit = (x, z) => { from.set(x, 2600, z); ray.set(from, down); ray.far = 3000; const h = ray.intersectObjects(all, false)[0]; return h ? { y: h.point.y, o: owner.get(h.object), ny: h.face ? h.face.normal.clone().transformDirection(h.object.matrixWorld).y : 1 } : null; };
-    const spheres = (x, y, z, yaw) => { const c = Math.cos(yaw), s = Math.sin(yaw), k = SIZE, at = (px, py, pz, r) => ({ c: [x + (px * c + pz * s) * k, y + py * k, z + (-px * s + pz * c) * k], r: r * k }); return [at(-60, 70, -40, 72), at(40, 70, -75, 70), at(85, 66, 5, 70), at(30, 70, 70, 65), at(-30, 60, 105, 50)]; };
+    const spheres = (x, y, z, yaw) => { const c = Math.cos(yaw), s = Math.sin(yaw), k = SIZE; return cat.spheres.map(({ c: [px, py, pz], r }) => ({ c: [x + (px * c + pz * s) * k, y + py * k, z + (-px * s + pz * c) * k], r: r * k })); };
     const clear = (sp, perchBox) => sp.every(({ c, r }) => {
       const p = new T.Vector3(...c);
       if (solids.concat(objects).some((o) => o.box !== perchBox && o.box.max.y > 100 && o.box.distanceToPoint(p) < r + 14)) return false;

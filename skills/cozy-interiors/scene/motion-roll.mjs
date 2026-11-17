@@ -21,6 +21,7 @@ export function dealMotion(out, seed, say) {
       picked.push(pool.splice(i, 1)[0]);
     }
     a.motion = picked.map(({ kind, k }) => ({ kind, needs: k.needs, say: k.say }));
+    if (picked.some((x) => x.kind === 'cat') && (a.accents || []).includes('cat')) { a.accents = a.accents.filter((x) => x !== 'cat'); a.say = a.say.replace(/accents: cat, /, 'accents: ').replace(/(accents: [^;]*?), cat(?=[,;])/, '$1'); }   // the sleeping cat replaces the static one: a home never shows two
     if (a.motion.length) a.say += `; living: ${a.motion.map((m) => m.say).join('; ')}`;
   }
   out.use += ' motion: a.alive(roll.areas[id].motion) in the spec; see src/motion/index.js.';
