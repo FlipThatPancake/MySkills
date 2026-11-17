@@ -20,6 +20,6 @@ for (const [id, names] of list) for (let i = 0; i < names.length; i++) {
   const f = join(tmp, `${id}-${i}.png`); await page.screenshot({ path: f }); files.push([id, names[i], f]);
 }
 await browser.close();
-const rows = list.map(([id, names]) => names.map((n, i) => `${id}-${i}.png|${n}`).join(',')).join(';');
+const rows = list.filter(([, names]) => names.length).map(([id, names]) => names.map((n, i) => `${id}-${i}.png|${n}`).join(',')).join(';');
 execSync(`python3 - <<'PY'\nfrom PIL import Image, ImageDraw\nrows=[r.split(',') for r in '${rows}'.split(';')]\nW,H=1200,750\nim=Image.new('RGB',(W*max(len(r) for r in rows),H*len(rows)),'white')\nd=ImageDraw.Draw(im)\nfor y,r in enumerate(rows):\n  for x,c in enumerate(r):\n    f,n=c.split('|'); t=Image.open('${tmp}/'+f).convert('RGB').resize((W,H)); im.paste(t,(x*W,y*H)); d.text((x*W+8,y*H+6),n,fill=(90,90,90))\nim.save('${out}')\nPY`);
 console.log(out);
