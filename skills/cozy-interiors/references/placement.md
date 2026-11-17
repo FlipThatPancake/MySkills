@@ -16,6 +16,7 @@ Place each thing where the person living here would use it: at the spot it serve
 - Side table at a seat's arm, top about level with the arm.
 - One rug per group, centred on it, under the front legs of every seat.
 - Walkways 750–900 wide between large pieces.
+- A sofa that backs onto a kitchen or table has a finished back or a console behind it, and a walkway clear behind that.
 
 ## Light
 - Floor lamp beside or just behind the seat it lights, shade bottom near seated shoulder height (about 1050). Table lamp at a sofa end, on a nightstand, at one end of a console or a back corner of a desk.
@@ -26,6 +27,7 @@ Place each thing where the person living here would use it: at the spot it serve
 - Each thing lives at its work spot: pans, pot rail, utensil crock, oil and spices within about 1 m of the hob; dish rack, soap and tea towel at the sink; knives, boards and bowls on the prep stretch between sink and hob; kettle and toaster on free worktop by a socket.
 - Free worktop beside each spot: 600 on one side of the sink and 400 on the other, 300–400 each side of the hob, 400 at the fridge's handle side.
 - A pan stands on the hob and a bowl in the sink; everything else stands on worktop, shelf or rail.
+- An island keeps 1000–1200 of free floor on each side where someone works or sits.
 
 ## Desk, reading, bed
 - Desk side-on to the window or under it, daylight falling across the top; screen at the back, lamp at a back corner, chair tucked in.
