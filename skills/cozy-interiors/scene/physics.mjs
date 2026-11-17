@@ -107,11 +107,11 @@ const res = await page.evaluate((PARTS) => {
   }
   if (PARTS) {   // inside one asset: its parts (separate meshes under ?check) must not pass deep into each other (a magazine through the sling, a book through a shelf)
     for (const id of list) {
-      const parts = []; objs[id].traverse((o) => { if (!solid(o)) return; const p = o.geometry.attributes.position, ix = o.geometry.index, n = ix ? ix.count : p.count, t = new Float64Array(n * 3); for (let i = 0; i < n; i++) { const k = ix ? ix.getX(i) : i; v.fromBufferAttribute(p, k).applyMatrix4(o.matrixWorld); t[i * 3] = v.x; t[i * 3 + 1] = v.y; t[i * 3 + 2] = v.z; } const b = [Infinity, Infinity, Infinity, -Infinity, -Infinity, -Infinity]; for (let i = 0; i < t.length; i += 3) for (let a = 0; a < 3; a++) { if (t[i + a] < b[a]) b[a] = t[i + a]; if (t[i + a] > b[a + 3]) b[a + 3] = t[i + a]; } parts.push({ t, b, n: n / 3 }); });
+      const parts = []; objs[id].traverse((o) => { if (!solid(o)) return; const p = o.geometry.attributes.position, ix = o.geometry.index, n = ix ? ix.count : p.count, t = new Float64Array(n * 3); for (let i = 0; i < n; i++) { const k = ix ? ix.getX(i) : i; v.fromBufferAttribute(p, k).applyMatrix4(o.matrixWorld); t[i * 3] = v.x; t[i * 3 + 1] = v.y; t[i * 3 + 2] = v.z; } const b = [Infinity, Infinity, Infinity, -Infinity, -Infinity, -Infinity]; for (let i = 0; i < t.length; i += 3) for (let a = 0; a < 3; a++) { if (t[i + a] < b[a]) b[a] = t[i + a]; if (t[i + a] > b[a + 3]) b[a + 3] = t[i + a]; } parts.push({ t, b, n: n / 3, content: !!o.userData.content }); });
       const D3 = [[0.577, 0.577, 0.577], [-0.267, 0.802, 0.535], [0.802, -0.535, 0.267]], AX3 = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]], ins = (B, x, y, z) => D3.every(([a, b, c]) => hits(B.t, x, y, z, a, b, c).length % 2 === 1);
       let worst = 0, pair = null;
       for (let i = 0; i < parts.length; i++) for (let j = 0; j < parts.length; j++) {
-        if (i === j) continue; const A = parts[i], B = parts[j]; if (A.n > 3000 || B.n > 3000) continue;
+        if (i === j) continue; const A = parts[i], B = parts[j]; if (!A.content || A.n > 3000 || B.n > 3000) continue;   // only things marked kit.content(...) are tested, against every other part of the asset
         if (A.b[0] > B.b[3] - 20 || A.b[3] < B.b[0] + 20 || A.b[1] > B.b[4] - 20 || A.b[4] < B.b[1] + 20 || A.b[2] > B.b[5] - 20 || A.b[5] < B.b[2] + 20) continue;
         const step = Math.max(1, Math.floor(A.t.length / 3 / 120)); let deep = 0, cnt = 0;
         for (let k = 0; k < A.t.length / 3; k += step) { const x = A.t[k * 3], y = A.t[k * 3 + 1], z = A.t[k * 3 + 2]; if (x <= B.b[0] || x >= B.b[3] || y <= B.b[1] || y >= B.b[4] || z <= B.b[2] || z >= B.b[5] || !ins(B, x, y, z)) continue; let d = Infinity; for (const [dx, dy, dz] of AX3) { const h = hits(B.t, x, y, z, dx, dy, dz); if (h.length) d = Math.min(d, h[0]); } if (d !== Infinity) { cnt++; deep = Math.max(deep, d); } }
@@ -120,7 +120,7 @@ const res = await page.evaluate((PARTS) => {
           if (above > 10 && below > Math.max(deep, 50) && nb >= 2 && below < 400) { deep = below; cnt = nb; } }
         if (cnt >= 2 && deep > worst) { worst = deep; pair = [i, j, cnt]; }
       }
-      if (worst > 20) out.push({ rule: 'parts', id, asset: sc(id).asset, depth: Math.round(worst), pair });
+      if (worst > 20) { const px = objs[id].position, rb = (b) => b.map((q, k) => Math.round(q - [px.x, px.y, px.z][k % 3])).join(','); out.push({ rule: 'parts', id, asset: sc(id).asset, depth: Math.round(worst), pair, boxes: [rb(parts[pair[0]].b), rb(parts[pair[1]].b)] }); }
     }
   }
   return { objects: list.length, tris: list.reduce((s, i) => s + O[i].n, 0), out };
@@ -129,7 +129,7 @@ await browser.close();
 console.log(`${res.objects} objects, ${res.tris} triangles`);
 const say = (i) => i.rule === 'floating' ? `${i.id} (${i.asset}): nothing under its base (y ${i.y}); the next surface is ${i.drop === 999 ? 'far' : i.drop + ' mm'} below`
   : i.rule === 'overhangs' ? `${i.id} (${i.asset}): ${i.over}% of its base reaches past what it stands on (${i.on.join(', ')})`
-  : i.rule === 'parts' ? `${i.id} (${i.asset}): two of its own parts pass ${i.depth} mm into each other (parts ${i.pair[0]} and ${i.pair[1]}, ${i.pair[2]} points)`
+  : i.rule === 'parts' ? `${i.id} (${i.asset}): two of its own parts pass ${i.depth} mm into each other (parts ${i.pair[0]} [${i.boxes[0]}] and ${i.pair[1]} [${i.boxes[1]}], ${i.pair[2]} points)`
   : i.rule === 'sunk' ? `${i.id} (${i.asset}): its base is ${i.depth} mm below the surface of ${i.into}`
   : `${i.id} (${i.assets[0]}) passes ${i.depth} mm into ${i.into} (${i.assets[1]}): ${i.points} of ${i.of} sampled points inside${i.soft ? ' (soft pair, tolerance 30 mm)' : ''}`;
 for (const i of res.out) { i.text = say(i); console.log(`[${i.rule}] ${i.text}`); }

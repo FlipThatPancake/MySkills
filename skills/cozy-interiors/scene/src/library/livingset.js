@@ -100,26 +100,35 @@ export function logBasket(kit, { r = 270, h = 400, logs = 7, seed = 3, weave = '
   if (weave !== 'plain') for (let i = 0; i < 20; i++) { const a = i / 20 * 6.2832, c = Math.cos(a), sn = Math.sin(a); pts.push([c * r * 0.88, h * 0.12, sn * r * 0.88], [c * r * 1.0, h - 22, sn * r * 1.0]); }   // the staves
   g.add(kit.lines(pts, 'mid'));
   const logRod = (A, B, lr) => {
-    g.add(rod(kit, A, B, lr, lr, 'lo'));
+    const lg = kit.group();
+    lg.add(rod(kit, A, B, lr, lr, 'lo'));
     let u = [B[0] - A[0], B[1] - A[1], B[2] - A[2]]; const um = Math.hypot(...u); u = u.map((q) => q / um);
     const e1 = Math.abs(u[1]) > 0.9 ? [1, 0, 0] : [0, 1, 0]; let v = [u[1] * e1[2] - u[2] * e1[1], u[2] * e1[0] - u[0] * e1[2], u[0] * e1[1] - u[1] * e1[0]]; const vm = Math.hypot(...v); v = v.map((q) => q / vm);
     const wv = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
     const disc = (rf, n = 18) => { const q = []; for (let i = 0; i < n; i++) { const a0 = i / n * 6.2832, a1 = (i + 1) / n * 6.2832; for (const a of [a0, a1]) q.push([B[0] + (v[0] * Math.cos(a) + wv[0] * Math.sin(a)) * lr * rf + u[0] * 2, B[1] + (v[1] * Math.cos(a) + wv[1] * Math.sin(a)) * lr * rf + u[1] * 2, B[2] + (v[2] * Math.cos(a) + wv[2] * Math.sin(a)) * lr * rf + u[2] * 2]); } return q; };
-    g.add(kit.lines([...disc(0.96), ...disc(0.62), ...disc(0.3), [B[0] + v[0] * lr * 0.2 + u[0] * 2, B[1] + v[1] * lr * 0.2 + u[1] * 2, B[2] + v[2] * lr * 0.2 + u[2] * 2], [B[0] + v[0] * lr * 0.9 + u[0] * 2, B[1] + v[1] * lr * 0.9 + u[1] * 2, B[2] + v[2] * lr * 0.9 + u[2] * 2]], 'mid'));   // the end: rings and a split
+    lg.add(kit.lines([...disc(0.96), ...disc(0.62), ...disc(0.3), [B[0] + v[0] * lr * 0.2 + u[0] * 2, B[1] + v[1] * lr * 0.2 + u[1] * 2, B[2] + v[2] * lr * 0.2 + u[2] * 2], [B[0] + v[0] * lr * 0.9 + u[0] * 2, B[1] + v[1] * lr * 0.9 + u[1] * 2, B[2] + v[2] * lr * 0.9 + u[2] * 2]], 'mid'));   // the end: rings and a split
+    g.add(kit.content(lg));
   };
-  const placed = [];
+  const placed = [], sub = (p, q) => [p[0] - q[0], p[1] - q[1], p[2] - q[2]], dot = (p, q) => p[0] * q[0] + p[1] * q[1] + p[2] * q[2];
+  const segDist = (A, B, C, D) => {   // the shortest distance between two segments (sampled finely: logs are fat, so a 20 mm step is exact enough)
+    let m = 1e9; const nA = 24, nC = 24; for (let i = 0; i <= nA; i++) { const p = [A[0] + (B[0] - A[0]) * i / nA, A[1] + (B[1] - A[1]) * i / nA, A[2] + (B[2] - A[2]) * i / nA]; for (let j = 0; j <= nC; j++) { const q = [C[0] + (D[0] - C[0]) * j / nC, C[1] + (D[1] - C[1]) * j / nC, C[2] + (D[2] - C[2]) * j / nC], d = Math.hypot(...sub(p, q)); if (d < m) m = d; } } return m;
+  };
+  const innerR = (y) => y < 40 ? r * 0.7 - wall : y < h * 0.35 ? (r * 0.7 + (r * 0.9 - wall - r * 0.7) * (y - 40) / (h * 0.35 - 40)) : (r * 0.9 - wall) + (r - wall - r * 0.9 + wall) * Math.min(1, (y - h * 0.35) / (h * 0.65 - 6));   // the inside wall radius at height y
+  const fits = (A, B, lr) => { for (let i = 0; i <= 20; i++) { const t = i / 20, y = A[1] + (B[1] - A[1]) * t; if (y > h + 8) break; if (Math.hypot(A[0] + (B[0] - A[0]) * t, A[2] + (B[2] - A[2]) * t) > innerR(y) - lr * 1.04 - 4) return false; } return placed.every((q) => segDist(A, B, q.A, q.B) > lr + q.lr + 6); };
   for (let k = 0; k < Math.max(5, Math.min(8, logs)); k++) {
-    let ok = false, x, z, u, lr, len, tries = 0;
-    while (!ok && tries++ < 20) {
-      const a = R() * 6.2832, rd = Math.sqrt(R()) * (r - wall - 70); x = Math.cos(a) * rd; z = Math.sin(a) * rd; lr = 40 + R() * 22; len = h * 0.9 + 80 + R() * 160;
-      const la = R() * 6.2832, lean = leanP * (0.3 + R() * 1.4) * (k % 3 === 0 ? 2.3 : 1); u = [Math.cos(la) * lean, 1, Math.sin(la) * lean]; const m = Math.hypot(...u); u = u.map((q) => q / m);
-      const t = (h - 40) / u[1], rx = x + u[0] * t, rz = z + u[2] * t; ok = Math.hypot(rx, rz) < r - wall - lr * 0.6 && placed.every(([px, pz, pr]) => Math.hypot(px - x, pz - z) > pr + lr - 10);
+    for (let tries = 0; tries < 80; tries++) {
+      const a = R() * 6.2832, rd = Math.sqrt(R()) * (r - wall - 70), x = Math.cos(a) * rd, z = Math.sin(a) * rd, lr = 40 + R() * 22, len = h * 0.9 + 80 + R() * 160;
+      const la = R() * 6.2832, lean = leanP * (0.3 + R() * 1.4) * (k % 3 === 0 ? 2.3 : 1); let u = [Math.cos(la) * lean, 1, Math.sin(la) * lean]; const m = Math.hypot(...u); u = u.map((q) => q / m);
+      const A = [x, 44, z], B = [x + u[0] * len, 44 + u[1] * len, z + u[2] * len];
+      if (!fits(A, B, lr)) continue;
+      placed.push({ A, B, lr }); logRod(A, B, lr); break;
     }
-    if (!ok) continue; placed.push([x, z, lr]);
-    logRod([x, 44, z], [x + u[0] * len, 44 + u[1] * len, z + u[2] * len], lr);
   }
-  { const la = R() * 3.1416, lr = 46 + R() * 14, cx = Math.cos(la), cz = Math.sin(la), L = r * 1.5, y = h + lr * 0.7;   // one log laid across the rim
-    logRod([-cx * L / 2, y, -cz * L / 2], [cx * L / 2, y + 30, cz * L / 2], lr); }
+  for (let tries = 0; tries < 60; tries++) {   // one log laid across the rim, resting on it
+    const la = R() * 3.1416, lr = 46 + R() * 14, cx = Math.cos(la), cz = Math.sin(la), L = r * 1.5, y = h + 8 + lr, A = [-cx * L / 2, y, -cz * L / 2], B = [cx * L / 2, y + 20, cz * L / 2];
+    if (!placed.every((q) => segDist(A, B, q.A, q.B) > lr + q.lr + 6)) continue;
+    logRod(A, B, lr); break;
+  }
   return kit.merge(g);
 }
 export function woodStove(kit, { w = 520, d = 430, h = 600, flueH = 1700, ceil, seed = 2, door = 'glass', legs: lg = 'feet', flue = 'up' } = {}) {   // flue up (the pipe rises and its top edges fade out toward the ceiling) | wall (the pipe turns through an elbow into the wall behind: back the stove onto a wall); ceil (the home's ceiling height, set by the home) overrides flueH
@@ -192,7 +201,7 @@ export function magazineRack(kit, { w = 400, h = 460, seed = 6, form = 'frame' }
     const shp = new T.Shape([...prof, ...prof.slice().reverse().map(([a, b]) => [a, b + th])].map(([a, b]) => new T.Vector2(a, b)));
     const geo = new T.ExtrudeGeometry(shp, { depth: w - 20, bevelEnabled: false, curveSegments: 4 }); geo.rotateY(Math.PI / 2); geo.translate(-(w - 20) / 2, 0, 0);
     g.add(kit.solid(geo, 0, 0, 0, { smooth: true, tone: 'lo' }));
-    let x = -w / 2 + 70; for (let i = 0; i < 4 && x < w / 2 - 80; i++) { const t = 16 + R() * 14, m = kit.group(); m.add(kit.box(-t / 2, 0, 90, t, 250 + R() * 40, 190, lo)); const tt2 = 105 / (sd / 2 - 30), hs = sy - 20 - (1 - tt2 * tt2) * h * 0.4 + th + 4; m.position.set(x, hs, 0); m.rotation.x = -(2 + R() * 4) * DEG; g.add(m); x += t + 10 + R() * 12; }   // each magazine rests on the two high edges of the sling's curve (its bottom edge is 190 mm wide), leaning a few degrees
+    let x = -w / 2 + 70; for (let i = 0; i < 4 && x < w / 2 - 80; i++) { const t = 16 + R() * 14, m = kit.group(); m.add(kit.box(-t / 2, 0, 90, t, 250 + R() * 40, 190, lo)); const tt2 = 105 / (sd / 2 - 30), hs = sy - 20 - (1 - tt2 * tt2) * h * 0.4 + th + 4; m.position.set(x, hs, 0); m.rotation.x = -(2 + R() * 4) * DEG; kit.content(m); g.add(m); x += t + 10 + R() * 12; }   // each magazine rests on the two high edges of the sling's curve (its bottom edge is 190 mm wide), leaning a few degrees
     return kit.merge(g);
   }
   if (form === 'crate') {   // a small slatted crate with magazines standing in it
@@ -200,13 +209,13 @@ export function magazineRack(kit, { w = 400, h = 460, seed = 6, form = 'frame' }
     g.add(B2(0, 0, 0, cw, tt, cd)); for (const sx of [-1, 1]) g.add(B2(sx * (cw / 2 - tt / 2), 0, 0, tt, ch, cd)); for (const sz of [-1, 1]) g.add(B2(0, 0, sz * (cd / 2 - tt / 2), cw, ch, tt));
     for (const f of [0.34, 0.67]) pts.push([-cw / 2, ch * f, cd / 2 + 0.6], [cw / 2, ch * f, cd / 2 + 0.6], [cw / 2 + 0.6, ch * f, cd / 2], [cw / 2 + 0.6, ch * f, -cd / 2]);
     pts.push([-cw / 2 + 60, ch * 0.5, cd / 2 + 0.6], [-cw / 2 + 60, ch * 0.5 + 0.1, cd / 2 + 0.6]);
-    let x = -cw / 2 + 50; for (let i = 0; i < 6 && x < cw / 2 - 50; i++) { const t = 14 + R() * 14, m = kit.group(); m.add(kit.box(-t / 2, 0, 80, t, 120 + R() * 40, 200, lo)); m.position.set(x, tt + ch * 0.3, 0); m.rotation.z = (R() - 0.5) * 0.12; g.add(m); x += t + 10 + R() * 14; }
+    let x = -cw / 2 + 50; for (let i = 0; i < 6 && x < cw / 2 - 50; i++) { const t = 14 + R() * 14, m = kit.group(); m.add(kit.box(-t / 2, 0, 80, t, 120 + R() * 40, 200, lo)); m.position.set(x, tt + ch * 0.3, 0); m.rotation.z = (R() - 0.5) * 0.12; kit.content(m); g.add(m); x += t + 10 + R() * 14; }
     g.add(kit.lines(pts, 'lo')); return kit.merge(g);
   }
   for (const sx of [-1, 1]) { g.add(rod(kit, [sx * w / 2, 0, d / 2 - 10], [sx * w / 2, h * 0.55, d / 2 - 40], 12, 12, 'mid')); g.add(rod(kit, [sx * w / 2, 0, -d / 2 + 10], [sx * w / 2, h, -d / 2 + 40], 12, 12, 'mid')); g.add(rod(kit, [sx * w / 2, h * 0.55, d / 2 - 40], [sx * w / 2, h, -d / 2 + 40], 11, 11, 'mid')); }
   g.add(rod(kit, [-w / 2, h, -d / 2 + 40], [w / 2, h, -d / 2 + 40], 11, 11, 'mid')); g.add(rod(kit, [-w / 2, h * 0.55, d / 2 - 40], [w / 2, h * 0.55, d / 2 - 40], 11, 11, 'mid')); g.add(rod(kit, [-w / 2, 8, d / 2 - 10], [w / 2, 8, d / 2 - 10], 10, 10, 'mid')); g.add(rod(kit, [-w / 2, 8, -d / 2 + 10], [w / 2, 8, -d / 2 + 10], 10, 10, 'mid'));
   g.add(kit.box(-w / 2 + 14, 4, d / 2 - 20, w - 28, 8, d - 30, lo));   // the base
-  let x = -w / 2 + 40; for (let i = 0; i < 5 && x < w / 2 - 70; i++) { const t = 18 + R() * 18, hh = 300 + R() * 60, m = kit.box(x, 14, 90, t, hh, 190, lo); m.rotation.x = -(3 + R() * 3) * DEG; g.add(m); pts.push([x + t / 2, 70, 94], [x + t / 2, 70 + hh * 0.5, 96]); x += t + 8 + R() * 14; }
+  let x = -w / 2 + 40; for (let i = 0; i < 5 && x < w / 2 - 70; i++) { const t = 18 + R() * 18, hh = 300 + R() * 60, m = kit.box(x, 14, 90, t, hh, 190, lo); m.rotation.x = -(3 + R() * 3) * DEG; kit.content(m); g.add(m); pts.push([x + t / 2, 70, 94], [x + t / 2, 70 + hh * 0.5, 96]); x += t + 8 + R() * 14; }
   g.add(kit.lines(pts, 'lo'));
   return kit.merge(g);
 }
