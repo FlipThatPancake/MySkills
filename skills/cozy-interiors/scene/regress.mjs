@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// node regress.mjs [--only=name,name] [--jobs=4] [--dir=<fixtures dir>] [--json out.json] [--keep] → the bug memory: builds every tiny fixture scene and runs check-home on it (physics included, --quick: no ghost renders).
+// node regress.mjs [--only=name,name] [--jobs=4] [--dir=<fixtures dir>] [--json out.json] [--keep] → the bug memory: builds every tiny fixture scene and runs check-home on it (the geometry core included, --quick: no ghost renders).
 // A fixture of kind 'bug' must be reported by some check (expect.rules, naming expect.ids); 'good' must produce no physical finding; 'pending' waits for a rule that is not written yet. known: true marks a bug the checks still miss (XFAIL).
 // Result per fixture: CAUGHT | MISSED (exit 1) | XFAIL | XPASS (a known miss is now caught: remove known) | OK / BAD-ALARM (good, exit 1) / XFAIL-ALARM (a known false alarm) | PENDING | NOW-CAUGHT | ERROR (exit 1).
 // Fixtures live in tests/cozy-interiors/regress/fixtures/*.mjs (default dir, found from the repo root) and export `fixtures`; see bugs.mjs for the shape. Needs Playwright and esbuild (global), like check-home.
@@ -18,22 +18,18 @@ const dir = resolve(opt('dir', join(here, '../../../tests/cozy-interiors/regress
 const COMP = new Set(['interest', 'frame', 'bare', 'fill', 'depth', 'shot', 'ghost', 'variety', 'accent', 'foreground', 'group', 'lone', 'units']), COMP_TEXT = /has no furniture on it|empty floor fills|shows its back to the home camera|a sofa backs onto a wall/;
 const physical = (f) => !COMP.has(f.rule) && !COMP_TEXT.test(f.text);
 // rules that existed when the corpus was written: a 'pending' fixture counts as caught only by a rule name outside this list (the placement rules to come)
-const OLD_RULES = new Set(['accent', 'bare', 'casing', 'cushion', 'depth', 'fill', 'floating', 'floor', 'foreground', 'frame', 'front', 'ghost', 'group', 'hidden', 'interest', 'kettle', 'lamps', 'lone', 'on-overlap', 'openings', 'overlap', 'path', 'physics', 'rug', 'rug-edge', 'rugs', 'sash', 'seat', 'seating', 'shot', 'sill', 'stool', 'support', 'surface', 'swing', 'table', 'tabletop', 'towel', 'units', 'variety', 'wall', 'overhangs', 'sunk', 'penetrates', 'parts']);
+const OLD_RULES = new Set(['accent', 'bare', 'casing', 'cushion', 'depth', 'fill', 'floating', 'floor', 'foreground', 'frame', 'front', 'ghost', 'group', 'hidden', 'interest', 'kettle', 'lamps', 'lone', 'on-overlap', 'openings', 'overlap', 'path', 'physics', 'rug', 'rug-edge', 'rugs', 'sash', 'seat', 'seating', 'shot', 'sill', 'stool', 'support', 'surface', 'swing', 'table', 'tabletop', 'towel', 'units', 'variety', 'wall', 'overhangs', 'sunk', 'penetrates', 'parts', 'moves', 'shape-failed']);
 const files = fs.readdirSync(dir).filter((f) => f.endsWith('.mjs') && f !== 'common.mjs').sort();
 let list = []; for (const f of files) list.push(...(await import(pathToFileURL(join(dir, f)).href)).fixtures.map((x) => ({ ...x, file: join(dir, f) })));
 if (only.length) list = list.filter((x) => only.includes(x.name));
 const tmp = fs.mkdtempSync(join(os.tmpdir(), 'regress-'));
-// kind 'asset': a throwaway asset (fixture.asset = { meta, make(kit) }) is registered in a page built for the occasion, laid out alone, and physics.mjs --parts looks inside it
-const runAsset = (x) => {
+// kind 'asset': a throwaway asset (fixture.asset = { meta, make(kit) }) is registered under its own name, laid out alone, and the geometry core looks inside it (geom/parts.mjs, in this process, no page)
+const runAsset = async (x) => {
   try {
-    const src = join(here, 'src'), esbuild = createRequire(join(execSync('npm root -g', { encoding: 'utf8' }).trim(), 'x.js'))('esbuild'), reg = join(tmp, x.name + '-reg.js'), json = join(tmp, x.name + '.json'), html = join(tmp, x.name + '.html');
-    fs.writeFileSync(reg, `import { REGISTRY } from '${src}/library/index.js'; import { ASSETS } from '${src}/library/meta.js'; import { fixtures } from '${x.file}'; const f = fixtures.find((q) => q.name === '${x.name}'); REGISTRY.testAsset = (kit, p) => f.asset.make(kit, p); ASSETS.testAsset = f.asset.meta;`);
-    ASSETS.testAsset = x.asset.meta;
-    const log = console.log; console.log = () => {}; try { const H = new Home({ seed: 1, floor: 'plain' }), a = H.area('t', 'T', { rect: [0, 0, 4000, 4000] }); a.put('thing', 'testAsset', [2000, 2000], 0, { group: 'g' }); H.write(json, fs); } finally { console.log = log; }
-    const js = esbuild.buildSync({ stdin: { contents: `import '${reg}'; import '${src}/page.js';`, resolveDir: src }, bundle: true, format: 'iife', minify: true, write: false, legalComments: 'none', define: { __SCENE__: fs.readFileSync(json, 'utf8') } }).outputFiles[0].text;
-    fs.writeFileSync(html, fs.readFileSync(join(src, 'page.html'), 'utf8').replace('@title', x.name).replace('<!-- @bundle:page.js -->', () => `<script>${js.replace(/<\/script/g, '<\\/script')}</script>`));
-    return new Promise((res) => { let out = ''; const p = spawn('node', [join(here, 'physics.mjs'), html, '--parts']); p.stdout.on('data', (d) => (out += d)); p.stderr.on('data', (d) => (out += d));
-      p.on('close', () => res({ x, findings: out.split('\n').map((l) => l.match(/^\[([\w-]+)\] (.*)$/)).filter(Boolean).map((m) => ({ rule: m[1], text: m[2] })), error: /findings?\b/.test(out) ? '' : 'physics.mjs printed no verdict: ' + out.slice(-200) })); });
+    const { REGISTRY } = await import('./src/library/index.js'), { checkParts } = await import('./geom/parts.mjs'), key = 'test_' + x.name.replace(/\W/g, '_'), json = join(tmp, x.name + '.json');
+    REGISTRY[key] = (kit, p) => x.asset.make(kit, p); ASSETS[key] = x.asset.meta;
+    const log = console.log; console.log = () => {}; try { const H = new Home({ seed: 1, floor: 'plain' }), a = H.area('t', 'T', { rect: [0, 0, 4000, 4000] }); a.put('thing', key, [2000, 2000], 0, { group: 'g' }); H.write(json, fs); } finally { console.log = log; }
+    return { x, findings: (await checkParts(json)).map((f) => ({ rule: f.rule, text: f.text })), error: '' };
   } catch (e) { return { x, error: 'asset: ' + e.message, findings: [] }; }
 };
 const run = (x) => new Promise((res) => {

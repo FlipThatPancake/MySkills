@@ -68,6 +68,8 @@ export function sleeper(kit, { seed = 1 } = {}) {
   breath.add(kit.solid(loft(T, spine, width, { flat: 0.9, ring: 24, cap: 0.1 }), 0, 0, 0, { smooth: true }));
   const hip = spine[6]; breath.add(kit.solid(ellipsoid(T, 52, 52, 56, 18), hip.x * 0.98, 52, hip.z * 0.98, { smooth: true }));   // the haunch, blended into the back
   const sh = spine[N - 3]; breath.add(kit.solid(ellipsoid(T, 50, 46, 54, 18), sh.x * 0.98, 50, sh.z * 0.98, { smooth: true }));   // the chest, blended
+  breath.add(kit.solid(ellipsoid(T, 92, 40, 92, 22), 0, 36, 0, { smooth: true }));   // the flank and belly fill the middle of the curl
+  breath.add(kit.solid(ellipsoid(T, 50, 36, 62, 16), -32, 34, 40, { smooth: true }));   // the tucked hind legs
   // tabby: a few fine arcs over the back
   const stripes = [];
   for (const t of [0.3, 0.4, 0.5, 0.6, 0.7]) {

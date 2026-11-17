@@ -389,9 +389,8 @@ for (const i of areaIssues) issues.push(i);
   const objs = JSON.parse(readFileSync(scene, 'utf8')).home.objects.filter((o) => SPACE[o.asset] && !['cushion'].includes(o.asset));
   for (let i = 0; i < objs.length; i++) for (let j = i + 1; j < objs.length; j++) { const a = objs[i], b = objs[j]; if (a.asset === b.asset && a.area !== b.area && distance(a.asset, a.params, b.params) < 2) issues.push({ rule: 'variety', what: `${a.id} and ${b.id} are the same ${a.asset} (parameter distance ${distance(a.asset, a.params, b.params).toFixed(1)}, needs 2): change two style choices or sizes` }); }
 }
-{   // rigid bodies: physics.mjs measures the real triangles (resting things touch their support, no two objects penetrate, nothing floats)
-  const { readFileSync, unlinkSync } = await import('node:fs'), html = scene.replace(/\.json$/, '.html'), tmp = scene.replace(/\.json$/, '.physics.json');
-  try { execSync(`node ${join(here, 'physics.mjs')} ${html} --json ${tmp}`, { stdio: 'ignore', timeout: 280000 }); for (const i of JSON.parse(readFileSync(tmp, 'utf8')).out) issues.push({ rule: i.rule === 'floating' ? 'floating' : i.rule === 'penetrates' ? 'penetrates' : i.rule, what: i.text }); unlinkSync(tmp); } catch (e) { issues.push({ rule: 'physics', what: 'physics.mjs did not run: ' + String(e.message).slice(0, 120) }); }
+{   // rigid bodies: the geometry core (geom/) measures the real parts in Node: contacts, support, overhang, sinking, one second of settling (no page needed)
+  try { const { checkScene } = await import('./geom/index.mjs'); for (const f of (await checkScene(scene)).findings) issues.push({ rule: f.rule, what: f.text }); } catch (e) { issues.push({ rule: 'physics', what: 'geom/index.mjs did not run: ' + String(e.stack || e.message).slice(0, 200) }); }
 }
 { const { openPlanIssues } = await import('./check-openplan.mjs'); for (const i of await openPlanIssues(page, scene, { quick: QUICK })) issues.push(i); }   // open-plan homes (scene.groups): layout, separators, glimpse, glide
 { const { motionIssues } = await import('./check-motion.mjs'); for (const i of await motionIssues(page, scene)) issues.push(i); }   // living things (src/motion): rolled kinds, open-window rule, nothing through furniture or walls in 240 s of simulated motion
