@@ -1387,7 +1387,19 @@
     ],
     "weight": 2,
     "flies": true
-   }
+   },
+  "cat": {
+   "say": "a cat asleep, curled on a sofa, bed, chair, rug or the floor, breathing slowly",
+   "needs": [],
+   "in": ["dining", "living", "bedroom", "reading-corner", "home-office"],
+   "weight": 3
+  },
+  "paw": {
+   "say": "a cat's paw reaches out from behind the curtain, searching, and goes back",
+   "needs": ["curtain"],
+   "in": ["dining", "living", "bedroom", "reading-corner", "home-office"],
+   "weight": 2
+  }
   }
  }
 }

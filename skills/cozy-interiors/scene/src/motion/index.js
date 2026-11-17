@@ -19,7 +19,9 @@ import * as THREE from '../vendor/three/three.module.js';
 import { openable, gapOf } from './rules.js';
 import butterfly from './butterfly.js';
 import wind from './wind.js';
-export const PLUGINS = { wind, butterfly };
+import cat from './cat.js';
+import paw from './paw.js';
+export const PLUGINS = { wind, butterfly, cat, paw };
 
 const hash = (s) => { let h = 2166136261 >>> 0; for (const c of String(s)) h = Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0; return h; };
 const seeded = (seed) => { let s = seed >>> 0; return (a = 0, b = 1) => { s = (s + 0x6d2b79f5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return a + (b - a) * (((t ^ (t >>> 14)) >>> 0) / 4294967296); }; };
