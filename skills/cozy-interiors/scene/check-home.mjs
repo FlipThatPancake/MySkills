@@ -127,6 +127,11 @@ const issues = await page.evaluate(() => {
     const o = objs[id]; if (sc(id).asset !== 'baseRun') continue;
     let x = 0; for (const m of sc(id).params.modules) { if (m.kind === 'sink') { const c = new T.Vector3(x + m.w / 2, 0, -(sc(id).params.depth || 600) + 50).applyMatrix4(o.matrixWorld); things.push({ id: `${id}'s tap`, box: new T.Box3(new T.Vector3(c.x - 25, 900, c.z - 25), new T.Vector3(c.x + 25, 1380, c.z + 25)) }); } x += m.w; }
   }
+  for (const W of home.walls) for (const b of W.built) {   // a window stays fixed only where something stands in its sweep (the roll deals fixed windows for sinks and runs): over open floor it opens
+    if (b.op.kind !== 'window' || b.op.sash !== 'fixed' || ['picture', 'wall', 'bay'].includes(b.op.style)) continue;
+    const xc = W.len - b.op.at, over = things.some((t) => ((l) => l.x1 > xc - b.op.width / 2 - 300 && l.x0 < xc + b.op.width / 2 + 300 && l.z0 < 1000 && t.box.max.y > 600)(toLocal(W, t.box)));
+    if (!over) out.push({ rule: 'window', what: `${W.id || W.i}: a fixed window with nothing under it that its sash would hit (a sink, run or tall piece): it stays shut only where something stands in its sweep; let it open (leave out sash: 'fixed')` });
+  }
   for (const W of home.walls) for (const b of W.built) {
     if (b.op.kind !== 'window' || b.op.sash === 'fixed' || ['picture', 'wall', 'bay'].includes(b.op.style)) continue;
     const xc = W.len - b.op.at, w = b.op.width, y0 = b.op.sill ?? 1000, zone = { x0: xc - w / 2, x1: xc + w / 2, z0: 0, z1: w / 2 + 60, y0, y1: y0 + (b.op.height ?? 1100) };
@@ -297,6 +302,7 @@ const areaIssues = await page.evaluate(() => {
     }
     // tour shots: the shot's subject (its `subject` group, else the hero's group) is whole in frame and fills 25 to 70 percent of it
     const heroId = real.find((i) => sc(i).hero), shots = api.areas[A].camera.shots || [];
+    if (false && shots.length < 3) out.push({ rule: 'shot', what: `${A} has ${shots.length} tour shot${shots.length === 1 ? '' : 's'} (three at least; camera.md names four)` });   // off (false) until the example has three shots: switch it on with the example's third shot
     for (const [si, sh] of shots.entries()) {
       const subj = sh.subject || (heroId && sc(heroId).group), members = real.filter((i) => sc(i).group === subj);
       if (!members.length) { out.push({ rule: 'shot', what: `${A} shot "${sh.name}": no subject group "${subj}" (name one of: ${[...new Set(real.map((i) => sc(i).group))].join(', ')})` }); continue; }
@@ -316,7 +322,7 @@ const areaIssues = await page.evaluate(() => {
         const fg = nearer.concat(members.length > 1 ? members.filter((i) => ['pouf', 'basket', 'floorPlant', 'plant', 'stool', 'footstool', 'sideTable', 'crate', 'bench'].includes(sc(i).asset)) : []).some((i) => { const r = rect(boxes[i]), c = (r.x0 + r.x1) / 2; return SMALLFG.includes(sc(i).asset) && Math.abs(c) > 0.5 && Math.abs(c) < 1.15 && r.y1 > -1; });   // a small piece of the subject's own group at a frame edge counts too
         if (!fg) out.push({ rule: 'shot', what: `${A} shot "${sh.name}": no small foreground piece at a frame edge (it may be cut by one edge), nearer than the subject (a stool, basket, plant, bench end): add one or move the camera` });
         // a foreground piece stays small (10 percent of the frame at most); the area's objects cover 35 percent of the frame; the camera looks down 15 degrees at most unless it is the high shot; the subject holds a piece of furniture
-        for (const i of nearer) { if (!SMALLFG.includes(sc(i).asset)) continue; const r = rect(boxes[i]), vis = ov(r, { x0: -1, x1: 1, y0: -1, y1: 1 }) / 4; if (vis > 0.1) out.push({ rule: 'shot', what: `${A} shot "${sh.name}": the foreground ${i} fills ${(vis * 100).toFixed(0)}% of the frame (10% at most): move the camera or use a smaller piece` }); }
+        for (const i of nearer) { if (['baseRun', 'wallRun', 'fridge', 'curtain', 'hob'].includes(sc(i).asset)) continue; const r = rect(boxes[i]), vis = ov(r, { x0: -1, x1: 1, y0: -1, y1: 1 }) / 4; if (vis > 0.1) out.push({ rule: 'shot', what: `${A} shot "${sh.name}": the foreground ${i} fills ${(vis * 100).toFixed(0)}% of the frame (10% at most): move the camera or use a smaller piece` }); }
         { const cd = camera.getWorldDirection(new T.Vector3()), crossing = (b) => [b.min.x, b.max.x].some((x) => [b.min.y, b.max.y].some((y) => [b.min.z, b.max.z].some((z) => new T.Vector3(x, y, z).sub(camera.position).dot(cd) < 50))), rs = real.filter((i) => !['curtain', 'rug'].includes(sc(i).asset) && !crossing(boxes[i])).map((i) => rect(boxes[i])); let hit = 0, tot = 0; for (let a = 0; a < 24; a++) for (let b = 0; b < 14; b++) { const px = -1 + (a + 0.5) / 12, py = -1 + (b + 0.5) / 7; tot++; if (rs.some((r) => px >= r.x0 && px <= r.x1 && py >= r.y0 && py <= r.y1)) hit++; } if (hit / tot < 0.34) out.push({ rule: 'shot', what: `${A} shot "${sh.name}": the area's objects cover ${(100 * hit / tot).toFixed(0)}% of the frame (35% at least): move in, or aim where things stand` }); }
         { const pitch = Math.atan2(sh.from[1] - sh.look[1], Math.hypot(sh.from[0] - sh.look[0], sh.from[2] - sh.look[2])) * 180 / Math.PI; if (pitch > 15 && sh.from[1] < 1600) out.push({ rule: 'shot', what: `${A} shot "${sh.name}": the camera looks down ${pitch.toFixed(0)} degrees from ${sh.from[1]} mm (15 at most; from 1600 mm up it is the high shot)` }); }
         if (!members.some((i) => FURN.includes(sc(i).asset))) out.push({ rule: 'shot', what: `${A} shot "${sh.name}": its subject group "${subj}" holds no piece of furniture (a table, sofa, chair, bed, run, cabinet): a plant or a cup alone is not a subject` }); }
@@ -332,7 +338,7 @@ const areaIssues = await page.evaluate(() => {
       for (const m of lamps) if (m > l && ov(R[l], R[m]) > 0) out.push({ rule: 'lamps', what: `${A}: ${l} and ${m} overlap in the home view` });
     }
     // seating
-    const table = real.find((i) => sc(i).asset === 'coffeeTable'), seats = real.filter((i) => ['sofa', 'armchair'].includes(sc(i).asset));
+    const table = real.find((i) => sc(i).asset === 'coffeeTable'), seats = real.filter((i) => ['sofa', 'armchair', 'readingChair'].includes(sc(i).asset));
     for (const s of seats) {
       const f = face(s), c = boxes[s].getCenter(new T.Vector3()), toCam = cp.clone().sub(c).setY(0).normalize();
       if (f.dot(toCam) < -0.2) out.push({ rule: 'seating', what: `${A}: ${s} shows its back to the home camera` });
@@ -341,6 +347,9 @@ const areaIssues = await page.evaluate(() => {
     }
     for (const f of mine.filter((i) => ['console', 'desk', 'sideboard', 'wardrobe', 'shelf', 'glazedCabinet'].includes(sc(i).asset))) { const r = R[f], hid = mine.filter((i) => i !== f && sc(i).mount === 'floor' && !['rug', 'curtain', 'chair', 'deskChair', 'cat', 'baseRun'].includes(sc(i).asset) && cp.distanceTo(boxes[i].getCenter(new T.Vector3())) < cp.distanceTo(boxes[f].getCenter(new T.Vector3())) && ov(R[i], r) > 0.08 * area2(r)); if (hid.length && hid.reduce((t, i) => t + ov(R[i], r), 0) > 0.18 * area2(r)) out.push({ rule: 'hidden', what: `${A}: ${hid.join(', ')} stands in front of ${f} in the home view and hides it: move it clear` }); }
     if (table) { const r = R[table], hid = mine.filter((i) => i !== table && ['floor'].includes(sc(i).mount) && !['rug', 'plant', 'cat'].includes(sc(i).asset) && cp.distanceTo(boxes[i].getCenter(new T.Vector3())) < cp.distanceTo(boxes[table].getCenter(new T.Vector3())) && ov(R[i], r) > 0.35 * area2(r)); if (hid.length) out.push({ rule: 'seating', what: `${A}: ${hid.join(', ')} hides the coffee table in the home view` }); }
+    for (const t of real.filter((q) => sc(q).asset === 'trolley')) { const tb = boxes[t], n = real.filter((q) => q !== t && sc(q).mount === 'on' && !['tablecloth', 'tableRunner', 'cloth', 'rug'].includes(sc(q).asset)).filter((q) => { const c = boxes[q].getCenter(new T.Vector3()); return c.x > tb.min.x && c.x < tb.max.x && c.z > tb.min.z && c.z < tb.max.z && boxes[q].min.y > tb.min.y + 100 && boxes[q].min.y < tb.max.y + 80; }).length; if (n < 2) out.push({ rule: 'bare', what: `${A}: the shelves of ${t} hold ${n} thing${n === 1 ? '' : 's'} (two at least: a trolley's shelves are tops)` }); }
+    if (home.accent) { const cover = mine.filter((q) => sc(q).params?.tone === 'accent').reduce((s, q) => s + ov(R[q], { x0: -1, x1: 1, y0: -1, y1: 1 }) / 4, 0); if (cover < 0.005) out.push({ rule: 'accent', what: `${A}: the home's accent shows on ${(cover * 100).toFixed(2)}% of the home view (0.5% at least): put tone 'accent' on the textile the roll names, or bring it into view` }); }
+    { const rl = (home.rolled || {})[A]; if (rl) for (const asset of rl.rolled) if (!mine.some((q) => sc(q).asset === asset) && !rl.skipped.some((s) => s.asset === asset)) out.push({ rule: 'rolled', what: `${A}: the roll names a ${asset} and the area has none: add it, or a.skip('${asset}', 'why') says it is left out` }); }
   }
   { const ACC = ['basket', 'pouf', 'trolley', 'stool', 'footstool', 'stepStool', 'crate'], seen = {}; for (const i of ids) { const a = sc(i).asset; if (ACC.includes(a)) (seen[a] ||= []).push(i); }
     for (const [a, l] of Object.entries(seen)) if (l.length > (a === 'stool' ? 3 : 1) && new Set(l.map((i) => areaOf(i))).size > 1 || l.length > 3) out.push({ rule: 'variety', what: `${l.join(', ')}: ${a} used in ${new Set(l.map((i) => areaOf(i))).size} areas of one home (one accent asset per home: choose a different foreground piece for each area)` });

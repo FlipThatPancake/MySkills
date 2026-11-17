@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import { Home } from './compose.mjs';
 const H = new Home({ seed: 12, floor: 'boards' });
 const a = H.area('kitchen', 'Kitchen', { rect: [0, 0, 6600, 4400] });
-const back = a.back(6600, [{ kind: 'window', x: 4700, width: 1300, height: 1200, sill: 1000, sash: 'fixed' }]);
+const back = a.back(6600, [{ kind: 'window', x: 4700, width: 1300, height: 1200, sill: 1000 }]);
 const left = a.left(4400, [{ kind: 'window', x: 2300, width: 1000, height: 1100, sill: 1000, sash: 'fixed' }]);
 // The L: run A stands on the back wall; its `joins` says run B stands at A's start and reaches 2200 mm out from A's front.
 // A builds the L-shaped worktop for both; B (on the left wall) is built with ownsTop: false and starts 1200 mm along the wall,
