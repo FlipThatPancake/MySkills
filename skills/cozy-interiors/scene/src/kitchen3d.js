@@ -194,7 +194,7 @@ export function createKit() {
     // Fill a geometry and outline it, at (x, y, z) — the position of the geometry's own origin.
     solid(geometry, x = 0, y = 0, z = 0, opts = {}) {
       const m = new THREE.Mesh(geometry, opts.leaf ? leafFill : opts.soil ? soilFill : opts.linen ? linenFill : opts.grey ? greyFill : opts.tone === 'accent' ? accentFill : fill);   // soil: true draws earth in warm grey-brown; leaf: true draws foliage in the sage fill with a green outline
-      m.position.set(x, y, z);
+      m.position.set(x, y, z); if (opts.through) m.userData.through = true;   // through: this part may pass through others of its asset (a trolley post through its trays); scene/geom/parts.mjs
       return kit.outline(m, opts);
     },
     // A box by its left-bottom-front corner and size; it reaches back (-z) by d.
