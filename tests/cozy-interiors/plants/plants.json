@@ -1,0 +1,158 @@
+{
+ "units": "mm",
+ "seed": 0,
+ "home": {
+  "height": 2700,
+  "floor": {
+   "style": "plain",
+   "seed": 0
+  },
+  "tiles": {
+   "origin": [
+    0,
+    0
+   ]
+  },
+  "walls": [
+   {
+    "id": "sheet-back",
+    "from": [
+     20400,
+     0
+    ],
+    "to": [
+     0,
+     0
+    ],
+    "openings": []
+   }
+  ],
+  "objects": [
+   {
+    "id": "sheet-p3",
+    "asset": "plant",
+    "at": [
+     11700,
+     0,
+     6500
+    ],
+    "mount": "floor",
+    "params": {
+     "form": 3,
+     "seed": 6
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-ref-p3",
+    "asset": "plant",
+    "at": [
+     12020,
+     0,
+     6500
+    ],
+    "mount": "floor",
+    "params": {
+     "form": 0
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-p4",
+    "asset": "plant",
+    "at": [
+     15100,
+     0,
+     6500
+    ],
+    "mount": "floor",
+    "params": {
+     "form": 4,
+     "seed": 6
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-ref-p4",
+    "asset": "plant",
+    "at": [
+     15420,
+     0,
+     6500
+    ],
+    "mount": "floor",
+    "params": {
+     "form": 0
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-p5",
+    "asset": "plant",
+    "at": [
+     18500,
+     0,
+     6500
+    ],
+    "mount": "floor",
+    "params": {
+     "form": 5,
+     "seed": 6
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-ref-p5",
+    "asset": "plant",
+    "at": [
+     18820,
+     0,
+     6500
+    ],
+    "mount": "floor",
+    "params": {
+     "form": 0
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   }
+  ]
+ },
+ "areas": [
+  {
+   "id": "sheet",
+   "name": "Sheet",
+   "O": [
+    0,
+    0
+   ],
+   "psi": 0,
+   "bounds": {
+    "x0": 0,
+    "x1": 20400,
+    "z0": 0,
+    "z1": 9000,
+    "top": 2500
+   },
+   "camera": {
+    "home": {
+     "target": [
+      3000,
+      400,
+      4000
+     ],
+     "az": 0,
+     "el": 10,
+     "fit": "objects",
+     "dist": 9000
+    },
+    "shots": []
+   }
+  }
+ ]
+}

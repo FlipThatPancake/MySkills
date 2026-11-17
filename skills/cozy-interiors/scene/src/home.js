@@ -57,7 +57,7 @@ export function buildHome(kit, home, registry, areas = []) {
   const P = (a) => new T.Vector2(a[0], a[1]), near = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]) < 40;
   const walls = (home.walls || []).map((w, i) => {
     const len = Math.hypot(w.to[0] - w.from[0], w.to[1] - w.from[1]), d = [(w.to[0] - w.from[0]) / len, (w.to[1] - w.from[1]) / len], n = [d[1], -d[0]];
-    return { ...w, i, len, d, n, vis: { value: 1 }, node: kit.group(), frames: kit.group(), fa: kit.fadable(), through: [], holes: [], built: [] };
+    return { ...w, i, len, d, n, vis: { value: 1 }, node: kit.group(), frames: kit.group(), fa: kit.fadable(), through: [], walk: [], holes: [], built: [] };
   });
   const walls_ = walls;
   for (const W of walls_) {
@@ -65,10 +65,12 @@ export function buildHome(kit, home, registry, areas = []) {
     node.position.set(W.to[0], 0, W.to[1]); node.rotation.y = Math.atan2(W.d[1], -W.d[0]);   // local x runs from `to` back toward `from`, local z is the room side
     for (const op of W.openings || []) {
       const b = opening(kit, op, vis), xc = len - op.at;
+      op.width ??= b.width; op.height ??= b.height; if (op.kind !== 'arch' || b.sill) op.sill ??= b.sill;   // the checks read the sizes the style gave
       b.group.rotation.y = -Math.PI / 2; b.group.position.set(xc, 0, 0);
       W.frames.add(b.group); W.built.push({ op, group: b.group, openables: b.openables }); openables.push(...b.openables); 
       W.holes.push(b.hole.map(([z, y]) => [xc - z, y]));
       if (op.kind !== 'window' && !(op.sill > 0 || /pass$/.test(op.style || ''))) W.through.push([xc - b.width / 2, xc + b.width / 2]);
+      if (op.kind === 'arch' && !(op.sill > 0 || /pass$/.test(op.style || ''))) W.walk.push([xc - b.width / 2, xc + b.width / 2]);   // a way through: the floor runs on beyond it
     }
     const square = (o) => Math.abs(o.d[0] * W.d[0] + o.d[1] * W.d[1]) < 0.9;   // a corner, square or wide (120 degrees); two walls in a line are no corner
     W.joinedTo = walls_.some((o) => o !== W && near(o.from, W.to) && square(o)); W.joinedFrom = walls_.some((o) => o !== W && near(o.to, W.from) && square(o));
@@ -98,7 +100,8 @@ export function buildHome(kit, home, registry, areas = []) {
 
   // ---- floor and tiles
   // the floor reaches as far as the walls and every area's bounds (areas are open: their floor runs out in front of the walls)
-  const xs = [...walls.flatMap((w) => [w.from[0], w.to[0]]), ...areas.flatMap((a) => [a.bounds.x0, a.bounds.x1])], zs = [...walls.flatMap((w) => [w.from[1], w.to[1]]), ...areas.flatMap((a) => [a.bounds.z0, a.bounds.z1])];
+  const BEYOND = 1600, back = walls.filter((w) => w.walk.length).flatMap((w) => [w.from, w.to].map((q) => [q[0] - w.n[0] * BEYOND, q[1] - w.n[1] * BEYOND]));   // behind a wall with a way through, the floor runs on
+  const xs = [...walls.flatMap((w) => [w.from[0], w.to[0]]), ...areas.flatMap((a) => [a.bounds.x0, a.bounds.x1]), ...back.map((q) => q[0])], zs = [...walls.flatMap((w) => [w.from[1], w.to[1]]), ...areas.flatMap((a) => [a.bounds.z0, a.bounds.z1]), ...back.map((q) => q[1])];
   const bb = { x0: Math.min(...xs), x1: Math.max(...xs), z0: Math.min(...zs), z1: Math.max(...zs) };
   const floor = new T.Mesh(new T.PlaneGeometry(bb.x1 - bb.x0 + 2 * EDGE, bb.z1 - bb.z0 + 2 * EDGE), wallMat);
   floor.rotation.x = -Math.PI / 2; floor.position.set((bb.x0 + bb.x1) / 2, -4, (bb.z0 + bb.z1) / 2);
@@ -109,7 +112,7 @@ export function buildHome(kit, home, registry, areas = []) {
   const EXT = 3000, regions = areas.map((a) => ({ b: a.bounds, ws: walls.filter((w) => w.id && w.id.startsWith(a.id + '-')) }));
   const behind = (p) => !regions.length ? 0 : Math.min(...regions.map(({ b, ws }) => {
     let d = Math.hypot(Math.max(b.x0 - EXT - p[0], p[0] - b.x1 - EXT, 0), Math.max(b.z0 - EXT - p[2], p[2] - b.z1 - EXT, 0));
-    for (const w of ws) { const dx = p[0] - w.to[0], dz = p[2] - w.to[1], s = -(dx * w.d[0] + dz * w.d[1]); if (s >= 0 && s <= w.len) d = Math.max(d, -(dx * w.n[0] + dz * w.n[1])); }
+    for (const w of ws) { const dx = p[0] - w.to[0], dz = p[2] - w.to[1], s = -(dx * w.d[0] + dz * w.d[1]); if (s >= 0 && s <= w.len) { const k = -(dx * w.n[0] + dz * w.n[1]); d = Math.max(d, k > 0 && k < BEYOND && w.walk.some(([a, b]) => s > a && s < b) ? k * 80 / BEYOND : k); } }   // beyond an arch the floor lines carry on for BEYOND mm, fading
     return d;
   }));
   const tone = (p) => Math.max(step(out(p) / M), step(behind(p) / 80));
