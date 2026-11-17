@@ -14,7 +14,10 @@
 //     via (the opening named by the roll, or null), room: { x0, x1, z0, z1, ymin, ymax } (where a flier may be: the area's floor shrunk 150 mm, above 1000 mm, below the lamp line) }
 //   opening = { id, W, op, centre: [x, z], n: [nx, nz] (into the room), u: [ux, uz] (along the wall), width, height, sill, open() 0 shut .. 1 wide, gap() the clear width at the middle now (mm), usable(r) gap >= 2 r + 30 }
 // Rule for every plug-in: anything that comes in from outside uses `ctx.via` and goes only while via.usable(r) holds (the window is open); nothing passes through furniture at any frame.
-// To add a kind: tables.json motion.kinds (say, needs, in, weight, flies), the module here, PLUGINS below; then `node check-motion.mjs` is part of check-home.
+// To add a kind:
+//   1. tables.json motion.kinds: say, needs ('openWindow', 'plant'; none for a cat), in (area kinds), weight, flies (true if it comes through the window).
+//   2. src/motion/<kind>.js: export default { sampled: true, build(ctx) } as above; chance only from ctx.rnd; bodies() lists the spheres it fills (a paw from a cabinet lists the sphere it sweeps).
+//   3. Register it in PLUGINS below. check-motion.mjs (part of check-home) then replays it for 240 s and names any crossing of furniture, walls or a shut window.
 import * as THREE from '../vendor/three/three.module.js';
 import { openable, gapOf } from './rules.js';
 import butterfly from './butterfly.js';
