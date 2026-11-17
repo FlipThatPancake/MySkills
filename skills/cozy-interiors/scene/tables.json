@@ -1435,5 +1435,73 @@
    "weight": 2
   }
   }
+ },
+ "groups": {
+  "note": "every area has at least three shootable groups, each a compact subject for one tour shot (camera.md: a group is a few pieces, not the whole arrangement): the hero group and two more from `list`, each at its own place so the three shots can differ by 25 degrees. The places are wall places: the left and right ends of an open-plan area are its seams.",
+  "places": [
+   {
+    "id": "back-left",
+    "say": "on the back wall, left third"
+   },
+   {
+    "id": "back-right",
+    "say": "on the back wall, right third"
+   },
+   {
+    "id": "window-wall",
+    "say": "on the window wall or the second wall"
+   }
+  ],
+  "list": {
+   "dining": [
+    "sideboard or dresser with a still life on top and a picture, shelf or mirror above",
+    "plant corner: a floor plant with a stool or basket beside it",
+    "bar cart or trolley with bottles and glasses",
+    "armchair with a floor lamp and a side table",
+    "bench under a picture, with a cushion and a basket",
+    "glazed cabinet with dishes and a plant"
+   ],
+   "living": [
+    "bookcase or shelf unit with books and objects",
+    "side chair with a lamp and a small table",
+    "plant corner: a floor plant with a basket or pouf",
+    "console or sideboard with a still life under a picture",
+    "reading corner: armchair, floor lamp and a book stack",
+    "bench or window seat with cushions"
+   ],
+   "kitchen": [
+    "island or table with two stools",
+    "tall unit or fridge with a trolley beside it",
+    "open shelves with jars and a plant, a stool below",
+    "sideboard or dresser with a still life and a picture",
+    "plant corner: a floor plant with a basket"
+   ],
+   "bedroom": [
+    "wardrobe or chest of drawers with a still life and a mirror",
+    "armchair with a floor lamp and a side table",
+    "bench at a wall with a blanket and a basket",
+    "plant corner: a floor plant with a stool",
+    "desk or dressing table with a stool and a lamp"
+   ],
+   "reading-corner": [
+    "bookcase with books and objects",
+    "side table with a lamp and a cup, a pouf beside it",
+    "plant corner: a floor plant with a basket",
+    "window seat or bench with cushions"
+   ],
+   "hallway": [
+    "console with a mirror, a key bowl and a plant",
+    "coat hooks with a bench, shoes and an umbrella stand",
+    "shelf with baskets above a bench",
+    "plant corner: a floor plant with a stool"
+   ],
+   "home-office": [
+    "bookshelf with files and objects",
+    "armchair or sofa with a lamp and a side table",
+    "plant corner: a floor plant with a basket",
+    "console or sideboard with a printer and a still life",
+    "cabinet with a plant on top"
+   ]
+  }
  }
 }

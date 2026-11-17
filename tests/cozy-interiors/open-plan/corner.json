@@ -251,70 +251,87 @@
     "dx": 220
    },
    {
-    "id": "dining-side",
-    "asset": "sideboard",
+    "id": "dining-cab",
+    "asset": "glazedCabinet",
     "at": [
-     2200,
+     2100,
      0,
-     210
+     185
     ],
     "mount": "floor",
     "params": {
-     "w": 1400,
-     "h": 800,
-     "form": "doors",
-     "legs": "plinth"
+     "w": 890,
+     "h": 1680,
+     "d": 370,
+     "shelves": 3,
+     "doors": 3,
+     "base": "plinth",
+     "crown": "cornice",
+     "low": 0.26,
+     "seed": 84
     },
-    "group": "dining:wall",
+    "group": "dining:cabinet",
     "area": "dining"
    },
    {
-    "id": "dining-side-vase",
-    "asset": "vase",
-    "at": [
-     1906.7,
-     800,
-     130
-    ],
-    "mount": "on",
-    "params": {
-     "form": 0
-    },
-    "group": "dining:wall",
-    "area": "dining"
-   },
-   {
-    "id": "dining-side-plant",
+    "id": "dining-cab-plant",
     "asset": "plant",
     "at": [
-     2443.3,
-     800,
+     2100,
+     1698,
      180
     ],
     "mount": "on",
     "params": {
      "form": 2
     },
-    "group": "dining:wall",
+    "group": "dining:cabinet",
     "area": "dining"
    },
    {
-    "id": "dining-pic",
-    "asset": "picture",
+    "id": "dining-cart",
+    "asset": "trolley",
     "at": [
-     2200,
-     1250,
-     0
+     4800,
+     0,
+     450
     ],
-    "mount": "wall",
+    "mount": "floor",
+    "params": {},
+    "group": "dining:cart",
+    "area": "dining"
+   },
+   {
+    "id": "dining-cm1",
+    "asset": "mug",
+    "at": [
+     4740,
+     820,
+     450
+    ],
+    "mount": "on",
+    "params": {},
+    "group": "dining:cart",
+    "area": "dining"
+   },
+   {
+    "id": "dining-cj",
+    "asset": "jug",
+    "at": [
+     4880,
+     820,
+     470
+    ],
+    "mount": "on",
     "params": {
-     "w": 700,
-     "h": 500,
-     "form": 0
+     "r": 75,
+     "h": 240,
+     "form": "straight",
+     "band": "banded",
+     "handle": "loop"
     },
-    "group": "dining:wall",
-    "area": "dining",
-    "shadow": false
+    "group": "dining:cart",
+    "area": "dining"
    },
    {
     "id": "dining-basket",
@@ -329,7 +346,7 @@
     "params": {
      "form": 0
     },
-    "group": "dining:rwall",
+    "group": "dining:table set",
     "area": "dining"
    },
    {
@@ -689,7 +706,7 @@
     "params": {
      "w": 800,
      "h": 600,
-     "form": 1
+     "form": 0
     },
     "group": "dining:rwall",
     "area": "dining",
@@ -775,34 +792,34 @@
       "subject": "dining:table set"
      },
      {
-      "name": "wall",
+      "name": "cabinet",
       "from": [
        5300,
        700,
        4800
       ],
       "look": [
-       1594,
+       2100,
        900,
        595
       ],
       "fov": 34,
-      "subject": "dining:wall"
+      "subject": "dining:cabinet"
      },
      {
-      "name": "right wall",
+      "name": "cart",
       "from": [
        1200,
        1300,
        4300
       ],
       "look": [
-       5200,
-       1000,
-       2400
+       4800,
+       600,
+       450
       ],
       "fov": 34,
-      "subject": "dining:rwall"
+      "subject": "dining:cart"
      }
     ]
    }

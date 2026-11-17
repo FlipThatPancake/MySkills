@@ -10,12 +10,14 @@ let d, k;
   a.put('rug', 'rug', [2900, 2800], 0, { group: 'dining rug', params: { w: 2200, d: 2200, form: 'round', fringe: 'ends', border: 40 } });
   const T = a.table('dining', { at: [2900, 2800], r: 650, chairs: 4, rug: false, group: 'table set', hero: true });
   T.over('pendantLamp', { group: 'table set', params: { rim: 1582 } }); T.on('jug', { dx: -120 }); T.on('bookStack', { dx: 220 });
-  back.place('side', 'sideboard', 2200, { group: 'wall', params: { w: 1400, h: 800 } });
-  a.onTop('side', [{ id: 'side-vase', asset: 'vase' }, { id: 'side-plant', asset: 'plant', params: { form: 2 } }], { at: 'back', group: 'wall' });
-  back.place('pic', 'picture', 2200, { y: 1250, group: 'wall', shadow: false, params: { w: 700, h: 500 } });
-  a.put('basket', 'basket', [4250, 3300], 10, { group: 'rwall' });
+  // what the roll dealt this dining area (seed 47): a glazed cabinet with a plant on the back wall between the door and the window, a bar cart on its right third
+  back.place('cab', 'glazedCabinet', 2100, { group: 'cabinet' });
+  a.onTop('cab', [{ id: 'cab-plant', asset: 'plant', params: { form: 2 } }], { at: 'back', group: 'cabinet' });
+  a.put('cart', 'trolley', [4800, 450], 0, { group: 'cart' });
+  a.put('cm1', 'mug', [4740, 450], 0, { y: a.topOf('cart'), mount: 'on', group: 'cart' }); a.put('cj', 'jug', [4880, 470], 0, { y: a.topOf('cart'), mount: 'on', group: 'cart' });
+  a.put('basket', 'basket', [4250, 3300], 10, { group: 'table set' });
   a.view({ target: [2900, 800, 2300], az: 52, el: 14, dist: 7700, fit: 'fixed' });
-  a.shot('table', [2600, 1250, 8400], [2637, 300, 3437], 40, 'table set'); a.shot('table-side', [-100, 1700, 8400], [2567, 500, 3074], 36, 'table set'); a.shot('wall', [5300, 700, 4800], [1594, 900, 595], 34, 'wall'); a.shot('right wall', [1200, 1300, 4300], [5200, 1000, 2400], 34, 'rwall');
+  a.shot('table', [2600, 1250, 8400], [2637, 300, 3437], 40, 'table set'); a.shot('table-side', [-100, 1700, 8400], [2567, 500, 3074], 36, 'table set'); a.shot('cabinet', [5300, 700, 4800], [2100, 900, 595], 34, 'cabinet'); a.shot('cart', [1200, 1300, 4300], [4800, 600, 450], 34, 'cart');
 }
 { // ---------- kitchen (the end: the chain turns; its back wall runs on from the dining area's right wall; a right wall is allowed)
   const a = k = H.area('kitchen', 'Kitchen', { rect: [0, 0, 5400, 4200] }); H.join(d, k, { layout: 'corner', share: 0, separators: ['openShelf', 'island'] });

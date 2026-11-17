@@ -24,4 +24,8 @@ export const fixtures = [
   { name: 'shot-subject-is-neighbour', from: 'round 3 lead: a kitchen shot whose subject group belongs to the dining area', kind: 'bug', expect: { rules: ['open-shot'], ids: [] },
     build({ Home }) { const H = home(Home); H.list[0].shot('table', [800, 1100, 3300], [6200, 600, 2600], 34, 'island'); return H; },
     patch(S) { S.areas.find((a) => a.id === 'kitchen').camera.shots[0].subject = 'dining:table set'; } },
+  { name: 'shot-table-no-foreground', from: 'round 3 lead: a table shot straight from the front: the nearest chair stands in the middle of the frame, not cut by an edge, and no small piece is in front', kind: 'bug', expect: { rules: ['shot'], ids: [] },
+    build({ Home }) { const H = home(Home); H.list[1].shot('table', [2700, 1100, 6600], [2700, 400, 2600], 34, 'table set'); return H; } },
+  { name: 'good-table-nearest-chair-cut-by-edge', from: 'round 3 lead: a table shot from a corner: the nearest chair is cut by the frame edge and is the foreground (the shot rules are not counted for good fixtures; this one guards the other rules)', kind: 'good',
+    build({ Home }) { const H = home(Home); H.list[1].shot('table', [5200, 1100, 6000], [2500, 400, 2600], 34, 'table set'); return H; } },
 ];

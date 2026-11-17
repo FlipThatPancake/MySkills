@@ -22,7 +22,7 @@
      "rect": [
       4425,
       -1500,
-      8950,
+      10150,
       6300
      ],
      "edge": [
@@ -39,9 +39,9 @@
     {
      "style": "boards",
      "rect": [
-      8950,
+      10150,
       -1500,
-      16100,
+      17300,
       6300
      ]
     }
@@ -90,7 +90,7 @@
    {
     "id": "dining-back",
     "from": [
-     9200,
+     10400,
      0
     ],
     "to": [
@@ -100,21 +100,21 @@
     "openings": [
      {
       "kind": "window",
-      "width": 1200,
+      "width": 1400,
       "height": 1200,
       "sill": 900,
-      "at": 900
+      "at": 4000
      }
     ]
    },
    {
     "id": "living-back",
     "from": [
-     14600,
+     15800,
      0
     ],
     "to": [
-     9200,
+     10400,
      0
     ],
     "openings": [
@@ -354,25 +354,19 @@
     "area": "kitchen"
    },
    {
-    "id": "kitchen-shelf",
-    "asset": "openShelf",
+    "id": "kitchen-kplant",
+    "asset": "floorPlant",
     "at": [
+     4250,
      0,
-     1350,
-     2500
+     500
     ],
-    "turn": 90,
-    "mount": "wall",
+    "mount": "floor",
     "params": {
-     "w": 900,
-     "plates": 5,
-     "mugs": 3,
-     "seed": 73,
-     "rack": "jars"
+     "form": 3
     },
     "group": "kitchen:stove",
-    "area": "kitchen",
-    "shadow": false
+    "area": "kitchen"
    },
    {
     "id": "kitchen-iplant",
@@ -393,7 +387,7 @@
     "id": "kitchen-kclock",
     "asset": "wallClock",
     "at": [
-     4450,
+     2800,
      1800,
      0
     ],
@@ -413,14 +407,14 @@
     "id": "dining-rug",
     "asset": "rug",
     "at": [
-     6500,
+     7600,
      0,
-     2600
+     2800
     ],
     "mount": "floor",
     "params": {
-     "w": 2500,
-     "d": 2500,
+     "w": 2900,
+     "d": 2900,
      "form": "round",
      "fringe": "ends",
      "border": 40
@@ -432,13 +426,13 @@
     "id": "dining-dining",
     "asset": "roundTable",
     "at": [
-     6500,
+     7600,
      7,
-     2600
+     2800
     ],
     "mount": "floor",
     "params": {
-     "r": 700,
+     "r": 600,
      "h": 750
     },
     "group": "dining:table set",
@@ -450,9 +444,9 @@
     "id": "dining-dining-chair-1",
     "asset": "chair",
     "at": [
-     6500,
+     7600,
      7,
-     1670
+     1970
     ],
     "mount": "floor",
     "params": {
@@ -466,9 +460,9 @@
     "id": "dining-dining-chair-2",
     "asset": "chair",
     "at": [
-     7430,
+     8430,
      7,
-     2600
+     2800
     ],
     "turn": -90,
     "mount": "floor",
@@ -483,28 +477,11 @@
     "id": "dining-dining-chair-3",
     "asset": "chair",
     "at": [
-     6500,
+     7600,
      7,
-     3530
+     3630
     ],
     "turn": 180,
-    "mount": "floor",
-    "params": {
-     "form": "ladder"
-    },
-    "group": "dining:table set",
-    "area": "dining",
-    "lift": 7
-   },
-   {
-    "id": "dining-dining-chair-4",
-    "asset": "chair",
-    "at": [
-     5570,
-     7,
-     2600
-    ],
-    "turn": 90,
     "mount": "floor",
     "params": {
      "form": "ladder"
@@ -517,24 +494,24 @@
     "id": "dining-dining-pendantLamp",
     "asset": "pendantLamp",
     "at": [
-     6500,
+     7600,
      0,
-     2600
+     2800
     ],
     "mount": "ceiling",
     "params": {
      "rim": 1582
     },
-    "group": "dining:table light",
+    "group": "dining:table set",
     "area": "dining"
    },
    {
     "id": "dining-dining-jug",
     "asset": "jug",
     "at": [
-     6380,
+     7480,
      757,
-     2600
+     2800
     ],
     "mount": "on",
     "params": {
@@ -552,9 +529,9 @@
     "id": "dining-dining-breadBasket",
     "asset": "breadBasket",
     "at": [
-     6720,
+     7820,
      757,
-     2600
+     2800
     ],
     "mount": "on",
     "params": {
@@ -569,106 +546,148 @@
     "dx": 220
    },
    {
-    "id": "dining-side",
-    "asset": "sideboard",
+    "id": "dining-bench",
+    "asset": "bench",
     "at": [
-     8300,
+     6400,
      0,
-     210
+     190
     ],
     "mount": "floor",
     "params": {
-     "w": 1400,
-     "h": 800,
-     "form": "doors",
-     "legs": "hairpin"
+     "form": "plank"
     },
-    "group": "dining:wall",
+    "group": "dining:bench",
     "area": "dining"
    },
    {
-    "id": "dining-side-vase",
-    "asset": "jug",
-    "at": [
-     8008.7,
-     800,
-     116
-    ],
-    "mount": "on",
-    "params": {
-     "r": 66,
-     "h": 250,
-     "form": "straight",
-     "band": "banded",
-     "handle": "loop"
-    },
-    "group": "dining:wall",
-    "area": "dining"
-   },
-   {
-    "id": "dining-side-books",
+    "id": "dining-bench-books",
     "asset": "bookStack",
     "at": [
-     8537.3,
-     800,
+     6400,
+     450,
      135
     ],
     "mount": "on",
     "params": {},
-    "group": "dining:wall",
+    "group": "dining:bench",
     "area": "dining"
    },
    {
     "id": "dining-fplant",
     "asset": "floorPlant",
     "at": [
-     9050,
+     7300,
      0,
-     700
+     650
     ],
     "mount": "floor",
     "params": {
-     "form": 3
+     "form": 4
     },
-    "group": "dining:wall",
+    "group": "dining:bench",
     "area": "dining"
+   },
+   {
+    "id": "dining-arm",
+    "asset": "armchair",
+    "at": [
+     9300,
+     8,
+     900
+    ],
+    "turn": -35.2,
+    "mount": "floor",
+    "params": {
+     "shape": "sling",
+     "weave": "cane",
+     "w": 910,
+     "d": 790,
+     "legs": "tapered",
+     "arms": "flared",
+     "legH": 86,
+     "backH": 850,
+     "back": "tight",
+     "piping": "edge",
+     "tone": "lo"
+    },
+    "group": "dining:reading",
+    "area": "dining",
+    "lift": 8
+   },
+   {
+    "id": "dining-sidet",
+    "asset": "sideTable",
+    "at": [
+     10100,
+     0,
+     800
+    ],
+    "mount": "floor",
+    "params": {
+     "r": 218,
+     "h": 610,
+     "top": "square",
+     "legs": "ball",
+     "shelf": "none",
+     "drawer": "cutout",
+     "tone": "mid"
+    },
+    "group": "dining:reading",
+    "area": "dining"
+   },
+   {
+    "id": "dining-apic",
+    "asset": "picture",
+    "at": [
+     9300,
+     1400,
+     0
+    ],
+    "mount": "wall",
+    "params": {
+     "w": 1000,
+     "h": 600,
+     "form": 0
+    },
+    "group": "dining:reading",
+    "area": "dining",
+    "shadow": false
    },
    {
     "id": "dining-basket",
     "asset": "basket",
     "at": [
-     7450,
+     9300,
      0,
-     3500
+     4250
     ],
     "turn": 10,
     "mount": "floor",
     "params": {
      "form": 1
     },
-    "group": "dining:table set",
+    "group": "dining:corner",
     "area": "dining"
    },
    {
-    "id": "dining-dstool",
-    "asset": "stool",
+    "id": "dining-cst",
+    "asset": "footstool",
     "at": [
-     5500,
+     6000,
      0,
-     3700
+     4350
     ],
     "mount": "floor",
-    "params": {
-     "form": 1
-    },
-    "group": "dining:table set",
+    "params": {},
+    "group": "dining:corner",
     "area": "dining"
    },
    {
     "id": "living-sofa",
     "asset": "sofa",
     "at": [
-     9850,
+     11050,
      8,
      2400
     ],
@@ -697,7 +716,7 @@
     "id": "living-sofa-cushion1",
     "asset": "cushion",
     "at": [
-     9870,
+     11070,
      439,
      1680
     ],
@@ -721,7 +740,7 @@
     "id": "living-sofa-throw",
     "asset": "foldedThrow",
     "at": [
-     10200,
+     11400,
      418,
      1710
     ],
@@ -740,7 +759,7 @@
     "id": "living-rug",
     "asset": "rug",
     "at": [
-     11700,
+     12900,
      0,
      2400
     ],
@@ -759,7 +778,7 @@
     "id": "living-coffee",
     "asset": "coffeeTable",
     "at": [
-     11800,
+     13000,
      7,
      2400
     ],
@@ -779,24 +798,24 @@
     "id": "living-arm",
     "asset": "armchair",
     "at": [
-     12700,
+     14400,
      8,
      1900
     ],
-    "turn": -69,
+    "turn": -74.5,
     "mount": "floor",
     "params": {
-     "shape": "sling",
-     "weave": "cane",
-     "w": 910,
-     "d": 790,
-     "legs": "tapered",
-     "arms": "flared",
-     "legH": 86,
-     "backH": 850,
-     "back": "tight",
-     "piping": "edge",
-     "tone": "lo"
+     "shape": "wing",
+     "weave": "slats",
+     "w": 800,
+     "d": 800,
+     "legs": "turned",
+     "arms": "track",
+     "legH": 131,
+     "backH": 790,
+     "back": "loose",
+     "piping": "none",
+     "tone": "mid"
     },
     "group": "living:coffee set",
     "area": "living",
@@ -806,7 +825,7 @@
     "id": "living-shelf",
     "asset": "sideboard",
     "at": [
-     14000,
+     15200,
      0,
      210
     ],
@@ -814,8 +833,8 @@
     "params": {
      "w": 1100,
      "h": 800,
-     "form": "drawers",
-     "legs": "tapered"
+     "form": "doors",
+     "legs": "hairpin"
     },
     "group": "living:shelves",
     "area": "living"
@@ -824,17 +843,17 @@
     "id": "living-shelf-vase",
     "asset": "jug",
     "at": [
-     13766,
+     14958.7,
      800,
-     138
+     116
     ],
     "mount": "on",
     "params": {
-     "r": 88,
-     "h": 270,
-     "form": "belly",
-     "band": "plain",
-     "handle": "none"
+     "r": 66,
+     "h": 250,
+     "form": "straight",
+     "band": "banded",
+     "handle": "loop"
     },
     "group": "living:shelves",
     "area": "living"
@@ -843,7 +862,7 @@
     "id": "living-shelf-books",
     "asset": "bookStack",
     "at": [
-     14202,
+     15387.3,
      800,
      135
     ],
@@ -856,7 +875,7 @@
     "id": "living-spic",
     "asset": "picture",
     "at": [
-     14000,
+     15200,
      1200,
      0
     ],
@@ -864,7 +883,7 @@
     "params": {
      "w": 800,
      "h": 600,
-     "form": 0
+     "form": 1
     },
     "group": "living:shelves",
     "area": "living",
@@ -874,7 +893,7 @@
     "id": "living-flamp",
     "asset": "floorLamp",
     "at": [
-     9900,
+     11100,
      0,
      950
     ],
@@ -887,13 +906,13 @@
     "id": "living-lplant",
     "asset": "floorPlant",
     "at": [
-     9850,
+     11050,
      0,
      4300
     ],
     "mount": "floor",
     "params": {
-     "form": 4
+     "form": 0
     },
     "group": "living:window",
     "area": "living"
@@ -902,9 +921,9 @@
     "id": "living-pouf",
     "asset": "pouf",
     "at": [
-     10700,
+     11900,
      8,
-     3300
+     3050
     ],
     "mount": "floor",
     "params": {},
@@ -916,7 +935,7 @@
     "id": "living-foot",
     "asset": "footstool",
     "at": [
-     12200,
+     13400,
      8,
      3150
     ],
@@ -930,7 +949,7 @@
     "id": "living-mug",
     "asset": "mug",
     "at": [
-     11800,
+     13000,
      357,
      2300
     ],
@@ -987,6 +1006,21 @@
       "across": "dining"
      },
      {
+      "name": "stove",
+      "from": [
+       4600,
+       1700,
+       4600
+      ],
+      "look": [
+       2300,
+       1300,
+       600
+      ],
+      "fov": 34,
+      "subject": "kitchen:stove"
+     },
+     {
       "name": "cook",
       "from": [
        2600,
@@ -1000,21 +1034,6 @@
       ],
       "fov": 36,
       "subject": "kitchen:cooking"
-     },
-     {
-      "name": "island",
-      "from": [
-       800,
-       700,
-       3300
-      ],
-      "look": [
-       4516,
-       557,
-       1759
-      ],
-      "fov": 32,
-      "subject": "kitchen:island"
      }
     ]
    }
@@ -1030,7 +1049,7 @@
    "psi": 0,
    "bounds": {
     "x0": 4050,
-    "x1": 9200,
+    "x1": 10400,
     "z0": 0,
     "z1": 4800,
     "top": 2500
@@ -1038,7 +1057,7 @@
    "camera": {
     "home": {
      "target": [
-      7100,
+      7600,
       800,
       2000
      ],
@@ -1050,47 +1069,47 @@
      {
       "name": "table",
       "from": [
-       3350,
-       1250,
-       3900
+       8750,
+       1000,
+       6600
       ],
       "look": [
-       7499,
+       7271,
        300,
-       2092
-      ],
-      "fov": 40,
-      "subject": "dining:table set"
-     },
-     {
-      "name": "wall",
-      "from": [
-       8400,
-       1900,
-       6000
-      ],
-      "look": [
-       5800,
-       800,
-       300
+       2808
       ],
       "fov": 34,
-      "subject": "dining:wall"
+      "subject": "dining:table set"
      },
      {
-      "name": "table-low",
+      "name": "reading",
       "from": [
-       8200,
-       850,
-       5600
+       4850,
+       1400,
+       1800
       ],
       "look": [
-       7400,
-       450,
-       2300
+       9493,
+       700,
+       255
+      ],
+      "fov": 36,
+      "subject": "dining:reading"
+     },
+     {
+      "name": "bench",
+      "from": [
+       4550,
+       2100,
+       3300
+      ],
+      "look": [
+       6326,
+       700,
+       610
       ],
       "fov": 30,
-      "subject": "dining:table set"
+      "subject": "dining:bench"
      }
     ]
    }
@@ -1100,13 +1119,13 @@
    "name": "Living",
    "group": "g1",
    "O": [
-    9200,
+    10400,
     0
    ],
    "psi": 0,
    "bounds": {
-    "x0": 8700,
-    "x1": 14600,
+    "x0": 9900,
+    "x1": 15800,
     "z0": 0,
     "z1": 4800,
     "top": 2500
@@ -1114,7 +1133,7 @@
    "camera": {
     "home": {
      "target": [
-      11600,
+      12800,
       800,
       2000
      ],
@@ -1124,48 +1143,48 @@
     },
     "shots": [
      {
-      "name": "sofa",
+      "name": "shelves",
       "from": [
-       16100,
-       1100,
-       4200
+       15600,
+       1300,
+       5400
       ],
       "look": [
-       11667,
-       440,
-       1562
+       15200,
+       700,
+       450
       ],
-      "fov": 40,
+      "fov": 34,
+      "subject": "living:shelves"
+     },
+     {
+      "name": "sofa",
+      "from": [
+       13700,
+       1100,
+       6300
+      ],
+      "look": [
+       11037,
+       700,
+       2706
+      ],
+      "fov": 36,
       "subject": "living:seating"
      },
      {
       "name": "coffee",
       "from": [
-       12800,
-       1300,
-       4400
+       11900,
+       1700,
+       6900
       ],
       "look": [
-       11800,
-       500,
-       2200
+       12894,
+       441,
+       2095
       ],
       "fov": 34,
-      "subject": "living:coffee set"
-     },
-     {
-      "name": "coffee-low",
-      "from": [
-       12800,
-       850,
-       6200
-      ],
-      "look": [
-       11900,
-       400,
-       2300
-      ],
-      "fov": 30,
       "subject": "living:coffee set"
      }
     ]
@@ -1209,11 +1228,11 @@
      "layout": "row",
      "share": 500,
      "p0": [
-      8950,
+      10150,
       0
      ],
      "p1": [
-      8950,
+      10150,
       4800
      ],
      "normal": [
