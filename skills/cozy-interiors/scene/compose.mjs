@@ -28,8 +28,9 @@ import { joinAreas, seamLine, zoneList } from './openplan.mjs';
 import { checkAlive, pickVia, MOTION } from './motion-roll.mjs';
 const rad = (d) => d * Math.PI / 180, deg = (r) => r * 180 / Math.PI, r0 = (v) => Math.round(v * 10) / 10;
 export const GAP = 3000;
+const headLine = (o, head) => o.kind !== 'window' || o.feature || ['picture', 'pair', 'wall', 'bay'].includes(o.style) ? o : o.sill != null && o.height == null ? { ...o, height: head - o.sill } : o.height != null && o.sill == null ? { ...o, sill: head - o.height } : o;   // windows on one wall share a head height: a sill alone fixes the height, a height alone fixes the sill
 export class Home {
-  constructor({ seed, floor = 'auto', height = 2700, accent }) { if (floor === 'auto') floor = seed % 5 === 3 ? 'tiles' : 'boards'; this.S = { units: 'mm', seed, home: { height, ...(accent ? { accent } : {}), floor: { style: floor, seed }, tiles: { origin: [0, 0] }, walls: [], objects: [] }, areas: [] }; this.list = []; }
+  constructor({ seed, floor = 'auto', height = 2700, accent, head = 2100 }) { this.head = head;   /* the head height of plain windows: a window given a sill or a height gets the other from it */ if (floor === 'auto') floor = seed % 5 === 3 ? 'tiles' : 'boards'; this.S = { units: 'mm', seed, home: { height, ...(accent ? { accent } : {}), floor: { style: floor, seed }, tiles: { origin: [0, 0] }, walls: [], objects: [] }, areas: [] }; this.list = []; }
   area(id, name, { O, psi = 0, rect }) {
     const a = new Area(this, id, name, O || [0, 0], psi, rect);
     if (!O) { const prev = this.list[this.list.length - 1], b = a.worldBounds(), x0 = prev ? prev.worldBounds().x1 + GAP : 0; a.O = [r0(x0 - b.x0), r0(-b.z0)]; }
@@ -77,7 +78,7 @@ class Area {
   wall(id, [x, z], phi, len, openings = []) {
     const p = this, to = p.P([x, z]), ph = rad(phi + p.psi), r = [Math.cos(ph), Math.sin(ph)];
     const from = [r0(to[0] + r[0] * len), r0(to[1] + r[1] * len)];
-    p.h.S.home.walls.push({ id: `${p.id}-${id}`, from, to, openings: openings.map(({ x: ox, ...o }) => ({ ...o, at: len - ox })) });
+    p.h.S.home.walls.push({ id: `${p.id}-${id}`, from, to, openings: openings.map(({ x: ox, ...o }) => ({ ...headLine(o, p.h.head), at: len - ox })) });
     const F = {
       id, len, phi,
       at: (ox, off = 0) => [x + Math.cos(rad(phi)) * ox - Math.sin(rad(phi)) * off, z + Math.sin(rad(phi)) * ox + Math.cos(rad(phi)) * off],   // the local point
@@ -181,7 +182,7 @@ class Area {
     const { tris, all } = this.targetTris('seatSoft', targetId), c = all.getCenter(new T.Vector3()), org = [c.x - (cx * Math.cos(th) + cz * Math.sin(th)), c.z - (-cx * Math.sin(th) + cz * Math.cos(th))];   // the object's origin in the area's frame, from where its parts really stand
     const toArea = (lx, lz) => [org[0] + lx * Math.cos(th) + lz * Math.sin(th), org[1] - lx * Math.sin(th) + lz * Math.cos(th)], f = heightField(tris), zo = lb.min.z + 480;
     const seats = tgt.params?.seats || (tgt.asset === 'armchair' ? 1 : 2), n = cushions ?? (tgt.asset === 'armchair' ? 1 : Math.max(1, seats - 1)), grp = group || tgt.group;
-    for (let i = 0; i < n; i++) { const lx = n === 1 ? cx + (tgt.asset === 'armchair' ? 0 : W / 2 - 330) : cx - (W / 2 - 330) + i * (W - 660) / (n - 1), [px, pz] = toArea(lx, zo), [sx, sz] = toArea(lx, zo + 60), y = Math.round(f(sx, sz)) + 6;   // the seat height is read in front of the back
+    for (let i = 0; i < n; i++) { const lx = n === 1 ? cx + (tgt.asset === 'armchair' ? 0 : W / 2 - 330) : cx - (W / 2 - 330) + i * (W - 660) / (n - 1), [px, pz] = toArea(lx, zo), [sx, sz] = toArea(lx, zo + 60), y = Math.round(f(sx, sz)) + 6 + Math.round(65 * Math.sin(rad(17 + 4 * (i % 2))));   // the seat height is read in front of the back; a leaning cushion's lower edge dips by half its thickness times the sine of the lean, so it stands that much higher
       this.put(`${targetId}-cushion${i + 1}`, 'cushion', [px, pz], tn + (i % 2 ? -6 : 8), { group: grp, y, mount: 'on', params: { w: 400, h: 320, thick: 130, lean: 17 + 4 * (i % 2), tone } }); }
     if (thr === 'drape') { try { const [ax, az] = toArea(cx - (W / 2 - 420), zo + 330); this.drapeOver(`${targetId}-throw`, targetId, { w: 1000, d: 700, wave: 10, at: [ax, az], spin: tn + 20, tone: throwTone, group: grp }); } catch (e) { if (process.env.SOFT_DEBUG) console.error(e.message); thr = 'band'; } }
     if (thr === 'band') { const [bx, bz] = toArea(cx + (W / 2 - 360), zo + 330); this.bandOn(`${targetId}-throw`, targetId, { w: 700, d: 380, at: [bx, bz], spin: tn, tone: throwTone, group: grp }); }

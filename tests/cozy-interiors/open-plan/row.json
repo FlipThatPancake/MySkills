@@ -121,7 +121,7 @@
      {
       "kind": "window",
       "width": 1500,
-      "height": 1300,
+      "height": 1400,
       "sill": 700,
       "at": 2900
      }
@@ -640,9 +640,9 @@
     "id": "dining-fplant",
     "asset": "floorPlant",
     "at": [
-     8950,
+     6600,
      0,
-     800
+     700
     ],
     "mount": "floor",
     "params": {
@@ -655,16 +655,16 @@
     "id": "dining-basket",
     "asset": "basket",
     "at": [
-     9000,
+     8750,
      0,
-     4000
+     3450
     ],
     "turn": 10,
     "mount": "floor",
     "params": {
      "form": 1
     },
-    "group": "dining:table light",
+    "group": "dining:table set",
     "area": "dining"
    },
    {
@@ -701,7 +701,7 @@
     "asset": "cushion",
     "at": [
      9870,
-     420,
+     439,
      1680
     ],
     "turn": 98,
@@ -782,11 +782,11 @@
     "id": "living-arm",
     "asset": "armchair",
     "at": [
-     13000,
+     12700,
      8,
-     1800
+     1900
     ],
-    "turn": -69.4,
+    "turn": -69,
     "mount": "floor",
     "params": {
      "shape": "sling",
@@ -902,6 +902,20 @@
     "area": "living"
    },
    {
+    "id": "living-pouf",
+    "asset": "pouf",
+    "at": [
+     12200,
+     8,
+     3500
+    ],
+    "mount": "floor",
+    "params": {},
+    "group": "living:seating",
+    "area": "living",
+    "lift": 8
+   },
+   {
     "id": "living-mug",
     "asset": "mug",
     "at": [
@@ -960,6 +974,36 @@
       "fov": 36,
       "subject": "kitchen:island",
       "across": "dining"
+     },
+     {
+      "name": "cook",
+      "from": [
+       2600,
+       1700,
+       6300
+      ],
+      "look": [
+       2338,
+       700,
+       696
+      ],
+      "fov": 36,
+      "subject": "kitchen:cooking"
+     },
+     {
+      "name": "island",
+      "from": [
+       800,
+       700,
+       3300
+      ],
+      "look": [
+       4516,
+       557,
+       1759
+      ],
+      "fov": 32,
+      "subject": "kitchen:island"
      }
     ]
    }
@@ -991,7 +1035,53 @@
      "el": 14,
      "fit": "objects"
     },
-    "shots": []
+    "shots": [
+     {
+      "name": "table",
+      "from": [
+       3350,
+       1250,
+       3900
+      ],
+      "look": [
+       7499,
+       300,
+       2092
+      ],
+      "fov": 40,
+      "subject": "dining:table set"
+     },
+     {
+      "name": "table-side",
+      "from": [
+       9350,
+       2100,
+       7200
+      ],
+      "look": [
+       7150,
+       500,
+       2785
+      ],
+      "fov": 36,
+      "subject": "dining:table set"
+     },
+     {
+      "name": "wall",
+      "from": [
+       5450,
+       700,
+       5100
+      ],
+      "look": [
+       5350,
+       875,
+       403
+      ],
+      "fov": 34,
+      "subject": "dining:wall"
+     }
+    ]
    }
   },
   {
@@ -1021,7 +1111,53 @@
      "el": 14,
      "fit": "objects"
     },
-    "shots": []
+    "shots": [
+     {
+      "name": "sofa",
+      "from": [
+       16100,
+       1100,
+       4200
+      ],
+      "look": [
+       11667,
+       440,
+       1562
+      ],
+      "fov": 40,
+      "subject": "living:seating"
+     },
+     {
+      "name": "shelves",
+      "from": [
+       13700,
+       1700,
+       5700
+      ],
+      "look": [
+       13236,
+       300,
+       168
+      ],
+      "fov": 32,
+      "subject": "living:shelves"
+     },
+     {
+      "name": "window",
+      "from": [
+       13400,
+       1000,
+       7500
+      ],
+      "look": [
+       10283,
+       700,
+       2340
+      ],
+      "fov": 34,
+      "subject": "living:window"
+     }
+    ]
    }
   }
  ],

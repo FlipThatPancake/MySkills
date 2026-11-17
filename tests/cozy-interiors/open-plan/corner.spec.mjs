@@ -13,8 +13,9 @@ let d, k;
   back.place('side', 'sideboard', 2200, { group: 'wall', params: { w: 1400, h: 800 } });
   a.onTop('side', [{ id: 'side-vase', asset: 'vase' }, { id: 'side-plant', asset: 'plant', params: { form: 2 } }], { at: 'back', group: 'wall' });
   back.place('pic', 'picture', 2200, { y: 1250, group: 'wall', shadow: false, params: { w: 700, h: 500 } });
-  a.put('basket', 'basket', [800, 3800], 10, { group: 'wall' });
+  a.put('basket', 'basket', [4350, 4350], 10, { group: 'table set' });
   a.view({ target: [2900, 800, 2300], az: 52, el: 14, dist: 7700, fit: 'fixed' });
+  a.shot('table', [2600, 1250, 8400], [2637, 300, 3437], 40, 'table set'); a.shot('table-side', [-100, 1700, 8400], [2567, 500, 3074], 36, 'table set'); a.shot('wall', [5300, 700, 4800], [1594, 900, 595], 34, 'wall');
 }
 { // ---------- kitchen (the end: the chain turns; its back wall runs on from the dining area's right wall; a right wall is allowed)
   const a = k = H.area('kitchen', 'Kitchen', { rect: [0, 0, 5400, 4200] }); H.join(d, k, { layout: 'corner', share: 0, separators: ['openShelf', 'island'] });
@@ -37,11 +38,12 @@ let d, k;
   right.place('rshelf', 'wallShelf', 3500, { y: 1500, group: 'shelfwall', shadow: false, params: { w: 800 } });
   a.across('across the island', [5300, 1400, 3300], [1200, 600, 2000], 38, 'island', 'dining');
   a.view({ target: [2500, 800, 1500], az: 8, el: 13, dist: 5600 });
+  a.shot('stove', [-4300, 1000, 2400], [-244, 1300, 2520], 34, 'stove'); a.shot('island', [-1900, 1100, 5700], [-1644, 557, 1158], 30, 'island');
 }
 { // the dining area's right wall is the stretch beside the kitchen, built by H.join(d, k, { layout: 'corner' }): hang things on it after the join
-  d.cornerWall.place('rshelf2', 'wallShelf', 3900, { y: 1500, group: 'wall', shadow: false, params: { w: 900 } });
-  d.cornerWall.place('rpic', 'picture', 2400, { y: 1200, group: 'wall', shadow: false, params: { w: 800, h: 600 } });
-  d.cornerWall.place('rshelf', 'wallShelf', 1550, { y: 1500, group: 'wall', shadow: false, params: { w: 700 } });
+  d.cornerWall.place('rshelf2', 'wallShelf', 3900, { y: 1500, group: 'rwall', shadow: false, params: { w: 900 } });
+  d.cornerWall.place('rpic', 'picture', 2400, { y: 1200, group: 'rwall', shadow: false, params: { w: 800, h: 600 } });
+  d.cornerWall.place('rshelf', 'wallShelf', 1550, { y: 1500, group: 'rwall', shadow: false, params: { w: 700 } });
 }
 H.write(new URL('./corner.json', import.meta.url).pathname, fs);
 console.log('wrote corner.json');

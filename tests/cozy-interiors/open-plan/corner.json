@@ -320,16 +320,16 @@
     "id": "dining-basket",
     "asset": "basket",
     "at": [
-     800,
+     4350,
      0,
-     3800
+     4350
     ],
     "turn": 10,
     "mount": "floor",
     "params": {
      "form": 0
     },
-    "group": "dining:wall",
+    "group": "dining:table set",
     "area": "dining"
    },
    {
@@ -672,7 +672,7 @@
     "params": {
      "w": 900
     },
-    "group": "dining:wall",
+    "group": "dining:rwall",
     "area": "dining",
     "shadow": false
    },
@@ -691,7 +691,7 @@
      "h": 600,
      "form": 1
     },
-    "group": "dining:wall",
+    "group": "dining:rwall",
     "area": "dining",
     "shadow": false
    },
@@ -708,7 +708,7 @@
     "params": {
      "w": 700
     },
-    "group": "dining:wall",
+    "group": "dining:rwall",
     "area": "dining",
     "shadow": false
    }
@@ -743,7 +743,53 @@
      "fit": "fixed",
      "dist": 7700
     },
-    "shots": []
+    "shots": [
+     {
+      "name": "table",
+      "from": [
+       2600,
+       1250,
+       8400
+      ],
+      "look": [
+       2637,
+       300,
+       3437
+      ],
+      "fov": 40,
+      "subject": "dining:table set"
+     },
+     {
+      "name": "table-side",
+      "from": [
+       -100,
+       1700,
+       8400
+      ],
+      "look": [
+       2567,
+       500,
+       3074
+      ],
+      "fov": 36,
+      "subject": "dining:table set"
+     },
+     {
+      "name": "wall",
+      "from": [
+       5300,
+       700,
+       4800
+      ],
+      "look": [
+       1594,
+       900,
+       595
+      ],
+      "fov": 34,
+      "subject": "dining:wall"
+     }
+    ]
    }
   },
   {
@@ -790,6 +836,36 @@
       "fov": 38,
       "subject": "kitchen:island",
       "across": "dining"
+     },
+     {
+      "name": "stove",
+      "from": [
+       3000,
+       1000,
+       500
+      ],
+      "look": [
+       2880,
+       1300,
+       4556
+      ],
+      "fov": 34,
+      "subject": "kitchen:stove"
+     },
+     {
+      "name": "island",
+      "from": [
+       -300,
+       1100,
+       2900
+      ],
+      "look": [
+       4242,
+       557,
+       3156
+      ],
+      "fov": 30,
+      "subject": "kitchen:island"
      }
     ]
    }

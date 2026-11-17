@@ -2,6 +2,8 @@
 // If one of these fails, a check has gone too strict, and the old bugs it was written for are probably still caught by luck.
 import { room, run } from './common.mjs';
 export const fixtures = [
+  { name: 'good-windows-share-head-line', from: 'windows on one wall: a sill alone, a height alone and a feature window all pass; compose fills the missing number from the head line (2100)', kind: 'good',
+    build({ Home }) { const { H } = room(Home, { openings: [{ kind: 'window', x: 1000, width: 1000, sill: 1000 }, { kind: 'window', x: 3300, width: 1000, height: 1300 }, { kind: 'window', x: 5500, width: 800, height: 800, sill: 1300, feature: true }] }); return H; } },
   { name: 'good-jug-off-centre-round-table', from: 'round-2 example (Nov 17): a jug 180 mm off the middle of a round table tipped in the settle test because a round hull top gave one contact point (now a cylinder)', kind: 'good',
     build({ Home }) { const { H, a } = room(Home); const T = a.table('bt', { at: [3200, 2600], r: 520, chairs: 2, group: 'breakfast' }); T.on('jug', { y: 757, dx: -180 }); return H; } },
   { name: 'good-leaning-board', from: 'a cutting board leaning on the wall through R.on stands against it (round-2 example: it used to land mid-worktop and tip)', kind: 'good',
@@ -12,6 +14,8 @@ export const fixtures = [
     build({ Home }) { const { H, a, back } = room(Home), R = a.run(back, 'run', 500, [{ w: 600, kind: 'doors' }, { w: 900, kind: 'hob' }, { w: 600, kind: 'drawers' }], { group: 'run' }); R.on('hob', 'hob'); R.on('hob', 'pan'); return H; } },
   { name: 'good-kettle-beside-sink', from: 'R.on(sink, kettle) puts the kettle on the next worktop module', kind: 'good',
     build({ Home }) { const { H, a, back } = room(Home), R = a.run(back, 'run', 500, [{ w: 600, kind: 'doors' }, { w: 900, kind: 'sink' }, { w: 600, kind: 'doors' }], { group: 'run' }); R.on('sink', 'kettle'); return H; } },
+  { name: 'good-sofa-lean-cushion-on-chaise', from: 'round 3 row home: a tight-back chaise sofa stood 34 mm inside its lean-back cushion (the cushion tilts, its lower edge dips below the height it was put at)', kind: 'good',
+    build({ Home }) { const { H, a } = room(Home); a.put('sofa', 'sofa', [650, 2400], 90, { group: 'g', hero: true, params: { seats: 3, chaise: 'right', d: 920, seatN: 1, legs: 'tapered', arms: 'none', legH: 108, backH: 750, back: 'tight', piping: 'none' } }); a.seatSoft('sofa', { cushions: 1, throw: false, tone: 'accent', group: 'g' }); return H; } },
   { name: 'good-sofa-on-rug', from: 'a rug under the sofa front legs, a coffee table on it, seat soft things on the sofa', kind: 'good',
     build({ Home }) { const { H, a } = room(Home); a.put('rug', 'rug', [3000, 1300], 0, { group: 'g', params: { w: 2800, d: 1900 } }); a.put('sofa', 'sofa', [3000, 560], 0, { group: 'g', hero: true }); a.put('ct', 'coffeeTable', [3000, 1740], 0, { group: 'g', params: { w: 1100 } }); a.seatSoft('sofa', { tone: 'lo', group: 'g' }); return H; } },
   { name: 'good-table-set', from: 'a round table with four chairs on its rug, a cloth and a pendant over it', kind: 'good',

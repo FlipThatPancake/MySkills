@@ -388,6 +388,12 @@ for (const i of areaIssues) issues.push(i);
 {   // rigid bodies: the geometry core (geom/) measures the real parts in Node: contacts, support, overhang, sinking, one second of settling (no page needed)
   try { const { checkScene } = await import('./geom/index.mjs'); for (const f of (await checkScene(scene)).findings) issues.push({ rule: f.rule, what: f.text }); } catch (e) { issues.push({ rule: 'physics', what: 'geom/index.mjs did not run: ' + String(e.stack || e.message).slice(0, 200) }); }
 }
+{   // windows on one back wall share a head height (the top of the glass): in an area, and along a row home's one long back wall; a feature window (style picture, pair, wall, bay, or feature: true) may differ
+  const S = JSON.parse((await import('node:fs')).readFileSync(scene, 'utf8')), FEATURE = ['picture', 'pair', 'wall', 'bay'], lines = {};
+  const rowOf = (area) => { const g = (S.groups || []).find((q) => q.areas.includes(area)); return g && g.seams.every((q) => q.layout === 'row') ? g.id : area; };
+  for (const w of S.home.walls) { const [area, side] = [w.id.slice(0, w.id.lastIndexOf('-')), w.id.slice(w.id.lastIndexOf('-') + 1)]; for (const o of w.openings) if (o.kind === 'window' && !o.feature && !FEATURE.includes(o.style)) (lines[`${side === 'back' ? rowOf(area) : area}:${side}`] ||= []).push({ id: w.id, head: (o.sill ?? 1000) + (o.height ?? 1100) }); }
+  for (const [k, ws] of Object.entries(lines)) { const hs = ws.map((q) => q.head), lo = Math.min(...hs), hi = Math.max(...hs); if (hi - lo > 30) issues.push({ rule: 'window-head', what: `windows on one back wall have different head heights (${ws.map((q) => `${q.id} ${q.head}`).join(', ')}): give them one head height (set height = head - sill, or leave height out and compose uses the home's head line, 2100), unless one is a feature window (feature: true or a picture/pair/wall/bay style)` }); }
+}
 { const { openPlanIssues } = await import('./check-openplan.mjs'); for (const i of await openPlanIssues(page, scene, { quick: QUICK })) issues.push(i); }   // open-plan homes (scene.groups): layout, separators, glimpse, glide
 { const { motionIssues } = await import('./check-motion.mjs'); for (const i of await motionIssues(page, scene)) issues.push(i); }   // living things (src/motion): rolled kinds, open-window rule, nothing through furniture or walls in 240 s of simulated motion
 await browser.close();
