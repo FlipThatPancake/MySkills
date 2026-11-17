@@ -22,4 +22,11 @@ const H = new Home({ seed: Number(process.env.SEED) || 7, floor: 'boards' });
   a.alive([{ kind: 'cat' }]);
   a.view({ target: [2800, 1000, 1800], az: 12, el: 10 });
 }
+{
+  const a = H.area('dining', 'Dining', { rect: [0, 0, 5200, 4000] });
+  a.back(5200, [{ kind: 'window', x: 2600, width: 1300, height: 1200, sill: 1000 }]);
+  a.put('rug', 'rug', [2600, 2200], 0, { group: 'rug', params: { w: 2800, d: 1900 } });
+  a.alive([{ kind: 'cat' }]);
+  a.view({ target: [2600, 400, 1800], az: 15, el: 14 });
+}
 H.write(new URL('./motion-cat.json', import.meta.url).pathname, fs);

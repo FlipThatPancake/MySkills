@@ -53,6 +53,26 @@
       "at": 3100
      }
     ]
+   },
+   {
+    "id": "dining-back",
+    "from": [
+     23100,
+     0
+    ],
+    "to": [
+     17900,
+     0
+    ],
+    "openings": [
+     {
+      "kind": "window",
+      "width": 1300,
+      "height": 1200,
+      "sill": 1000,
+      "at": 2600
+     }
+    ]
    }
   ],
   "objects": [
@@ -226,6 +246,25 @@
     },
     "group": "bedroom:foot",
     "area": "bedroom"
+   },
+   {
+    "id": "dining-rug",
+    "asset": "rug",
+    "at": [
+     20500,
+     0,
+     2200
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 2800,
+     "d": 1900,
+     "form": "striped",
+     "border": 45,
+     "fringe": "none"
+    },
+    "group": "dining:rug",
+    "area": "dining"
    }
   ]
  },
@@ -301,6 +340,41 @@
      ],
      "az": 12,
      "el": 10,
+     "fit": "objects"
+    },
+    "shots": []
+   }
+  },
+  {
+   "id": "dining",
+   "name": "Dining",
+   "motion": [
+    {
+     "kind": "cat",
+     "needs": []
+    }
+   ],
+   "O": [
+    17900,
+    0
+   ],
+   "psi": 0,
+   "bounds": {
+    "x0": 17900,
+    "x1": 23100,
+    "z0": 0,
+    "z1": 4000,
+    "top": 2500
+   },
+   "camera": {
+    "home": {
+     "target": [
+      20500,
+      400,
+      1800
+     ],
+     "az": 15,
+     "el": 14,
      "fit": "objects"
     },
     "shots": []
