@@ -131,6 +131,7 @@ class Area {
     for (const m of modules) { mods.push({ ...m, xc: x + m.w / 2 }); x += m.w; }
     const length = x - left;
     F.put(id, 'baseRun', left, depth, { group, hero, params: { ...params, depth, modules } });
+    if (modules.some((m) => m.ajar)) this.h.sign(this.id, 'drawer ajar');   // a module { kind: 'drawers', ajar: 0.4 } leaves its top drawer pulled out 0.4 of its travel
     let n = 0;
     return {
       length, left, depth, mods, F,

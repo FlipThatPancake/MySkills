@@ -5,7 +5,7 @@ import { execSync } from 'node:child_process';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import fs from 'node:fs';
-const here = dirname(fileURLToPath(import.meta.url)), scene = resolve(process.argv[2]);
+const here = dirname(fileURLToPath(import.meta.url)), scene = resolve(process.argv.slice(2).find((a) => !a.startsWith('--')));
 const spec = JSON.parse(fs.readFileSync(scene, 'utf8')), O = Object.fromEntries(spec.areas.map((a) => [a.id, a.O || [0, 0]]));
 execSync(`node ${join(here, 'build.mjs')} ${scene}`, { stdio: 'ignore' });
 const { chromium } = createRequire(join(execSync('npm root -g', { encoding: 'utf8' }).trim(), 'x.js'))('playwright');
@@ -16,8 +16,8 @@ await page.waitForFunction(() => window.cozyScene && window.cozyBaked, null, { t
 const res = await page.evaluate(() => {
   const api = window.cozyScene, { home, kit, camera } = api, T = kit.THREE, objs = home.objects, sc = (id) => objs[id].userData.scene, out = [];
   home.group.updateMatrixWorld(true);
-  const box = (g) => { g.updateMatrixWorld(true); const b = new T.Box3(), bb = new T.Box3(); g.traverse((o) => { if (!o.isMesh || o.isLineSegments2 || o.material.isMeshBasicMaterial || kit.hulls.includes(o.material) || o.material === kit.depth) return; o.geometry.computeBoundingBox(); b.union(bb.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld)); }); return b; };
-  const ids = Object.keys(objs), boxes = Object.fromEntries(ids.map((i) => [i, box(objs[i])]));
+  const box = (g) => { g.updateMatrixWorld(true); const b = new T.Box3(), bb = new T.Box3(); g.traverse((o) => { if (!o.isMesh || o.isLineSegments2 || o.material.isMeshBasicMaterial || kit.hulls.includes(o.material) || o.material === kit.depth) return; o.geometry.computeBoundingBox(); b.union(bb.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld)); }); if (b.isEmpty()) b.expandByPoint(new T.Vector3().setFromMatrixPosition(g.matrixWorld)); return b; };     // a lines-only object (scratches, leaf, scuff, height chart) has no solid parts: its box is its origin point
+  const CH = { woodStove: 1700, hood: 2250 }, ids = Object.keys(objs), boxes = Object.fromEntries(ids.map((i) => { const b = box(objs[i]); if (CH[sc(i).asset]) b.max.y = Math.min(b.max.y, CH[sc(i).asset]); return [i, b]; }));   // a flue or chimney runs on up to the ceiling: only its first 1700 (stove) or 2250 (hood) mm frame as the object
   const areaOf = (id) => sc(id).area || api.areaIds.find((a) => { const b = api.areas[a].bounds, c = boxes[id].getCenter(new T.Vector3()); return c.x >= b.x0 && c.x <= b.x1 && c.z >= b.z0 && c.z <= b.z1; });
   const rect = (b) => { const xs = [], ys = []; for (const x of [b.min.x, b.max.x]) for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) { const p = new T.Vector3(x, y, z).project(camera); xs.push(p.x); ys.push(p.y); } return { x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys) }; };
   for (const A of api.areaIds) {
@@ -66,5 +66,6 @@ const res = await page.evaluate(() => {
   }
   return out;
 });
-for (const r of res) { const o = O[r.area]; console.log(r.area, JSON.stringify(r.name), '→', r.best ? `[${[r.best.from[0] - o[0], r.best.from[1], r.best.from[2] - o[1]]}], [${[r.best.look[0] - o[0], r.best.look[1], r.best.look[2] - o[1]]}], ${r.best.fov} (fills ${r.best.fill}, at ${r.best.cx}${r.best.loose ? ", LOOSE: strict rules found nothing" : ""})` : 'no camera found (make the subject group smaller, add a foreground piece) ' + JSON.stringify(r.stat)); }
+const WHY = { orbit: 'the camera would leave the orbit limits: the area is too shallow for this group, or the group stands too far back', cut: 'the group does not fit the frame: make the subject group smaller', fill: 'the group fills too little or too much of the frame: resize the group', third: 'the group cannot sit in the middle third', blocked: 'a piece stands in front of the subject: move it or add a group', fg: 'no foreground piece fits: add a stool, basket or bench end', off: 'the subject cannot sit in the middle third', empty: 'a frame side stays empty: add things on that side', clip: 'something is cut by the top edge' };
+for (const r of res) { const o = O[r.area]; console.log(r.area, JSON.stringify(r.name), '→', r.best ? `[${[r.best.from[0] - o[0], r.best.from[1], r.best.from[2] - o[1]]}], [${[r.best.look[0] - o[0], r.best.look[1], r.best.look[2] - o[1]]}], ${r.best.fov} (fills ${r.best.fill}, at ${r.best.cx}${r.best.loose ? ", LOOSE: strict rules found nothing" : ""})` : `no camera found: most candidates failed on "${Object.entries(r.stat).filter(([k, v]) => typeof v === 'number' && k !== 'minOv').sort((x, y) => y[1] - x[1])[0]?.[0] || 'none'}" (${WHY[Object.entries(r.stat).filter(([k, v]) => typeof v === 'number' && k !== 'minOv').sort((x, y) => y[1] - x[1])[0]?.[0]] || 'make the subject group smaller, add a foreground piece'}) ` + JSON.stringify(r.stat)); }
 await browser.close();

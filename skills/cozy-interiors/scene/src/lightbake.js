@@ -38,7 +38,8 @@ export async function bakeLight({ THREE: T, renderer, scene, kit, walls, areas, 
         vec3 L = uOrtho > 0.5 ? -uAxis : normalize(uRef - P);
         float c = max(dot(uN, L), 0.0), vis = 1.0, near = 0.0;
         vec4 cl = uVP * vec4(P, 1.0); vec3 nd = cl.xyz / cl.w; vec2 q = nd.xy * 0.5 + 0.5;
-        if (uOrtho < 0.5 && (cl.w <= 0.0 || q.x < 0.0 || q.x > 1.0 || q.y < 0.0 || q.y > 1.0)) vis = 0.0;
+        if (uOrtho < 0.5 && cl.w <= 0.0) vis = 0.0;
+        else if (uOrtho < 0.5 && (q.x < 0.0 || q.x > 1.0 || q.y < 0.0 || q.y > 1.0)) vis = 0.5;   // outside the light's 130 degree cone: half lit, so the cone's edge leaves no hard grey patch on the floor
         else if (uOrtho > 0.5 && (q.x < 0.0 || q.x > 1.0 || q.y < 0.0 || q.y > 1.0)) vis = 1.0;
         else { float d = uOrtho > 0.5 ? dot(P - uRef, uAxis) : length(P - uRef); float s = texture2D(uDepth, q).r * ${FAR.toFixed(1)}; float dd = d - s, bias = 14.0 + 14.0 / max(c, 0.1); vis = dd > bias ? 0.0 : 1.0; near = dd > bias && dd < ${REACH.toFixed(1)} ? 1.0 : 0.0;
           if (dd > bias) {

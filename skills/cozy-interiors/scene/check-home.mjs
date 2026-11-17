@@ -10,7 +10,7 @@ import { execSync } from 'node:child_process';
 import { existsSync, statSync } from 'node:fs';
 import { dirname, join, resolve, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
-const here = dirname(fileURLToPath(import.meta.url)), scene = process.argv[2] ? resolve(process.argv[2]) : (console.error('usage: node check-home.mjs <scene.json>   (the scene a spec wrote)'), process.exit(2));
+const here = dirname(fileURLToPath(import.meta.url)), scene = process.argv.slice(2).find((a) => !a.startsWith('--')) ? resolve(process.argv.slice(2).find((a) => !a.startsWith('--'))) : (console.error('usage: node check-home.mjs <scene.json>   (the scene a spec wrote)'), process.exit(2));
 const QUICK = process.argv.includes('--quick'), REUSE = process.argv.includes('--reuse');   // --quick skips the ghost renders (the slow part: run it on the final pass only); --reuse keeps the built page when it is newer than the scene
 if (!(REUSE && existsSync(scene.replace(/\.json$/, '.html')) && statSync(scene.replace(/\.json$/, '.html')).mtimeMs > statSync(scene).mtimeMs)) execSync(`node ${join(here, 'build.mjs')} ${scene}`, { stdio: 'ignore' });
 const { chromium } = createRequire(join(execSync('npm root -g', { encoding: 'utf8' }).trim(), 'x.js'))('playwright');
@@ -30,7 +30,8 @@ const issues = await page.evaluate(() => {
     if (b.isEmpty()) b.expandByPoint(new T.Vector3().setFromMatrixPosition(g.matrixWorld));   // a mark drawn only in lines has no solid parts: it counts as a point
     return b;
   };
-  const boxes = Object.fromEntries(Object.keys(objs).map((id) => { const b = box(objs[id]); if (sc(id).asset === 'baseRun') b.max.y = Math.min(b.max.y, 940); return [id, b]; }));   // a run's tap is not part of its body
+  const CHIMNEY = { woodStove: 1700, hood: 2250 };
+  const boxes = Object.fromEntries(Object.keys(objs).map((id) => { const b = box(objs[id]); if (sc(id).asset === 'baseRun') b.max.y = Math.min(b.max.y, 940); if (CHIMNEY[sc(id).asset]) b.max.y = Math.min(b.max.y, CHIMNEY[sc(id).asset]); return [id, b]; }));   // a chimney or flue runs on up to the ceiling: only its first 1700 (stove) or 2250 (hood) mm count as the object   // a run's tap is not part of its body
   // an object turned off the grid (a sofa on a wall at 60 degrees) is measured by its own box, turned with it: corners are its 8 corners in the world
   const cornersOf = (g) => {
     g.updateMatrixWorld(true); const inv = g.matrixWorld.clone().invert(), b = new T.Box3(), bb = new T.Box3();
@@ -38,10 +39,20 @@ const issues = await page.evaluate(() => {
     if (b.isEmpty()) b.expandByPoint(new T.Vector3().setFromMatrixPosition(g.matrixWorld));
     const pts = []; for (const x of [b.min.x, b.max.x]) for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) pts.push(new T.Vector3(x, y, z).applyMatrix4(g.matrixWorld));
     if (sc0(g) === 'baseRun') for (const p of pts) p.y = Math.min(p.y, 940);
+    if (CHIMNEY[sc0(g)]) for (const p of pts) p.y = Math.min(p.y, CHIMNEY[sc0(g)]);
     return pts;
   };
   function sc0(g) { return g.userData.scene.asset; }
   for (const id of Object.keys(objs)) boxes[id].pts = cornersOf(objs[id]);
+  // an L run (baseRun with joins) is two legs: its own box would count the empty floor inside the L as solid
+  const legsOf = (id) => {
+    const q = sc(id), J = q.asset === 'baseRun' && q.params?.joins; if (!J) return [boxes[id]];
+    const o = objs[id]; o.updateMatrixWorld(true); const D = q.params.depth || 600, L = q.params.modules.reduce((n, m) => n + m.w, 0), j = J.length || D;
+    return [[0, -D, L, 0], J.side === 'start' ? [0, 0, D, j] : [L - D, 0, L, j]].map(([x0, z0, x1, z1]) => {
+      const b = new T.Box3(); b.pts = []; for (const [x, z] of [[x0, z0], [x1, z0], [x1, z1], [x0, z1]]) for (const y of [0, 940]) { const v = new T.Vector3(x, y, z).applyMatrix4(o.matrixWorld); b.expandByPoint(v); b.pts.push(v); } return b;
+    });
+  };
+  const footB = (b) => { const p = b.pts, ys = p.map((q) => q.y), y0 = Math.min(...ys); const f = p.filter((q) => q.y < y0 + 1).map((q) => [q.x, q.z]); const cx = f.reduce((a, q) => a + q[0], 0) / f.length, cz = f.reduce((a, q) => a + q[1], 0) / f.length; return f.sort((a, b) => Math.atan2(a[1] - cz, a[0] - cx) - Math.atan2(b[1] - cz, b[0] - cx)); };
   const foot = (id) => { const p = boxes[id].pts, ys = p.map((q) => q.y), y0 = Math.min(...ys); const f = p.filter((q) => q.y < y0 + 1).map((q) => [q.x, q.z]); const cx = f.reduce((a, q) => a + q[0], 0) / f.length, cz = f.reduce((a, q) => a + q[1], 0) / f.length; return f.sort((a, b) => Math.atan2(a[1] - cz, a[0] - cx) - Math.atan2(b[1] - cz, b[0] - cx)); };
   const sat = (A, B, tol) => {   // two convex footprints penetrate by more than tol along every edge normal
     for (const P of [A, B]) for (let i = 0; i < P.length; i++) { const a = P[i], b = P[(i + 1) % P.length], nx = b[1] - a[1], nz = a[0] - b[0], l = Math.hypot(nx, nz) || 1; let lo1 = 1e9, hi1 = -1e9, lo2 = 1e9, hi2 = -1e9; for (const q of A) { const d = (q[0] * nx + q[1] * nz) / l; lo1 = Math.min(lo1, d); hi1 = Math.max(hi1, d); } for (const q of B) { const d = (q[0] * nx + q[1] * nz) / l; lo2 = Math.min(lo2, d); hi2 = Math.max(hi2, d); } if (Math.min(hi1, hi2) - Math.max(lo1, lo2) <= tol) return false; }
@@ -53,7 +64,7 @@ const issues = await page.evaluate(() => {
   for (let i = 0; i < solid.length; i++) for (let j = i + 1; j < solid.length; j++) {
     const a = solid[i], b = solid[j];
     if (sc(a).mount !== sc(b).mount || baseRuns(a, b)) continue;
-    if (Math.min(boxes[a].max.y, boxes[b].max.y) - Math.max(boxes[a].min.y, boxes[b].min.y) > 4 && sat(foot(a), foot(b), 4)) out.push({ rule: 'overlap', what: `${a} and ${b} pass through each other: move one, or shrink what is around it` });
+    if (legsOf(a).some((la) => legsOf(b).some((lb) => Math.min(la.max.y, lb.max.y) - Math.max(la.min.y, lb.min.y) > 4 && sat(footB(la), footB(lb), 4)))) out.push({ rule: 'overlap', what: `${a} and ${b} pass through each other: move one, or shrink what is around it` });
   }
   { const rugs = Object.keys(objs).filter((id) => sc(id).asset === 'rug'); for (let i = 0; i < rugs.length; i++) for (let j = i + 1; j < rugs.length; j++) if (sat(foot(rugs[i]), foot(rugs[j]), 0)) out.push({ rule: 'rugs', what: `${rugs[i]} and ${rugs[j]} overlap: size or move them so each rug lies on its own patch of floor` }); }
   for (const id of Object.keys(objs)) {
@@ -132,7 +143,7 @@ const issues = await page.evaluate(() => {
     const pend = Object.keys(objs).filter((o) => sc(o).asset === 'pendantLamp'), centred = pend.length ? pend.some((o) => Math.hypot(objs[o].position.x - c.x, objs[o].position.z - c.z) < 100) : Object.keys(objs).some((o) => sc(o).asset === 'rug' && Math.hypot(objs[o].position.x - c.x, objs[o].position.z - c.z) < 150);
     if (!centred) out.push({ rule: 'table', what: `${id} has no pendant centred on it (within 100 mm) or rug centred on it (within 150 mm)` });
     for (const W of home.walls) { const l = toLocal(W, tb); if (l.x1 > 0 && l.x0 < W.len && l.z0 >= -3 && l.z0 > 5 && l.z0 < 900) out.push({ rule: 'table', what: `${id} is ${l.z0.toFixed(0)} mm from ${W.id || W.i}: stand it against the wall or keep 900 mm` }); }
-    for (const o of Object.keys(objs)) { if (o === id || ['rug', 'chair', 'curtain'].includes(sc(o).asset) || !['floor'].includes(sc(o).mount)) continue; const g = gap2(tb, boxes[o]); if (g < 900) out.push({ rule: 'table', what: `${id} is ${g.toFixed(0)} mm from ${o} (need 900)` }); }
+    for (const o of Object.keys(objs)) { if (o === id || ['rug', 'chair', 'curtain'].includes(sc(o).asset) || !['floor'].includes(sc(o).mount)) continue; const g = Math.min(...legsOf(o).map((l) => gap2(tb, l))); if (g < 900) out.push({ rule: 'table', what: `${id} is ${g.toFixed(0)} mm from ${o} (need 900)` }); }
   }
   // 4. a door or arch keeps a path 1000 mm wide and 1500 mm deep straight ahead (floor pieces; rugs and lamps do not count)
   for (const W of home.walls) for (const b of W.built) {
@@ -194,7 +205,7 @@ const areaIssues = await page.evaluate(() => {
   const api = window.cozyScene; if (!api.areaIds) return [];
   const { home, kit, camera } = api, T = kit.THREE, out = [], objs = home.objects, ids = Object.keys(objs), sc = (id) => objs[id].userData.scene;
   const box = (g) => { g.updateMatrixWorld(true); const b = new T.Box3(), bb = new T.Box3(); g.traverse((o) => { if (!o.isMesh || o.isLineSegments2 || o.userData.lines || o.material.isMeshBasicMaterial || kit.hulls.includes(o.material) || o.material === kit.depth) return; o.geometry.computeBoundingBox(); b.union(bb.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld)); }); g.traverse((o) => { if (o.userData.landing) { const L = new T.Vector3(...o.userData.landing).applyMatrix4(o.matrixWorld), c = b.getCenter(new T.Vector3()); b.expandByPoint(L); b.expandByPoint(new T.Vector3(c.x - 130, L.y, c.z - 130)); b.expandByPoint(new T.Vector3(c.x + 130, L.y, c.z + 130)); } }); return b; };
-  const boxes = Object.fromEntries(ids.map((id) => [id, box(objs[id])]));
+  const CHIMNEY = { woodStove: 1700, hood: 2250 }, boxes = Object.fromEntries(ids.map((id) => { const b = box(objs[id]); if (CHIMNEY[sc(id).asset]) b.max.y = Math.min(b.max.y, CHIMNEY[sc(id).asset]); return [id, b]; }));
   const areaOf = (id) => sc(id).area || api.areaIds.find((a) => { const b = api.areas[a].bounds, c = boxes[id].getCenter(new T.Vector3()); return c.x >= b.x0 && c.x <= b.x1 && c.z >= b.z0 && c.z <= b.z1; });
   const rect = (b) => { const xs = [], ys = []; for (const x of [b.min.x, b.max.x]) for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) { const p = new T.Vector3(x, y, z).project(camera); xs.push(p.x); ys.push(p.y); } return { x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys) }; };
   const ov = (a, b) => Math.max(0, Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0)) * Math.max(0, Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0)), area2 = (a) => (a.x1 - a.x0) * (a.y1 - a.y0);

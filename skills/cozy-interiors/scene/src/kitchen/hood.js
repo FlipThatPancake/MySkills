@@ -1,5 +1,5 @@
 // @js:kitchen-hood — the cooker hood with its chimney, on the back wall above the hob. Origin: the hob unit's left-front-floor corner.
-export function hood(kit) {
+export function hood(kit, { ceil = 2250 } = {}) {
   const T = kit.THREE, g = kit.group();
 
   // ---- hood: canopy underside y 1500, 900 x 500 (z -100..-600), chimney 300 x 300 to y 2250
@@ -10,7 +10,7 @@ export function hood(kit) {
   const canopy = kit.solid(geo, 0, 0, -100);
   canopy.rotation.y = Math.PI / 2;
   g.add(canopy);
-  g.add(kit.box(300, 1650, -300, 300, 600, 300));          // chimney
+  g.add(kit.box(300, 1650, -300, 300, Math.max(600, ceil - 1650), 300));          // chimney, up to the ceiling
   g.add(kit.box(0, 1500, -90, 900, 30, 20));                // front lower lip (proud 10 mm)
   g.add(kit.box(30, 1536, -96, 840, 22, 4));                // control strip
   g.add(kit.cyl(790, 1547, -92, 7, 4, { axis: 'z', seg: 20 }));   // two buttons

@@ -5,7 +5,7 @@
 //   sink (two doors, a basin and a tap above), hob (a shallow drawer over two doors; the hob product sits on top), filler (a plain strip), open (a shelf, no front),
 //   tall (a tall unit, h default 2100, first or last: no worktop over it), blind (a corner unit: a fixed panel over the `dead` side ('l' or 'r', one depth wide) where the other run stands, and one door over the rest; w at least depth + 300).
 //   A corner: run A has joins: { side: 'start' | 'end', length } (the other run stands at that end of A and reaches `length` mm out from A's front); A then builds the L-shaped worktop and plinth for both,
-//   and the other run is built with ownsTop: false. Its end at the corner is a filler wide enough for both runs' fronts to open (check-runs.mjs finds the width).
+//   and the other run is built with ownsTop: false. Its end at the corner is a filler wide enough for both runs' fronts to open (check-home's swing rule names it when two fronts collide).
 //   The worktop runs the whole length, cut for each sink; trimStart/trimEnd shorten it where it butts another run's worktop.
 // wallRun(kit, { modules, y0 = 1450, h = 720, depth = 320 }): wall cabinets; kind door, doors, open, filler.
 // fillWidths(length, fixed): fills a length with standard widths (300-900 by 50 mm) round fixed modules, leaving a filler under 100 mm.
@@ -79,7 +79,7 @@ export function baseRun(kit, { modules, depth = 600, top = 900, overhang = 20, t
     const drawers = (yy0, hh, n) => {
       const dh = (hh - GAP * (n - 1)) / n;
       for (let i = 0; i < n; i++) {
-        const y = yy0 + i * (dh + GAP), D = leaf('drawer', 0, 0, { max: Math.min(depth - 120, 480), x0: x, w, yr: [y, y + dh] });
+        const y = yy0 + i * (dh + GAP), D = leaf('drawer', 0, 0, { max: Math.min(depth - 120, 480), x0: x, w, yr: [y, y + dh], ...(m.ajar && i === n - 1 ? { v: m.ajar, target: m.ajar } : {}) });   // m.ajar 0-1: the top drawer stays pulled out that fraction
         front(D, x + GAP / 2, y, w - GAP, dh); hbar(D, x + w / 2, y + dh - 45, Math.min(320, w - 160));
         const bx0 = x + SIDE + 4, bx1 = x + w - SIDE - 4, by = y + 20, bh = Math.max(60, dh - 50), BD = Math.min(depth - 120, 480), lo = { tone: 'lo' };
         add(kit.box(bx0, by, -16, 12, bh, BD, lo), D); add(kit.box(bx1 - 12, by, -16, 12, bh, BD, lo), D);
