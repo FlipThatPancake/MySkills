@@ -215,7 +215,7 @@ export function createKit() {
     // A cylinder standing on (x, y, z), axis up; `axis: 'z'` lays it front-to-back, 'x' left-to-right
     // (then (x, y, z) is the centre of its first end).
     cyl(x, y, z, r, h, opts = {}) {
-      const g = new THREE.CylinderGeometry(opts.rTop ?? r, r, h, opts.seg ?? 32);
+      const g = new THREE.CylinderGeometry(opts.rTop ?? r, r, h, opts.seg ?? 32, 1, !!opts.open);   // open: no end caps (a pipe whose top fades out)
       const m = kit.solid(g, x, y + h / 2, z, { smooth: true, ...opts });
       if (opts.axis === 'z') { m.rotation.x = Math.PI / 2; m.position.set(x, y, z - h / 2); }
       if (opts.axis === 'x') { m.rotation.z = Math.PI / 2; m.position.set(x + h / 2, y, z); }

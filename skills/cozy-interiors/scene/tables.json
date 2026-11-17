@@ -955,5 +955,86 @@
    "id": "leaning",
    "say": "leaning against the wall (the old way, at most one home in five)"
   }
- ]
+ ],
+ "lights": {
+  "kitchen": [
+   {
+    "id": "pendant",
+    "w": 9
+   },
+   {
+    "id": "floor lamp",
+    "w": 1
+   }
+  ],
+  "dining": [
+   {
+    "id": "pendant",
+    "w": 9
+   },
+   {
+    "id": "wall light pair",
+    "w": 1
+   }
+  ],
+  "reading-corner": [
+   {
+    "id": "pendant",
+    "w": 5
+   },
+   {
+    "id": "floor lamp",
+    "w": 5
+   }
+  ],
+  "home-office": [
+   {
+    "id": "pendant",
+    "w": 4
+   },
+   {
+    "id": "desk lamp",
+    "w": 6
+   }
+  ],
+  "living": [
+   {
+    "id": "floor lamp",
+    "w": 5
+   },
+   {
+    "id": "pendant",
+    "w": 3
+   },
+   {
+    "id": "table lamp",
+    "w": 2
+   }
+  ],
+  "bedroom": [
+   {
+    "id": "table lamp",
+    "w": 6
+   },
+   {
+    "id": "pendant",
+    "w": 3
+   },
+   {
+    "id": "wall light pair",
+    "w": 1
+   }
+  ],
+  "hallway": [
+   {
+    "id": "pendant",
+    "w": 5
+   },
+   {
+    "id": "wall light pair",
+    "w": 5
+   }
+  ]
+ },
+ "lightNote": "area.light is the one lamp of the area. pendant: hang a.table(...).over('pendantLamp') (or over an island or a chair) so it reads in the home view; the roll deals one in most kitchens, dining areas and reading corners, so a pendant is a decision, not an extra. If the lamp would overlap the window in the home view, slide it along the table (over('pendantLamp', { dx })) rather than dropping it."
 }

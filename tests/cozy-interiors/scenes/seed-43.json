@@ -3041,7 +3041,7 @@
     ],
     "mount": "floor",
     "params": {
-     "form": 0
+     "form": 4
     },
     "group": "living:edge",
     "area": "living"
@@ -3119,7 +3119,7 @@
     ],
     "mount": "floor",
     "params": {
-     "form": 1
+     "form": 0
     },
     "group": "living:edge",
     "area": "living"

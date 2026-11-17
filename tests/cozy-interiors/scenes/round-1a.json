@@ -261,7 +261,7 @@
     ],
     "mount": "on",
     "params": {
-     "form": 0
+     "form": 2
     },
     "group": "kitchen:cook",
     "area": "kitchen",
@@ -536,7 +536,7 @@
     ],
     "mount": "on",
     "params": {
-     "form": 1
+     "form": 3
     },
     "group": "kitchen:breakfast",
     "area": "kitchen"
@@ -883,7 +883,7 @@
     ],
     "mount": "on",
     "params": {
-     "form": 2
+     "form": 4
     },
     "group": "dining:sideboard",
     "area": "dining"
@@ -1181,6 +1181,7 @@
     "turn": -60,
     "mount": "floor",
     "params": {
+     "flue": "wall",
      "w": 550,
      "d": 440,
      "h": 580,

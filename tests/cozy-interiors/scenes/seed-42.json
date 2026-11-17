@@ -368,7 +368,7 @@
     ],
     "mount": "floor",
     "params": {
-     "form": 0
+     "form": 4
     },
     "group": "living:room edge",
     "area": "living"
@@ -692,7 +692,7 @@
     ],
     "mount": "floor",
     "params": {
-     "form": 1
+     "form": 0
     },
     "group": "reading:window seat",
     "area": "reading"
@@ -1005,7 +1005,7 @@
     ],
     "mount": "floor",
     "params": {
-     "form": 2
+     "form": 1
     },
     "group": "hallway:runner",
     "area": "hallway"

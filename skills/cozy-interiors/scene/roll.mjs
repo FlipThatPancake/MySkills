@@ -16,6 +16,9 @@ export function roll(seed, kinds = ['kitchen', 'dining', 'living']) {
   let s3 = (seed ^ 0x85ebca6b) >>> 0;   // a third stream deals plant places, the foreground piece and the accent textile, so the older picks stay the same
   const rnd3 = () => { s3 = (s3 + 0x6d2b79f5) >>> 0; let t = s3; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
   const pick3 = (a) => a[Math.floor(rnd3() * a.length)], some3 = (a, n) => { const c = a.slice(), o = []; while (o.length < n && c.length) o.push(c.splice(Math.floor(rnd3() * c.length), 1)[0]); return o; };
+  let s4 = (seed ^ 0xc2b2ae35) >>> 0;   // a fourth stream deals each area's light, so no older pick moves
+  const rnd4 = () => { s4 = (s4 + 0x6d2b79f5) >>> 0; let t = s4; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  const light = (kind) => { const l = T.lights[kind] || T.lights.living, tot = l.reduce((a, x) => a + x.w, 0); let q = rnd4() * tot; for (const x of l) { q -= x.w; if (q < 0) return x.id; } return l[0].id; };
   const pick = (a) => a[Math.floor(rnd() * a.length)];
   const some = (a, n) => { const c = a.slice(), out = []; while (out.length < n && c.length) out.push(c.splice(Math.floor(rnd() * c.length), 1)[0]); return out; };
   const out = { seed, floor: pick(T.floor), accent: null, use: 'plantAt: place each plant at those places (one floor plant at most). foreground: the near-camera piece of the shots. accent: new Home({ accent: hex }); accentOn: put params { tone: \'accent\' } on that textile. Soft things: a.seatSoft(id, { tone }), a.table(id, { cloth: true }). See compose.mjs.', areas: {} }, used = new Set(), usedAcc = new Set(), ONE = ['basket', 'pouf', 'trolley'];   // signs dealt so far: none repeats in a home; a basket, pouf or trolley appears in one area of a home at most (check-home's variety rule)
@@ -31,13 +34,14 @@ export function roll(seed, kinds = ['kitchen', 'dining', 'living']) {
     a.plantAt = some3(T.plantPlaces.filter((x) => x.in.includes(id)), a.plants).map((x) => x.id); a.plants = a.plantAt.length;   // where each plant lives: distinct places, so at most one floor plant
     a.passages = a.openings.filter((o) => o.kind === 'arch').map(() => { return pick3(T.passages).style; });   // each arch's style (a counter style, pass or widepass, is a hatch with a ledge: put the counter or worktop under it)
     if (id === 'kitchen') a.board = pick3(T.boardPlaces).id;   // where the cutting board is
+    a.light = light(id);   // the area's one light (a pendant over the table, island or chair in most kitchens, dining areas and reading corners)
     a.accentOn = pick3(t.accentOn);   // the textile in this area that carries the home's accent
     a.foreground = pick3(t.foreground);   // the near-camera piece comes from the area's own use
     a.signs = some(T.signs.filter((x) => x.in.includes(id) && !used.has(x.id)), 2 + Math.floor(rnd() * 2)); a.signs.forEach((x) => used.add(x.id)); a.signs = a.signs.map((x) => x.id);
     if (t.pieces) a.pieces = t.pieces;
     if (shape) { a.shape = shape; a.shapeNote = t.shapeNotes[shape]; }
     const wall = (on) => (on === 'second' ? `the ${b.second} wall` : 'the back wall'), shape2 = b.walls === 1 ? 'one backing wall' : `two backing walls at ${b.angle} degrees, the second wall on the ${b.second}`;
-    a.say = `${id}: ${a.hero}; ${shape2}; ${a.openings.map((o) => `${o.kind === 'arch' ? 'arch ' + (a.passages[a.openings.filter((q) => q.kind === 'arch').indexOf(o)] || 'round') : o.kind} on ${wall(o.on)}`).join(', ')}; accents: ${a.accents.join(', ')}${a.more.length ? `, ${a.more.join(', ')}` : ''}; plants: ${a.plantAt.map((x) => T.plantPlaces.find((p) => p.id === x).say).join('; ')}; foreground piece: ${a.foreground}; ${a.board ? 'cutting board: ' + T.boardPlaces.find((p) => p.id === a.board).say + '; ' : ''}accent (${out.accent.name}) on the ${a.accentOn}; pieces: ${(a.pieces || []).join(', ') || 'as the hero needs'}; signs of life: ${a.signs.join(', ')}`;   // the choices in plain words
+    a.say = `${id}: ${a.hero}; ${shape2}; ${a.openings.map((o) => `${o.kind === 'arch' ? 'arch ' + (a.passages[a.openings.filter((q) => q.kind === 'arch').indexOf(o)] || 'round') : o.kind} on ${wall(o.on)}`).join(', ')}; accents: ${a.accents.join(', ')}${a.more.length ? `, ${a.more.join(', ')}` : ''}; plants: ${a.plantAt.map((x) => T.plantPlaces.find((p) => p.id === x).say).join('; ')}; foreground piece: ${a.foreground}; light: ${a.light}; ${a.board ? 'cutting board: ' + T.boardPlaces.find((p) => p.id === a.board).say + '; ' : ''}accent (${out.accent.name}) on the ${a.accentOn}; pieces: ${(a.pieces || []).join(', ') || 'as the hero needs'}; signs of life: ${a.signs.join(', ')}`;   // the choices in plain words
     out.areas[id] = a;
   }
   return out;

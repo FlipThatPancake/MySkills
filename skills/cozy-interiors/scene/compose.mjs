@@ -7,10 +7,10 @@
 //   const left = a.left(4200, [openings], angle);     // meeting the back's left end; angle 90 (default) or 120 between the two walls; its left end is the front one
 //   const right = a.right(4200, [openings], angle);   // meeting the back's right end; its left end is the back one
 //   Placing on a wall (xc is where the middle of the thing is along the wall, measured like an opening's x; the distance out from the wall comes from the asset, see assets.mjs):
-//   back.place('fridge', 'fridge', 5100);   back.place('sofa', 'sofa', 3200, { y: 7, lift: 7, params: { seats: 2 } });   back.place('pic', 'picture', 2000, { y: 1400 });   options: y, turn (added to facing out from the wall), params, off (override), group, hero, shadow
+//   back.place('fridge', 'fridge', 5100);   back.place('sofa', 'sofa', 3200, { y: 7, lift: 7, params: { seats: 2 } });   back.place('pic', 'picture', 2000, { y: 1400 });   onSill: back.onSill('herbs', 'plant', 2400, { params })  a pot or small thing on a window's sill (xc inside a window of that wall; it stands at the sill + 30 mm);   options: y, turn (added to facing out from the wall), params, off (override), group, hero, shadow
 //   A cabinet run with slots:  const R = a.run(back, 'run', 1650, [modules], { group: 'run' });  R.on('hob', 'hob');  R.on('hob', 'hood');  R.on('hob', 'pan');  R.on('sink', 'kettle');  (the thing goes on the middle of that module)
 //   A table set:  const T = a.table('dining', { at: [2800, 2800], r: 650 | w: 1700, d: 900, chairs: 4, chairForm: 'ladder'|'spindle'|'bentwood'|'upholstered' (dealt per table if left out), rug: true, cloth: false | true | 'accent' });  T.over('pendantLamp');  T.on('vase')
-//   What roll.mjs deals, and how a spec uses it:  plantAt (distinct places: sill, shelf, worktop, hanging, floor; one floor plant at most) -> place each plant there;  foreground (the near-camera piece, from the area's own use) -> put it by the shot's near edge;
+//   What roll.mjs deals, and how a spec uses it:  plantAt (distinct places: sill (wall.onSill), shelf, worktop, hanging, floor; one floor plant at most) -> place each plant there;  foreground (the near-camera piece, from the area's own use) -> put it by the shot's near edge;
 //     accent {name, hex} for the home -> new Home({ accent: hex });  accentOn (the textile that carries it) -> give that piece params: { tone: 'accent' } (cushion, foldedThrow, cloth, tablecloth, teaTowel, benchCushion, floorCushion, runner, tableRunner, duvetCloth).
 //   Soft things:  a.seatSoft('sofa', { tone: 'accent' | 'lo' | 'mid', throw: 'drape' | 'band' | false, group })  one leaning cushion per seat end and a throw dropped on the arm or folded across the seat (armchairs get one cushion);  a.table(id, { cloth: true | 'accent' }) puts a cloth shaped to the table.
 //   a.topOf(id): the height of the top of something placed (its dealt h included), for y of a thing that stands on it.
@@ -74,7 +74,11 @@ class Area {
     const F = {
       id, len, phi,
       at: (ox, off = 0) => [x + Math.cos(rad(phi)) * ox - Math.sin(rad(phi)) * off, z + Math.sin(rad(phi)) * ox + Math.cos(rad(phi)) * off],   // the local point
-      put(oid, asset, ox, off, o = {}) { return p.put(oid, asset, F.at(ox, off), -phi + (o.turn || 0), o); },   // low level: the object's origin at ox along, off out
+      put(oid, asset, ox, off, { turn = 0, ...o } = {}) { return p.put(oid, asset, F.at(ox, off), -phi + turn, o); },   // turn is added to the facing out from the wall (it never reaches the object as its own `turn`)   // low level: the object's origin at ox along, off out
+      onSill(oid, asset, xc, o = {}) {   // a pot or small thing on a window's sill: xc is its middle along the wall (it must lie within a window of this wall); stands at the sill's height + 30 mm
+        const W = openings.find((q) => q.kind === 'window' && Math.abs(q.x - xc) <= q.width / 2 - 40); if (!W) throw new Error(`onSill('${oid}'): xc ${xc} is not over a window of this wall`);
+        return F.place(oid, asset, xc, { ...o, y: (W.sill ?? 1000) + 30, mount: 'on', onSill: true, off: o.off ?? 40 });
+      },
       place(oid, asset, xc, o = {}) {   // by the asset's own origin and size: xc is its middle along the wall
         o = { ...o, params: vary(p.h, asset, o.params, p.id) }; const { w, d, m } = sizeOf(asset, o.params), mount = o.mount || m.mount; if (o.y === undefined && m.y === 'top') throw new Error(`place('${oid}', '${asset}'): give y, the height of the surface it stands on in mm (for example y: 520 on a bedside table, 740 on a desk)`); const y = o.y ?? (typeof m.y === 'number' ? m.y : 0);
         const off = o.off ?? (m.origin === 'centre' ? d / 2 : m.origin === 'front-left' ? (o.depth ?? d) : m.origin === 'front-centre' ? (o.depth ?? 600) : 0);
@@ -139,7 +143,7 @@ class Area {
     const toArea = (lx, lz) => [org[0] + lx * Math.cos(th) + lz * Math.sin(th), org[1] - lx * Math.sin(th) + lz * Math.cos(th)], f = heightField(tris), zo = lb.min.z + 420;
     const seats = tgt.params?.seats || (tgt.asset === 'armchair' ? 1 : 2), n = cushions ?? (tgt.asset === 'armchair' ? 1 : Math.max(1, seats - 1)), grp = group || tgt.group;
     for (let i = 0; i < n; i++) { const lx = n === 1 ? cx + (tgt.asset === 'armchair' ? 0 : W / 2 - 330) : cx - (W / 2 - 330) + i * (W - 660) / (n - 1), [px, pz] = toArea(lx, zo), [sx, sz] = toArea(lx, zo + 120), y = Math.round(f(sx, sz));   // the seat height is read in front of the back
-      this.put(`${targetId}-cushion${i + 1}`, 'cushion', [px, pz], tn + (i % 2 ? -6 : 8), { group: grp, y, mount: 'on', params: { w: 400, h: 320, thick: 130, lean: 14 + 4 * (i % 2), tone } }); }
+      this.put(`${targetId}-cushion${i + 1}`, 'cushion', [px, pz], tn + (i % 2 ? -6 : 8), { group: grp, y, mount: 'on', params: { w: 400, h: 320, thick: 130, lean: 17 + 4 * (i % 2), tone } }); }
     if (thr === 'drape') { try { const [ax, az] = toArea(cx - (W / 2 - 420), zo + 330); this.drapeOver(`${targetId}-throw`, targetId, { w: 1000, d: 700, wave: 10, at: [ax, az], spin: tn + 20, tone: throwTone, group: grp }); } catch (e) { if (process.env.SOFT_DEBUG) console.error(e.message); thr = 'band'; } }
     if (thr === 'band') { const [bx, bz] = toArea(cx + (W / 2 - 360), zo + 330); this.bandOn(`${targetId}-throw`, targetId, { w: 700, d: 380, at: [bx, bz], spin: tn, tone: throwTone, group: grp }); }
   }
@@ -175,7 +179,7 @@ class Area {
     const cnt = (this.h.counts ||= {}), nx = cnt.tableSet = (cnt.tableSet ?? this.h.S.seed % 4) + 1, cf = chairForm || ['ladder', 'spindle', 'bentwood', 'upholstered'][nx % 4];   // one chair form for the whole set
     spots.forEach(([dx, dz], i) => { const q = [at[0] + dx, at[1] + dz]; p.put(`${id}-chair-${i + 1}`, 'chair', q, deg(Math.atan2(at[0] + (round ? 0 : dx) - q[0], at[1] - q[1])), { y: 7, lift: 7, group, params: { form: cf } }); });
     return {
-      at, over: (asset = 'pendantLamp', o = {}) => p.put(`${id}-${asset}`, asset, at, 0, { mount: 'ceiling', group, ...o }),
+      at, over: (asset = 'pendantLamp', { dx = 0, dz = 0, ...o } = {}) => p.put(`${id}-${asset}`, asset, [at[0] + dx, at[1] + dz], 0, { mount: 'ceiling', group, ...o }),   // dx / dz slide it off the table's middle (up to a third of the table's length) to clear a window in the home view
       on: (asset, o = {}) => p.put(`${id}-${asset}`, asset, [at[0] + (o.dx || 0), at[1] + (o.dz || 0)], 0, { y: h + 7, mount: 'on', group, ...o }),
     };
   }
