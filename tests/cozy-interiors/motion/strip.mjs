@@ -12,6 +12,7 @@ const page = await browser.newPage({ viewport: { width: 900, height: 560 }, devi
 page.on('pageerror', (e) => console.log('PAGE ERROR', String(e)));
 await page.goto('file://' + resolve(html) + '?nobake'); await page.waitForFunction(() => window.cozyScene);
 const view = await page.evaluate(() => { const v = window.cozyScene.motion.things.find((t) => t.ctx?.via).ctx.via; return { c: v.centre, n: v.n, y: v.sill + v.height / 2 }; });   // the camera looks at the window from inside, fixed
+await page.evaluate((v) => { const { motion, kit } = window.cozyScene, cam = new kit.THREE.Vector3(v.c[0] + v.n[0] * 2600, 1450, v.c[1] + v.n[1] * 2600); motion.cameraOf = () => [cam]; }, view);   // the strip's camera is a camera the fliers keep away from, like a real one
 const aim = () => page.evaluate((v) => { const c = window.cozyScene; c.camera.fov = 36; c.at([v.c[0] + v.n[0] * 2600, 1450, v.c[1] + v.n[1] * 2600], [v.c[0] + v.n[0] * 900, v.y - 100, v.c[1] + v.n[1] * 900]); c.camera.updateProjectionMatrix(); }, view);
 const N = Number(fr), per = Number(sec) / N, wind = {};
 for (let i = 0; i < N; i++) {
