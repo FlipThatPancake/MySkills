@@ -80,7 +80,8 @@ class Area {
       put(oid, asset, ox, off, { turn = 0, ...o } = {}) { return p.put(oid, asset, F.at(ox, off), -phi + turn, o); },   // turn is added to the facing out from the wall (it never reaches the object as its own `turn`)   // low level: the object's origin at ox along, off out
       onSill(oid, asset, xc, o = {}) {   // a pot or small thing on a window's sill: xc is its middle along the wall (it must lie within a window of this wall); stands at the sill's height + 30 mm
         const W = openings.find((q) => q.kind === 'window' && Math.abs(q.x - xc) <= q.width / 2 - 40); if (!W) throw new Error(`onSill('${oid}'): xc ${xc} is not over a window of this wall`);
-        return F.place(oid, asset, xc, { ...o, y: (W.sill ?? 1000) + 30, mount: 'on', onSill: true, off: o.off ?? 40 });
+        const prm = vary(p.h, asset, o.params, p.id), { d: pd } = sizeOf(asset, prm); if (o.off === undefined && pd > 130) throw new Error(`onSill('${oid}'): the ${asset} is ${Math.round(pd)} mm deep and the sill about 130 mm: use a smaller pot (params) or put it on a shelf`);
+        return F.place(oid, asset, xc, { ...o, params: prm, y: (W.sill ?? 1000) + 30, mount: 'on', onSill: true, off: o.off ?? 40 - pd / 2 - 4 });   // the pot's front stands 4 mm inside the sill's front lip (the sill reaches 40 mm into the room): centred on the free depth, not on the lip
       },
       place(oid, asset, xc, o = {}) {   // by the asset's own origin and size: xc is its middle along the wall
         o = { ...o, params: vary(p.h, asset, o.params, p.id) }; const { w, d, m } = sizeOf(asset, o.params), mount = o.mount || m.mount; if (o.y === undefined && m.y === 'top') throw new Error(`place('${oid}', '${asset}'): give y, the height of the surface it stands on in mm (for example y: 520 on a bedside table, 740 on a desk)`); const y = o.y ?? (typeof m.y === 'number' ? m.y : 0);
@@ -185,7 +186,14 @@ class Area {
           nb.sort((p, q) => (p.used || 0) - (q.used || 0)); return this.on(nb[0].kind, asset, { ...oo, nth: mods.filter((q) => q.kind === nb[0].kind).indexOf(nb[0]) });   // the emptier neighbour first
         }
         const m = this.mod(kind, oo.nth || 0); m.used = (m.used || 0) + 1; const meta = ASSETS[asset], top = params.top || 900, wall = meta.mount === 'wall';
-        const xc = m.xc + (oo.dx || 0), oid = oo.id || `${id}-${asset}${n++ || ''}`;
+        let dx0 = oo.dx || 0;
+        if (!wall && !['hob', 'hood', 'pan'].includes(asset)) {   // a second or third thing on one module slides along the worktop to a free stretch (never on top of the first); the call refuses when the module is full
+          const aw = sizeOf(asset, oo.params).w, items = (m.items ||= []), clash = (x) => items.some((q) => Math.abs(x - q.x) < (aw + q.w) / 2 + 20);
+          if (oo.dx === undefined) { const xs = []; for (let x = -m.w / 2 + aw / 2 + 20; x <= m.w / 2 - aw / 2 - 20; x += 20) xs.push(x); xs.sort((p, q) => Math.abs(p) - Math.abs(q)); const fx = xs.find((x) => !clash(x)); if (fx === undefined) throw new Error(`R.on('${kind}', '${asset}'): the ${kind} module (${m.w} mm) has no free stretch for a ${Math.round(aw)} mm piece: put it on another module`); dx0 = fx; }
+          else if (clash(dx0)) throw new Error(`R.on('${kind}', '${asset}', { dx: ${dx0} }): it would stand on another piece of that module: change dx or the module`);
+          items.push({ x: dx0, w: aw });
+        }
+        const xc = m.xc + dx0, oid = oo.id || `${id}-${asset}${n++ || ''}`;
         const o2 = { group, ...oo, params: oo.params }; delete o2.nth; delete o2.dx; delete o2.id;
         if (asset === 'hob' || asset === 'hood') return F.place(oid, asset, xc, { ...o2, depth });
         if (asset === 'pan') return F.place(oid, asset, xc + m.w * 0.2, { ...o2, y: 940, off: depth - 160, turn: o2.turn ?? -35 });
@@ -225,6 +233,15 @@ class Area {
     let y = 0; for (const [a, b] of [[0, 0], [1, 1], [1, -1], [-1, 1], [-1, -1]]) y = Math.max(y, hf(p[0] + a * w / 3, p[1] + b * d / 3));
     this.put(id, asset, p, turn, { y: Math.round(y), mount: 'on', group: group || this.h.S.home.objects.find((q) => q.id === `${this.id}-${targetId}`)?.group.split(':')[1], params: pr });
   }
-  out() { this.liftOnRugs(); const b = this.worldBounds(); return { id: this.id, name: this.name, ...(this.group ? { group: this.group } : {}), O: this.O, psi: this.psi, bounds: { ...b, top: this.top }, camera: { home: this.cam, shots: this.shots } }; }
+  // things on a tablecloth rise by the cloth's thickness (16 mm), so their bases rest on the cloth, not in it: every `on` piece whose middle lies over a cloth's table top and whose base is at the cloth's base height
+  liftOnCloths() {
+    const objs = this.h.S.home.objects.filter((o) => o.area === this.id), done = new Set();
+    for (const c of objs.filter((o) => o.asset === 'tablecloth')) for (const q of objs) {
+      if (q === c || q.mount !== 'on' || q.asset === 'tablecloth' || Math.abs(q.at[1] - c.at[1]) > 3 || done.has(q)) continue;
+      const dx = q.at[0] - c.at[0], dz = q.at[2] - c.at[2], r = c.params?.r;
+      if (r ? Math.hypot(dx, dz) < r : Math.abs(dx) < ((c.params?.w ?? 1600) - 90) / 2 && Math.abs(dz) < ((c.params?.d ?? 900) - 90) / 2) { q.at[1] += 16; done.add(q); }
+    }
+  }
+  out() { this.liftOnRugs(); this.liftOnCloths(); const b = this.worldBounds(); return { id: this.id, name: this.name, ...(this.group ? { group: this.group } : {}), O: this.O, psi: this.psi, bounds: { ...b, top: this.top }, camera: { home: this.cam, shots: this.shots } }; }
 }
 export const facing = (from, to) => deg(Math.atan2(to[0] - from[0], to[1] - from[1]));   // the turn that makes an object at `from` face `to`, in local x/z

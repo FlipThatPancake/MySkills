@@ -83,7 +83,7 @@ const res = await page.evaluate((PARTS) => {
       if (gap <= GAP) { ok++; under[by] = (under[by] || 0) + 1; grow(sb, L); if (-gap > sink) { sink = -gap; sinkInto = by; } } else drop = Math.max(drop, Math.min(gap, 999));
     }
     const area = (q) => Math.max(q[2] - q[0], 1) * Math.max(q[3] - q[1], 1), over = ok ? 1 - area(sb) / area(bb) : 1;
-    const softPair = sinkInto && (soft(id) || (sinkInto !== 'floor' && soft(sinkInto) && !/rug/.test(O[sinkInto].asset || '')));
+    const softPair = sinkInto && (soft(id) || (sinkInto !== 'floor' && soft(sinkInto) && !/rug|tablecloth/.test(O[sinkInto].asset || '')));
     if (!ok) out.push({ rule: 'floating', id, asset: A.asset, drop: Math.round(drop), y: Math.round(y0) });   // (a pan may hang up to half off the hob: past that its centre of mass is over nothing and it tips)
     else if (over > (A.asset === 'pan' ? 0.5 : 0.15)) out.push({ rule: 'overhangs', id, asset: A.asset, over: Math.round(over * 100), on: Object.keys(under), y: Math.round(y0) });
     if (ok && sink > (softPair ? 30 : SINK)) out.push({ rule: 'sunk', id, asset: A.asset, into: sinkInto, depth: Math.round(sink), y: Math.round(y0) });
