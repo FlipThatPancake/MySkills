@@ -29,14 +29,260 @@
   ],
   "objects": [
    {
-    "id": "sheet-p3",
+    "id": "sheet-fp0",
+    "asset": "floorPlant",
+    "at": [
+     1500,
+     0,
+     2000
+    ],
+    "mount": "floor",
+    "params": {
+     "form": 0,
+     "seed": 6
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-ref-fp0",
     "asset": "plant",
     "at": [
+     2150,
+     0,
+     2000
+    ],
+    "mount": "floor",
+    "params": {
+     "form": 0
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-fp1",
+    "asset": "floorPlant",
+    "at": [
+     4900,
+     0,
+     2000
+    ],
+    "mount": "floor",
+    "params": {
+     "form": 1,
+     "seed": 6
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-ref-fp1",
+    "asset": "plant",
+    "at": [
+     5550,
+     0,
+     2000
+    ],
+    "mount": "floor",
+    "params": {
+     "form": 0
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-fp2",
+    "asset": "floorPlant",
+    "at": [
+     8300,
+     0,
+     2000
+    ],
+    "mount": "floor",
+    "params": {
+     "form": 2,
+     "seed": 6
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-ref-fp2",
+    "asset": "plant",
+    "at": [
+     8950,
+     0,
+     2000
+    ],
+    "mount": "floor",
+    "params": {
+     "form": 0
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-fp3",
+    "asset": "floorPlant",
+    "at": [
      11700,
+     0,
+     2000
+    ],
+    "mount": "floor",
+    "params": {
+     "form": 3,
+     "seed": 6
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-ref-fp3",
+    "asset": "plant",
+    "at": [
+     12350,
+     0,
+     2000
+    ],
+    "mount": "floor",
+    "params": {
+     "form": 0
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-fp4",
+    "asset": "floorPlant",
+    "at": [
+     15100,
+     0,
+     2000
+    ],
+    "mount": "floor",
+    "params": {
+     "form": 4,
+     "seed": 6
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-ref-fp4",
+    "asset": "plant",
+    "at": [
+     15750,
+     0,
+     2000
+    ],
+    "mount": "floor",
+    "params": {
+     "form": 0
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-p0",
+    "asset": "plant",
+    "at": [
+     1500,
      0,
      6500
     ],
     "mount": "floor",
+    "params": {
+     "form": 0,
+     "seed": 6
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-p1",
+    "asset": "plant",
+    "at": [
+     4900,
+     0,
+     6500
+    ],
+    "mount": "floor",
+    "params": {
+     "form": 1,
+     "seed": 6
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-ref-p1",
+    "asset": "plant",
+    "at": [
+     5220,
+     0,
+     6500
+    ],
+    "mount": "floor",
+    "params": {
+     "form": 0
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-p2",
+    "asset": "plant",
+    "at": [
+     8300,
+     0,
+     6500
+    ],
+    "mount": "floor",
+    "params": {
+     "form": 2,
+     "seed": 6
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-ref-p2",
+    "asset": "plant",
+    "at": [
+     8620,
+     0,
+     6500
+    ],
+    "mount": "floor",
+    "params": {
+     "form": 0
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-cons3",
+    "asset": "console",
+    "at": [
+     11860,
+     0,
+     6500
+    ],
+    "mount": "floor",
+    "params": {},
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-p3",
+    "asset": "plant",
+    "at": [
+     11700,
+     800,
+     6500
+    ],
+    "mount": "on",
     "params": {
      "form": 3,
      "seed": 6
@@ -49,10 +295,10 @@
     "asset": "plant",
     "at": [
      12020,
-     0,
+     800,
      6500
     ],
-    "mount": "floor",
+    "mount": "on",
     "params": {
      "form": 0
     },

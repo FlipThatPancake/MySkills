@@ -18,7 +18,7 @@ const S = JSON.parse((await import('node:fs')).readFileSync(scene, 'utf8')), cel
 for (const o of S.home.objects) {
   if (!/^(fp|p)\d/.test(o.id.replace(/^sheet-/, ''))) continue;
   const big = o.asset === 'floorPlant', [x, , z] = o.at, key = o.id.replace(/^sheet-/, '');
-  const views = big ? [['whole', 3200, [x + 300, 500, z]], ['crown', 1300, [x + 200, 720, z]]] : [['whole', 1100, [x + 110, 130, z]]];
+  const views = big ? [['whole', 3200, [x + 300, 500, z]], ['crown', 1300, [x + 200, 720, z]]] : [['whole', 1100, [x + 110, 130 + o.at[1], z]]];
   for (const [name, d, t] of views) {
     await page.evaluate(([d, t]) => { window.cozyScene.controls.minDistance = 10; window.cozyScene.look(d, 12, 8, t); }, [d, t]);
     await page.waitForTimeout(500);
