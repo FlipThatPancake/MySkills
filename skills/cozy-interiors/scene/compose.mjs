@@ -22,7 +22,7 @@ import { dealParams } from './src/library/space.js';
 import { dropCloth, heightField } from './src/cloth.js';
 import { createKit } from './src/kitchen3d.js';
 import { REGISTRY } from './src/library/index.js';
-import { joinAreas, seamLine } from './openplan.mjs';
+import { joinAreas, seamLine, zoneList } from './openplan.mjs';
 const rad = (d) => d * Math.PI / 180, deg = (r) => r * 180 / Math.PI, r0 = (v) => Math.round(v * 10) / 10;
 export const GAP = 3000;
 export class Home {
@@ -33,8 +33,9 @@ export class Home {
     this.list.push(a); return a;
   }
   join(a, b, o) { return joinAreas(this, a, b, o); }   // open plan: b joins a on one floor (openplan.mjs): H.join(a, b, { layout: 'row' | 'corner', share: 0 to 1000 mm })
+  floorZones(styles) { this.zoneStyles = styles; }   // open plan floor change: H.floorZones({ kitchen: 'tiles', dining: 'boards', living: 'boards' }) (openplan.mjs)
   sign(areaId, kind) { (this.signs ||= {})[areaId] = [...(this.signs[areaId] || []), kind]; }
-  write(file, fs) { this.S.areas = this.list.map((a) => a.out()); if (this.groups) this.S.groups = this.groups.map((g) => ({ id: g.id, areas: g.areas, seams: g.seams.map((q) => seamLine(this, q)) })); if (this.signs) for (const [a, k] of Object.entries(this.signs)) console.log(`signs ${a}: ${k.join(', ')}`); fs.writeFileSync(file, JSON.stringify(this.S, null, 1)); return this.S; }
+  write(file, fs) { this.S.areas = this.list.map((a) => a.out()); { const z = zoneList(this); if (z) this.S.home.floor.zones = z.map(({ area, ...q }) => q); } if (this.groups) this.S.groups = this.groups.map((g) => ({ id: g.id, areas: g.areas, seams: g.seams.map((q) => seamLine(this, q)) })); if (this.signs) for (const [a, k] of Object.entries(this.signs)) console.log(`signs ${a}: ${k.join(', ')}`); fs.writeFileSync(file, JSON.stringify(this.S, null, 1)); return this.S; }
 }
 const pickForm = (h, asset, params) => {   // the next form of an asset that has several (started from the seed); an explicit params.form stays
   if (!ASSETS[asset].variants || params?.form !== undefined) return params;

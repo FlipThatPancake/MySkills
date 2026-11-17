@@ -77,7 +77,7 @@ export function createAreaScene(canvas, S) {
   const boundsOf = (A) => { if (!A.group) return A.bounds; const m = S.areas.filter((x) => x.group === A.group).map((x) => x.bounds); return { x0: Math.min(...m.map((b) => b.x0)), x1: Math.max(...m.map((b) => b.x1)), z0: Math.min(...m.map((b) => b.z0)), z1: Math.max(...m.map((b) => b.z1)), top: A.bounds.top }; };
   const fadeOf = (A) => {
     let b = boundsOf(A); const top = b.top || 2500, w = Math.max(b.x1 - b.x0, b.z1 - b.z0), r0 = 0;
-    for (const W of home.walls) if (W.walk.length && W.id && W.id.startsWith(A.id + '-')) b = { ...b, ...[W.from, W.to].reduce((e, q) => { const x = q[0] - W.n[0] * 1600, z = q[1] - W.n[1] * 1600; return { x0: Math.min(e.x0, x), x1: Math.max(e.x1, x), z0: Math.min(e.z0, z), z1: Math.max(e.z1, z) }; }, { x0: b.x0, x1: b.x1, z0: b.z0, z1: b.z1 }) };   // the floor beyond a way through stays in view
+    for (const W of home.walls) if (W.walk.length && W.id && together(order.find((q) => W.id.startsWith(q + '-')), A.id)) b = { ...b, ...[W.from, W.to].reduce((e, q) => { const x = q[0] - W.n[0] * 1600, z = q[1] - W.n[1] * 1600; return { x0: Math.min(e.x0, x), x1: Math.max(e.x1, x), z0: Math.min(e.z0, z), z1: Math.max(e.z1, z) }; }, { x0: b.x0, x1: b.x1, z0: b.z0, z1: b.z1 }) };   // the floor beyond a way through stays in view
     const bx = b.x1 - b.x0, bz = b.z1 - b.z0;   // objects past the bounds thin from the edge: about 35% gone at 1 m, all gone at 2 m
     return [(b.x0 + b.x1) / 2, top / 2 - 150, (b.z0 + b.z1) / 2, bx / 2, top / 2 + 300, bz / 2, FADE[0] * w, FADE[1] * w, r0, 900];
   };
@@ -136,6 +136,8 @@ export function createAreaScene(canvas, S) {
   function setArea(id, snap = false) { if (snap || !cur) { glide = null; arrive(id); } else startGlide(id); }
 
   // ---- ways to shift: the area names at the bottom, the arrow keys, a click on a door or arch with `to`
+  // the light bake treats an open-plan group as one area: one floor sheet, so daylight shows no step at a seam
+  const bakeAreas = () => { const seen = {}, list = []; for (const A of S.areas) { if (!A.group) { list.push({ id: A.id, bounds: A.bounds }); continue; } if (seen[A.group]) continue; seen[A.group] = 1; const m = S.areas.filter((x) => x.group === A.group); list.push({ id: A.group, ids: m.map((x) => x.id), bounds: boundsOf(A) }); } return list; };
   const bar = document.createElement('div');
   bar.style.cssText = 'position:fixed;left:0;right:0;bottom:14px;display:flex;justify-content:center;gap:6px;font:13px/1 system-ui,-apple-system,sans-serif;pointer-events:none';
   const btns = Object.fromEntries(S.areas.map((a) => {
@@ -215,7 +217,7 @@ export function createAreaScene(canvas, S) {
     const withAll = (fn) => { const ws = home.walls.map((W) => W.node.visible), os = Object.values(home.objects).map((o) => o.visible); only(null); try { fn(); } finally { home.walls.forEach((W, i) => { W.node.visible = ws[i]; }); Object.values(home.objects).forEach((o, i) => { o.visible = os[i]; }); } };   // every area's pieces must stand in the light passes, though only one is shown
     const gain = { value: 0 }, tune = (q.get('baket') || '').split(',').map(Number);   // ?baket=strength,contact,wWin,wSky
     home.useBake(true);   // no halos while the light is baking: the page shows plain, then the soft light fades in
-    bakeLight({ THREE, renderer, scene, kit, walls: home.walls, areas: home.areas || S.areas.map((A) => ({ id: A.id, bounds: A.bounds })), group: home.group, quality: Number(q.get('bake')) || 1, debug: q.has('bakedebug'), gain, withAll, ...(tune[0] ? { strength: tune[0], contact: tune[1], wWin: tune[2], wSky: tune[3] } : {}) }).then((bake) => {
+    bakeLight({ THREE, renderer, scene, kit, walls: home.walls, areas: bakeAreas(), group: home.group, quality: Number(q.get('bake')) || 1, debug: q.has('bakedebug'), gain, withAll, ...(tune[0] ? { strength: tune[0], contact: tune[1], wWin: tune[2], wSky: tune[3] } : {}) }).then((bake) => {
       if (!bake) { home.useBake(false); window.cozyBaked = true; return; }
       window.cozyBake = bake; const t0 = performance.now(), fade = (now) => { gain.value = Math.min(1, (now - t0) / 1200); if (gain.value < 1) requestAnimationFrame(fade); else window.cozyBaked = true; }; requestAnimationFrame(fade);
     });
