@@ -34,7 +34,7 @@ let k, d, l;
   back.place('pic', 'picture', 750, { y: 1550, group: 'wall', shadow: false, params: { w: 700, h: 500 } });
   a.put('fplant', 'floorPlant', [4150, 800], 0, { group: 'wall' });
   a.put('basket', 'basket', [4200, 4000], 10, { group: 'table light' });
-  a.view({ target: [2300, 800, 2000], az: 4, el: 14 });
+  a.view({ target: [2300, 800, 2000], az: 7, el: 14 });
 }
 { // ---------- living (the end: a right wall is allowed, the roll dealt none)
   const a = l = H.area('living', 'Living', { rect: [0, 0, 5400, 4800] }); H.join(d, l, { layout: 'row', share: 500, separators: ['sofaBack'] });
