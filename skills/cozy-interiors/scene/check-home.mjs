@@ -109,6 +109,7 @@ const issues = await page.evaluate(() => {
   const hit3 = (a, b, tol = 2) => a.x1 - b.x0 > tol && b.x1 - a.x0 > tol && a.z1 - b.z0 > tol && b.z1 - a.z0 > tol && a.y1 - b.y0 > tol && b.y1 - a.y0 > tol;
   const gap2 = (a, b) => Math.hypot(Math.max(a.min.x - b.max.x, b.min.x - a.max.x, 0), Math.max(a.min.z - b.max.z, b.min.z - a.max.z, 0));
   const GAP = 1200;
+  const free = (W) => { const len = Math.hypot(W.from[0] - W.to[0], W.from[1] - W.to[1]), e = W.built.map((b) => span(W, b)).sort((p, q) => p[0] - q[0]); let best = [0, 0], at = 0; for (const [a, z] of [...e, [len, len]]) { if (a - at > best[1] - best[0]) best = [at, a]; at = Math.max(at, z); } return `the free stretch of wall is ${best[0].toFixed(0)} to ${best[1].toFixed(0)} mm along it (${(best[1] - best[0]).toFixed(0)} mm): put the lamp there`; };
   // 1. at least 1200 mm of clear wall between two openings, on one wall and round a corner
   const span = (W, b) => [b.op.at - b.op.width / 2, b.op.at + b.op.width / 2];
   for (const W of home.walls) {
@@ -334,7 +335,7 @@ const areaIssues = await page.evaluate(() => {
     if (lamps.length > 1) out.push({ rule: 'lamps', what: `${A} has ${lamps.length} lamps (one: a pendant over the table or a floor lamp)` });
     for (const l of lamps) for (const d of as(WALLDEC)) if (ov(R[l], R[d]) > 0.002 && sc(d).asset !== 'curtain') out.push({ rule: 'lamps', what: `${A}: ${l} overlaps ${d} in the home view: move the lamp or the ${sc(d).asset}` });
     for (const l of real.filter((i) => LAMPS.includes(sc(i).asset) || sc(i).asset === 'pendantForm')) {
-      for (const W of home.walls) { if (!W.id || !W.id.startsWith(A + '-')) continue; for (const b of W.built) if (ov(R[l], rect(box(b.group))) > 0.002) out.push({ rule: 'lamps', what: `${A}: ${l} overlaps the ${b.op.kind} on ${W.id} in the home view` }); }
+      for (const W of home.walls) { if (!W.id || !W.id.startsWith(A + '-')) continue; for (const b of W.built) if (ov(R[l], rect(box(b.group))) > 0.002) out.push({ rule: 'lamps', what: `${A}: ${l} overlaps the ${b.op.kind} on ${W.id} in the home view: ${free(W)}` }); }
       for (const m of lamps) if (m > l && ov(R[l], R[m]) > 0) out.push({ rule: 'lamps', what: `${A}: ${l} and ${m} overlap in the home view` });
     }
     // seating
