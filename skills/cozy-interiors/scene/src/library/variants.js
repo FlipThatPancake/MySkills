@@ -7,14 +7,16 @@ import { fridge as fridge0 } from '../kitchen/fridge.js';
 import { stool as stool0 } from './living.js';
 import { basket as basket0 } from './decor.js';
 import { potTop } from './pots.js';
+import { fiddle, palm, monstera, snake, fern, pothos, basil, smallFern } from './plants.js';
 const rimTop = (kit, g, r, y) => { const t = potTop(kit, r); t.position.y = y; g.add(t); };
 const rnd = (seed) => { let r = (seed || 1) * 9301 + 49297; return () => { r = (r * 9301 + 49297) % 233280; return r / 233280; }; };
 const lo = { tone: 'lo' };
 const leafAt = (kit, x, y, z, sx, sy, rx, rz) => { const T = kit.THREE, ge = new T.SphereGeometry(1, 14, 8); ge.scale(sx, sy, 12); const l = kit.solid(ge, x, y, z, { smooth: true, leaf: true }); l.rotation.set(rx, 0, rz); return l; };
 
-export const FORMS = { floorPlant: 4, plant: 4, vase: 4, picture: 4, fridge: 3, stool: 3, basket: 3 };
+export const FORMS = { floorPlant: 5, plant: 6, vase: 4, picture: 4, fridge: 3, stool: 3, basket: 3 };
 
-export function floorPlant(kit, { form = 0, h = 950, seed = 6 } = {}) {
+export function floorPlant(kit, { form = 0, h = 950, seed = 6 } = {}) {   // form 0 fiddle-leaf fig | 1 palm | 2 monstera | 3 snake plant | 4 fern (plants.js); the old ellipse drawings are gone
+  return [fiddle, palm, monstera, snake, fern][form % 5](kit, { h, seed });
   if (!form) return floorPlant0(kit, { h, seed });
   const g = kit.group(), R = rnd(seed + form * 7), pts = [];
   if (form === 1) {   // a palm: a slim trunk and a fan of long leaves, in a tall round pot
@@ -32,7 +34,8 @@ export function floorPlant(kit, { form = 0, h = 950, seed = 6 } = {}) {
   return kit.merge(g);
 }
 
-export function plant(kit, { form = 0 } = {}) {   // the small pot on a worktop or shelf
+export function plant(kit, { form = 0, seed = 6 } = {}) {   // the small pot on a worktop or shelf: 0 the original blades | 1 round bush | 2 cactus | 3 trailing pothos | 4 basil | 5 small fern
+  if (form === 3) return pothos(kit, { seed }); if (form === 4) return basil(kit, { seed }); if (form === 5) return smallFern(kit, { seed });
   if (!form) return plant0(kit);
   const g = kit.group(), R = rnd(form * 11), pts = [];
   if (form === 1) {   // a small round bush

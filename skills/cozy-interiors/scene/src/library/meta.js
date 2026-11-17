@@ -133,7 +133,7 @@ export const ASSETS = {
   daybed: A('centre', [1900, 850, 810], 'floor', 'w 1900, d 850'),
   pot: A('centre', [200, 200, 220], 'on', 'see the parameter space', { y: 'top', note: 'an empty plant pot with rim, dip and soil, a sprig or bush in it; on a surface or the floor (mount floor, y 0)' }),
 };
-for (const [k, n] of Object.entries({ floorPlant: 4, plant: 4, vase: 4, picture: 4, wallRun: 3, fridge: 3, stool: 3, basket: 3 })) { ASSETS[k].variants = n; ASSETS[k].params = (ASSETS[k].params === '-' ? '' : ASSETS[k].params + ', ') + `form 0-${n - 1}`; }   // compose.mjs picks a form from the seed
+for (const [k, n] of Object.entries({ floorPlant: 5, plant: 6, vase: 4, picture: 4, wallRun: 3, fridge: 3, stool: 3, basket: 3 })) { ASSETS[k].variants = n; ASSETS[k].params = (ASSETS[k].params === '-' ? '' : ASSETS[k].params + ', ') + `form 0-${n - 1}`; }   // compose.mjs picks a form from the seed
 
 // ---- parameter spaces: what a variant of a base asset may be. A range [lo, hi] is a size or proportion (mm unless noted); a list is a style choice. compose.mjs deals unset ones from the home's seed (each value used before the deck runs out
 // of new ones, so two instances differ); named presets are points in the space. A variant = asset + seed + overrides; assets.mjs prints this, the asset sheet shows 8 of them.
