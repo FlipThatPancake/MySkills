@@ -63,7 +63,7 @@ const issues = await page.evaluate(() => {
   const baseRuns = (x, y) => sc(x).asset === 'baseRun' && sc(y).asset === 'baseRun';
   for (let i = 0; i < solid.length; i++) for (let j = i + 1; j < solid.length; j++) {
     const a = solid[i], b = solid[j];
-    if (sc(a).mount !== sc(b).mount || baseRuns(a, b)) continue;
+    if (sc(a).mount !== sc(b).mount || sc(a).mount === 'floor' || baseRuns(a, b)) continue;   // floor pieces: the geometry core's penetrates rule reads the real parts (a footprint box counted a drawer pulled out as a desk 120 mm deeper)
     if (legsOf(a).some((la) => legsOf(b).some((lb) => Math.min(la.max.y, lb.max.y) - Math.max(la.min.y, lb.min.y) > 4 && sat(footB(la), footB(lb), 4)))) out.push({ rule: 'overlap', what: `${a} and ${b} pass through each other: move one, or shrink what is around it` });
   }
   { const rugs = Object.keys(objs).filter((id) => sc(id).asset === 'rug'); for (let i = 0; i < rugs.length; i++) for (let j = i + 1; j < rugs.length; j++) if (sat(foot(rugs[i]), foot(rugs[j]), 0)) out.push({ rule: 'rugs', what: `${rugs[i]} and ${rugs[j]} overlap: size or move them so each rug lies on its own patch of floor` }); }

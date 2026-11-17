@@ -21,7 +21,7 @@ left.place('shelf', 'openShelf', 800, { group: 'sink' });
 const T = a.table('bt', { at: [3200, 2600], r: 520, chairs: 2, group: 'breakfast' });
 T.on('jug', { y: 757, dx: -180 }); T.on('candlesticks', { y: 757, dx: 260 });
 // A seating group: an armchair, a side table and a floor lamp, in the free corner by the window.
-a.put('chair', 'armchair', [5700, 2300], -35, { group: 'nook', y: 7, lift: 7 });
+a.put('chair', 'armchair', [5700, 2300], -35, { group: 'nook' });
 a.put('side', 'sideTable', [5700, 3150], 0, { group: 'nook' });
 // Shots: a.shot(name, from, look, fov, group). fitshots.mjs finds the cameras; its numbers go in here.
 a.shot('cook', [2600, 1100, 4800], [1710, 1300, 393], 36, 'cook');

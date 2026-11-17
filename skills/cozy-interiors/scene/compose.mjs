@@ -186,7 +186,7 @@ class Area {
   }
   // ---- a cabinet run with slots: R.on('hob', 'pan') puts a pan on the middle of the first hob module
   run(F, id, left, modules, o = {}) {
-    const { group = 'run', depth = 600, hero, ...params } = o, mods = []; let x = left;
+    const { group = 'run', depth = 600, hero, ...params } = o, mods = [], p = this; let x = left;
     for (const m of modules) { mods.push({ ...m, xc: x + m.w / 2 }); x += m.w; }
     const length = x - left;
     F.put(id, 'baseRun', left, depth, { group, hero, params: { ...params, depth, modules } });
@@ -213,7 +213,8 @@ class Area {
         const o2 = { group, ...oo, params: oo.params }; delete o2.nth; delete o2.dx; delete o2.id;
         if (asset === 'hob' || asset === 'hood') return F.place(oid, asset, xc, { ...o2, depth });
         if (asset === 'pan') return F.place(oid, asset, xc + m.w * 0.2, { ...o2, y: 940, off: depth - 160, turn: o2.turn ?? -35 });
-        return F.place(oid, asset, xc, { ...o2, y: o2.y ?? top, off: o2.off ?? depth * 0.55, ...(wall ? { off: 0, y: o2.y ?? meta.y } : {}) });
+        const bk = meta.backed && (vary(p.h, asset, o2.params, p.id).form ?? (meta.backed.byDefault ? meta.backed.form : null)) === meta.backed.form ? meta.backed.off : undefined;   // a board leaning on the wall stands against it
+        return F.place(oid, asset, xc, { ...o2, y: o2.y ?? top, off: o2.off ?? bk ?? depth * 0.55, ...(wall ? { off: 0, y: o2.y ?? meta.y } : {}) });
       },
     };
   }

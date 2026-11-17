@@ -5,6 +5,8 @@
 import { room, run } from './common.mjs';
 const SUPPORT = ['support', 'floating', 'overhangs', 'sunk'];
 export const fixtures = [
+  { name: 'leaning-board-mid-worktop', from: 'round-2 example (Nov 17): R.on put a leaning cutting board mid-worktop, 330 mm from the wall, so it tipped 31 degrees', kind: 'bug', expect: { rules: ['moves', 'floating', 'support'], ids: ['t-cuttingBoard'] },
+    build({ Home }) { const { H, a, back } = room(Home), R = run(a, back, [['doors', 1200]]); R.F.place('cuttingBoard', 'cuttingBoard', R.mod('doors').xc, { group: 'run', y: 900, off: 330 }); return H; } },
   { name: 'kettle-over-sink-basin', from: 'Paul 10 (Nov 17): kettle hovers over the basin; support check took the run top as solid across the cut-out', kind: 'bug', expect: { rules: SUPPORT, ids: ['t-kettle'] },
     build({ Home }) { const { H, a, back } = room(Home), R = run(a, back, [['doors', 600], ['sink', 900], ['doors', 600]]); R.F.place('kettle', 'kettle', R.mod('sink').xc, { group: 'run', y: 900, off: 330 }); return H; } },
   { name: 'binder-half-off-console', from: 'Paul 11: open binder half off the console, hanging in the air', kind: 'bug', expect: { rules: SUPPORT, ids: ['t-binders'] },

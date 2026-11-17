@@ -1,6 +1,7 @@
 // @js:library-meta — what each asset in the registry is: where its origin sits, how big it is, how it is mounted, what it takes. Plain data (no three.js), read by compose.mjs and assets.mjs.
 // origin: 'centre' (the middle of the footprint, on the floor or on its foot), 'front-left' (the left end of its front, body behind it: runs, fridge, wall cabinets), 'front-centre' (the middle of its front, sitting in a run's slot: hob, hood), 'wall-centre' (the middle of its back, on a wall face, bottom edge at y).
 // size: [width, depth, height] mm with the default params (width runs along the wall). mount: 'floor' | 'on' (stands on something: give y) | 'wall' | 'ceiling'. y: the height it sits at when mounted `on` or `wall`.
+// backed: { form, off }: with that form the thing leans on the wall, so R.on stands its origin off mm from the wall instead of mid-worktop.
 // facing: all floor pieces face +z (turn them), a bed has its head toward -z. slot: what it goes into.
 const A = (origin, size, mount, params, extra = {}) => ({ origin, size, mount, params, ...extra });
 export const ASSETS = {
@@ -10,7 +11,7 @@ export const ASSETS = {
   hob: A('front-left', [900, 600, 20], 'on', '-', { y: 0, slot: 'hob', note: 'sits in the worktop over a hob module: y 0' }),
   hood: A('front-left', [900, 500, 900], 'wall', '-', { y: 0, slot: 'hob', note: 'over a hob module: y 0' }),
   pan: A('centre', [260, 260, 60], 'on', '-', { y: 940, slot: 'hob' }),
-  cuttingBoard: A('centre', [300, 40, 400], 'on', 'form leaning|flat|hanging|stacked (roll.board says which)', { y: 904, note: 'leaning: against the wall at y 904. flat or stacked: lies on a worktop or the table (460 x 300 on the top: put it with y at the surface). hanging: upright on a wall rail or hook, y 1100' }),
+  cuttingBoard: A('centre', [300, 40, 400], 'on', 'form leaning|flat|hanging|stacked (roll.board says which)', { y: 904, backed: { form: 'leaning', off: 111, byDefault: true }, note: 'leaning: against the wall at y 904. flat or stacked: lies on a worktop or the table (460 x 300 on the top: put it with y at the surface). hanging: upright on a wall rail or hook, y 1100' }),
   fruitBowl: A('centre', [300, 300, 120], 'on', '-', { y: 'top' }),
   plant: A('centre', [260, 260, 300], 'on', '-', { y: 'top', note: 'a pot on a surface; for the floor use floorPlant' }),
   floorPlant: A('centre', [700, 700, 950], 'floor', 'h 950, seed'),

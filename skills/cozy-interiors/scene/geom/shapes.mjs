@@ -25,7 +25,17 @@ let PW, PB;
 const probe = (d) => { PW ||= new RAPIER.World({ x: 0, y: 0, z: 0 }); PB ||= PW.createRigidBody(RAPIER.RigidBodyDesc.fixed()); try { const c = PW.createCollider(d, PB); const v = c.volume(); PW.removeCollider(c, false); return v; } catch { return null; } };
 
 // a convex hull collider description, welding on a 0.01 mm grid, then 0.1, then 1 mm until Rapier accepts it; null when none does. `volume` is in m³.
+// a straight round disc or drum (a table top, a base, a plate: two flat ends, every other point on one circle) becomes a Rapier cylinder: as a hull its flat top is a fan of triangles and a thing standing on it touches one triangle (one contact point, so it rocks)
+function drum(t, c) {
+  let y0 = Infinity, y1 = -Infinity, x0 = Infinity, x1 = -Infinity, z0 = Infinity, z1 = -Infinity;
+  for (let i = 0; i < t.length; i += 3) { x0 = Math.min(x0, t[i]); x1 = Math.max(x1, t[i]); y0 = Math.min(y0, t[i + 1]); y1 = Math.max(y1, t[i + 1]); z0 = Math.min(z0, t[i + 2]); z1 = Math.max(z1, t[i + 2]); }
+  const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, r = (x1 - x0) / 2; if (r < 20 || Math.abs((z1 - z0) / 2 - r) > r * 0.01 || y1 - y0 < 1) return null;
+  for (let i = 0; i < t.length; i += 3) { if (Math.abs(t[i + 1] - y0) > 0.05 && Math.abs(t[i + 1] - y1) > 0.05) return null; const q = Math.hypot(t[i] - cx, t[i + 2] - cz); if (q > 0.5 && Math.abs(q - r) > r * 0.01) return null; }
+  const d = RAPIER.ColliderDesc.cylinder((y1 - y0) / 2 * M, r * M).setTranslation((cx - c[0]) * M, ((y0 + y1) / 2 - c[1]) * M, (cz - c[2]) * M);
+  return { d, how: 'drum', q: 0, volume: Math.PI * r * r * (y1 - y0) * M * M * M };
+}
 export function hullDesc(t, c, grids = [0.01, 0.1, 1]) {
+  const dr = drum(t, c); if (dr) return dr;
   for (const q of grids) { let d = null; try { d = RAPIER.ColliderDesc.convexHull(hullPoints(t, c, q)); } catch {} if (d && d.shape) { const volume = probe(d); if (volume !== null) return { d, how: 'hull', q, volume }; } }
   return null;
 }

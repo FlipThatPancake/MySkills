@@ -2,6 +2,10 @@
 // If one of these fails, a check has gone too strict, and the old bugs it was written for are probably still caught by luck.
 import { room, run } from './common.mjs';
 export const fixtures = [
+  { name: 'good-jug-off-centre-round-table', from: 'round-2 example (Nov 17): a jug 180 mm off the middle of a round table tipped in the settle test because a round hull top gave one contact point (now a cylinder)', kind: 'good',
+    build({ Home }) { const { H, a } = room(Home); const T = a.table('bt', { at: [3200, 2600], r: 520, chairs: 2, group: 'breakfast' }); T.on('jug', { y: 757, dx: -180 }); return H; } },
+  { name: 'good-leaning-board', from: 'a cutting board leaning on the wall through R.on stands against it (round-2 example: it used to land mid-worktop and tip)', kind: 'good',
+    build({ Home }) { const { H, a, back } = room(Home), R = a.run(back, 'run', 500, [{ w: 1200, kind: 'doors' }], { group: 'run' }); R.on('doors', 'cuttingBoard'); return H; } },
   { name: 'good-desk-things', from: 'books, lamp, laptop and mug properly on a desk (a.onTop)', kind: 'good',
     build({ Home }) { const { H, a } = room(Home); a.put('desk', 'desk', [2800, 350], 0, { group: 'g', hero: true, params: { w: 1500, d: 700, h: 740 } }); a.onTop('desk', [{ id: 'lamp', asset: 'taskLamp' }, { id: 'stack', asset: 'bookStack' }, { id: 'laptop', asset: 'laptop' }, { id: 'mug', asset: 'mug' }], { at: 'back' }); a.put('chair', 'deskChair', [2800, 1000], 180, { group: 'g' }); return H; } },
   { name: 'good-pan-on-hob', from: 'a pan on the hob through R.on (hob pans are meant to stand there)', kind: 'good',
