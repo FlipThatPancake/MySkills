@@ -916,12 +916,12 @@
   },
   {
    "style": "pass",
-   "say": "pass-through (a counter-height opening with a ledge; not walked through: a window-like hatch)",
+   "say": "pass-through (a hatch with its own counter under it; not walked through)",
    "counter": true
   },
   {
    "style": "widepass",
-   "say": "wide pass-through (a half-wall or counter opening, 2000 mm wide)",
+   "say": "wide pass-through (a half-wall hatch with its own counter, 2000 mm wide)",
    "counter": true
   },
   {
@@ -933,7 +933,70 @@
    "say": "pocket-door opening (door half slid into the wall)"
   }
  ],
- "passageNote": "roll gives each arch an opening style from `passages`; a counter style (pass, widepass) sits on a wall that has a counter or sideboard in front of it and is not a way through, so give it no `to`, or use the arch/cased kind for a connection. Style goes in the opening: { kind: 'arch', style, x }.",
+ "passageNote": "roll gives each arch an opening style from `passages`; a counter style (pass, widepass) is built with its own counter and is not a way through, so give it no `to`, or use the arch/cased kind for a connection. Style goes in the opening: { kind: 'arch', style, x }. A pass-through carries its own counter (worktop 400 mm into the room, a cabinet body under it): put no worktop or sideboard there and keep 600 mm of floor clear in front; a walk-through opening shows floor running on beyond and one thing of the next room (opening.hint: picture | rug | lamp | chair, else dealt from the position).",
+ "windows": [
+  {
+   "style": "sash",
+   "weight": {
+    "kitchen": 6,
+    "default": 4
+   },
+   "say": "two-sash window (the old kitchen's: thick frame, slightly open)"
+  },
+  {
+   "style": "picture",
+   "weight": {
+    "kitchen": 2,
+    "default": 3
+   },
+   "say": "picture window (one large fixed pane, slim frame; 2100 x 1400 mm, sill 650)"
+  },
+  {
+   "style": "pair",
+   "weight": {
+    "kitchen": 2,
+    "default": 2
+   },
+   "say": "tall pair (two tall narrow casements side by side, 1100 x 1800 mm, sill 450)"
+  },
+  {
+   "style": "wall",
+   "weight": {
+    "kitchen": 0,
+    "hallway": 0,
+    "default": 2
+   },
+   "say": "window wall (floor-level lights between slim mullions with a transom; 3800 x 2300 mm, sill 100; it takes the whole wall, so no other opening beside it)"
+  },
+  {
+   "style": "bay",
+   "weight": {
+    "kitchen": 0,
+    "hallway": 0,
+    "default": 1
+   },
+   "say": "bay window (three angled panes projecting 500 mm outside, a seat at the sill; 2400 x 1500 mm, sill 450; it takes the wall's middle, no other opening beside it)"
+  },
+  {
+   "style": "french",
+   "kind": "door",
+   "weight": {
+    "hallway": 0,
+    "default": 1
+   },
+   "say": "french glass doors to the outside (two leaves ajar, 1500 x 2250 mm; keep 1000 x 1500 mm of floor clear in front)"
+  },
+  {
+   "style": "slider",
+   "kind": "door",
+   "weight": {
+    "hallway": 0,
+    "default": 1
+   },
+   "say": "sliding glass doors to the outside (two panels, one half slid, 2400 x 2250 mm; keep the floor in front clear)"
+  }
+ ],
+ "windowsNote": "roll gives each window a style from `windows`; at most one wall, bay, french or slider per area, and a window with sash 'fixed' (over a sink) stays a two-sash window. Style goes in the opening: { kind: 'window', style: 'picture' | 'pair' | 'wall' | 'bay', x } or { kind: 'door', style: 'french' | 'slider', x }; width, height and sill default from the style (opening.js STYLE). A glass door or wall of glass counts as an opening for the 1200 mm of clear wall rule, and its sheet of daylight lights the area.",
  "boardPlaces": [
   {
    "id": "flat with a loaf",
@@ -1036,5 +1099,28 @@
    }
   ]
  },
- "lightNote": "area.light is the one lamp of the area. pendant: hang a.table(...).over('pendantLamp') (or over an island or a chair) so it reads in the home view; the roll deals one in most kitchens, dining areas and reading corners, so a pendant is a decision, not an extra. If the lamp would overlap the window in the home view, slide it along the table (over('pendantLamp', { dx })) rather than dropping it."
+ "lightNote": "area.light is the one lamp of the area. pendant: hang a.table(...).over('pendantLamp') (or over an island or a chair) so it reads in the home view; the roll deals one in most kitchens, dining areas and reading corners, so a pendant is a decision, not an extra. If the lamp would overlap the window in the home view, slide it along the table (over('pendantLamp', { dx })) rather than dropping it.",
+ "openPlan": {
+  "chance": 0.4,
+  "joinable": ["kitchen", "dining", "living"],
+  "nook": { "reading-corner": "living" },
+  "nookChance": 0.7,
+  "wholeChainChance": 0.5,
+  "pairs": [{ "of": ["kitchen", "dining"], "w": 3 }, { "of": ["dining", "living"], "w": 3 }, { "of": ["kitchen", "living"], "w": 2 }],
+  "orders": [{ "of": ["kitchen", "dining", "living"], "w": 5 }, { "of": ["dining", "kitchen", "living"], "w": 1 }, { "of": ["kitchen", "living", "dining"], "w": 1 }],
+  "layouts": { "row": 1, "corner": 1 },
+  "overlap": [0, 250, 500, 750, 1000],
+  "secondChance": 0.5,
+  "separators": {
+   "island": { "furniture": true, "w": 4, "needs": "kitchen", "say": "a kitchen island facing the neighbour (the kitchen's shape is island)" },
+   "peninsula": { "furniture": true, "w": 3, "needs": "kitchen", "say": "a kitchen peninsula reaching toward the neighbour (the kitchen's shape is peninsula)" },
+   "sofaBack": { "furniture": true, "w": 4, "needs": "living", "say": "a sofa or armchair with its back to the neighbour" },
+   "openShelf": { "furniture": true, "w": 2, "say": "an open shelf unit seen from both sides" },
+   "rug": { "w": 3, "say": "a rug whose edge lies on the seam" },
+   "hangingLight": { "w": 3, "needs": "dining", "say": "a hanging light over the dining table, which stands by the seam" },
+   "halfWall": { "w": 2, "say": "a half wall about 1000 mm high" },
+   "floorChange": { "only": "second", "w": 3, "say": "a floor change: tiles in one area and boards beyond, in one straight line by the other separator" }
+  },
+  "note": "roll.mjs deals openPlan (about 2 homes in 5 with at least two joinable areas). chain = the joined areas in order, layout row (one long back wall) or corner (turns 90 degrees at seam `turn`), seams[i].separators (at least one furniture) and overlap mm. Each joined area's `backing` is set so no side wall stands on a seam. See openplan.mjs and compose.mjs H.join."
+ }
 }

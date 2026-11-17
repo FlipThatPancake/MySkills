@@ -56,7 +56,7 @@ export function daybed(kit, { w = 1900, d = 850 } = {}) {
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) g.add(kit.cyl(sx * (w / 2 - 70), 0, sz * (d / 2 - 60), 24, 170, { rTop: 18, seg: 12, ...lo }));
   g.add(R(0, 170, 0, w, 90, d, 10)); g.add(R(0, 260, 20, w - 40, 170, d - 40, 36, lo));
   g.add(R(0, 430, -d / 2 + 30, w, 380, 60, 14)); for (const s of [-1, 1]) g.add(R(s * (w / 2 - 30), 260, 0, 60, 330, d, 14));   // back and ends
-  g.add(R(-w / 2 + 250, 430, 40, 140, 140, 520, 60));                                                // a bolster
+  g.add(kit.content(R(-w / 2 + 250, 430, 40, 140, 140, 520, 60)));                                                // a bolster
   return kit.merge(g);
 }
 export const readingChair = (kit, p = {}) => armchair(kit, { w: 820, d: 900, ...p });

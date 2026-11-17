@@ -10,8 +10,8 @@ Beautiful views of home areas on one page: paper-white fills, thin grey lines, s
 ## Home and areas
 - Home: one sensible layout in real mm; sizes in [scale.md](references/scale.md). An area may be larger than a real room to serve its view.
 - Area: an open, spacious space backed by one wall or two at an angle. One area in focus at a time; the page glides between areas.
-- Each area is a picture of its own: a hero piece, groups at floor, waist and wall height, something living, something soft. Every object belongs to a group and serves the area's use.
-- Openings give a wall character: windows, doors and arches with thick frames, slightly open, a view outside.
+- Each area is a picture of its own: a hero piece, groups at floor, waist and wall height, something living, something soft. Every object belongs to a group and stands where its owner would use it: [placement.md](references/placement.md).
+- Openings give a wall character, as the roll deals them: two-sash, tall-pair, bay, picture and window-wall windows, glass doors, and passages (arch, cased opening, pass-through, portal, pocket door); thick frames, slightly open, a view outside. A way through shows floor running on beyond it.
 - Each home differs in layout and object choice: follow the roll.
 
 ## Build

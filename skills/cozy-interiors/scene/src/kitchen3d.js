@@ -214,6 +214,8 @@ export function createKit() {
     },
     // A cylinder standing on (x, y, z), axis up; `axis: 'z'` lays it front-to-back, 'x' left-to-right
     // (then (x, y, z) is the centre of its first end).
+    // content(obj): mark a thing as a separate body inside an asset (a magazine, a log, a plate, a hat): scene/selftest.mjs checks that it does not pass through anything else of the asset. Parts left unmarked are one rigid assembly (joinery may overlap).
+    content(obj) { obj.traverse((m) => { if (m.isMesh) m.userData.content = true; }); return obj; },
     cyl(x, y, z, r, h, opts = {}) {
       const g = new THREE.CylinderGeometry(opts.rTop ?? r, r, h, opts.seg ?? 32, 1, !!opts.open);   // open: no end caps (a pipe whose top fades out)
       const m = kit.solid(g, x, y + h / 2, z, { smooth: true, ...opts });
