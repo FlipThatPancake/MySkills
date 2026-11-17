@@ -34,6 +34,15 @@ function drum(t, c) {
   const d = RAPIER.ColliderDesc.cylinder((y1 - y0) / 2 * M, r * M).setTranslation((cx - c[0]) * M, ((y0 + y1) / 2 - c[1]) * M, (cz - c[2]) * M);
   return { d, how: 'drum', q: 0, volume: Math.PI * r * r * (y1 - y0) * M * M * M };
 }
+// a thin top that is solid (a table top 15 mm or more thick): a round one is a drum, a rectangular one (every vertex on a corner of its box) a cuboid; null for anything else. As a triangle mesh its seams push a book stack sideways.
+export function slabDesc(t, c) {
+  const dr = drum(t, c); if (dr) return dr;
+  let a = [Infinity, Infinity, Infinity], b = [-Infinity, -Infinity, -Infinity]; for (let i = 0; i < t.length; i += 3) for (let k = 0; k < 3; k++) { a[k] = Math.min(a[k], t[i + k]); b[k] = Math.max(b[k], t[i + k]); }
+  if (b[1] - a[1] < 15) return null;
+  for (let i = 0; i < t.length; i += 3) for (let k = 0; k < 3; k++) if (Math.abs(t[i + k] - a[k]) > 0.05 && Math.abs(t[i + k] - b[k]) > 0.05) return null;
+  const d = RAPIER.ColliderDesc.cuboid((b[0] - a[0]) / 2 * M, (b[1] - a[1]) / 2 * M, (b[2] - a[2]) / 2 * M).setTranslation(((a[0] + b[0]) / 2 - c[0]) * M, ((a[1] + b[1]) / 2 - c[1]) * M, ((a[2] + b[2]) / 2 - c[2]) * M);
+  return { d, how: 'slab', q: 0, volume: (b[0] - a[0]) * (b[1] - a[1]) * (b[2] - a[2]) * M * M * M };
+}
 export function hullDesc(t, c, grids = [0.01, 0.1, 1]) {
   const dr = drum(t, c); if (dr) return dr;
   for (const q of grids) { let d = null; try { d = RAPIER.ColliderDesc.convexHull(hullPoints(t, c, q)); } catch {} if (d && d.shape) { const volume = probe(d); if (volume !== null) return { d, how: 'hull', q, volume }; } }

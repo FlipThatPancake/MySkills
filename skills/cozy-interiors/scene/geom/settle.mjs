@@ -1,7 +1,7 @@
 // the settle test: one Rapier world in metres, free objects dynamic, everything else fixed, one second of gravity. A home that stands still passes.
 // Free objects: one convex hull per part, mass from the part (volume × 500 kg/m³; an open part, a vessel or a shade, weighs its surface × 3 mm; parts at the foot weigh ×10 so a lamp stands).
 // Left out: drapes and cushions (a draped cloth as a fixed mesh pushed its table 105 mm) and objects resting on something soft (a cat on a cushion): the sunk rule checks those.
-import { RAPIER, M, partDesc, hullDesc, meshDesc } from './shapes.mjs';
+import { RAPIER, M, partDesc, hullDesc, meshDesc, slabDesc } from './shapes.mjs';
 import { environment } from './env.mjs';
 import { DRAPE, SOFT, isFree } from './kinds.mjs';
 import { supports } from './rules.mjs';
@@ -21,11 +21,11 @@ export function settleScene(Q, list, opt = {}, polys = {}) {
   const dyn = new Map(); let lost = 0;
   const fixedBody = W.createRigidBody(RAPIER.RigidBodyDesc.fixed());
   const addFixed = (p, owner) => { const c = [(p.box.mn[0] + p.box.mx[0]) / 2, (p.box.mn[1] + p.box.mx[1]) / 2, (p.box.mn[2] + p.box.mx[2]) / 2];
-    const ext = p.box.mx.map((v, i) => v - p.box.mn[i]), thin = Math.min(...ext) / Math.max(...ext) < 0.03, s = (thin && meshDesc(p.tris, c)) || partDesc(p, c);   // a very flat hull (a rug 7 mm by 2.4 m) lets things fall through in Rapier: those fixed parts stay triangle meshes
+    const ext = p.box.mx.map((v, i) => v - p.box.mn[i]), thin = Math.min(...ext) / Math.max(...ext) < 0.03, s = (thin && (slabDesc(p.tris, c) || meshDesc(p.tris, c))) || partDesc(p, c);   // a very flat hull (a rug 7 mm by 2.4 m) lets things fall through in Rapier: those fixed parts stay triangle meshes
     if (!s.d) { lost++; find.push({ rule: 'shape-failed', id: owner, text: `${owner}: a part could not be made into a shape for the settle test` }); return; } const b = W.createRigidBody(RAPIER.RigidBodyDesc.fixed().setTranslation(c[0] * M, c[1] * M, c[2] * M)); W.createCollider(s.d.setFriction(S.friction), b); };
   for (const p of environment(L)) addFixed(p, p.role);
   for (const o of L.objects) {
-    const free = isFree(o);
+    const free = isFree(o) && !/^(roundTable|table|desk)$/.test(o.asset || '');   // a table is heavy: a chair tucked against it must not carry it (and the books on it) sideways
     if (DRAPE.test(o.asset || '') || softUnder.has(o.id)) continue;   // left out of the world (a fixed cat sunk into its cushion would push the seat down)
     if (!free) { for (const p of o.parts) if (p.kind !== 'flat' || !isFree(o)) addFixed(p, o.id); continue; }
     let cx = 0, cy = 0, cz = 0, n = 0, y0 = Infinity; for (const p of o.parts) { y0 = Math.min(y0, p.box.mn[1]); for (let i = 0; i < p.tris.length; i += 3) { cx += p.tris[i]; cy += p.tris[i + 1]; cz += p.tris[i + 2]; n++; } } if (!n) continue; cx /= n; cy /= n; cz /= n;
