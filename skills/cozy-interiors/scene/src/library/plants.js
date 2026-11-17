@@ -55,7 +55,7 @@ export function monstera(kit, { h = 950, seed = 6 } = {}) {   // a monstera: lon
     const a = i * 2.4 + R() * 0.5, young = i === 2, spread = 0.08 + 0.07 * (i % 3) + 0.012 * i, hh = (h - 300 - 260) * (0.5 + 0.5 * ((i * 5) % 7) / 6);
     const st = curvedStem(kit, g, [Math.sin(a) * 25, 310, Math.cos(a) * 25], [Math.sin(a) * spread, 1, Math.cos(a) * spread], hh + 80, 0.5 + 0.3 * R(), 7, 7);
     const L = (young ? 110 : 185) + 30 * R(), lf = monsteraLeaf(kit, L, { slits: young ? 0 : 4 + (i % 2), depth: 0.6 + 0.2 * R(), seed: seed + i, fold: 0.1 + 0.08 * R(), bow: -0.12 - 0.2 * R() });
-    const el = -0.5 + 0.8 * R();   // the stalk bends the leaf outward, its face turned outward and slightly up
+    const el = -0.95 + 0.4 * R();   // the stalk bends the leaf outward, its face turned outward and slightly up
     place(kit, g, lf, st.end, norm([Math.sin(a), el, Math.cos(a)]), 0, [Math.sin(a) * 1.5, 0.5, Math.cos(a) * 1.5]);
   }
   return kit.merge(g);
@@ -97,9 +97,9 @@ export function basil(kit, { seed = 6 } = {}) {   // basil: a bushy rounded moun
   const ns = 8;
   for (let s = 0; s < ns; s++) {
     const a = s / ns * Math.PI * 2 + R(), r = s === 0 ? 0 : 8 + R() * 14, top = (s === 0 ? 150 : 105 - 10 * R()) + R() * 20, base = [Math.sin(a) * r, 70, Math.cos(a) * r];
-    const st = curvedStem(kit, g, base, [Math.sin(a) * (s ? 0.2 : 0.1), 1, Math.cos(a) * (s ? 0.2 : 0.1)], top, 0.2, 6, 2.5);
+    const st = curvedStem(kit, g, base, [Math.sin(a) * (s ? 0.1 : 0.1), 1, Math.cos(a) * (s ? 0.1 : 0.1)], top, 0.2, 6, 2.5);
     for (let i = 1; i <= 6; i++) {
-      const q = st.pts[i], size = 48 - (i - 1) * 3 + R() * 8;
+      const q = st.pts[i], size = 42 - (i - 1) * 3 + R() * 6;
       for (const m of [0, 1]) { if (i > 1 && R() < 0.2) continue; const b = a + (i % 2 ? 0 : Math.PI / 2) + m * Math.PI + (R() - 0.5) * 0.7; place(kit, g, blade(kit, size, size * 0.8, { profile: 'oval', fold: 0.3, bow: 0.3, curl: 0.06, veins: 2, N: 5, M: 4 }), q, norm([Math.sin(b), 0.1 + 0.05 * i + 0.3 * (R() - 0.3), Math.cos(b)]), b, [0, 1, 0]); }
     }
     place(kit, g, blade(kit, 34, 24, { profile: 'oval', fold: 0.3, bow: 0.1, veins: 0, N: 4, M: 3 }), st.end, [0, 1, 0], a, [0, 0, 1]);
