@@ -38,7 +38,7 @@ export function deskChair(kit) {   // a swivel chair: five-star base, a gas post
   g.add(kit.cyl(0, 60, 0, 22, 330, { seg: 14, ...lo }));
   g.add(kit.cyl(0, 400, 0, 230, 70, { rTop: 215, seg: 32 }));
   g.add(kit.rbox(-190, 520, -180, 380, 330, 60, 60));
-  g.add(kit.cyl(0, 470, -215, 14, 100, { seg: 10, ...lo }));
+  g.add(kit.cyl(0, 470, -215, 14, 100, { seg: 10, through: true, ...lo }));
   return kit.merge(g);
 }
 import { coat, tote } from './softpieces.js';
@@ -47,8 +47,8 @@ export function coatHooks(kit, { n = 4, w = 900 } = {}) {   // a wooden board on
   const g = kit.group(), zc = 24 + 110;
   g.add(kit.rbox(-w / 2, 0, 24, w, 120, 24, 6));
   for (let i = 0; i < n; i++) { const x = -w / 2 + w * (i + 0.5) / n; g.add(kit.cyl(x, 80, 24 + 55, 9, 55, { axis: 'z', seg: 10 })); g.add(kit.cyl(x, 80, 24 + 80, 13, 24, { seg: 10, tone: 'lo' })); }
-  g.add(coat(kit, -w / 2 + w * 1.5 / n, 70, zc + 10));
-  g.add(tote(kit, -w / 2 + w * 3.5 / n, 80, 24 + 100));
+  g.add(kit.through(coat(kit, -w / 2 + w * 1.5 / n, 70, zc + 10)));   // hung on its hook
+  g.add(kit.through(tote(kit, -w / 2 + w * 3.5 / n, 80, 24 + 100)));
   return kit.merge(g);
 }
 export function daybed(kit, { w = 1900, d = 850 } = {}) {

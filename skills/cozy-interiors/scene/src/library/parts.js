@@ -8,9 +8,9 @@ export const HANDLES = ['bar', 'knob', 'cup', 'cutout'];
 export const ARMS = ['track', 'rolled', 'flared', 'none'];
 
 // a rod between two points (radius r at A, r2 at B)
-export function rod(kit, a, b, r, r2 = r, tone) {
+export function rod(kit, a, b, r, r2 = r, tone, through = false) {   // through: it may pass through another part of its asset (a pen standing in a pot)
   const T = kit.THREE, A = new T.Vector3(...a), B = new T.Vector3(...b), d = B.clone().sub(A), len = d.length();
-  const m = kit.solid(new T.CylinderGeometry(r2, r, len, 12), 0, 0, 0, { smooth: true, tone });
+  const m = kit.solid(new T.CylinderGeometry(r2, r, len, 12), 0, 0, 0, { smooth: true, tone, through });
   m.position.copy(A.clone().add(B).multiplyScalar(0.5)); m.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), d.normalize());
   return m;
 }

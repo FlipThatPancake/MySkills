@@ -152,13 +152,13 @@ export function woodStove(kit, { w = 520, d = 430, h = 600, flueH = 1700, ceil, 
     g.add(kit.solid(new kit.THREE.SphereGeometry(80, 24, 16), 0, y1, fz, { smooth: true }));   // the elbow
     g.add(kit.cyl(0, y1, fz, 80, fz - wz, { seg: 24, axis: 'z' }));   // the run into the wall
     g.add(kit.cyl(0, y1, wz + 20, 130, 20, { seg: 28, axis: 'z', tone: 'lo' }));   // a round wall plate
-    for (const y of [h + 120]) g.add(kit.cyl(0, y, fz, 90, 30, { seg: 24, tone: 'lo' }));
+    for (const y of [h + 120]) g.add(kit.cyl(0, y, fz, 90, 30, { seg: 24, tone: 'lo', through: true }));
     return kit.merge(g);
   }
   const FADE = Math.min(450, (flueH - h) * 0.4);   // the pipe is solid up to flueH - 450 mm, then its two edges melt out toward the ceiling (like the pendant's cord)
   g.add(kit.cyl(0, h, fz, 80, flueH - h - FADE, { seg: 24, open: true }));
   for (const sx of [-80, 80]) g.add(kit.meltingLine([sx, flueH - FADE, fz], [sx, flueH, fz], (p) => Math.min(1, (p[1] - (flueH - FADE)) / FADE), 24));
-  for (const y of [h + 120, flueH - FADE - 140]) g.add(kit.cyl(0, y, fz, 90, 30, { seg: 24, tone: 'lo' }));   // two collars
+  for (const y of [h + 120, flueH - FADE - 140]) g.add(kit.cyl(0, y, fz, 90, 30, { seg: 24, tone: 'lo', through: true }));   // two collars
   return kit.merge(g);
 }
 export function recordPlayer(kit, { w = 760, d = 400, h = 520, seed = 4, records = 9, lid: lidP = 'open', legs: lg = 'splay' } = {}) {

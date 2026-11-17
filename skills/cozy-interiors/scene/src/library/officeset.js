@@ -22,7 +22,7 @@ export function deskFrame(kit, { w = 1400, d = 700, h = 740, form = 'pedestal', 
     const dw = Math.min(520, w * 0.4); g.add(B(0, h - TT - ap + 6, d / 2 - 38, dw, ap - 12, 14, {})); pts.push(...rect(-dw / 2, h - TT - ap + 6, dw / 2, h - TT - 6, d / 2 - 30)); g.add(kit.cyl(0, h - TT - ap / 2, d / 2 - 28, 14, 20, { axis: 'z', seg: 12, ...lo }));
     const lp = []; for (const sx of [-1, 1]) for (const sz of [-1, 1]) lp.push([sx * (w / 2 - 70), sz * (d / 2 - 60)]); g.add(legParts(kit, legs, lp, h - TT - ap + 2, { r: 24 }));
   } else {   // pedestal
-    const TT = 30, z = d / 2 + 0.6; g.add(R(0, h - TT, 0, w, TT, d, 6)); g.add(B(-w / 2 + 25, 0, 0, 30, h - TT, d - 60)); g.add(R(w / 2 - 230, 0, 0, 440, h - TT, d - 40, 4)); g.add(B(0, 450, -d / 2 + 80, w - 80, 20, 20, lo));
+    const TT = 30, z = d / 2 + 0.6; g.add(R(0, h - TT, 0, w, TT, d, 6)); g.add(B(-w / 2 + 25, 0, 0, 30, h - TT, d - 60)); g.add(R(w / 2 - 230, 0, 0, 440, h - TT, d - 40, 4)); g.add(B(0, 450, -d / 2 + 80, w - 80, 20, 20, { ...lo, through: true }));
     const rows = Math.max(2, Math.round((h - TT) / 250)), rh = (h - TT - 60) / rows;
     for (let i = 0; i < rows; i++) { const y = 30 + i * rh; pts.push(...rect(w / 2 - 440, y + 6, w / 2 - 30, y + rh - 6, z - 20)); g.add(kit.cyl(w / 2 - 230, y + rh / 2, z - 12, 12, 20, { axis: 'z', seg: 10, ...lo })); }
   }
@@ -113,7 +113,7 @@ export function deskOrganiser(kit, { form = 'cups', n = 3, tall = 1, pens = 3, t
   const cnt = Math.max(2, Math.min(4, n)), base = [[44, 110], [38, 140], [50, 90], [40, 120]].slice(0, cnt);
   base.forEach(([r, h0], i) => { const h = h0 * tall, x = (i - (cnt - 1) / 2) * 112, tn = i % 2 ? lt : {};
     if (form === 'pots') { g.add(Rb(x, 0, 0, r * 1.9, h, r * 1.9, 6, tn)); g.add(Rb(x, h - 3, 0, r * 1.5, 3, r * 1.5, 2, { linen: true })); } else { g.add(kit.cyl(x, 0, 0, r, h, { rTop: r * 1.05, seg: 24, ...(i % 2 ? lt : {}) })); g.add(kit.cyl(x, h - 3, 0, r * 0.82, 3, { seg: 20, linen: true })); }
-    for (let k = 0; k < Math.max(1, Math.round(pens * (0.6 + 0.3 * (i % 2)))); k++) { const a = R() * 6.28, tl = 0.08 + R() * 0.2, L = 150 + R() * 40; const out = 50 + R() * 40, lat = (r - 10) * 0.3 + out * tl; g.add(rod(kit, [x + Math.cos(a) * 6, h - 110, Math.sin(a) * 6], [x + Math.cos(a) * lat, h + out, Math.sin(a) * lat], 4.5, 4.5, 'lo')); } });
+    for (let k = 0; k < Math.max(1, Math.round(pens * (0.6 + 0.3 * (i % 2)))); k++) { const a = R() * 6.28, tl = 0.08 + R() * 0.2, L = 150 + R() * 40; const out = 50 + R() * 40, lat = (r - 10) * 0.3 + out * tl; g.add(rod(kit, [x + Math.cos(a) * 6, h - 110, Math.sin(a) * 6], [x + Math.cos(a) * lat, h + out, Math.sin(a) * lat], 4.5, 4.5, 'lo', true)); } });
   g.add(Rb(0, 0, 90, cnt * 112 - 12, 10, 70, 3, lo));   // a little tray in front
   return kit.merge(g);
 }
@@ -121,8 +121,8 @@ export function deskOrganiser(kit, { form = 'cups', n = 3, tall = 1, pens = 3, t
 export function printer(kit, { w = 430, form = 'inkjet', h: hIn, lid: lidForm = 'flat', paper = 'stack', seed = 1 } = {}) {   // a desktop printer: a boxy body, a sloped lid, a paper tray with a sheet in it, an output slot and a button
   const g = kit.group(), Rb = rb(kit), R = rnd(seed), d = w * 0.8, h = hIn || (form === 'inkjet' ? 170 : 210), z = 0;
   g.add(Rb(0, 0, z, w, h * 0.66, d, 14)); g.add(Rb(0, h * 0.66 - 2, -8, w - 16, lidForm === 'raised' ? h * 0.62 : h * 0.4, d - 40, 10, lo));
-  g.add(Rb(0, h * 0.18, d / 2 - 2, w - 80, 8, 120, 2, { tone: 'lo' })); g.add(Rb(0, h * 0.18 + 8, d / 2 + 40, w - 120, 3, 160, 1, { linen: true }));   // the output tray and a sheet
-  if (paper === 'stack') g.add(Rb(0, h * 0.66 + 14, -d / 2 + 70, w - 90, 5, 150, 1, { linen: true }));   // paper standing up at the back
+  g.add(Rb(0, h * 0.18, d / 2 - 2, w - 80, 8, 120, 2, { tone: 'lo', through: true })); g.add(Rb(0, h * 0.18 + 8, d / 2 + 40, w - 120, 3, 160, 1, { linen: true, through: true }));   // the output tray and a sheet
+  if (paper === 'stack') g.add(Rb(0, h * 0.66 + 14, -d / 2 + 70, w - 90, 5, 150, 1, { linen: true, through: true }));   // paper standing up at the back
   g.add(kit.lines([[-w / 2 + 70, h * 0.4, d / 2 + 0.5], [w / 2 - 70, h * 0.4, d / 2 + 0.5]], 'mid')); g.add(kit.cyl(w / 2 - 40, h * 0.5, d / 2 - 8, 9, 6, { axis: 'z', seg: 14, ...lo }));
   return kit.merge(g);
 }
