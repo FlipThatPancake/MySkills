@@ -93,7 +93,7 @@ class Area {
         const off = o.off ?? (m.origin === 'centre' ? d / 2 : m.origin === 'front-left' ? (o.depth ?? d) : m.origin === 'front-centre' ? (o.depth ?? 600) : 0);
         const ox = m.origin === 'front-left' ? xc - w / 2 : xc;
         const { dropThrow, ...o3 } = o, res = F.put(oid, asset, ox, off, { ...o3, y, mount });
-        if (dropThrow) { try { p.drapeOver(`${oid}-throw`, oid, { w: 900, d: 520, dx: Math.min(w, 2000) / 2 - 520, dz: 110, spin: 4, tone: 'lo', group: o.group }); } catch (e) { if (process.env.DEBUG_THROW) console.log(e.message); } }   // the throw is a cloth dropped on the cushion, not a stack of slabs
+        if (dropThrow) { try { p.drapeOver(`${oid}-throw`, oid, { w: 900, d: 520, dx: Math.min(w, 2000) / 2 - 520, dz: 110, spin: 4, wave: 0, tone: 'lo', group: o.group }); } catch (e) { if (process.env.DEBUG_THROW) console.log(e.message); } }   // the throw is a cloth dropped on the cushion, not a stack of slabs
         return res;
       },
     };
