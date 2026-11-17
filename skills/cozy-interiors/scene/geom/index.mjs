@@ -8,7 +8,7 @@ import { loadScene } from './load.mjs';
 import { queryWorld, contacts } from './world.mjs';
 import { applyRules } from './rules.mjs';
 
-export async function checkScene(scene, { settle = true, parts = false, src } = {}) {
+export async function checkScene(scene, { settle = true, parts = true, src } = {}) {
   const t0 = performance.now(), L = await loadScene(scene, { src }), t1 = performance.now();
   const Q = queryWorld(L), t2 = performance.now(), C = contacts(Q), t3 = performance.now();
   const { find, supporters, supportPolys } = applyRules(Q, C.list), t4 = performance.now();
@@ -27,7 +27,7 @@ export async function checkScene(scene, { settle = true, parts = false, src } = 
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const args = process.argv.slice(2), out = args.includes('--json') ? args[args.indexOf('--json') + 1] : null, file = args.find((a) => !a.startsWith('--') && a !== out);
-  const r = await checkScene(file, { settle: !args.includes('--no-settle'), parts: args.includes('--parts') });
+  const r = await checkScene(file, { settle: !args.includes('--no-settle'), parts: !args.includes('--no-parts') });
   console.log(`${r.shapes.objects} objects, ${r.shapes.parts} parts (${r.shapes.hull} hulls, ${r.shapes.mesh} meshes, ${r.shapes.failed} failed), ${Math.round(r.timings.total)} ms`);
   for (const f of r.findings) console.log(`[${f.rule}] ${f.text}`);
   console.log(`${r.findings.length} finding(s)`);

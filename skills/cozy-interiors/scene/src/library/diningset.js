@@ -40,7 +40,7 @@ export function breadBasket(kit, { r = 150, h = 95, bread = 'loaf', seed = 3, cl
   g.add(kit.solid(new T.LatheGeometry([[r * 0.6, 0], [r * 0.7, 6], [r * 0.95, h * 0.7], [r, h], [r - 12, h], [r * 0.85, h * 0.7], [r * 0.5, 14], [0.01, 14]].map(([a, b]) => new T.Vector2(a, b)), 32), 0, 0, 0, { smooth: true, tone: 'lo' }));
   for (const f of [0.3, 0.6, 0.85]) pts.push(...ringXZ(0, h * f, 0, r * (0.7 + 0.3 * f) + 1.5, 32));
   g.add(kit.lines(pts, 'mid'));
-  if (cloth === 'yes') g.add(kit.rbox(-r * 0.8, 20, r * 0.75, r * 1.6, 8, r * 1.5, 4, { linen: true }));   // a cloth lining
+  if (cloth === 'yes') g.add(kit.rbox(-r * 0.8, 20, r * 0.75, r * 1.6, 8, r * 1.5, 4, { linen: true, through: true }));   // a cloth lining
   if (rim === 'rolled') g.add(kit.cyl(0, h - 6, 0, r + 4, 14, { seg: 32, tone: 'lo', open: true }));
   if (bread === 'rolls') { const rr = Math.max(68, r * 0.45), sr = Math.min(48, rr * 0.69); for (let i = 0; i < 4; i++) { const a = i * 1.57 + R() * 0.3; g.add(kit.content(kit.solid(new T.SphereGeometry(sr, 14, 10), Math.cos(a) * rr, 22 + sr, Math.sin(a) * rr, { smooth: true, tone: 'lo', linen: false }))); } }
   else if (bread === 'baguette') for (const [o, a0, len] of [[-40, 0.05, 2.05], [38, -0.05, 1.9]]) {   // a baguette: a long lathe that is fullest in the middle and tapers to both ends, bowed a little, with diagonal slashes
@@ -129,7 +129,7 @@ export function wallPlates(kit, { n = 5, r = 110, seed = 4, layout = 'cluster' }
 // a pendant lamp for over a table: the shade's lower rim at `rim` above the floor, a cord up to 2700. form: dome | globe | cone | cluster | rattan | linear
 export function pendantForm(kit, { form = 'dome', rim = 1950, r = 220, seed = 1, canopy = 'disc' } = {}) {
   const g = kit.group(), T = kit.THREE, R = rnd(seed), top = 2700;
-  const cord = (x, y0, z) => g.add(rod(kit, [x, y0, z], [x, top, z], 4, 4, 'lo'));
+  const cord = (x, y0, z) => g.add(rod(kit, [x, y0, z], [x, top, z], 4, 4, 'lo', true));
   if (form === 'globe') { g.add(kit.solid(new T.SphereGeometry(r * 0.8, 28, 20), 0, rim + r * 0.8, 0, { smooth: true })); cord(0, rim + r * 1.6, 0); }
   else if (form === 'cone') { g.add(kit.cyl(0, rim, 0, r, r * 0.9, { rTop: r * 0.18, seg: 36 })); g.add(kit.cyl(0, rim + r * 0.9, 0, r * 0.2, r * 0.12, { seg: 16, tone: 'lo' })); cord(0, rim + r * 1.02, 0); }
   else if (form === 'cluster') for (let i = 0; i < 3; i++) { const x = (i - 1) * r * 0.85, rr = r * (0.38 + 0.12 * ((i * 5) % 3)), y = rim + (i === 1 ? r * 0.5 : 0); g.add(kit.solid(new T.SphereGeometry(rr, 20, 14), x, y + rr, 0, { smooth: true })); cord(x, y + rr * 2, 0); }

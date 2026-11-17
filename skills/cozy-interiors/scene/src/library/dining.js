@@ -36,7 +36,7 @@ export function chair(kit, { form = 'ladder', seed = 1 } = {}) {   // form ladde
   } else {
     g.add(kit.rbox(-S / 2, seatY, S / 2, S, 36, S, 8));                                              // the seat
     for (const sx of [-1, 1]) for (const sz of [-1, 1]) g.add(kit.box(sx * (S / 2 - 22 - LEG / 2) - LEG / 2, 0, sz * (S / 2 - 22 - LEG / 2) + LEG / 2, LEG, seatY, LEG));
-    for (const sx of [-1, 1]) g.add(kit.box(sx * (S / 2 - 22 - LEG / 2) - LEG / 2, seatY + 36, -S / 2 + 22 + LEG, LEG, 360, LEG));   // the back uprights
+    for (const sx of [-1, 1]) g.add(kit.box(sx * (S / 2 - 22 - LEG / 2) - LEG / 2, seatY + 36, -S / 2 + 22 + LEG, LEG, 360, LEG, { through: true }));   // the back uprights run up into the top rail
     g.add(kit.rbox(-S / 2 + 22, 745, -S / 2 + 22 + LEG - 4, S - 44, 70, 26, 6, lo));                  // the top rail
     if (form === 'spindle') { for (let k = 0; k < 5; k++) g.add(kit.cyl(-S / 2 + 22 + LEG + 20 + k * ((S - 44 - 2 * LEG - 40) / 4), seatY + 36, -S / 2 + 22 + LEG / 2 - 2, 8, 300, { seg: 10, tone: 'lo' })); g.add(kit.rbox(-S / 2 + 22 + LEG, 520, -S / 2 + 22 + LEG - 8, S - 44 - 2 * LEG, 26, 18, 4, lo)); }
     else { g.add(kit.rbox(-S / 2 + 22 + LEG, 610, -S / 2 + 22 + LEG - 8, S - 44 - 2 * LEG, 36, 18, 4, lo)); g.add(kit.rbox(-S / 2 + 22 + LEG, 520, -S / 2 + 22 + LEG - 8, S - 44 - 2 * LEG, 30, 18, 4, lo)); }   // ladder rails

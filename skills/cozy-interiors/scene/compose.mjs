@@ -22,6 +22,7 @@ import { ASSETS, SPACE } from './src/library/meta.js';
 import { dealParams } from './src/library/space.js';
 import { dropCloth, heightField } from './src/cloth.js';
 import { createKit } from './src/kitchen3d.js';
+import { restOn as geomRestOn, fits as geomFits } from './geom/place.mjs';
 import { REGISTRY } from './src/library/index.js';
 import { joinAreas, seamLine, zoneList } from './openplan.mjs';
 import { checkAlive, pickVia, MOTION } from './motion-roll.mjs';
@@ -104,6 +105,18 @@ class Area {
     const [wx, wz] = this.P([x, z]);
     this.h.S.home.objects.push({ id: `${this.id}-${id}`, asset, at: [wx, y, wz], ...(turn - this.psi ? { turn: r0(turn - this.psi) } : {}), mount: mount || ASSETS[asset].mount, ...(params ? { params } : {}), group: `${this.id}:${group}`, ...(hero ? { hero: true } : {}), area: this.id, ...rest });
   }
+  thingTris(asset, params) {   // a thing's triangles in its own frame (origin at its placed point), for geom.restOn / geom.fits
+    const kit = (this.h.kit ||= createKit()), g = REGISTRY[asset](kit, { ...(params || {}) }), tris = [], a = new kit.THREE.Vector3(), b = new kit.THREE.Vector3(), c = new kit.THREE.Vector3(); g.updateMatrixWorld(true);
+    g.traverse((o) => { if (!o.isMesh || o.isLineSegments2 || o.userData.lines || o.material.isMeshBasicMaterial || kit.hulls.includes(o.material) || o.material === kit.depth) return; const p = o.geometry.attributes.position, ix = o.geometry.index;
+      for (let t = 0, n = ix ? ix.count : p.count; t < n; t += 3) { const [i, j, k] = ix ? [ix.getX(t), ix.getX(t + 1), ix.getX(t + 2)] : [t, t + 1, t + 2]; a.fromBufferAttribute(p, i).applyMatrix4(o.matrixWorld); b.fromBufferAttribute(p, j).applyMatrix4(o.matrixWorld); c.fromBufferAttribute(p, k).applyMatrix4(o.matrixWorld); tris.push([a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z]); } });
+    return tris;
+  }
+  // the geometry core decides the height and the overhang: the thing's base must rest on real surface (at least 85% of it), else the call refuses
+  settleOn(label, id, asset, tris, params, [px, pz], turn) {
+    const thing = this.thingTris(asset, params), y = geomRestOn(tris, thing, [px, pz], turn), share = geomFits(tris, thing, [px, pz], turn);
+    if (share < 0.85) throw new Error(`${label}('${id}'): only ${Math.round(share * 100)}% of the ${asset} base would lie over the surface (it needs 85%): move it inward (at or dx/dz), or use a smaller piece`);
+    return Math.round(y);
+  }
   targetTris(label, targetId) {   // the triangles of a placed thing in this area's frame, for resting things on it
     const T = (this.h.kit ||= createKit()).THREE, tgt = this.h.S.home.objects.find((q) => q.id === `${this.id}-${targetId}`);
     if (!tgt) throw new Error(`${label}('${targetId}'): place the target first`);
@@ -138,7 +151,7 @@ class Area {
   // spaced things on one top: a.onTop('desk', [{ id: 'lamp', asset: 'lamp' }, { id: 'books', asset: 'bookStack', params }, ...], { at: 'back' | 'centre' | 'front', margin: 50, group, turn })
   // lays the things in a row along the longer side of the top, in the order given, with equal gaps of at least `margin` mm between them and the edges, every footprint inside the edge; 'back' is the side nearer the area's back wall (lower z). It refuses with the length it needs when they do not fit.
   onTop(surfaceId, things, { at = 'centre', margin = 50, group, turn = 0 } = {}) {
-    const { tris, all } = this.targetTris('onTop', surfaceId), hf = heightField(tris), x0 = all.min.x, x1 = all.max.x, z0 = all.min.z, z1 = all.max.z, alongX = (x1 - x0) >= (z1 - z0), L = alongX ? x1 - x0 : z1 - z0, W = alongX ? z1 - z0 : x1 - x0;
+    const { tris, all } = this.targetTris('onTop', surfaceId), x0 = all.min.x, x1 = all.max.x, z0 = all.min.z, z1 = all.max.z, alongX = (x1 - x0) >= (z1 - z0), L = alongX ? x1 - x0 : z1 - z0, W = alongX ? z1 - z0 : x1 - x0;
     const grp = group || this.h.S.home.objects.find((q) => q.id === `${this.id}-${surfaceId}`)?.group.split(':')[1];
     const items = things.map((t) => { const params = vary(this.h, t.asset, t.params, this.id), { w, d } = sizeOf(t.asset, params); return { ...t, params, a: alongX ? w : d, b: alongX ? d : w }; });
     const need = items.reduce((q, i) => q + i.a, 0) + (items.length + 1) * margin;
@@ -147,8 +160,8 @@ class Area {
     const gap = (L - items.reduce((q, i) => q + i.a, 0)) / (items.length + 1); let p = (alongX ? x0 : z0) + gap;
     for (const i of items) {
       const along = p + i.a / 2, perp = at === 'back' ? (alongX ? z0 : x0) + margin + i.b / 2 : at === 'front' ? (alongX ? z1 : x1) - margin - i.b / 2 : (alongX ? (z0 + z1) / 2 : (x0 + x1) / 2), [px, pz] = alongX ? [along, perp] : [perp, along];
-      let y = 0; for (const [dx, dz] of [[0, 0], [1, 1], [1, -1], [-1, 1], [-1, -1]]) y = Math.max(y, hf(px + dx * (alongX ? i.a : i.b) / 2, pz + dz * (alongX ? i.b : i.a) / 2));
-      this.put(i.id, i.asset, [px, pz], i.turn ?? turn, { y: Math.round(y), mount: 'on', group: i.group || grp, params: i.params, ...(i.hero ? { hero: true } : {}) });
+      const y = this.settleOn('onTop', i.id, i.asset, tris, i.params, [px, pz], i.turn ?? turn);
+      this.put(i.id, i.asset, [px, pz], i.turn ?? turn, { y, mount: 'on', group: i.group || grp, params: i.params, ...(i.hero ? { hero: true } : {}) });
       p += i.a + gap;
     }
   }
@@ -232,9 +245,9 @@ class Area {
   }
   // a small thing resting on the highest surface under it: a.restOn('cat', 'cat', 'seat', { dx, dz | at, turn, params, group }): a cat on a seat, a cushion on a chair, a book on a pile
   restOn(id, asset, targetId, { at, dx = 0, dz = 0, turn = 0, params, group } = {}) {
-    const { tris, all, T } = this.targetTris('restOn', targetId), hf = heightField(tris), c = all.getCenter(new T.Vector3()), p = at || [c.x + dx, c.z + dz], pr = vary(this.h, asset, params, this.id), { w, d } = sizeOf(asset, pr);
-    let y = 0; for (const [a, b] of [[0, 0], [1, 1], [1, -1], [-1, 1], [-1, -1]]) y = Math.max(y, hf(p[0] + a * w / 3, p[1] + b * d / 3));
-    this.put(id, asset, p, turn, { y: Math.round(y), mount: 'on', group: group || this.h.S.home.objects.find((q) => q.id === `${this.id}-${targetId}`)?.group.split(':')[1], params: pr });
+    const { tris, all, T } = this.targetTris('restOn', targetId), c = all.getCenter(new T.Vector3()), p = at || [c.x + dx, c.z + dz], pr = vary(this.h, asset, params, this.id), { w, d } = sizeOf(asset, pr);
+    const y = this.settleOn('restOn', id, asset, tris, pr, p, turn);
+    this.put(id, asset, p, turn, { y, mount: 'on', group: group || this.h.S.home.objects.find((q) => q.id === `${this.id}-${targetId}`)?.group.split(':')[1], params: pr });
   }
   // things on a tablecloth rise by the cloth's thickness (16 mm), so their bases rest on the cloth, not in it: every `on` piece whose middle lies over a cloth's table top and whose base is at the cloth's base height
   liftOnCloths() {

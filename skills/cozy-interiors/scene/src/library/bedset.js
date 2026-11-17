@@ -105,7 +105,7 @@ export function clothesRail(kit, { w = 1100, h = 1650, items = 4, mix = 'mixed',
   g.add(rod(kit, [-w / 2 - 20, h, 0], [w / 2 + 20, h, 0], 14, 14, 'mid'));
   let gotGrey = false, x = -w / 2 + 80; for (let i = 0; i < items && x < w / 2 - 70; i++) {
     const k = KINDS[(i + Math.floor(R() * 4)) % KINDS.length], ry = i === 0 || R() < 0.25 ? (R() - 0.5) * 1.1 : (R() < 0.5 ? 1 : -1) * (1.15 + R() * 0.3), q = garment(kit, k, { tone: 'mid', R, front: Math.abs(ry) < 0.7, grey: Math.abs(ry) < 0.7 && !gotGrey && (gotGrey = true) });
-    q.position.set(x, h - 8, 0); q.rotation.y = ry; g.add(q);   // most hang edge-on to the rail, a few turned to show their front
+    q.position.set(x, h - 8, 0); q.rotation.y = ry; g.add(kit.through(q));   // most hang edge-on to the rail, a few turned to show their front
     x += 70 + R() * 55 + (Math.abs(q.rotation.y) < 0.7 ? 150 : 0);
   }
   return kit.merge(g);
