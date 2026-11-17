@@ -88,12 +88,11 @@ class Area {
         return F.place(oid, asset, xc, { ...o, params: prm, y: (W.sill ?? 1000) + 30, mount: 'on', onSill: true, off: o.off ?? 110 - pd / 2 + 15 });   // the pot's front stands 15 mm past the sill's front lip so its leaves clear the sash (the sill reaches 110 mm into the room): centred on the free depth, not on the lip
       },
       place(oid, asset, xc, o = {}) {   // by the asset's own origin and size: xc is its middle along the wall
-        if (asset === 'windowSeat') { const W = openings.find((q) => q.kind === 'window' && Math.abs(q.x - xc) <= q.width / 2 + 300); if (W) { const h = o.params?.h ?? Math.min(480, Math.max(400, (W.sill ?? 1000) - 130)); o = { ...o, params: { ...o.params, h, pillowMax: (W.sill ?? 1000) - (h + 70) - 30, throwOn: 'no' }, dropThrow: o.params?.throwOn !== 'no' }; } }   // under a window the seat is as tall as the sill allows (its cushion top within 100 of the sill: a sill of 530-610 fits h 400-480; a higher sill leaves a gap the placement check names)
+        if (asset === 'windowSeat') { const W = openings.find((q) => q.kind === 'window' && Math.abs(q.x - xc) <= q.width / 2 + 300); if (W) { const h = o.params?.h ?? Math.min(480, Math.max(400, (W.sill ?? 1000) - 130)); o = { ...o, params: { ...o.params, h, pillowMax: (W.sill ?? 1000) - (h + 70) - 30 }, }; } }   // under a window the seat is as tall as the sill allows (its cushion top within 100 of the sill: a sill of 530-610 fits h 400-480; a higher sill leaves a gap the placement check names)
         o = { ...o, params: vary(p.h, asset, o.params, p.id) }; const { w, d, m } = sizeOf(asset, o.params), mount = o.mount || m.mount; if (o.y === undefined && m.y === 'top') throw new Error(`place('${oid}', '${asset}'): give y, the height of the surface it stands on in mm (for example y: 520 on a bedside table, 740 on a desk)`); const y = o.y ?? (typeof m.y === 'number' ? m.y : 0);
         const off = o.off ?? (m.origin === 'centre' ? d / 2 : m.origin === 'front-left' ? (o.depth ?? d) : m.origin === 'front-centre' ? (o.depth ?? 600) : 0);
         const ox = m.origin === 'front-left' ? xc - w / 2 : xc;
-        const { dropThrow, ...o3 } = o, res = F.put(oid, asset, ox, off, { ...o3, y, mount });
-        if (dropThrow) { try { p.drapeOver(`${oid}-throw`, oid, { w: 900, d: 520, dx: Math.min(w, 2000) / 2 - 520, dz: 110, spin: 4, wave: 0, tone: 'lo', group: o.group }); } catch (e) { if (process.env.DEBUG_THROW) console.log(e.message); } }   // the throw is a cloth dropped on the cushion, not a stack of slabs
+        const res = F.put(oid, asset, ox, off, { ...o, y, mount });
         return res;
       },
     };

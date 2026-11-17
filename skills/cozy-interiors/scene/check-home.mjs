@@ -98,7 +98,8 @@ const issues = await page.evaluate(() => {
       if (o.kind === 'door') f.rotation.y = o.dir * Math.PI / 180 * o.max * v; else f.position.z = o.max * v;
       f.updateMatrixWorld(true);
       const fb = box(f);
-      for (const id of Object.keys(objs)) { if (kind === 'run' && sc(id).asset === 'baseRun') continue; if (objs[id] === own || sc(id).mount === 'ceiling' || ['rug', 'curtain', 'plant', 'pan', 'fruitBowl', 'cuttingBoard'].includes(sc(id).asset)) continue; if (kind === 'run' && ['on', 'wall'].includes(sc(id).mount) && !(sc(id).mount === 'wall' && f.userData.open.yr)) { if (sc(id).mount === 'on') continue; } if (inter(fb, boxes[id], 6)) hit.add(id); }
+      for (const id of Object.keys(objs)) { if (kind === 'run' && sc(id).asset === 'baseRun') continue; if (objs[id] === own || sc(id).mount === 'ceiling' || ['rug', 'curtain', 'plant', 'pan', 'fruitBowl', 'cuttingBoard', 'windowSeat'].includes(sc(id).asset)) continue;   // a window seat's soft end cushions give way to an opening leaf
+      if (kind === 'run' && ['on', 'wall'].includes(sc(id).mount) && !(sc(id).mount === 'wall' && f.userData.open.yr)) { if (sc(id).mount === 'on') continue; } if (inter(fb, boxes[id], 6)) hit.add(id); }
       if (kind === 'opening') for (const op of openings) { if (op.group === own) continue; const ob = box(op.group); if (inter(fb, ob, 6)) hit.add(`the ${op.op.kind} on ${op.wall} at ${op.op.at}`); }
     }
     f.rotation.y = rot; f.position.z = pos; f.updateMatrixWorld(true);
@@ -136,7 +137,7 @@ const issues = await page.evaluate(() => {
   for (const W of home.walls) for (const b of W.built) {
     if (b.op.kind !== 'window' || b.op.sash === 'fixed' || ['picture', 'wall', 'bay'].includes(b.op.style)) continue;
     const xc = W.len - b.op.at, w = b.op.width, y0 = b.op.sill ?? 1000, zone = { x0: xc - w / 2, x1: xc + w / 2, z0: 0, z1: w / 2 + 60, y0, y1: y0 + (b.op.height ?? 1100) };
-    for (const t of things) { if (sc(t.id.split("'")[0])?.mount === 'wall' && false) continue; if (hit3(toLocal(W, t.box), zone)) out.push({ rule: 'sash', what: `${t.id} stands in the sweep of the window on ${W.id || W.i} at ${b.op.at} (make that window fixed or move it)` }); }
+    for (const t of things) { if (sc(t.id.split("'")[0])?.mount === 'wall' && false) continue; if (sc(t.id.split("'")[0])?.asset === 'windowSeat') continue; if (hit3(toLocal(W, t.box), zone)) out.push({ rule: 'sash', what: `${t.id} stands in the sweep of the window on ${W.id || W.i} at ${b.op.at} (make that window fixed or move it)` }); }
   }
   // 2b. wall pieces keep 150 mm clear of an opening and its casing (a tea towel rail or a shelf touching a window frame)
   for (const W of home.walls) for (const b of W.built) {

@@ -16,7 +16,7 @@ function book(kit, x, y, z, w, h, d, ang, tone) {
   g.position.set(x, y, z); g.rotation.y = ang; return g;
 }
 
-export function windowSeat(kit, { w = 1500, d = 520, h = 440, form = 'storage', cushion = 'plain', pillows = 2, throwOn = 'yes', pillowMax = 400, seed = 1 } = {}) {   // a built-in seat under a window: a box with drawers, a frame with open cubbies, or a slatted bench on legs; a long cushion, pillows leaning on the wall, a folded throw. Back at -z.
+export function windowSeat(kit, { w = 1500, d = 520, h = 440, form = 'storage', cushion = 'plain', pillows = 2, throwOn = 'yes', pillowMax = 400, throwTone = 'accent', seed = 1 } = {}) {   // a built-in seat under a window: a box with drawers, a frame with open cubbies, or a slatted bench on legs; a long cushion, pillows leaning on the wall, a folded throw. Back at -z.
   const g = kit.group(), R = rnd(seed), B = bx(kit), Rb = rb(kit), pts = [], z = d / 2 + 0.6, cuH = 70;
   if (form === 'storage') {
     g.add(Rb(0, 70, 0, w, h - 70 - 20, d, 5)); g.add(B(0, 0, 14, w - 40, 70, d - 40, lo)); g.add(Rb(0, h - 20, 10, w + 20, 20, d + 20, 4));
@@ -32,9 +32,14 @@ export function windowSeat(kit, { w = 1500, d = 520, h = 440, form = 'storage', 
   if (pts.length) g.add(kit.lines(pts, 'lo'));
   const cw2 = w - 50, cd = d - 60, cy = h, cs = softBox(kit, cw2, cuH, cd, { r: 24, bulge: 8, piping: cushion === 'tufted' ? 'none' : 'edge', tone: 'mid', tufts: cushion === 'tufted' ? Array.from({ length: Math.max(2, Math.round(cw2 / 260)) }, (_, i) => [-cw2 / 2 + (i + 0.5) * cw2 / Math.max(2, Math.round(cw2 / 260)), 0]) : undefined }); cs.position.set(0, cy + cuH / 2, 14); g.add(cs);
   if (cushion === 'striped') { const ln = []; for (let x = -cw2 / 2 + 60; x < cw2 / 2 - 40; x += 90) ln.push([x, cy + cuH * 0.6, 14 + cd / 2 + 8], [x, cy + cuH * 0.1, 14 + cd / 2 + 8]); g.add(kit.lines(ln, 'mid')); }
-  const ps = Math.min(1, pillowMax / 330), pw = ps < 0.55 ? [] : [-1, 1, 0].slice(0, Math.max(0, Math.min(3, pillows)));   // pillowMax: how tall pillows may stand (under a low sill they shrink or go)
-  pw.forEach((s, i) => { const p = softBox(kit, (340 - i * 20) * ps, (330 - i * 20) * ps, 110 * ps, { r: 50, bulge: 22, dent: 12, piping: 'edge', tone: i % 2 ? 'lo' : 'mid' }); p.position.set(s * (cw2 / 2 - 260) + (R() - 0.5) * 60, cy + cuH + 130 * ps, -d / 2 + 90 + 70); p.rotation.x = -(0.30 + R() * 0.16); p.rotation.z = (R() - 0.5) * 0.35; g.add(p); });
-  if (throwOn === 'yes') { const t = foldedThrow(kit, { w: 700, d: 200, layers: 3, tone: 'lo' }); t.position.set(cw2 / 2 - 480, cy + cuH, 125);  t.rotation.y = 0.08; g.add(t); }
+  const ph = Math.min(340, Math.max(280, pillowMax + 270)), ends = pillows >= 2 ? [-1, 1] : pillows === 1 ? [R() < 0.5 ? -1 : 1] : [];   // end cushions: small, upright against the side cheek or the reveal, sized to the gap under the sill (a low sill gets the smaller ones, never none)
+  ends.forEach((s, i) => { const p = softBox(kit, 100, ph - i * 20, ph + 10 - i * 20, { r: 40, bulge: 18, dent: 8, piping: 'edge', tone: i % 2 ? 'lo' : 'mid' }); p.position.set(s * (cw2 / 2 - 62), cy + cuH + (ph - i * 20) / 2 - 8, -d / 2 + 125 + (ph + 10) / 2); p.rotation.z = -s * (0.2 + R() * 0.06); p.rotation.x = (R() - 0.5) * 0.12; g.add(p); });
+  if (throwOn === 'yes') {   // a folded throw across the cushion beside an end cushion, one corner falling over the front edge; the home's accent when the roll gives it
+    const s = ends.length === 2 ? (R() < 0.5 ? -1 : 1) : ends.length ? -ends[0] : 1, tx = s * (cw2 / 2 - 62 - 50 - 200), zf = 14 + cd / 2, tn = { tone: throwTone };
+    const t = kit.group(); [[400, 34, cd - 70, 0], [360, 30, cd - 110, 12]].forEach(([tw, th, td, dx], i) => { const l = softBox(kit, tw, th, td, { r: 15, bulge: 6, ...tn }); l.position.set(dx, i ? 34 + 15 - 4 : 17, -8); t.add(l); });
+    const tg = kit.group(), tc = softBox(kit, 290, 26, 115, { r: 12, bulge: 5, ...tn }); tc.position.set(0, 0, 58); tg.add(tc); tg.position.set(-20, 38, zf - 14 - 34); tg.rotation.x = 1.2; tg.rotation.z = 0.06; t.add(tg);
+    t.position.set(tx, cy + cuH, 14); g.add(t);
+  }
   return kit.merge(g);
 }
 
