@@ -1122,5 +1122,219 @@
    "floorChange": { "only": "second", "w": 3, "say": "a floor change: tiles in one area and boards beyond, in one straight line by the other separator" }
   },
   "note": "roll.mjs deals openPlan (about 2 homes in 5 with at least two joinable areas). chain = the joined areas in order, layout row (one long back wall) or corner (turns 90 degrees at seam `turn`), seams[i].separators (at least one furniture) and overlap mm. Each joined area's `backing` is set so no side wall stands on a seam. See openplan.mjs and compose.mjs H.join."
+ },
+"stillLife": {
+ "note": "For each waist-high top the roll deals 2 or 3 of its things (never a cloth, runner or rug: those are not things) and one wall arrangement for the longest bare wall stretch (check-home 'bare': a top over 0.4 m2 holds two things at least; no wall stretch over 1.8 m is empty between 1.0 and 2.0 m high). Put each thing on its top with a.onTop slots so nothing overlaps or overhangs.",
+ "kitchen": {
+  "tops": [
+   {
+    "id": "worktop",
+    "say": "the worktop beside the hob",
+    "things": [
+     "utensil crock (utensilCrock)",
+     "jars (jars)",
+     "herbs in a pot (herbs)",
+     "cutting board with a loaf (cuttingBoard)",
+     "fruit bowl (fruitBowl)",
+     "moka pot (mokaPot)",
+     "bread bin (breadBin)",
+     "cookbook on a stand (cookbookStand)"
+    ]
+   },
+   {
+    "id": "table",
+    "say": "the breakfast table",
+    "things": [
+     "fruit bowl (fruitBowl)",
+     "jug of water (jug)",
+     "mug (mug)",
+     "vase of branches (vase)",
+     "bread basket (breadBasket)",
+     "salt and pepper (jars)"
+    ]
+   }
+  ],
+  "wall": [
+   "open shelf with plates and jars (openShelf)",
+   "pot rail with pans (potRail)",
+   "spice rack (spiceRack)",
+   "wall clock with a tea towel (wallClock, teaTowel)",
+   "picture over the table (picture)"
+  ]
+ },
+ "dining": {
+  "tops": [
+   {
+    "id": "table",
+    "say": "the dining table",
+    "things": [
+     "vase of branches (vase)",
+     "candlesticks (candlesticks)",
+     "jug of water (jug)",
+     "bread basket (breadBasket)",
+     "fruit bowl (fruitBowl)",
+     "place settings (placeSetting)"
+    ]
+   },
+   {
+    "id": "sideboard",
+    "say": "the sideboard",
+    "things": [
+     "lamp (readingLamp)",
+     "vase of branches (vase)",
+     "book stack (bookStack)",
+     "bowl (fruitBowl)",
+     "candlesticks (candlesticks)",
+     "framed photo (picture)"
+    ]
+   }
+  ],
+  "wall": [
+   "mirror over the sideboard (mirror)",
+   "plates on the wall (wallPlates)",
+   "wall shelf with jars and a plant (wallShelf)",
+   "picture group over the sideboard (picture)",
+   "glazed cabinet with dishes (glazedCabinet)"
+  ]
+ },
+ "living": {
+  "tops": [
+   {
+    "id": "coffee table",
+    "say": "the coffee table",
+    "things": [
+     "book stack (bookStack)",
+     "tray with a mug (mug)",
+     "vase (vase)",
+     "candle (candlesticks)",
+     "bowl (fruitBowl)",
+     "magazine (magazineRack)"
+    ]
+   },
+   {
+    "id": "side table",
+    "say": "the side table",
+    "things": [
+     "lamp (readingLamp)",
+     "mug (mug)",
+     "book stack (bookStack)",
+     "small plant (herbs)",
+     "glasses on a book (glassesBook)"
+    ]
+   }
+  ],
+  "wall": [
+   "gallery wall of frames over the sofa (galleryWall)",
+   "wall shelf with books and a plant (wallShelf)",
+   "big picture over the sofa (picture)",
+   "mirror on the wall beside the window (mirror)"
+  ]
+ },
+ "bedroom": {
+  "tops": [
+   {
+    "id": "bedside table",
+    "say": "each bedside table",
+    "things": [
+     "bedside lamp (bedsideLamp)",
+     "alarm clock (alarmClock)",
+     "glasses on a book (glassesBook)",
+     "mug (mug)",
+     "small plant (herbs)"
+    ]
+   },
+   {
+    "id": "chest of drawers",
+    "say": "the chest of drawers",
+    "things": [
+     "tray with a jewellery dish (letterTray)",
+     "vase (vase)",
+     "framed photo (picture)",
+     "book stack (bookStack)",
+     "lamp (readingLamp)"
+    ]
+   }
+  ],
+  "wall": [
+   "picture or gallery over the bed (galleryWall)",
+   "wall sconce either side of the bed (wallSconce)",
+   "mirror over the chest of drawers (mirror)",
+   "wall shelf with books (wallShelf)"
+  ]
+ },
+ "reading-corner": {
+  "tops": [
+   {
+    "id": "side table",
+    "say": "the side table by the chair",
+    "things": [
+     "book stack (bookStack)",
+     "mug (mug)",
+     "lamp (readingLamp)",
+     "glasses on a book (glassesBook)"
+    ]
+   },
+   {
+    "id": "shelf",
+    "say": "the shelf or window sill",
+    "things": [
+     "small plant (herbs)",
+     "candle (candlesticks)",
+     "framed photo (picture)",
+     "book stack (bookStack)"
+    ]
+   }
+  ],
+  "wall": [
+   "shelves with books and objects (readShelf)",
+   "gallery wall of frames (galleryWall)",
+   "wall sconce by the chair (wallSconce)",
+   "picture over the daybed (picture)"
+  ]
+ },
+ "hallway": {
+  "tops": [
+   {
+    "id": "console",
+    "say": "the console",
+    "things": [
+     "key bowl (keyBowl)",
+     "letter tray (letterTray)",
+     "lamp (readingLamp)",
+     "vase (vase)",
+     "framed photo (picture)"
+    ]
+   }
+  ],
+  "wall": [
+   "mirror over the console (mirror)",
+   "coat hooks with a coat and hat (coatHooks, hungHat)",
+   "picture group (picture)",
+   "wall clock (wallClock)"
+  ]
+ },
+ "home-office": {
+  "tops": [
+   {
+    "id": "desk",
+    "say": "the desk",
+    "things": [
+     "desk organiser (deskOrganiser)",
+     "task lamp (taskLamp)",
+     "laptop (laptop)",
+     "notebook (notebook)",
+     "mug (mug)",
+     "small plant (herbs)",
+     "printer (printer)"
+    ]
+   }
+  ],
+  "wall": [
+   "pinboard over the desk (pinboard)",
+   "wall shelf with binders and books (wallShelf)",
+   "picture or calendar over the desk (picture)",
+   "window with a curtain (curtain)"
+  ]
  }
+}
 }
