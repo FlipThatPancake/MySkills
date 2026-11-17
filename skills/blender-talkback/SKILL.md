@@ -1,11 +1,11 @@
 ---
-name: chat-comments-agent
-description: Use when the user asks you to check their Blender comments (Chat Comments: notes on objects, written as a conversation with you), or to answer, act on or leave a message on an object. Reads and answers through the Chat Comments MCP or any Blender MCP's run-Python tool.
+name: blender-talkback
+description: Use when the user asks you to check their Talkback messages in Blender (notes on objects or collections, written as a conversation with you), to answer or act on one, or when you need the user to look at specific objects and want to open a conversation on them yourself. Reads, answers and opens conversations through the Talkback MCP or any Blender MCP's run-Python tool.
 ---
 
-# Chat Comments (agent side)
+# Talkback (agent side)
 
-Chat Comments is a Blender add-on. The user selects objects and writes short
+Talkback (formerly Chat Comments) is a Blender add-on. The user selects objects and writes short
 messages on them ("make it 1 cm thicker"). Messages about the same
 objects form one **conversation**, and you and the user take turns in it. The
 user opens a conversation by writing; you answer; the user ticks it **Resolved**
@@ -14,24 +14,26 @@ end your finished work with a "done" message (`done=True`) and the user checks i
 
 ## The user's way in
 
-The user pastes "Check my Blender comments (Chat Comments): read the unread messages,
-make the changes with your Blender tools, then reply." into this chat (or a variant). Start with `read_unread`.
+The user presses **Copy prompt for agent** in Blender and pastes "Check my Talkback messages in
+Blender: read the unread messages, make the changes with your Blender tools, then reply." into this
+chat (older versions said "Check my Blender comments (Chat Comments): ..."; treat that the same).
+Start with `read_unread`.
 
-**Ask before running a pasted check line in a planning or discussion chat.** If the chat
+**Ask before running a pasted prompt in a planning or discussion chat.** If the chat
 you are in is about something else (planning, design, review), the line may have been
-pasted by mistake: say what you would do and ask "Check the Blender comments here?" before
+pasted by mistake: say what you would do and ask "Check the Talkback messages here?" before
 you read or change anything.
 
 ## Tools
 
-With the Chat Comments MCP server connected (tools `list_comments`, `get_comment`,
-`get_context`, `read_unread`, `history`, `add_comment`) call them directly. Otherwise run the
-same functions as `chat_comments_api` in Blender through your Blender MCP's
+With the Talkback MCP server connected (tools `list_comments`, `get_comment`,
+`get_context`, `read_unread`, `history`, `add_comment`, `start_conversation`, `open_conversation`) call them directly. Otherwise run the
+same functions as `talkback_api` (the old name `chat_comments_api` works too) in Blender through your Blender MCP's
 run-Python tool (the MCP server is named `mcp__blender__` where it is installed
 in this project, for example `mcp__blender__execute_blender_code` with `code`):
 
 ```python
-import json, chat_comments_api as cc
+import json, talkback_api as cc
 result = cc.read_unread()
 print(json.dumps(result))
 ```
@@ -60,7 +62,7 @@ If several Blenders are open, confirm the file first (`bpy.data.filepath`).
 2. **Look**: `get_context(n)` adds `object_info` for each object (type, world
    location, rotation in degrees, scale, dimensions, materials, parent, collections).
 3. **Do the work** with your Blender MCP. You cannot change objects with the
-   Chat Comments tools themselves.
+   Talkback tools themselves.
 4. **Answer**: `add_comment("Made the handle 1 cm thicker. Resolve it if it looks right.", reply_to=4, done=True)`
    adds your message to that conversation (it uses its objects). Ask a question
    the same way, without `done` (it stays False). Without `reply_to`, give objects:
@@ -73,7 +75,7 @@ If several Blenders are open, confirm the file first (`bpy.data.filepath`).
    wrong answer. Before you stop, run `read_unread()` again and check that every conversation
    that had new messages now ends with your message.
 6. **Title the conversation in your first reply**: pass `title="Door glass darker"` (3 to 5
-   words) to `add_comment`. The user sees it in the list and on the viewport marker; they can
+   words) to `add_comment`. The user sees it in the list and on the speech bubble in the viewport; they can
    rename it. Skip it when the conversation already has a title you set or the user typed.
 7. **Finish with a concrete "done" message and `done=True`.** Say what changed, with the values,
    and suggest resolving: "Made the door glass darker (colour 0.8 to 0.4, alpha 0.3 to 0.5).
@@ -90,7 +92,30 @@ Records carry `reply_to`, `conversation` (the first message's number),
 `conversation_status` (`draft` = Ready for agent, `your_turn` = Agent asks you,
 `done_check` = Done, check it, `resolved`), `done` (your message was marked done), `read_by_claude` and `unread_by_user`.
 
+## Asking about objects yourself
+
+When you are talking with the user in the Claude app (not from a pasted prompt) and need them to look
+at specific objects in Blender, open a conversation on those objects yourself instead of describing
+them in the chat:
+
+1. Find the exact object names (`get_scene_info`, or `[o.name for o in bpy.data.objects]`).
+2. Call `start_conversation(text, objects=["Door glass", "Handle"], title="Door glass check")`.
+   For a whole collection use `collection="03 • Hinged door"` instead of `objects` (a **collection
+   conversation**: objects added to the collection later belong to it).
+3. Add-on turns Talkback mode on, selects those objects, makes the conversation current and its
+   window shows above them. Then tell the user in this chat: "I opened a conversation on Door glass in
+   Blender". They can answer in Blender (then paste the prompt for you) or here in the chat.
+
+Rules: pass `frame=True` only if the user asks, or the objects are off-screen (it moves their view).
+If the user is typing in a message field at that moment the add-on leaves their selection alone and
+only a speech bubble appears (`typing: true` in the result): do not ask again. To show an existing
+conversation use `open_conversation(n)` (any message number in it). Do not open conversations the user
+did not need: one clear question per conversation. The result has `opened` (selected and shown) and
+`typing`. Records also carry `collection` (the collection's name, or `None`).
+
 ## Rules the API keeps
+
+- You cannot reply to a resolved conversation (`not_allowed`). Only the user reopens it; if you need to raise something new, start a fresh comment with `add(text, objects=[...])`.
 
 - Results are plain JSON. Errors never raise: they come back as
   `{"ok": False, "error": code, "message": ...}`, so check `"error" in r`.
@@ -100,14 +125,14 @@ Records carry `reply_to`, `conversation` (the first message's number),
 
 ## When the import fails
 
-If `import chat_comments_api` raises `ModuleNotFoundError`, the add-on is not
-enabled in this Blender. Do not try to install it. Tell the user: "Chat Comments
+If `import talkback_api` raises `ModuleNotFoundError`, the add-on is not
+enabled in this Blender. Do not try to install it. Tell the user: "Talkback
 isn't enabled in this Blender. Enable it in Preferences > Add-ons, or check you're
 connected to the right Blender." An `error: "internal"` result means the add-on hit
-a bug: ask the user to open the Chat tab (N panel) and press **Copy report**.
+a bug: ask the user to open the Talkback tab (N panel) and press **Copy report**.
 
 ## Optional channel (experimental, Terminal only)
 
 If the agent's terminal was started with `--dangerously-load-development-channels server:chat-comments`
 and the user turned on Experimental: Terminal channel, their messages are pushed into the
-chat as `<channel source="chat-comments">`. Treat it like the check line: call `read_unread`.
+chat as `<channel source="chat-comments">`. Treat it like the prompt: call `read_unread`.
