@@ -109,6 +109,7 @@ const issues = await page.evaluate(() => {
   const hit3 = (a, b, tol = 2) => a.x1 - b.x0 > tol && b.x1 - a.x0 > tol && a.z1 - b.z0 > tol && b.z1 - a.z0 > tol && a.y1 - b.y0 > tol && b.y1 - a.y0 > tol;
   const gap2 = (a, b) => Math.hypot(Math.max(a.min.x - b.max.x, b.min.x - a.max.x, 0), Math.max(a.min.z - b.max.z, b.min.z - a.max.z, 0));
   const GAP = 1200;
+  const free = (W) => { const len = Math.hypot(W.from[0] - W.to[0], W.from[1] - W.to[1]), e = W.built.map((b) => span(W, b)).sort((p, q) => p[0] - q[0]); let best = [0, 0], at = 0; for (const [a, z] of [...e, [len, len]]) { if (a - at > best[1] - best[0]) best = [at, a]; at = Math.max(at, z); } return `the free stretch of wall is ${best[0].toFixed(0)} to ${best[1].toFixed(0)} mm along it (${(best[1] - best[0]).toFixed(0)} mm): put the lamp there`; };
   // 1. at least 1200 mm of clear wall between two openings, on one wall and round a corner
   const span = (W, b) => [b.op.at - b.op.width / 2, b.op.at + b.op.width / 2];
   for (const W of home.walls) {
@@ -125,7 +126,7 @@ const issues = await page.evaluate(() => {
   const things = Object.keys(objs).filter((id) => !['rug', 'curtain'].includes(sc(id).asset)).map((id) => ({ id, box: boxes[id] }));
   for (const id of Object.keys(objs)) {   // each tap is a thing of its own
     const o = objs[id]; if (sc(id).asset !== 'baseRun') continue;
-    let x = 0; for (const m of sc(id).params.modules) { if (m.kind === 'sink') { const c = new T.Vector3(x + m.w / 2, 0, -(sc(id).params.depth || 600) + 50).applyMatrix4(o.matrixWorld); things.push({ id: `${id}'s tap`, box: new T.Box3(new T.Vector3(c.x - 25, 900, c.z - 25), new T.Vector3(c.x + 25, 1380, c.z + 25)) }); } x += m.w; }
+    let x = 0; for (const m of sc(id).params.modules) { if (m.kind === 'sink') { const c = new T.Vector3(x + m.w / 2, 0, -(sc(id).params.depth || 600) + 135).applyMatrix4(o.matrixWorld); things.push({ id: `${id}'s tap`, box: new T.Box3(new T.Vector3(c.x - 25, 900, c.z - 25), new T.Vector3(c.x + 25, 1380, c.z + 25)) }); } x += m.w; }
   }
   for (const W of home.walls) for (const b of W.built) {   // a window stays fixed only where something stands in its sweep (the roll deals fixed windows for sinks and runs): over open floor it opens
     if (b.op.kind !== 'window' || b.op.sash !== 'fixed' || ['picture', 'wall', 'bay'].includes(b.op.style)) continue;
@@ -166,8 +167,8 @@ const issues = await page.evaluate(() => {
   for (const id of Object.keys(objs)) {
     const m = sc(id).mount, b = boxes[id];
     if (m === 'on' && sc(id).onSill) {   // a pot on a window sill: the sill is the window's own ledge; its centre must be over a window, at the sill's height
-      const ok = home.walls.some((W) => { const l = toLocal(W, b); return (W.built || []).some((q) => { if (q.op.kind !== 'window') return false; const xc = W.len - q.op.at, y0 = (q.op.sill ?? 1000) + 30; return (l.z0 + l.z1) / 2 < 22 && l.z0 < 160 && (l.x0 + l.x1) / 2 > xc - q.op.width / 2 && (l.x0 + l.x1) / 2 < xc + q.op.width / 2 && Math.abs(b.min.y - y0) < 40; }); });
-      if (!ok) out.push({ rule: 'support', what: `${id} is marked onSill but does not rest on a window's sill (centre over the window, bottom at sill + 30 mm, its middle no further than 20 mm from the wall: the sill reaches 40 mm into the room, so a pot hangs off it past that)` });
+      const ok = home.walls.some((W) => { const l = toLocal(W, b); return (W.built || []).some((q) => { if (q.op.kind !== 'window') return false; const xc = W.len - q.op.at, y0 = (q.op.sill ?? 1000) + 30; return (l.z0 + l.z1) / 2 < 84 && l.z0 < 160 && (l.x0 + l.x1) / 2 > xc - q.op.width / 2 && (l.x0 + l.x1) / 2 < xc + q.op.width / 2 && Math.abs(b.min.y - y0) < 40; }); });
+      if (!ok) out.push({ rule: 'support', what: `${id} is marked onSill but does not rest on a window's sill (centre over the window, bottom at sill + 30 mm, its middle no further than 80 mm from the wall: the sill reaches 110 mm into the room, so a pot hangs off it past that)` });
     }
     if (m === 'wall') {
       const near = home.walls.some((W) => { let lo = 1e9, hi = -1e9, s0 = 1e9, s1 = -1e9; for (const { x, z } of b.pts) { const dx = x - W.to[0], dz = z - W.to[1], d = dx * W.n[0] + dz * W.n[1], s = -(dx * W.d[0] + dz * W.d[1]); lo = Math.min(lo, d); hi = Math.max(hi, d); s0 = Math.min(s0, s); s1 = Math.max(s1, s); } return lo > -12 && lo < 90 && s1 > 0 && s0 < W.len; });
@@ -334,7 +335,7 @@ const areaIssues = await page.evaluate(() => {
     if (lamps.length > 1) out.push({ rule: 'lamps', what: `${A} has ${lamps.length} lamps (one: a pendant over the table or a floor lamp)` });
     for (const l of lamps) for (const d of as(WALLDEC)) if (ov(R[l], R[d]) > 0.002 && sc(d).asset !== 'curtain') out.push({ rule: 'lamps', what: `${A}: ${l} overlaps ${d} in the home view: move the lamp or the ${sc(d).asset}` });
     for (const l of real.filter((i) => LAMPS.includes(sc(i).asset) || sc(i).asset === 'pendantForm')) {
-      for (const W of home.walls) { if (!W.id || !W.id.startsWith(A + '-')) continue; for (const b of W.built) if (ov(R[l], rect(box(b.group))) > 0.002) out.push({ rule: 'lamps', what: `${A}: ${l} overlaps the ${b.op.kind} on ${W.id} in the home view` }); }
+      for (const W of home.walls) { if (!W.id || !W.id.startsWith(A + '-')) continue; for (const b of W.built) if (ov(R[l], rect(box(b.group))) > 0.002) out.push({ rule: 'lamps', what: `${A}: ${l} overlaps the ${b.op.kind} on ${W.id} in the home view: ${free(W)}` }); }
       for (const m of lamps) if (m > l && ov(R[l], R[m]) > 0) out.push({ rule: 'lamps', what: `${A}: ${l} and ${m} overlap in the home view` });
     }
     // seating

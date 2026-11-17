@@ -19,7 +19,7 @@ export function cuttingBoard(kit, { form = 'leaning' } = {}) {
     g.add(kit.lines([[150, 405, 24], [150, 470, 24], [150, 470, 4]], 'mid'));
   } else {
     const b = kit.group(); b.add(kit.rbox(0, 0, 0, 300, 460, 20, 24, lo)); b.add(kit.cyl(150, 405, 12, 22, 6, { axis: 'z', seg: 24, ...lo }));
-    b.rotation.x = -0.2; g.add(b);   // leans back against the wall
+    b.rotation.x = -0.2; b.position.y = 20 * Math.sin(0.2) + 0.5; g.add(b);   // leans back against the wall (its back-bottom edge would sink 4 mm into the worktop, so it is lifted by that)
   }
   return kit.merge(g);
 }
