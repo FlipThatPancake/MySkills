@@ -222,7 +222,7 @@
     "turn": 10,
     "mount": "on",
     "params": {
-     "form": "open",
+     "form": "spiral",
      "w": 164,
      "pens": 1,
      "seed": 73
@@ -631,6 +631,9 @@
      "d": 400,
      "shelves": 3,
      "doors": 2,
+     "base": "plinth",
+     "crown": "flat",
+     "low": 0.32,
      "seed": 40
     },
     "group": "kitchen:dresser",

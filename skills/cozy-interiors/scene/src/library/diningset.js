@@ -11,11 +11,13 @@ const ringXZ = (cx, y, cz, r, n = 28) => { const p = []; for (let i = 0; i < n; 
 export function candlesticks(kit, { n = 2, h = 260, form = 'turned', seed = 1 } = {}) {   // n candlesticks of varied height, each with a candle and a flame
   const g = kit.group(), R = rnd(seed), T = kit.THREE, pts = [];
   for (let i = 0; i < n; i++) {
-    const x = (i - (n - 1) / 2) * 120, hh = h * (0.7 + 0.5 * ((i * 37 + seed) % 5) / 4), br = 40;
+    const x = (i - (n - 1) / 2) * 120, br = 40; let hh = h * (0.7 + 0.5 * ((i * 37 + seed) % 5) / 4); const cr = form === 'column' ? 22 : 11;   // column: a short fat pillar holder; chamber: a dish with a ring handle
     if (form === 'turned') g.add(kit.solid(new T.LatheGeometry([[br, 0], [br, 8], [14, 24], [12, hh * 0.35], [26, hh * 0.45], [11, hh * 0.55], [10, hh * 0.85], [22, hh * 0.9], [22, hh]].map(([a, b]) => new T.Vector2(a, b)), 20), x, 0, 0, { smooth: true, tone: 'lo' }));
+    else if (form === 'column') { hh *= 0.45; g.add(kit.cyl(x, 0, 0, 36, hh, { rTop: 34, seg: 22, tone: 'lo' })); }
+    else if (form === 'chamber') { hh = 26 + hh * 0.18; g.add(kit.cyl(x, 0, 0, 58, 12, { seg: 26, tone: 'lo' })); g.add(kit.cyl(x, 12, 0, 20, hh - 12, { rTop: 15, seg: 16, tone: 'lo' })); g.add(kit.lines(ringXY(x + 70, 26, 20, 0, 18), 'lo')); }
     else if (form === 'tapered') g.add(kit.cyl(x, 0, 0, br, hh, { rTop: 14, seg: 16, tone: 'lo' }));
     else { g.add(kit.cyl(x, 0, 0, 38, 14, { seg: 20, tone: 'lo' })); g.add(rod(kit, [x, 10, 0], [x, hh, 0], 8, 8, 'lo')); g.add(kit.cyl(x, hh - 6, 0, 22, 10, { seg: 16, tone: 'lo' })); }   // a slim brass-style stem
-    const ch = 140 + R() * 80; g.add(kit.cyl(x, hh, 0, 11, ch, { seg: 12 }));
+    const ch = (form === 'column' ? 90 : 140) + R() * 80; g.add(kit.cyl(x, hh, 0, cr, ch, { seg: 12 }));
     pts.push([x, hh + ch, 0], [x + 2, hh + ch + 24, 0], [x + 2, hh + ch + 24, 0], [x - 6, hh + ch + 42, 0], [x - 6, hh + ch + 42, 0], [x, hh + ch + 58, 0], [x, hh + ch + 58, 0], [x + 7, hh + ch + 40, 0], [x + 7, hh + ch + 40, 0], [x + 2, hh + ch + 24, 0]);   // the flame
   }
   g.add(kit.lines(pts, 'mid'));
@@ -60,13 +62,13 @@ export function placeSetting(kit, { r = 140, glass: gl = true, napkin: nk = true
   return kit.merge(g);
 }
 
-export function glazedCabinet(kit, { w = 1000, h = 1800, d = 420, shelves = 3, doors = 2, seed = 2 } = {}) {   // a tall cabinet on short feet, glass doors on the upper part, dishes visible inside, drawers or cupboards below
-  const g = kit.group(), R = rnd(seed), pts = [], legH = 90, z = d / 2 + 0.8, lowH = h * 0.32, T = kit.THREE;
-  for (const sx of [-1, 1]) for (const sz of [-1, 1]) g.add(kit.cyl(sx * (w / 2 - 50), 0, sz * (d / 2 - 50), 24, legH + 6, { rTop: 18, seg: 10, tone: 'lo' }));
+export function glazedCabinet(kit, { w = 1000, h = 1800, d = 420, shelves = 3, doors = 2, base = 'feet', crown = 'flat', low = 0.32, seed = 2 } = {}) {   // a tall cabinet on short feet, glass doors on the upper part, dishes visible inside, drawers or cupboards below
+  const g = kit.group(), R = rnd(seed), pts = [], legH = base === 'plinth' ? 70 : 90, z = d / 2 + 0.8, lowH = h * low, T = kit.THREE;   // base feet | plinth; crown flat | cornice (a stepped moulding); low = the cupboard's share of the height
+  if (base === 'plinth') g.add(kit.box(-w / 2 + 24, 0, d / 2 - 14, w - 48, legH + 4, d - 28, { tone: 'lo' })); else for (const sx of [-1, 1]) for (const sz of [-1, 1]) g.add(kit.cyl(sx * (w / 2 - 50), 0, sz * (d / 2 - 50), 24, legH + 6, { rTop: 18, seg: 10, tone: 'lo' }));
   g.add(kit.rbox(-w / 2, legH, d / 2, w, lowH, d, 8));   // the lower cupboard
   const uh = h - legH - lowH - 40, uy = legH + lowH;
   for (const sx of [-1, 1]) g.add(kit.box(sx * (w / 2 - 14) - 14, uy - 4, 0 + (d - 30) / 2, 28, uh + 8, d - 30));
-  g.add(kit.box(-w / 2 + 22, uy - 4, -d / 2 + 30, w - 44, uh + 8, 14, lo)); g.add(kit.rbox(-w / 2 - 12, h - 40, d / 2 + 12, w + 24, 40, d + 12, 6));
+  g.add(kit.box(-w / 2 + 22, uy - 4, -d / 2 + 30, w - 44, uh + 8, 14, lo)); g.add(kit.rbox(-w / 2 - 12, h - 40, d / 2 + 12, w + 24, 40, d + 12, 6)); if (crown === 'cornice') g.add(kit.rbox(-w / 2 - 26, h - 8, d / 2 + 26, w + 52, 26, d + 26, 5));
   for (let s = 0; s < shelves; s++) {   // shelves with plates standing and a stack of bowls
     const y = uy + (s + 0.5) * uh / shelves - uh / (shelves * 2) + 6; g.add(kit.box(-w / 2 + 22, y, d / 2 - 20, w - 44, 16, d - 60, lo));
     let x = -w / 2 + 90; while (x < w / 2 - 150) { const rr = 90 + R() * 22; if (R() < 0.7) { const p = kit.group(); p.add(kit.cyl(0, rr, 0, rr, 8, { axis: 'z', seg: 28 })); p.position.set(x, y + 16, 0); p.rotation.x = -0.14; g.add(p); x += 60; } else { g.add(kit.cyl(x, y + 16, 0, 70, 90, { rTop: 90, seg: 24 })); x += 190; } }
@@ -90,7 +92,9 @@ export function benchCushion(kit, { w = 1100, d = 360, thick = 60, tone = 'mid',
 export function wallPlates(kit, { n = 5, r = 110, seed = 4, layout = 'cluster' } = {}) {   // decorative plates on the wall, hung flat: a cluster, a row or a ring; origin bottom middle
   const g = kit.group(), R = rnd(seed), T = kit.THREE, pts = [];
   const spots = [];
-  if (layout === 'row') for (let i = 0; i < n; i++) spots.push([(i - (n - 1) / 2) * (r * 2.3), r, r * (0.8 + 0.5 * R())]);
+  if (layout === 'column') for (let i = 0; i < Math.min(n, 4); i++) spots.push([(R() - 0.5) * r * 0.3, r + i * r * 2.25, r * (0.85 + 0.3 * R())]);   // a vertical stack
+  else if (layout === 'grid') for (let i = 0; i < n; i++) spots.push([((i % 3) - 1) * r * 2.3, r + Math.floor(i / 3) * r * 2.3, r * (0.85 + 0.3 * R())]);   // rows of three
+  else if (layout === 'row') for (let i = 0; i < n; i++) spots.push([(i - (n - 1) / 2) * (r * 2.3), r, r * (0.8 + 0.5 * R())]);
   else if (layout === 'ring') { spots.push([0, r * 2.4, r * 1.1]); for (let i = 0; i < n - 1; i++) { const a = i / (n - 1) * 6.2832; spots.push([Math.cos(a) * r * 2.3, r * 2.4 + Math.sin(a) * r * 2.3, r * 0.6]); } }
   else for (let i = 0; i < n; i++) { const a = i * 2.4 + R(), d = Math.sqrt(i + 0.5) * r * 1.1; spots.push([Math.cos(a) * d, r * 2.5 + Math.sin(a) * d * 0.8, r * (0.6 + 0.6 * R())]); }
   spots.forEach(([x, y, rr], i) => { g.add(kit.cyl(x, y, 20, rr, 14, { axis: 'z', seg: 32 })); g.add(kit.cyl(x, y, 25, rr * 0.7, 8, { axis: 'z', seg: 28, tone: 'lo' })); pts.push(...ringXY(x, y, rr * 0.82, 26.5, 28)); if (i % 3 === 0) for (let k = 0; k < 8; k++) { const a = k / 8 * 6.2832; pts.push([x + Math.cos(a) * rr * 0.12, y + Math.sin(a) * rr * 0.12, 26.5], [x + Math.cos(a) * rr * 0.5, y + Math.sin(a) * rr * 0.5, 26.5]); } else if (i % 3 === 1) pts.push(...ringXY(x, y, rr * 0.5, 26.5, 20)); });

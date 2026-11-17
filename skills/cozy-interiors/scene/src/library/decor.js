@@ -30,10 +30,10 @@ export function bookStack(kit, { n = 4, seed = 5 } = {}) {   // books lying on e
   }
   return kit.merge(g);
 }
-export function mirror(kit, { w = 700, h = 1000, shape = 'arch' } = {}) {
-  const g = kit.group(), F = 30, D = 26, pts = [];
+export function mirror(kit, { w = 700, h = 1000, shape = 'arch', frame = 'thin' } = {}) {   // shape arch | pill | round | rect; frame thin | thick
+  const g = kit.group(), F = frame === 'thick' ? 56 : 30, D = 26, pts = [];
   if (shape === 'round') { const r = w / 2; g.add(kit.cyl(0, r, D, r, D, { axis: 'z', seg: 48 })); g.add(kit.cyl(0, r, D + 4, r - F, 4, { axis: 'z', seg: 48, ...lo })); h = w; }
-  else { const r = shape === 'pill' ? w / 2 : 90; g.add(kit.rbox(-w / 2, 0, D, w, h, D, shape === 'arch' ? w / 2 : r)); g.add(kit.rbox(-w / 2 + F, F, D + 3, w - 2 * F, h - 2 * F, 3, shape === 'arch' ? w / 2 - F : r - F, lo)); }
+  else { const r = shape === 'pill' ? w / 2 : shape === 'rect' ? 16 : 90; g.add(kit.rbox(-w / 2, 0, D, w, h, D, shape === 'arch' ? w / 2 : r)); g.add(kit.rbox(-w / 2 + F, F, D + 3, w - 2 * F, h - 2 * F, 3, shape === 'arch' ? w / 2 - F : r - F, lo)); }
   const cy = h * 0.5, z = D + 5;   // two short glints on the glass
   pts.push([-w * 0.16, cy + h * 0.2, z], [w * 0.06, cy + h * 0.32, z], [-w * 0.2, cy + h * 0.1, z], [-w * 0.04, cy + h * 0.2, z]);
   g.add(kit.lines(pts, 'mid'));

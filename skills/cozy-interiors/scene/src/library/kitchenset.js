@@ -17,6 +17,9 @@ export function dishRack(kit, { w = 480, d = 320, form = 'plates', seed = 1 } = 
   if (form === 'plates') {
     const n = 5, step = (w - 90) / n; for (let i = 0; i < n; i++) { const x = -w / 2 + 60 + i * step, p = kit.group(), r = 100 + R() * 14; p.add(kit.cyl(0, r, 0, r, 8, { axis: 'z', seg: 32 })); p.add(kit.lines(ringXY(0, r, r * 0.72, 4.5, 28), 'lo')); p.position.set(x, 24, -d * 0.04 + (R() - 0.5) * 20); p.rotation.y = 0.1 + R() * 0.1; p.rotation.x = -0.12; g.add(p); }
     for (let i = 0; i < n + 1; i++) { const x = -w / 2 + 44 + i * step; g.add(rod(kit, [x, 22, d * 0.22], [x, 70, d * 0.22], 3, 3, 'lo')); g.add(rod(kit, [x, 22, -d * 0.22], [x, 70, -d * 0.22], 3, 3, 'lo')); }
+  } else if (form === 'mixed') {   // three plates on the left, two cups on pegs on the right
+    for (let i = 0; i < 3; i++) { const x = -w / 2 + 60 + i * (w * 0.5 - 60) / 3, p = kit.group(), r = 100 + R() * 14; p.add(kit.cyl(0, r, 0, r, 8, { axis: 'z', seg: 32 })); p.add(kit.lines(ringXY(0, r, r * 0.72, 4.5, 28), 'lo')); p.position.set(x, 24, -d * 0.04); p.rotation.x = -0.12; g.add(p); g.add(rod(kit, [x - 14, 22, d * 0.22], [x - 14, 70, d * 0.22], 3, 3, 'lo')); g.add(rod(kit, [x - 14, 22, -d * 0.22], [x - 14, 70, -d * 0.22], 3, 3, 'lo')); }
+    for (let i = 0; i < 2; i++) { const x = w / 2 - 70 - i * 100, z = (i ? 1 : -1) * d * 0.1; g.add(rod(kit, [x, 22, z], [x, 130, z], 5, 5, 'lo')); const q = kit.group(); q.add(mug(kit, { r: 38, h: 88 })); q.rotation.x = Math.PI; q.position.set(x, 24 + 88 + 6, z); g.add(q); }
   } else {   // cups upside down on pegs
     const n = 4; for (let i = 0; i < n; i++) { const x = -w / 2 + 70 + i * (w - 140) / (n - 1), z = (i % 2 ? 1 : -1) * d * 0.1; g.add(rod(kit, [x, 22, z], [x, 130, z], 5, 5, 'lo')); const m = mug(kit, { r: 38, h: 88 }); const q = kit.group(); q.add(m); q.rotation.x = Math.PI; q.position.set(x, 24 + 88 + 6, z); g.add(q); }
   }
@@ -57,9 +60,20 @@ export function breadBin(kit, { w = 380, d = 250, h = 210, form = 'roll', seed =
   return kit.merge(g);
 }
 
-export function toaster(kit, { w = 300, d = 170, h = 190, form = 'square', slots = 2 } = {}) {   // a two-slot toaster with a lever and a slice sticking out
+export function toaster(kit, { w = 300, d = 170, h = 190, form = 'square', slots = 2, tone = 'mid' } = {}) {   // a two-slot toaster with a lever and a slice sticking out; form oven: a toaster oven with a glass door, a handle bar and two dials
   const g = kit.group(), pts = [], T = kit.THREE;
-  g.add(kit.rbox(-w / 2, 20, d / 2, w, h - 20, d, form === 'retro' ? 60 : 22));
+  if (form === 'oven') {
+    const W = w * 1.4, D = d * 1.6, H = h * 1.1, y0 = 18;
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) g.add(kit.box(sx * (W / 2 - 34) - 14, 0, sz * (D / 2 - 30) + 14, 28, y0 + 2, 28, lo));
+    g.add(kit.rbox(-W / 2, y0, D / 2, W, H - y0, D, 16, { tone }));
+    const z = D / 2 + 0.8, dx0 = -W / 2 + 22, dx1 = W / 2 - 96, dy0 = y0 + 24, dy1 = H - 36;
+    pts.push([dx0, dy0, z], [dx1, dy0, z], [dx1, dy0, z], [dx1, dy1, z], [dx1, dy1, z], [dx0, dy1, z], [dx0, dy1, z], [dx0, dy0, z]);
+    pts.push([dx0 + 14, dy0 + 14, z], [dx1 - 14, dy0 + 14, z], [dx1 - 14, dy0 + 14, z], [dx1 - 14, dy1 - 14, z], [dx1 - 14, dy1 - 14, z], [dx0 + 14, dy1 - 14, z], [dx0 + 14, dy1 - 14, z], [dx0 + 14, dy0 + 14, z]);   // the glass inside the door frame
+    g.add(rod(kit, [dx0 + 20, dy1 + 8, z + 26], [dx1 - 20, dy1 + 8, z + 26], 6, 6, 'lo')); for (const x of [dx0 + 20, dx1 - 20]) g.add(rod(kit, [x, dy1 + 8, z + 1], [x, dy1 + 8, z + 26], 5, 5, 'lo'));
+    for (const y of [H * 0.7, H * 0.32]) { g.add(kit.cyl(W / 2 - 48, y, z + 8, 22, 14, { axis: 'z', seg: 20, tone: 'lo' })); pts.push([W / 2 - 48, y, z + 15], [W / 2 - 48, y + 16, z + 15]); }
+    g.add(kit.lines(pts, 'lo')); return kit.merge(g);
+  }
+  g.add(kit.rbox(-w / 2, 20, d / 2, w, h - 20, d, form === 'retro' ? 60 : 22, { tone }));
   g.add(kit.box(-w / 2 + 20, 0, d / 2 - 14, 30, 22, 30, lo)); g.add(kit.box(w / 2 - 50, 0, d / 2 - 14, 30, 22, 30, lo)); g.add(kit.box(-w / 2 + 20, 0, -d / 2 + 44, 30, 22, 30, lo)); g.add(kit.box(w / 2 - 50, 0, -d / 2 + 44, 30, 22, 30, lo));
   for (const x of slots === 4 ? [-w * 0.27, -w * 0.09, w * 0.09, w * 0.27] : [-w * 0.2, w * 0.2]) pts.push([x - 36, h + 0.6, -d * 0.3], [x - 36, h + 0.6, d * 0.3], [x + 36, h + 0.6, -d * 0.3], [x + 36, h + 0.6, d * 0.3], [x - 36, h + 0.6, -d * 0.3], [x + 36, h + 0.6, -d * 0.3], [x - 36, h + 0.6, d * 0.3], [x + 36, h + 0.6, d * 0.3]);
   g.add(kit.rbox(-w * 0.2 - 50, h - 40, 14, 100, 80, 20, 14, lo));   // a slice sticking out
