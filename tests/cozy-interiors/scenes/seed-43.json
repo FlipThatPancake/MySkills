@@ -165,7 +165,10 @@
     "mount": "floor",
     "params": {
      "w": 1700,
-     "d": 1400
+     "d": 1400,
+     "form": "borderless",
+     "border": 55,
+     "fringe": "ends"
     },
     "group": "office:desk",
     "area": "office"
@@ -822,7 +825,10 @@
     "mount": "floor",
     "params": {
      "w": 3000,
-     "d": 1900
+     "d": 1900,
+     "form": "plain",
+     "border": 45,
+     "fringe": "none"
     },
     "group": "living:seating rug",
     "area": "living"

@@ -24,12 +24,21 @@ export function coffeeTable(kit, { w = 1000, d = 600, h = 380 } = {}) {
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) g.add(bx(sx * (w / 2 - 70), 0, sz * (d / 2 - 60), 44, h - TT, 44));
   return kit.merge(g);
 }
-export function rug(kit, { w = 2400, d = 1700, border = 70 } = {}) {
+export function rug(kit, { w = 2400, d = 1700, border = 70, form = 'plain', fringe = 'none' } = {}) {   // form plain (a border of two lines) | striped (bands along the length) | borderless (a plain mat with a faint weave) | round (a disc, diameter the smaller of w and d) | runner (use a long narrow w x d; stripes and fringe at both ends)
   const { rb } = boxes(kit), g = kit.group(), T = 7, y = T + 0.4, pts = [];
-  g.add(rb(0, 0, 0, w, T, d, 24, lo));
   const rect = (i) => { const x = w / 2 - i, z = d / 2 - i, c = [[-x, y, z], [x, y, z], [x, y, -z], [-x, y, -z]]; for (let k = 0; k < 4; k++) pts.push(c[k], c[(k + 1) % 4]); };
-  rect(border); rect(border + 28);
-  g.add(kit.lines(pts, 'mid'));
+  if (form === 'round') {
+    const r = Math.min(w, d) / 2; g.add(kit.cyl(0, 0, 0, r, T, { seg: 56, tone: 'lo' }));
+    for (const f of [0.9, 0.82, 0.45]) { const rr = r * f, n = 56; for (let k = 0; k < n; k++) { const a = k / n * 6.2832, b = (k + 1) / n * 6.2832; pts.push([Math.cos(a) * rr, y, Math.sin(a) * rr], [Math.cos(b) * rr, y, Math.sin(b) * rr]); } }
+  } else {
+    g.add(rb(0, 0, 0, w, T, d, form === 'runner' ? 8 : 24, lo));
+    if (form === 'plain') { rect(border); rect(border + 28); }
+    else if (form === 'striped') { rect(border * 0.6); for (let k = -3; k <= 3; k++) { if (k % 2 === 0) continue; const z = k * d / 8; pts.push([-w / 2 + border * 0.6, y, z], [w / 2 - border * 0.6, y, z], [-w / 2 + border * 0.6, y, z + 36], [w / 2 - border * 0.6, y, z + 36]); } }
+    else if (form === 'runner') { rect(border * 0.5); rect(border * 0.5 + 22); for (const e of [-1, 1]) for (let k = 0; k < 14; k++) { const z = -d / 2 + 30 + k * (d - 60) / 13; pts.push([e * w / 2, y - 3, z], [e * (w / 2 + 55), 0.5, z + (k % 2 ? 6 : -6)]); } }
+    else { for (let k = 0; k < 9; k++) { const x = -w / 2 + (k + 0.5) * w / 9; pts.push([x, y, -d / 2 + 60], [x, y, d / 2 - 60]); } }   // borderless: a faint weave
+  }
+  if (fringe === 'ends' && form !== 'runner' && form !== 'round') for (const e of [-1, 1]) for (let k = 0; k < 16; k++) { const z = -d / 2 + 40 + k * (d - 80) / 15; pts.push([e * w / 2, y - 3, z], [e * (w / 2 + 50), 0.5, z + (k % 2 ? 6 : -6)]); }   // fringe: short tassels at the two short ends
+  g.add(kit.lines(pts, form === 'borderless' ? 'lo' : 'mid'));
   return kit.merge(g);
 }
 export function shelf(kit, { w = 800, h = 1800, d = 320, shelves = 5, seed = 3, form: form0 = 0, fill, base = 'plinth', back = 'closed' } = {}) {   // space: meta.js SPACE.shelf; fill books|boxes|mixed (form 0|1|2 still works)
@@ -82,22 +91,33 @@ export function picture(kit, { w = 600, h = 800, seed = 2 } = {}) {
   g.add(kit.lines(pts, 'mid'));
   return kit.merge(g);
 }
-export function sideboard(kit, { w = 1600, h = 800, d = 420, doors = 3 } = {}) {
-  const { bx, rb } = boxes(kit), g = kit.group(), L = 150, pts = [], z = d / 2 + 0.6, bw = w - 40;
-  for (const sx of [-1, 1]) for (const sz of [-1, 1]) g.add(kit.cyl(sx * (w / 2 - 80), 0, sz * (d / 2 - 60), 22, L, { rTop: 16, seg: 12, ...lo }));   // tapered legs
+export function sideboard(kit, { w = 1600, h = 800, d = 420, doors = 3, form = 'doors', legs = 'tapered' } = {}) {   // form doors | drawers (two rows of drawer fronts) | mixed (doors at the ends, a drawer stack between) | open (open shelves); legs tapered | plinth | hairpin
+  const { bx, rb } = boxes(kit), g = kit.group(), L = legs === 'plinth' ? 90 : 150, pts = [], z = d / 2 + 0.6, bw = w - 40;
+  if (legs === 'plinth') g.add(bx(0, 0, 0, bw - 60, L, d - 70, lo));
+  else for (const sx of [-1, 1]) for (const sz of [-1, 1]) g.add(legs === 'hairpin' ? kit.cyl(sx * (w / 2 - 80), 0, sz * (d / 2 - 60), 7, L, { seg: 8, ...lo }) : kit.cyl(sx * (w / 2 - 80), 0, sz * (d / 2 - 60), 22, L, { rTop: 16, seg: 12, ...lo }));
   g.add(rb(0, L, 0, bw, h - L - 22, d - 20, 6));                                                         // the carcass
   g.add(rb(0, h - 22, 0, w, 22, d, 6));                                                                  // the top, overhanging
-  const cw = bw / doors;
-  for (let i = 0; i < doors; i++) {
-    const x0 = -bw / 2 + i * cw + 12, x1 = -bw / 2 + (i + 1) * cw - 12, y0 = L + 18, y1 = h - 22 - 18;
-    for (const [a, b] of [[[x0, y0], [x1, y0]], [[x1, y0], [x1, y1]], [[x1, y1], [x0, y1]], [[x0, y1], [x0, y0]]]) pts.push([a[0], a[1], z], [b[0], b[1], z]);
-    const hx = i % 2 === 0 ? x1 - 36 : x0 + 36; g.add(kit.cyl(hx, (y0 + y1) / 2 - 30, z - 4, 7, 60, { axis: 'z', seg: 10, ...lo }));
+  const y0 = L + 18, y1 = h - 22 - 18, frame = (x0, x1, a, b) => { for (const [p, q] of [[[x0, a], [x1, a]], [[x1, a], [x1, b]], [[x1, b], [x0, b]], [[x0, b], [x0, a]]]) pts.push([p[0], p[1], z], [q[0], q[1], z]); };
+  const knob = (x, y) => g.add(kit.cyl(x, y, z - 4, 7, 12, { axis: 'z', seg: 10, ...lo }));
+  if (form === 'open') {
+    const hh = (y1 - y0) / 2; for (let c = 0; c < 2; c++) { const x0 = -bw / 2 + 12 + c * (bw / 2), x1 = x0 + bw / 2 - 24; frame(x0, x1, y0 + 4, y1); pts.push([x0, y0 + hh, z], [x1, y0 + hh, z]); g.add(bx((x0 + x1) / 2, y0 + hh + 2, -d / 2 + 160, (x1 - x0) * 0.55, 150 + 40 * c, 150, lo)); }
+  } else if (form === 'drawers') {
+    const cols = Math.max(2, doors), cw = bw / cols, rh = (y1 - y0) / 2; for (let c = 0; c < cols; c++) for (let r = 0; r < 2; r++) { const x0 = -bw / 2 + c * cw + 12, x1 = -bw / 2 + (c + 1) * cw - 12, a = y0 + r * rh + 4, b = y0 + (r + 1) * rh - 4; frame(x0, x1, a, b); knob((x0 + x1) / 2, (a + b) / 2); }
+  } else if (form === 'mixed') {
+    const dw = bw * 0.26, sw = (bw - 2 * dw) / 1; for (const [x0, x1, i] of [[-bw / 2 + 12, -bw / 2 + dw - 12, 0], [bw / 2 - dw + 12, bw / 2 - 12, 1]]) { frame(x0, x1, y0, y1); g.add(kit.cyl(i ? x0 + 36 : x1 - 36, (y0 + y1) / 2 - 30, z - 4, 7, 60, { axis: 'z', seg: 10, ...lo })); }
+    const rh = (y1 - y0) / 3; for (let r = 0; r < 3; r++) { const a = y0 + r * rh + 4, b = y0 + (r + 1) * rh - 4; frame(-bw / 2 + dw + 12, bw / 2 - dw - 12, a, b); knob(0, (a + b) / 2); }
+  } else {
+    const cw = bw / doors;
+    for (let i = 0; i < doors; i++) { const x0 = -bw / 2 + i * cw + 12, x1 = -bw / 2 + (i + 1) * cw - 12; frame(x0, x1, y0, y1); const hx = i % 2 === 0 ? x1 - 36 : x0 + 36; g.add(kit.cyl(hx, (y0 + y1) / 2 - 30, z - 4, 7, 60, { axis: 'z', seg: 10, ...lo })); }
   }
   g.add(kit.lines(pts, 'lo'));
   return kit.merge(g);
 }
-export function bench(kit, { w = 1200, d = 380, h = 450 } = {}) {
+export function bench(kit, { w = 1200, d = 380, h = 450, form = 'plank' } = {}) {   // form plank (a thick top on four legs and stretchers) | slatted (a top of slats with gaps) | upholstered (a padded seat on short legs) | trestle (a top on two slab ends)
   const { bx, rb } = boxes(kit), g = kit.group(), TT = 40;
+  if (form === 'slatted') { const n = 5, sw = (d - 4 * 14) / n; for (let k = 0; k < n; k++) g.add(rb(0, h - TT, -d / 2 + sw / 2 + k * (sw + 14), w, TT, sw, 4)); for (const sx of [-1, 1]) g.add(bx(sx * (w / 2 - 90), 0, 0, 40, h - TT, d - 40)); g.add(bx(0, 130, 0, w - 180, 28, 36, lo)); return kit.merge(g); }
+  if (form === 'trestle') { g.add(rb(0, h - TT, 0, w, TT, d, 8)); for (const sx of [-1, 1]) g.add(rb(sx * (w / 2 - 110), 0, 0, 50, h - TT, d - 40, 4)); g.add(bx(0, h - TT - 90, 0, w - 220, 60, 30, lo)); return kit.merge(g); }
+  if (form === 'upholstered') { for (const sx of [-1, 1]) for (const sz of [-1, 1]) g.add(kit.cyl(sx * (w / 2 - 70), 0, sz * (d / 2 - 50), 16, h - 110, { rTop: 24, seg: 12, ...lo })); g.add(rb(0, h - 110, 0, w, 110, d, 30)); g.add(kit.lines([[-w / 2 + 50, h - 40, d / 2 + 1], [w / 2 - 50, h - 40, d / 2 + 1]], 'lo')); return kit.merge(g); }
   g.add(rb(0, h - TT, 0, w, TT, d, 8));
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) g.add(bx(sx * (w / 2 - 70), 0, sz * (d / 2 - 50), 46, h - TT, 46));
   for (const sz of [-1, 1]) g.add(bx(0, 120, sz * (d / 2 - 50), w - 140, 30, 36, lo));   // a stretcher between each pair of legs

@@ -152,7 +152,10 @@
     "mount": "floor",
     "params": {
      "w": 2900,
-     "d": 1900
+     "d": 1900,
+     "form": "striped",
+     "border": 65,
+     "fringe": "none"
     },
     "group": "living:seating rug",
     "area": "living"
@@ -453,7 +456,10 @@
     "mount": "floor",
     "params": {
      "w": 2200,
-     "d": 1600
+     "d": 1600,
+     "form": "borderless",
+     "border": 95,
+     "fringe": "ends"
     },
     "group": "reading:reading group",
     "area": "reading"
@@ -720,7 +726,8 @@
     ],
     "mount": "floor",
     "params": {
-     "w": 1000
+     "w": 1000,
+     "form": "trestle"
     },
     "group": "hallway:hooks",
     "hero": true,

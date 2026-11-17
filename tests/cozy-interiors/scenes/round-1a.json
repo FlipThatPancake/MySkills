@@ -438,7 +438,10 @@
     "mount": "floor",
     "params": {
      "w": 1900,
-     "d": 1900
+     "d": 1900,
+     "form": "borderless",
+     "border": 45,
+     "fringe": "ends"
     },
     "group": "kitchen:floor",
     "area": "kitchen"
@@ -483,7 +486,9 @@
      1950
     ],
     "mount": "floor",
-    "params": {},
+    "params": {
+     "form": "ladder"
+    },
     "group": "kitchen:breakfast",
     "area": "kitchen",
     "lift": 7
@@ -498,7 +503,9 @@
     ],
     "turn": -90,
     "mount": "floor",
-    "params": {},
+    "params": {
+     "form": "ladder"
+    },
     "group": "kitchen:breakfast",
     "area": "kitchen",
     "lift": 7
@@ -609,7 +616,10 @@
     "mount": "floor",
     "params": {
      "w": 2800,
-     "d": 1800
+     "d": 1800,
+     "form": "plain",
+     "border": 85,
+     "fringe": "none"
     },
     "group": "dining:floor",
     "area": "dining"
@@ -626,7 +636,8 @@
     "params": {
      "w": 1800,
      "d": 900,
-     "h": 750
+     "h": 750,
+     "form": "pedestal"
     },
     "group": "dining:table set",
     "hero": true,
@@ -642,7 +653,9 @@
      1940
     ],
     "mount": "floor",
-    "params": {},
+    "params": {
+     "form": "spindle"
+    },
     "group": "dining:table set",
     "area": "dining",
     "lift": 7
@@ -657,7 +670,9 @@
     ],
     "turn": 180,
     "mount": "floor",
-    "params": {},
+    "params": {
+     "form": "spindle"
+    },
     "group": "dining:table set",
     "area": "dining",
     "lift": 7
@@ -671,7 +686,9 @@
      1940
     ],
     "mount": "floor",
-    "params": {},
+    "params": {
+     "form": "spindle"
+    },
     "group": "dining:table set",
     "area": "dining",
     "lift": 7
@@ -686,7 +703,9 @@
     ],
     "turn": 180,
     "mount": "floor",
-    "params": {},
+    "params": {
+     "form": "spindle"
+    },
     "group": "dining:table set",
     "area": "dining",
     "lift": 7
@@ -700,7 +719,9 @@
      1940
     ],
     "mount": "floor",
-    "params": {},
+    "params": {
+     "form": "spindle"
+    },
     "group": "dining:table set",
     "area": "dining",
     "lift": 7
@@ -715,7 +736,9 @@
     ],
     "turn": 180,
     "mount": "floor",
-    "params": {},
+    "params": {
+     "form": "spindle"
+    },
     "group": "dining:table set",
     "area": "dining",
     "lift": 7
@@ -777,7 +800,9 @@
      190
     ],
     "mount": "floor",
-    "params": {},
+    "params": {
+     "form": "plank"
+    },
     "group": "dining:window",
     "area": "dining"
    },
@@ -824,7 +849,10 @@
      210
     ],
     "mount": "floor",
-    "params": {},
+    "params": {
+     "form": "doors",
+     "legs": "tapered"
+    },
     "group": "dining:sideboard",
     "area": "dining"
    },
@@ -950,7 +978,10 @@
     "mount": "floor",
     "params": {
      "w": 3300,
-     "d": 2700
+     "d": 2700,
+     "form": "striped",
+     "border": 115,
+     "fringe": "ends"
     },
     "group": "living:extra",
     "area": "living"

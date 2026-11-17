@@ -9,14 +9,14 @@
 //   Placing on a wall (xc is where the middle of the thing is along the wall, measured like an opening's x; the distance out from the wall comes from the asset, see assets.mjs):
 //   back.place('fridge', 'fridge', 5100);   back.place('sofa', 'sofa', 3200, { y: 7, lift: 7, params: { seats: 2 } });   back.place('pic', 'picture', 2000, { y: 1400 });   options: y, turn (added to facing out from the wall), params, off (override), group, hero, shadow
 //   A cabinet run with slots:  const R = a.run(back, 'run', 1650, [modules], { group: 'run' });  R.on('hob', 'hob');  R.on('hob', 'hood');  R.on('hob', 'pan');  R.on('sink', 'kettle');  (the thing goes on the middle of that module)
-//   A table set:  const T = a.table('dining', { at: [2800, 2800], r: 650 | w: 1700, d: 900, chairs: 4, rug: true, cloth: false | true | 'accent' });  T.over('pendantLamp');  T.on('vase')
+//   A table set:  const T = a.table('dining', { at: [2800, 2800], r: 650 | w: 1700, d: 900, chairs: 4, chairForm: 'ladder'|'spindle'|'bentwood'|'upholstered' (dealt per table if left out), rug: true, cloth: false | true | 'accent' });  T.over('pendantLamp');  T.on('vase')
 //   What roll.mjs deals, and how a spec uses it:  plantAt (distinct places: sill, shelf, worktop, hanging, floor; one floor plant at most) -> place each plant there;  foreground (the near-camera piece, from the area's own use) -> put it by the shot's near edge;
 //     accent {name, hex} for the home -> new Home({ accent: hex });  accentOn (the textile that carries it) -> give that piece params: { tone: 'accent' } (cushion, foldedThrow, cloth, tablecloth, teaTowel, benchCushion, floorCushion, runner, tableRunner, duvetCloth).
 //   Soft things:  a.seatSoft('sofa', { tone: 'accent' | 'lo' | 'mid', throw: 'drape' | 'band' | false, group })  one leaning cushion per seat end and a throw dropped on the arm or folded across the seat (armchairs get one cushion);  a.table(id, { cloth: true | 'accent' }) puts a cloth shaped to the table.
 //   a.topOf(id): the height of the top of something placed (its dealt h included), for y of a thing that stands on it.
 //   Anywhere:  a.put(id, asset, [x, z], turn, { y, mount, group, hero, params, ... })  (the object's own origin at [x, z]; see assets.mjs).  a.view({ target, az, el }), a.shot(name, from, look, fov, group)
 // Every object has a `group` (its run, table set, seating group or wall arrangement) and hero: true marks the area's main piece.
-import { ASSETS } from './src/library/meta.js';
+import { ASSETS, SPACE } from './src/library/meta.js';
 import { dealParams } from './src/library/space.js';
 import { dropCloth, heightField } from './src/cloth.js';
 import { createKit } from './src/kitchen3d.js';
@@ -39,6 +39,8 @@ const pickForm = (h, asset, params) => {   // the next form of an asset that has
 };
 const vary = (h, asset, params, areaId = '') => {
   let p = pickForm(h, asset, params);
+  const named = ['rug', 'table', 'sideboard', 'bench'].includes(asset) ? [...new Set(SPACE[asset]?.form)] : null;   // named forms (rug, table, sideboard, bench): the next one in turn, so two of them in a home differ
+  if (named && asset !== 'chair' && p?.form === undefined) { const c = (h.counts ||= {}); p = { ...(p || {}), form: named[(c['f-' + asset] = (c['f-' + asset] ?? h.S.seed) + 1) % named.length] }; }
   if (asset === 'basket' && p?.form === 2 && !/bed|bath/.test(areaId)) p = { ...p, form: h.S.seed % 2 };   // the tall lidded hamper is laundry: a bedroom or bathroom thing
   return dealParams(h, asset, p);
 };   // a form for assets with forms, then every unset parameter of the asset's space, from the home's seed
@@ -163,14 +165,15 @@ class Area {
     };
   }
   // ---- a table set: a table (round with r, or w x d) with chairs, a rug under it and slots over / on it
-  table(id, { at, r, w = 1600, d = 900, chairs = 4, rug = true, cloth = false, group = 'table set', hero = true, h = 750 } = {}) {
+  table(id, { at, r, w = 1600, d = 900, chairs = 4, rug = true, cloth = false, group = 'table set', hero = true, h = 750, chairForm } = {}) {
     const round = !!r, p = this, TW = round ? 2 * r : w, TD = round ? 2 * r : d;
-    if (rug) p.put(`${id}-rug`, 'rug', at, 0, { group, params: { w: TW + 1100, d: TD + 1100 } });
+    if (rug) p.put(`${id}-rug`, 'rug', at, 0, { group, params: { w: TW + 1100, d: TD + 1100, ...(round ? { form: 'round' } : {}) } });   // (rug form: round for a round table, else dealt)
     p.put(id, round ? 'roundTable' : 'table', at, 0, { y: 7, lift: 7, group, hero, params: round ? { r, h } : { w, d, h } });
     if (cloth) p.put(`${id}-cloth`, 'tablecloth', at, 0, { y: h + 7, mount: 'on', group, params: { ...(round ? { r } : { w: w + 90, d: d + 90 }), drop: round ? 260 : 300, ...(cloth === 'accent' ? { tone: 'accent' } : {}) } });   // cloth: true | 'accent': a cloth whose shape follows the table (round skirt, or a rectangle that hangs over the long sides)
     const spots = round ? [[0, -1], [1, 0], [0, 1], [-1, 0]].slice(0, Math.min(4, chairs)).map(([a, b]) => [a * (r + 230), b * (r + 230)])
       : (() => { const per = Math.ceil(chairs / 2), out = []; for (let i = 0; i < per; i++) for (const s of [-1, 1]) { if (out.length < chairs) out.push([(i - (per - 1) / 2) * (w / per), s * (d / 2 + 310)]); } return out; })();
-    spots.forEach(([dx, dz], i) => { const q = [at[0] + dx, at[1] + dz]; p.put(`${id}-chair-${i + 1}`, 'chair', q, deg(Math.atan2(at[0] + (round ? 0 : dx) - q[0], at[1] - q[1])), { y: 7, lift: 7, group }); });
+    const cnt = (this.h.counts ||= {}), nx = cnt.tableSet = (cnt.tableSet ?? this.h.S.seed % 4) + 1, cf = chairForm || ['ladder', 'spindle', 'bentwood', 'upholstered'][nx % 4];   // one chair form for the whole set
+    spots.forEach(([dx, dz], i) => { const q = [at[0] + dx, at[1] + dz]; p.put(`${id}-chair-${i + 1}`, 'chair', q, deg(Math.atan2(at[0] + (round ? 0 : dx) - q[0], at[1] - q[1])), { y: 7, lift: 7, group, params: { form: cf } }); });
     return {
       at, over: (asset = 'pendantLamp', o = {}) => p.put(`${id}-${asset}`, asset, at, 0, { mount: 'ceiling', group, ...o }),
       on: (asset, o = {}) => p.put(`${id}-${asset}`, asset, [at[0] + (o.dx || 0), at[1] + (o.dz || 0)], 0, { y: h + 7, mount: 'on', group, ...o }),
