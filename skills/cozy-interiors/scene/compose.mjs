@@ -15,6 +15,7 @@
 //   Soft things:  a.seatSoft('sofa', { tone: 'accent' | 'lo' | 'mid', throw: 'drape' | 'band' | false, group })  one leaning cushion per seat end and a throw dropped on the arm or folded across the seat (armchairs get one cushion);  a.table(id, { cloth: true | 'accent' }) puts a cloth shaped to the table.
 //   a.topOf(id): the height of the top of something placed (its dealt h included), for y of a thing that stands on it.
 //   Things on one top:  a.onTop('desk', [{ id, asset, params }, ...], { at: 'back' | 'centre' | 'front', margin: 50 })  spaces them along the top, every footprint inside its edge (refuses when they do not fit); use it instead of placing by fractions.
+//   Living things:  a.alive(roll.areas[id].motion)  (after the walls: the roll's 2 or 3 kinds; refuses one whose needs the walls do not meet, e.g. a flier with no open window).  See src/motion/index.js.
 //   Anywhere:  a.put(id, asset, [x, z], turn, { y, mount, group, hero, params, ... })  (the object's own origin at [x, z]; see assets.mjs).  a.view({ target, az, el }), a.shot(name, from, look, fov, group)
 // Every object has a `group` (its run, table set, seating group or wall arrangement) and hero: true marks the area's main piece.
 import { ASSETS, SPACE } from './src/library/meta.js';
@@ -23,6 +24,7 @@ import { dropCloth, heightField } from './src/cloth.js';
 import { createKit } from './src/kitchen3d.js';
 import { REGISTRY } from './src/library/index.js';
 import { joinAreas, seamLine, zoneList } from './openplan.mjs';
+import { checkAlive, pickVia, MOTION } from './motion-roll.mjs';
 const rad = (d) => d * Math.PI / 180, deg = (r) => r * 180 / Math.PI, r0 = (v) => Math.round(v * 10) / 10;
 export const GAP = 3000;
 export class Home {
@@ -226,6 +228,7 @@ class Area {
     let y = 0; for (const [a, b] of [[0, 0], [1, 1], [1, -1], [-1, 1], [-1, -1]]) y = Math.max(y, hf(p[0] + a * w / 3, p[1] + b * d / 3));
     this.put(id, asset, p, turn, { y: Math.round(y), mount: 'on', group: group || this.h.S.home.objects.find((q) => q.id === `${this.id}-${targetId}`)?.group.split(':')[1], params: pr });
   }
-  out() { this.liftOnRugs(); const b = this.worldBounds(); return { id: this.id, name: this.name, ...(this.group ? { group: this.group } : {}), O: this.O, psi: this.psi, bounds: { ...b, top: this.top }, camera: { home: this.cam, shots: this.shots } }; }
+  alive(list) { checkAlive(this.id, this.h.S.home.walls.filter((w) => w.id.startsWith(this.id + '-')), list); const ws = this.h.S.home.walls.filter((w) => w.id.startsWith(this.id + '-')); this.motion = list.map(({ kind }) => { const k = MOTION.kinds[kind]; return { kind, needs: k.needs, ...(k.needs.includes('openWindow') ? { via: pickVia(ws, k.flies) } : {}) }; }); return this; }   // living things (roll's `motion`; src/motion/index.js)
+  out() { this.liftOnRugs(); const b = this.worldBounds(); return { id: this.id, name: this.name, ...(this.motion?.length ? { motion: this.motion } : {}), ...(this.group ? { group: this.group } : {}), O: this.O, psi: this.psi, bounds: { ...b, top: this.top }, camera: { home: this.cam, shots: this.shots } }; }
 }
 export const facing = (from, to) => deg(Math.atan2(to[0] - from[0], to[1] - from[1]));   // the turn that makes an object at `from` face `to`, in local x/z

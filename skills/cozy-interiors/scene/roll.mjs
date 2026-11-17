@@ -6,6 +6,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { dealOpenPlan } from './openplan.mjs';
+import { dealMotion } from './motion-roll.mjs';
 const T = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'tables.json'), 'utf8'));
 export const KINDS = Object.keys(T).filter((k) => T[k]?.hero);
 export function roll(seed, kinds = ['kitchen', 'dining', 'living']) {
@@ -59,6 +60,7 @@ export function roll(seed, kinds = ['kitchen', 'dining', 'living']) {
     a.say = describe(id, a);
     out.areas[id] = a;
   }
+  dealMotion(out, seed);   // living things (motion-roll.mjs): 2 or 3 kinds per area, from tables.json motion; its own random stream, so no older pick moves
   dealOpenPlan(out, seed, kinds, describe);   // open plan (openplan.mjs): about 2 homes in 5 with two joinable areas; its own random stream, so no older pick moves
   return out;
 }

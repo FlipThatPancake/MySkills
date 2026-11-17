@@ -11,6 +11,7 @@ import { buildHome, FADE } from './home.js';
 import { bakeLight } from './lightbake.js';
 import { VIEW } from './sheet.js';
 import { createTour } from './tour.js';
+import { createMotion } from './motion/index.js';
 
 const rad = THREE.MathUtils.degToRad, deg = THREE.MathUtils.radToDeg, FOV = 30, GLIDE_S = 1.6, SPAN = 80;
 const smooth = (k) => k * k * (3 - 2 * k);
@@ -199,6 +200,7 @@ export function createAreaScene(canvas, S) {
     get glide() { return glide; }, objects: home.objects, openables: home.openables,
     openAll(on) { home.openables.forEach((f) => { f.userData.open.target = on ? 1 : 0; }); moveFronts(1, true); },
   };
+  api.motion = createMotion(kit, home, S);   // living things (motion/index.js): what the roll dealt each area
   resize();
   arrive(q.get('area') || order[0]);
   renderer.setAnimationLoop((now) => {
@@ -206,6 +208,7 @@ export function createAreaScene(canvas, S) {
     if (glide) { lastInput = now; if (!glide.hold) glideAt((now - glide.t0) / 1000 / GLIDE_S); }
     else if (!tour.update(now, now - lastInput)) controls.update();
     for (const g of Object.values(home.objects)) { g.userData.tick?.(dt); g.userData.update?.(dt); }
+    api.motion.update(dt, api.area);
     moveFronts(dt);
     home.update(camera, tour.look || controls.target);
     renderer.render(scene, camera);
