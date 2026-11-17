@@ -79,7 +79,7 @@ export function joinAreas(H, a, b, { layout = 'row', share = 0, separators = [] 
   const end = a.backAt[0] + a.backLen;
   if (layout === 'row') { b.psi = a.psi; b.O = a.P([end, 0]); b.rect = [-share, b.rect[1], b.rect[2], b.rect[3]]; }
   else if (layout === 'corner') {
-    const d = a.rect[3] - share; a.right(d, [], 90);   // the wall beside a: a's right wall, whose far end is where b's back wall begins
+    const d = a.rect[3] - share; a.cornerWall = a.right(d, [], 90);   // a.cornerWall: the wall helper, to place things on the stretch beside the corner   // the wall beside a: a's right wall, whose far end is where b's back wall begins
     b.psi = a.psi + 90; b.O = a.P([end, d]); b.rect = [0, b.rect[1], b.rect[2], b.rect[3]];
   } else throw new Error(`H.join: layout is 'row' or 'corner' (got "${layout}")`);
   const gid = a.group || `g${(H.groups ||= []).length + 1}`, G = H.groups.find((g) => g.id === gid) || (H.groups.push({ id: gid, areas: [a.id], seams: [] }), H.groups[H.groups.length - 1]);
