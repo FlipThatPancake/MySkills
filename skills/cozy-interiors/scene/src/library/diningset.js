@@ -20,6 +20,7 @@ export function candlesticks(kit, { n = 2, h = 260, form = 'turned', seed = 1 } 
     const ch = (form === 'column' ? 90 : 140) + R() * 80; g.add(kit.cyl(x, hh, 0, cr, ch, { seg: 12 }));
     pts.push([x, hh + ch, 0], [x + 2, hh + ch + 24, 0], [x + 2, hh + ch + 24, 0], [x - 6, hh + ch + 42, 0], [x - 6, hh + ch + 42, 0], [x, hh + ch + 58, 0], [x, hh + ch + 58, 0], [x + 7, hh + ch + 40, 0], [x + 7, hh + ch + 40, 0], [x + 2, hh + ch + 24, 0]);   // the flame
   }
+  if (n > 2) g.add(kit.rbox(-((n - 1) * 60 + 70), 0, 62, (n - 1) * 120 + 140, 12, 124, 5, { tone: 'lo' }));   // three or more stand on a thin tray, so they read as one piece
   g.add(kit.lines(pts, 'mid'));
   return kit.merge(g);
 }

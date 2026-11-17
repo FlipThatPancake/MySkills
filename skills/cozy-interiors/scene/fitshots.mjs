@@ -22,7 +22,7 @@ const res = await page.evaluate(() => {
   const rect = (b) => { const xs = [], ys = []; for (const x of [b.min.x, b.max.x]) for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) { const p = new T.Vector3(x, y, z).project(camera); xs.push(p.x); ys.push(p.y); } return { x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys) }; };
   for (const A of api.areaIds) {
     const shots = api.areas[A].camera.shots || [], bd = api.areas[A].bounds, real = ids.filter((i) => areaOf(i) === A && !['socket', 'lightSwitch'].includes(sc(i).asset));
-    const heroId = real.find((i) => sc(i).hero);
+    const heroId = real.find((i) => sc(i).hero), taken = [];   // taken: the directions of the shots found so far in this area
     for (const [k, sh] of shots.entries()) {
       const ST = [{ ys: [1100, 1250, 1400], fovs: [32, 34, 36, 38, 40], fp: 36, dp: 4500 }, { ys: [1700, 1900, 2100], fovs: [30, 32, 34, 36], fp: 33, dp: 5000 }, { ys: [700, 850, 1000], fovs: [28, 30, 32, 34], fp: 31, dp: 4000 }, { ys: [1100, 1250], fovs: [26, 28, 30], fp: 28, dp: 3500 }][k % 4];   // shot 1 eye level, 2 high, 3 low, 4 tight: the tour does not look the same four times
       const subj = sh.subject || (heroId && sc(heroId).group), mem = real.filter((i) => sc(i).group === subj); if (!mem.length) continue;
@@ -43,10 +43,13 @@ const res = await page.evaluate(() => {
         for (const i of near) if (ovl(rect(boxes[i])) > 0.1 * subjArea) { stat.blocked = (stat.blocked || 0) + 1; return null; }
         const fg = near.concat(mem.length > 1 ? mem.filter((i) => ['pouf', 'basket', 'floorPlant', 'plant', 'stool', 'footstool', 'sideTable', 'crate', 'bench'].includes(sc(i).asset)) : []).some((i) => { const r = rect(boxes[i]), c = (r.x0 + r.x1) / 2; return SMALLFG.includes(sc(i).asset) && Math.abs(c) > 0.5 && Math.abs(c) < 1.15 && r.y1 > -1; });
         if (!fg) { stat.fg = (stat.fg || 0) + 1; return null; }
+        for (const i of near) if (SMALLFG.includes(sc(i).asset)) { const r = rect(boxes[i]); if (Math.max(0, Math.min(r.x1, 1) - Math.max(r.x0, -1)) * Math.max(0, Math.min(r.y1, 1) - Math.max(r.y0, -1)) / 4 > 0.1) { stat.fgbig = (stat.fgbig || 0) + 1; return null; } }   // a foreground piece fills at most 10 percent of the frame
+        { const dy = from[1] - look[1], pitch = Math.atan2(dy, Math.hypot(from[0] - look[0], from[2] - look[2])) * 180 / Math.PI; if (pitch > 15 && from[1] < 1600) { stat.pitch = (stat.pitch || 0) + 1; return null; } }   // looks down 15 degrees at most unless it is the high shot
+        { const az = Math.atan2(look[0] - from[0], look[2] - from[2]) * 180 / Math.PI; if (taken.some((t) => { let d = Math.abs(t - az) % 360; if (d > 180) d = 360 - d; return d < 25; })) { stat.dir = (stat.dir || 0) + 1; return null; } }   // two shots of an area differ in direction by 25 degrees or more
         if (strict && Math.abs(cx) > 0.34) { stat.off = (stat.off || 0) + 1; return null; }   // the subject sits in the middle third
         const rs = real.filter((i) => !['curtain', 'rug'].includes(sc(i).asset)).map((i) => rect(boxes[i])), cell = [0, 0, 0], tot = [0, 0, 0], NX = 18, NY = 10;
         for (let a = 0; a < NX; a++) for (let b = 0; b < NY; b++) { const px = -1 + (a + 0.5) * 2 / NX, py = -1 + (b + 0.5) * 2 / NY, t = Math.min(2, Math.floor(a * 3 / NX)); tot[t]++; if (rs.some((r) => px >= r.x0 && px <= r.x1 && py >= r.y0 && py <= r.y1)) cell[t]++; }
-        if (strict && (cell[0] / tot[0] < 0.09 || cell[2] / tot[2] < 0.09 || (cell[0] + cell[1] + cell[2]) / (tot[0] + tot[1] + tot[2]) < 0.25)) { stat.empty = (stat.empty || 0) + 1; stat.cov = [cell[0] / tot[0], cell[1] / tot[1], cell[2] / tot[2]].map((v) => +v.toFixed(2)); return null; }   // no empty side, at least a third of the frame holds things
+        if (strict && (cell[0] / tot[0] < 0.09 || cell[2] / tot[2] < 0.09 || (cell[0] + cell[1] + cell[2]) / (tot[0] + tot[1] + tot[2]) < 0.35)) { stat.empty = (stat.empty || 0) + 1; stat.cov = [cell[0] / tot[0], cell[1] / tot[1], cell[2] / tot[2]].map((v) => +v.toFixed(2)); return null; }   // no empty side, at least 35 percent of the frame holds things
         if (strict) for (const i of real) { if (['curtain', 'rug', 'baseRun', 'wallRun'].includes(sc(i).asset)) continue; const r = rect(boxes[i]); if (r.y1 > 0.97 && r.y0 < 0.9 && r.x1 > -1 && r.x0 < 1 && !(mem.includes(i) && fill > 0.5)) { stat.clip = (stat.clip || 0) + 1; return null; } }   // nothing is cut by the top edge
         return { fill, cx };
       };
@@ -61,11 +64,12 @@ const res = await page.evaluate(() => {
         if (!best || cost < best.cost) best = { cost, from: from.toArray().map(Math.round), look: look.toArray().map(Math.round), fov, fill: +r.fill.toFixed(2), cx: +r.cx.toFixed(2) };
       }
       if (best && !strict) best.loose = true; }   // the strict pass found nothing: this camera ignores the middle-third, empty-side and top-clip rules
+      if (best) taken.push(Math.atan2(best.look[0] - best.from[0], best.look[2] - best.from[2]) * 180 / Math.PI);
       out.push({ area: A, name: sh.name, subject: subj, best, stat });
     }
   }
   return out;
 });
-const WHY = { orbit: 'the camera would leave the orbit limits: the area is too shallow for this group, or the group stands too far back', cut: 'the group does not fit the frame: make the subject group smaller', fill: 'the group fills too little or too much of the frame: resize the group', third: 'the group cannot sit in the middle third', blocked: 'a piece stands in front of the subject: move it or add a group', fg: 'no foreground piece fits: add a stool, basket or bench end', off: 'the subject cannot sit in the middle third', empty: 'a frame side stays empty: add things on that side', clip: 'something is cut by the top edge' };
+const WHY = { orbit: 'the camera would leave the orbit limits: the area is too shallow for this group, or the group stands too far back', cut: 'the group does not fit the frame: make the subject group smaller', fill: 'the group fills too little or too much of the frame: resize the group', third: 'the group cannot sit in the middle third', blocked: 'a piece stands in front of the subject: move it or add a group', fg: 'no foreground piece fits: add a stool, basket or bench end', off: 'the subject cannot sit in the middle third', empty: 'a frame side stays empty: add things on that side', clip: 'something is cut by the top edge', fgbig: 'the foreground piece would fill over 10% of the frame: use a smaller piece', pitch: 'the camera would look down over 15 degrees: raise the group or use the high shot', dir: 'every direction is within 25 degrees of an earlier shot: reorder or add a second view' };
 for (const r of res) { const o = O[r.area]; console.log(r.area, JSON.stringify(r.name), '→', r.best ? `[${[r.best.from[0] - o[0], r.best.from[1], r.best.from[2] - o[1]]}], [${[r.best.look[0] - o[0], r.best.look[1], r.best.look[2] - o[1]]}], ${r.best.fov} (fills ${r.best.fill}, at ${r.best.cx}${r.best.loose ? ", LOOSE: strict rules found nothing" : ""})` : `no camera found: most candidates failed on "${Object.entries(r.stat).filter(([k, v]) => typeof v === 'number' && k !== 'minOv').sort((x, y) => y[1] - x[1])[0]?.[0] || 'none'}" (${WHY[Object.entries(r.stat).filter(([k, v]) => typeof v === 'number' && k !== 'minOv').sort((x, y) => y[1] - x[1])[0]?.[0]] || 'make the subject group smaller, add a foreground piece'}) ` + JSON.stringify(r.stat)); }
 await browser.close();

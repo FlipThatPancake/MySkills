@@ -26,7 +26,7 @@ const H = new Home({ seed: 42, floor: 'boards' });
   a.put('floor-plant-2', 'floorPlant', [700, 3050], 0, { group: 'room edge' });
   a.put('scuff', 'scuff', [900, 3500], 90, { group: 'room edge', mount: 'lines' });
   a.view({ target: [2800, 800, 1700], az: 12, el: 12 });
-  a.shot('armchairs', [800, 1400, 6600], [2589, 900, 2195], 40, 'seating');
+  a.shot('armchairs', [200, 1100, 6300], [2629, 1100, 2127], 40, 'seating');
 }
 { // ---------- reading corner
   const a = H.area('reading', 'Reading corner', { rect: [0, 0, 5400, 4200] });
@@ -51,8 +51,8 @@ const H = new Home({ seed: 42, floor: 'boards' });
   back.place('floor-plant', 'floorPlant', 600, { group: 'window seat' });
   a.put('plant-stand', 'plantStand', [1300, 1900], 0, { group: 'shelf', params: { h: 560, r: 190, tiers: 2, plant: 'bush', seed: 4 } });
   a.view({ target: [3000, 800, 1500], az: 12, el: 12 });
-  a.shot('reading chair', [2300, 1100, 6000], [3115, 700, 1081], 40, 'reading group');
-  a.shot('window seat', [2600, 1900, 6000], [2030, 300, 1208], 34, 'window seat');
+  a.shot('reading chair', [1400, 1100, 5700], [3287, 700, 1020], 40, 'reading group');
+  a.shot('window seat', [2600, 1900, 6000], [2030, 465, 1208], 34, 'window seat');
 }
 { // ---------- hallway
   const a = H.area('hallway', 'Hallway', { rect: [0, 0, 6200, 3800] });
@@ -76,8 +76,8 @@ const H = new Home({ seed: 42, floor: 'boards' });
   a.put('floor-plant', 'floorPlant', [5900, 3000], 0, { group: 'runner' });
   a.put('leaf', 'leaf', [5500, 3200], 0, { group: 'runner', mount: 'lines', params: { turn: 2 } });
   a.view({ target: [3100, 900, 1500], az: 12, el: 10 });
-  a.shot('hooks', [4700, 1100, 5400], [3836, 1100, 279], 40, 'hooks');
-  a.shot('console', [3800, 1700, 5700], [4479, 1075, 176], 36, 'console');
+  a.shot('hooks', [5900, 1100, 4800], [3624, 900, 186], 40, 'hooks');
+  a.shot('console', [3500, 1700, 5700], [4624, 700, 218], 36, 'console');
 }
 H.write(new URL('./seed-42.json', import.meta.url).pathname, fs);
 console.log('wrote seed-42.json');

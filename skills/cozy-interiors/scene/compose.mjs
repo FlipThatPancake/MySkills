@@ -149,7 +149,7 @@ class Area {
   // ---- a table set: a table (round with r, or w x d) with chairs, a rug under it and slots over / on it
   table(id, { at, r, w = 1600, d = 900, chairs = 4, rug = true, group = 'table set', hero = true, h = 750 } = {}) {
     const round = !!r, p = this, TW = round ? 2 * r : w, TD = round ? 2 * r : d;
-    if (rug) p.put(`${id}-rug`, 'rug', at, 0, { group, params: { w: TW + 1300, d: TD + 1300 } });
+    if (rug) p.put(`${id}-rug`, 'rug', at, 0, { group, params: { w: TW + 1100, d: TD + 1100 } });
     p.put(id, round ? 'roundTable' : 'table', at, 0, { y: 7, lift: 7, group, hero, params: round ? { r, h } : { w, d, h } });
     const spots = round ? [[0, -1], [1, 0], [0, 1], [-1, 0]].slice(0, Math.min(4, chairs)).map(([a, b]) => [a * (r + 230), b * (r + 230)])
       : (() => { const per = Math.ceil(chairs / 2), out = []; for (let i = 0; i < per; i++) for (const s of [-1, 1]) { if (out.length < chairs) out.push([(i - (per - 1) / 2) * (w / per), s * (d / 2 + 310)]); } return out; })();
