@@ -201,6 +201,14 @@ export function createAreaScene(canvas, S) {
     openAll(on) { home.openables.forEach((f) => { f.userData.open.target = on ? 1 : 0; }); moveFronts(1, true); },
   };
   api.motion = createMotion(kit, home, S);   // living things (motion/index.js): what the roll dealt each area
+  {   // the cameras fliers keep away from: an area's home view (its fitted view is known once the area is on show) and its tour shot cameras; the live camera too on the page (not in ?check)
+    const home0 = {}, shotsOf = (id) => (areas[id].camera?.shots || []).map((x) => new THREE.Vector3(...x.from)), plain = /[?&]check\b/.test(location.search);
+    api.motion.cameraOf = (id) => {
+      if (api.area !== id) return shotsOf(id);
+      if (!home0[id]) { const v = viewOf(areas[id]); home0[id] = [new THREE.Vector3(...v.target).add(sph(v.dist, v.az, v.el)), ...shotsOf(id)]; }
+      return plain ? home0[id] : [...home0[id], camera.position];
+    };
+  }
   resize();
   arrive(q.get('area') || order[0]);
   renderer.setAnimationLoop((now) => {

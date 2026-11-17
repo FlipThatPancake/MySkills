@@ -12,19 +12,29 @@
 //   ctx = { T (THREE), kit, home, entry, area ({ id, bounds }), rnd(a = 0, b = 1) (seeded), objects ([{ id, g, box (solid Box3, world), landing (world [x,y,z] | null), asset }]),
 //     solids (boxes of everything solid in the area), walls ([{ W, id }]; W.d runs along the wall, W.n points into the room, W.len, W.to), openings ([opening]),
 //     via (the opening named by the roll, or null), room: { x0, x1, z0, z1, ymin, ymax } (where a flier may be: the area's floor shrunk 150 mm, above 1000 mm, below the lamp line) }
+//   cameras() -> [THREE.Vector3]: the area's home-view camera and tour shot cameras; a flier keeps 900 mm + its reach from each (flight.js does; check-motion measures it).
 //   opening = { id, W, op, centre: [x, z], n: [nx, nz] (into the room), u: [ux, uz] (along the wall), width, height, sill, open() 0 shut .. 1 wide, gap() the clear width at the middle now (mm), usable(r) gap >= 2 r + 30 }
 // Rule for every plug-in: anything that comes in from outside uses `ctx.via` and goes only while via.usable(r) holds (the window is open); nothing passes through furniture at any frame.
-// To add a kind: tables.json motion.kinds (say, needs, in, weight, flies), the module here, PLUGINS below; then `node check-motion.mjs` is part of check-home.
+// Fliers (butterfly, bee, bird) share their flight, perches and window rules in flight.js: a new flier builds its body and calls createFlight(ctx, group, { R, flap, ...numbers }); see the header there.
+// To add a kind:
+//   1. tables.json motion.kinds: say, needs ('openWindow', 'plant'; none for a cat), in (area kinds), weight, flies (true if it comes through the window; a number is the narrowest window in mm it can use).
+//   2. src/motion/<kind>.js: export default { sampled: true, build(ctx) } as above; chance only from ctx.rnd; bodies() lists the spheres it fills (a paw from a cabinet lists the sphere it sweeps).
+//   3. Register it in PLUGINS below. check-motion.mjs (part of check-home) then replays it for 240 s and names any crossing of furniture, walls or a shut window.
 import * as THREE from '../vendor/three/three.module.js';
 import { openable, gapOf } from './rules.js';
 import butterfly from './butterfly.js';
+import bee from './bee.js';
+import bird from './bird.js';
 import wind from './wind.js';
-export const PLUGINS = { wind, butterfly };
+import cat from './cat.js';
+import paw from './paw.js';
+export const PLUGINS = { wind, butterfly, bee, bird, cat, paw };
 
 const hash = (s) => { let h = 2166136261 >>> 0; for (const c of String(s)) h = Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0; return h; };
 const seeded = (seed) => { let s = seed >>> 0; return (a = 0, b = 1) => { s = (s + 0x6d2b79f5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return a + (b - a) * (((t ^ (t >>> 14)) >>> 0) / 4294967296); }; };
 
 export function createMotion(kit, home, S) {
+  let api;   // the object returned below; `api.cameraOf(areaId)` (set by area-run.js) lists the cameras of an area: its home view and its tour shots
   const T = THREE, things = [], where = (g) => new T.Box3().setFromObject(g);
   home.group.updateMatrixWorld(true);
   // plants that sway are driven by the wind thing of their area only (kitchen/plant.js keeps its own blade update under userData.windUpdate)
@@ -47,7 +57,7 @@ export function createMotion(kit, home, S) {
       const L = g.userData.landing; return { id, g, asset: g.userData.scene?.asset, box: solidBox(g), landing: L ? new T.Vector3(...L).applyMatrix4(g.matrixWorld).toArray() : null };
     }).filter((o) => !o.box.isEmpty());
     const b = A.bounds, via = entry.via ? openings.find((o) => o.W.id === entry.via[0] && o.index === entry.via[1]) || null : null;
-    return { T, kit, home, entry, area: A, rnd: seeded(hash(`${S.seed}/${A.id}/${entry.kind}`)), objects, solids: objects.filter((o) => o.box.max.y > 500), walls: ws, openings, via,
+    return { T, kit, home, entry, area: A, rnd: seeded(hash(`${S.seed}/${A.id}/${entry.kind}`)), objects, solids: objects.filter((o) => o.box.max.y > 500), walls: ws, openings, via, cameras: () => (api?.cameraOf ? api.cameraOf(A.id) : []),
       room: { x0: b.x0 + 150, x1: b.x1 - 150, z0: b.z0 + 150, z1: b.z1 - 150, ymin: 1000, ymax: Math.min((b.top || 2500) - 250, 2150) } };
   };
   for (const A of S.areas) for (const entry of A.motion || []) {
@@ -59,7 +69,7 @@ export function createMotion(kit, home, S) {
     things.push(th);
   }
   const paused = typeof location !== 'undefined' && /[?&]check\b/.test(location.search);   // ?check: nothing moves by itself, so the measuring checks see every plant at rest (the motion check steps things itself)
-  return {
+  return (api = {
     things, PLUGINS,
     // each frame: the things of the area on show move (the others wait where they are)
     update(dt, areaId) {
@@ -76,5 +86,5 @@ export function createMotion(kit, home, S) {
       for (let t = 0; t < seconds; t += dt) for (const th of things) if (th.sampled && th.update) { th.update(dt); fn(th, t, th.bodies ? th.bodies() : []); }
       if (paused) for (const th of things) if (th.group) th.group.visible = false;
     },
-  };
+  });
 }

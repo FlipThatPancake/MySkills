@@ -229,5 +229,6 @@ export function opening(kit, op, vis = null) {
       g.add(kit.cyl(20, 1000, op.slid === 'l' ? Z0 + lw - 70 : Z1 - lw + 70, 40, 10, { axis: 'x', seg: 20, tone: 'mid' }));
       g.add(kit.lines([[19, 40, z0], [19, h - 40, z0], [19, h - 40, z0 + lw], [19, 40, z0 + lw]], 'lo')); }
   }
+  g.traverse((o) => { if (o.isMesh && !o.material.isMeshBasicMaterial && !o.userData.kitLine) o.userData.solid = true; });   // the checks (scene/geom) treat these as the opening's physical frame, sill and sashes
   return { group: g, hole, width: w, height: h, sill: Y0, openables, hit, kind: op.kind };
 }
