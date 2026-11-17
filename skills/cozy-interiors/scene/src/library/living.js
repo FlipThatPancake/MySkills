@@ -95,12 +95,15 @@ export function sideboard(kit, { w = 1600, h = 800, d = 420, doors = 3, form = '
   const { bx, rb } = boxes(kit), g = kit.group(), L = legs === 'plinth' ? 90 : 150, pts = [], z = d / 2 + 0.6, bw = w - 40;
   if (legs === 'plinth') g.add(bx(0, 0, 0, bw - 60, L, d - 70, lo));
   else for (const sx of [-1, 1]) for (const sz of [-1, 1]) g.add(legs === 'hairpin' ? kit.cyl(sx * (w / 2 - 80), 0, sz * (d / 2 - 60), 7, L, { seg: 8, ...lo }) : kit.cyl(sx * (w / 2 - 80), 0, sz * (d / 2 - 60), 22, L, { rTop: 16, seg: 12, ...lo }));
-  g.add(rb(0, L, 0, bw, h - L - 22, d - 20, 6));                                                         // the carcass
+  if (form === 'open') { const t = 22, ht = h - L - 22; for (const sx of [-1, 1]) g.add(bx(sx * (bw / 2 - t / 2), L, 0, t, ht, d - 20)); g.add(bx(0, L, 0, bw, t, d - 20)); g.add(bx(0, L + ht / 2, 0, bw, t, d - 20)); g.add(bx(0, L, -d / 2 + 16, bw, ht, 12, lo)); }
+  else g.add(rb(0, L, 0, bw, h - L - 22, d - 20, 6));                                                         // the carcass
   g.add(rb(0, h - 22, 0, w, 22, d, 6));                                                                  // the top, overhanging
   const y0 = L + 18, y1 = h - 22 - 18, frame = (x0, x1, a, b) => { for (const [p, q] of [[[x0, a], [x1, a]], [[x1, a], [x1, b]], [[x1, b], [x0, b]], [[x0, b], [x0, a]]]) pts.push([p[0], p[1], z], [q[0], q[1], z]); };
   const knob = (x, y) => g.add(kit.cyl(x, y, z - 4, 7, 12, { axis: 'z', seg: 10, ...lo }));
-  if (form === 'open') {
-    const hh = (y1 - y0) / 2; for (let c = 0; c < 2; c++) { const x0 = -bw / 2 + 12 + c * (bw / 2), x1 = x0 + bw / 2 - 24; frame(x0, x1, y0 + 4, y1); pts.push([x0, y0 + hh, z], [x1, y0 + hh, z]); g.add(bx((x0 + x1) / 2, y0 + hh + 2, -d / 2 + 160, (x1 - x0) * 0.55, 150 + 40 * c, 150, lo)); }
+  if (form === 'open') {   // open shelves with a few things on them: a book stack, a box, a bowl
+    const mid = L + (h - L - 22) / 2, hs = [[-bw * 0.32, 0.3, 0], [-bw * 0.12, 0.2, 1], [bw * 0.3, 0.18, 2], [-bw * 0.28, 0.25, 3], [bw * 0.05, 0.3, 4]];
+    for (const [x, , k] of hs) { const up = k > 2, y = up ? mid + 22 : L + 22; if (k === 0 || k === 3) for (let i = 0; i < 4; i++) g.add(bx(x, y + i * 34, 0, 260 - i * 12, 32, 200)); else if (k === 1 || k === 4) g.add(rb(x, y, 0, 220, 150, 200, 10)); else g.add(kit.cyl(x, y, 0, 120, 70, { rTop: 150, seg: 16 })); }
+    pts.push([-bw / 2 + 22, mid, z], [bw / 2 - 22, mid, z]);
   } else if (form === 'drawers') {
     const cols = Math.max(2, doors), cw = bw / cols, rh = (y1 - y0) / 2; for (let c = 0; c < cols; c++) for (let r = 0; r < 2; r++) { const x0 = -bw / 2 + c * cw + 12, x1 = -bw / 2 + (c + 1) * cw - 12, a = y0 + r * rh + 4, b = y0 + (r + 1) * rh - 4; frame(x0, x1, a, b); knob((x0 + x1) / 2, (a + b) / 2); }
   } else if (form === 'mixed') {

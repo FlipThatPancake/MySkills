@@ -21,13 +21,13 @@ export function chair(kit, { form = 'ladder', seed = 1 } = {}) {   // form ladde
   const T = kit.THREE, g = kit.group(), lo = { tone: 'lo' }, S = 430, LEG = 36, seatY = 415;
   const rod = (a, b, r0, r1, tone) => { const A = new T.Vector3(...a), B = new T.Vector3(...b), d = B.clone().sub(A), m = kit.solid(new T.CylinderGeometry(r1, r0, d.length(), 10), 0, 0, 0, { smooth: true, tone }); m.position.copy(A).add(B).multiplyScalar(0.5); m.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), d.normalize()); return m; };
   if (form === 'bentwood') {
-    g.add(kit.cyl(0, seatY + 8, 0, 205, 30, { seg: 36 }));
-    for (let k = 0; k < 4; k++) { const a = Math.PI / 4 + k * Math.PI / 2, c = Math.cos(a), sn = Math.sin(a); g.add(rod([c * 150, seatY + 10, sn * 150], [c * 205, 0, sn * 205], 12, 9, 'mid')); }
+    g.add(kit.cyl(0, seatY - 6, 0, 205, 36, { seg: 36 }));   // a seat with real thickness
+    for (let k = 0; k < 4; k++) { const a = Math.PI / 4 + k * Math.PI / 2, c = Math.cos(a), sn = Math.sin(a); g.add(rod([c * 150, seatY - 4, sn * 150], [c * 205, 0, sn * 205], 12, 9, 'lo')); }
     g.add(kit.cyl(0, 170, 0, 150, 12, { seg: 28, tone: 'lo', rTop: 150 }));
-    const N = 9, hy = 640, pts = []; for (let k = 0; k <= N; k++) { const a = Math.PI * (0.12 + 0.76 * k / N); pts.push([Math.cos(a) * 185, hy, -Math.sin(a) * 185]); }
-    for (let k = 0; k < N; k++) g.add(rod(pts[k], pts[k + 1], 9, 9, 'mid'));
-    for (const sx of [-1, 1]) g.add(rod([sx * 165, seatY + 30, -90], [pts[sx < 0 ? N : 0][0], hy, pts[sx < 0 ? N : 0][2]], 9, 9, 'mid'));
-    g.add(rod([0, seatY + 30, -190], [0, hy - 90, -183], 8, 8, 'lo'));
+    const N = 10, arc = (hy, r) => { const o = []; for (let k = 0; k <= N; k++) { const a = Math.PI * (0.14 + 0.72 * k / N); o.push([Math.cos(a) * r, hy, -Math.sin(a) * r]); } return o; }, top = arc(700, 190), low = arc(600, 190);
+    for (const R of [top, low]) for (let k = 0; k < N; k++) g.add(rod(R[k], R[k + 1], 11, 11, 'lo'));   // two curved back rails
+    for (const k of [0, 3, 5, 7, N]) g.add(rod(low[k], top[k], 7, 7, 'lo'));
+    for (const sx of [-1, 1]) { const e = sx < 0 ? N : 0; g.add(rod([sx * 170, seatY + 10, -100], [low[e][0], 600, low[e][2]], 10, 10, 'lo')); }
   } else if (form === 'upholstered') {
     for (const sx of [-1, 1]) for (const sz of [-1, 1]) g.add(kit.cyl(sx * 175, 0, sz * 175, 14, seatY - 30, { rTop: 24, seg: 12, tone: 'lo' }));
     g.add(kit.rbox(-S / 2 - 6, seatY - 30, S / 2 + 6, S + 12, 80, S + 12, 26));
