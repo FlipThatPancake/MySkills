@@ -916,12 +916,12 @@
   },
   {
    "style": "pass",
-   "say": "pass-through (a counter-height opening with a ledge; not walked through: a window-like hatch)",
+   "say": "pass-through (a hatch with its own counter under it; not walked through)",
    "counter": true
   },
   {
    "style": "widepass",
-   "say": "wide pass-through (a half-wall or counter opening, 2000 mm wide)",
+   "say": "wide pass-through (a half-wall hatch with its own counter, 2000 mm wide)",
    "counter": true
   },
   {
@@ -933,7 +933,7 @@
    "say": "pocket-door opening (door half slid into the wall)"
   }
  ],
- "passageNote": "roll gives each arch an opening style from `passages`; a counter style (pass, widepass) sits on a wall that has a counter or sideboard in front of it and is not a way through, so give it no `to`, or use the arch/cased kind for a connection. Style goes in the opening: { kind: 'arch', style, x }.",
+ "passageNote": "roll gives each arch an opening style from `passages`; a counter style (pass, widepass) is built with its own counter and is not a way through, so give it no `to`, or use the arch/cased kind for a connection. Style goes in the opening: { kind: 'arch', style, x }. A pass-through carries its own counter (worktop 400 mm into the room, a cabinet body under it): put no worktop or sideboard there and keep 600 mm of floor clear in front; a walk-through opening shows floor running on beyond and one thing of the next room (opening.hint: picture | rug | lamp | chair, else dealt from the position).",
  "windows": [
   {
    "style": "sash",
@@ -952,6 +952,14 @@
    "say": "picture window (one large fixed pane, slim frame; 2100 x 1400 mm, sill 650)"
   },
   {
+   "style": "pair",
+   "weight": {
+    "kitchen": 2,
+    "default": 2
+   },
+   "say": "tall pair (two tall narrow casements side by side, 1100 x 1800 mm, sill 450)"
+  },
+  {
    "style": "wall",
    "weight": {
     "kitchen": 0,
@@ -959,6 +967,15 @@
     "default": 2
    },
    "say": "window wall (floor-level lights between slim mullions with a transom; 3800 x 2300 mm, sill 100; it takes the whole wall, so no other opening beside it)"
+  },
+  {
+   "style": "bay",
+   "weight": {
+    "kitchen": 0,
+    "hallway": 0,
+    "default": 1
+   },
+   "say": "bay window (three angled panes projecting 500 mm outside, a seat at the sill; 2400 x 1500 mm, sill 450; it takes the wall's middle, no other opening beside it)"
   },
   {
    "style": "french",
@@ -979,7 +996,7 @@
    "say": "sliding glass doors to the outside (two panels, one half slid, 2400 x 2250 mm; keep the floor in front clear)"
   }
  ],
- "windowsNote": "roll gives each window a style from `windows`; at most one wall, french or slider per area, and a window with sash 'fixed' (over a sink) stays a two-sash window. Style goes in the opening: { kind: 'window', style: 'picture' | 'wall', x } or { kind: 'door', style: 'french' | 'slider', x }; width, height and sill default from the style (opening.js STYLE). A glass door or wall of glass counts as an opening for the 1200 mm of clear wall rule, and its sheet of daylight lights the area.",
+ "windowsNote": "roll gives each window a style from `windows`; at most one wall, bay, french or slider per area, and a window with sash 'fixed' (over a sink) stays a two-sash window. Style goes in the opening: { kind: 'window', style: 'picture' | 'pair' | 'wall' | 'bay', x } or { kind: 'door', style: 'french' | 'slider', x }; width, height and sill default from the style (opening.js STYLE). A glass door or wall of glass counts as an opening for the 1200 mm of clear wall rule, and its sheet of daylight lights the area.",
  "boardPlaces": [
   {
    "id": "flat with a loaf",

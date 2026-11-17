@@ -128,7 +128,7 @@ const issues = await page.evaluate(() => {
     let x = 0; for (const m of sc(id).params.modules) { if (m.kind === 'sink') { const c = new T.Vector3(x + m.w / 2, 0, -(sc(id).params.depth || 600) + 50).applyMatrix4(o.matrixWorld); things.push({ id: `${id}'s tap`, box: new T.Box3(new T.Vector3(c.x - 25, 900, c.z - 25), new T.Vector3(c.x + 25, 1380, c.z + 25)) }); } x += m.w; }
   }
   for (const W of home.walls) for (const b of W.built) {
-    if (b.op.kind !== 'window' || b.op.sash === 'fixed' || b.op.style === 'picture' || b.op.style === 'wall') continue;
+    if (b.op.kind !== 'window' || b.op.sash === 'fixed' || ['picture', 'wall', 'bay'].includes(b.op.style)) continue;
     const xc = W.len - b.op.at, w = b.op.width, y0 = b.op.sill ?? 1000, zone = { x0: xc - w / 2, x1: xc + w / 2, z0: 0, z1: w / 2 + 60, y0, y1: y0 + (b.op.height ?? 1100) };
     for (const t of things) { if (sc(t.id.split("'")[0])?.mount === 'wall' && false) continue; if (hit3(toLocal(W, t.box), zone)) out.push({ rule: 'sash', what: `${t.id} stands in the sweep of the window on ${W.id || W.i} at ${b.op.at} (make that window fixed or move it)` }); }
   }
