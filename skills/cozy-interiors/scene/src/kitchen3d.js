@@ -195,7 +195,7 @@ export function createKit() {
     // Fill a geometry and outline it, at (x, y, z) — the position of the geometry's own origin.
     solid(geometry, x = 0, y = 0, z = 0, opts = {}) {
       const m = new THREE.Mesh(geometry, opts.leaf ? leafFill : opts.soil ? soilFill : opts.linen ? linenFill : opts.grey ? greyFill : opts.tone === 'accent' ? accentFill : fill);   // soil: true draws earth in warm grey-brown; leaf: true draws foliage in the sage fill with a green outline
-      m.position.set(x, y, z); if (opts.through) m.userData.through = true;   // through: this part may pass through others of its asset (a trolley post through its trays); scene/geom/parts.mjs
+      m.position.set(x, y, z); if (opts.through) m.userData.through = opts.through;   // through: this part may pass through others of its asset (a trolley post through its trays); scene/geom/parts.mjs
       return kit.outline(m, opts);
     },
     // A box by its left-bottom-front corner and size; it reaches back (-z) by d.
@@ -216,7 +216,7 @@ export function createKit() {
     // A cylinder standing on (x, y, z), axis up; `axis: 'z'` lays it front-to-back, 'x' left-to-right
     // (then (x, y, z) is the centre of its first end).
     // content(obj): mark a thing as a separate body inside an asset (a magazine, a log, a plate, a hat): scene/selftest.mjs checks that it does not pass through anything else of the asset. Parts left unmarked are one rigid assembly (joinery may overlap).
-    through(obj) { obj.traverse((m) => { if (m.isMesh) m.userData.through = true; }); return obj; },   // through(obj): every part of obj may pass through other parts of its asset (a garment on a hanger, a pen in a pot); scene/geom/parts.mjs
+    through(obj, held) { obj.traverse((m) => { if (m.isMesh) m.userData.through = held ? 'held' : true; }); return obj; },   // through(obj, held): every part of obj may pass through other parts of its asset; held ('held'): it stands in a holder (a pen in a pot, an umbrella in a stand) and may not poke out below the asset's lowest part (a garment on a hanger, a pen in a pot); scene/geom/parts.mjs
     content(obj) { obj.traverse((m) => { if (m.isMesh) m.userData.content = true; }); return obj; },
     cyl(x, y, z, r, h, opts = {}) {
       const g = new THREE.CylinderGeometry(opts.rTop ?? r, r, h, opts.seg ?? 32, 1, !!opts.open);   // open: no end caps (a pipe whose top fades out)

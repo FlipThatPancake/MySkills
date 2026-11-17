@@ -8,11 +8,12 @@ import { loadScene } from './load.mjs';
 
 export const PARTS = { depth: 20, slack: 1 };
 
-export async function checkParts(scene, { src, depth = PARTS.depth, all = false } = {}) {
+export async function checkParts(scene, { src, depth = PARTS.depth, all = false, declared: showDeclared = false } = {}) {
   const L = scene.objects ? scene : await loadScene(scene, { src }), W = new RAPIER.World({ x: 0, y: 0, z: 0 }), find = [];
   for (const o of L.objects) {
     const P = []; o.parts.forEach((p, k) => { if (p.kind === 'flat') return; const c = [(p.box.mn[0] + p.box.mx[0]) / 2, (p.box.mn[1] + p.box.mx[1]) / 2, (p.box.mn[2] + p.box.mx[2]) / 2], s = partDesc(p, c); if (!s.d) return; const b = W.createRigidBody(RAPIER.RigidBodyDesc.fixed().setTranslation(c[0] * M, c[1] * M, c[2] * M)); P.push({ k, p, col: W.createCollider(s.d, b), mesh: s.how === 'mesh' }); });
     let worst = null; const every = [];
+    const low = Math.min(...o.parts.filter((q) => q.through !== 'held' && q.kind !== 'flat').map((q) => q.box.mn[1]));   // a declared pass-through may cross what holds it, never poke out below the asset's lowest solid part (a pen through the pot's floor)
     for (let i = 0; i < P.length; i++) for (let j = i + 1; j < P.length; j++) {
       const A = P[i], B = P[j], a = A.p.box, b = B.p.box;
       if (a.mn[0] > b.mx[0] - depth || a.mx[0] < b.mn[0] + depth || a.mn[1] > b.mx[1] - depth || a.mx[1] < b.mn[1] + depth || a.mn[2] > b.mx[2] - depth || a.mx[2] < b.mn[2] + depth) continue;
@@ -21,7 +22,7 @@ export async function checkParts(scene, { src, depth = PARTS.depth, all = false 
       const n = r.normal1, proj = (t) => { let lo = Infinity, hi = -Infinity; for (let q = 0; q < t.length; q += 3) { const v = t[q] * n.x + t[q + 1] * n.y + t[q + 2] * n.z; if (v < lo) lo = v; if (v > hi) hi = v; } return [lo, hi]; };
       const [al, ah] = proj(A.p.tris), [bl, bh] = proj(B.p.tris), E = PARTS.slack, pierce = (al < bl - E && ah > bh + E) || (bl < al - E && bh > ah + E);
       const content = A.p.content || B.p.content, declared = A.p.through || B.p.through;
-      if (declared && !content) continue; if (!pierce && !content) continue;
+      if (declared && !content && !showDeclared && ![A, B].some((x) => x.p.through === 'held' && x.p.box.mn[1] < low - 3)) continue; if (!pierce && !content) continue;
       const o0 = [Math.min(...o.parts.map((q) => q.box.mn[0])), Math.min(...o.parts.map((q) => q.box.mn[1])), Math.min(...o.parts.map((q) => q.box.mn[2]))]; every.push({ d: Math.round(d), parts: [A.k, B.k], types: [A.p.type, B.p.type], boxes: [A, B].map((x) => [...x.p.box.mn.map((v, i) => Math.round(v - o0[i])), ...x.p.box.mx.map((v, i) => Math.round(v - o0[i]))].join(',')), content });
       if (!worst || d > worst.depth) worst = { depth: Math.round(d), parts: [A.k, B.k], boxes: [A, B].map((x) => [...x.p.box.mn, ...x.p.box.mx].map(Math.round)), types: [A.p.type, B.p.type], content, pierce };
     }

@@ -34,8 +34,8 @@ export function umbrellaStand(kit, { h = 520 } = {}) {   // a tall round bin hol
     u.add(kit.lines([[34 * 0.97, c, 0], [8, 0, 0], [-34 * 0.97, c, 0], [-8, 0, 0]], 'lo'));   // two seams down the furled canopy
     u.position.set(x, h * 0.45, z); u.rotation.set(0, spin, tilt); return u;
   };
-  g.add(kit.through(umbrella(-40, 10, 0.16, 760, 0))); g.add(kit.through(umbrella(45, -20, -0.1, 700, 0)));   // standing in the bin
-  g.add(kit.through(bar(kit, [0, h * 0.5, 50], [30, h * 0.5 + 780, 40], 12, lo)));   // the umbrellas and the stick stand in the hollow bin, so they join its body
+  g.add(kit.through(umbrella(-40, 10, 0.16, 760, 0), true)); g.add(kit.through(umbrella(45, -20, -0.1, 700, 0), true));   // standing in the bin
+  g.add(kit.through(bar(kit, [0, h * 0.5, 50], [30, h * 0.5 + 780, 40], 12, lo), true));   // the umbrellas and the stick stand in the hollow bin, so they join its body
   return kit.merge(g);
 }
 import { shoe } from './softpieces.js';

@@ -113,7 +113,7 @@ export function deskOrganiser(kit, { form = 'cups', n = 3, tall = 1, pens = 3, t
   const cnt = Math.max(2, Math.min(4, n)), base = [[44, 110], [38, 140], [50, 90], [40, 120]].slice(0, cnt);
   base.forEach(([r, h0], i) => { const h = h0 * tall, x = (i - (cnt - 1) / 2) * 112, tn = i % 2 ? lt : {};
     if (form === 'pots') { g.add(Rb(x, 0, 0, r * 1.9, h, r * 1.9, 6, tn)); g.add(Rb(x, h - 3, 0, r * 1.5, 3, r * 1.5, 2, { linen: true })); } else { g.add(kit.cyl(x, 0, 0, r, h, { rTop: r * 1.05, seg: 24, ...(i % 2 ? lt : {}) })); g.add(kit.cyl(x, h - 3, 0, r * 0.82, 3, { seg: 20, linen: true })); }
-    for (let k = 0; k < Math.max(1, Math.round(pens * (0.6 + 0.3 * (i % 2)))); k++) { const a = R() * 6.28, tl = 0.08 + R() * 0.2, L = 150 + R() * 40; const out = 50 + R() * 40, lat = (r - 10) * 0.3 + out * tl; g.add(rod(kit, [x + Math.cos(a) * 6, h - 110, Math.sin(a) * 6], [x + Math.cos(a) * lat, h + out, Math.sin(a) * lat], 4.5, 4.5, 'lo', true)); } });
+    for (let k = 0; k < Math.max(1, Math.round(pens * (0.6 + 0.3 * (i % 2)))); k++) { const a = R() * 6.28, tl = 0.08 + R() * 0.2, L = 150 + R() * 40; const out = 50 + R() * 40, lat = (r - 10) * 0.3 + out * tl; g.add(rod(kit, [x + Math.cos(a) * 6, Math.max(6, h - 110), Math.sin(a) * 6], [x + Math.cos(a) * lat, h + out, Math.sin(a) * lat], 4.5, 4.5, 'lo', 'held')); } });
   g.add(Rb(0, 0, 90, cnt * 112 - 12, 10, 70, 3, lo));   // a little tray in front
   return kit.merge(g);
 }

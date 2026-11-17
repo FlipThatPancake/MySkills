@@ -61,7 +61,7 @@ export function floorBooks(kit, { n = 6, form = 'stack', topper = 'none', seed =
   const pile = (cx, cz, k, wob) => { let y = 0; for (let i = 0; i < k; i++) { const w = 190 + R() * 110, d = 130 + R() * 90, hh = 24 + R() * 30; g.add(book(kit, cx + (R() - 0.5) * wob, y, cz + (R() - 0.5) * wob * 0.5, w, hh, d, (R() - 0.5) * 0.4, tones[i % 2])); y += hh; } return y; };
   let top;
   if (form === 'pair') { top = Math.max(pile(-130, 0, Math.ceil(n / 2), 24), 0); pile(150, 20, Math.floor(n / 2), 28); }
-  else if (form === 'tower') { top = pile(0, 0, n, 50); const lb = book(kit, 150, 0, 0, 230, 34, 160, 0, 'mid'); lb.rotation.z = 0.5; lb.position.set(190, 40, 0); kit.through(lb); g.add(lb); }
+  else if (form === 'tower') { top = pile(0, 0, n, 50); const lb = book(kit, 150, 0, 0, 230, 34, 160, 0, 'mid'); lb.rotation.z = 0.5; lb.position.set(190, 56, 0); kit.through(lb); g.add(lb); }
   else top = pile(0, 0, n, 26);
   if (topper === 'cup') { const T = kit.THREE; g.add(kit.cyl(10, top, 0, 38, 82, { rTop: 42, seg: 20, ...lo })); g.add(kit.cyl(10, top + 80, 0, 32, 3, { seg: 18, linen: true })); g.add(rod(kit, [48, top + 62, 0], [72, top + 40, 0], 5, 5, 'lo')); }
   else if (topper === 'glasses') { const T = kit.THREE, gl = kit.group(); for (const s of [-1, 1]) { const rg = kit.solid(new T.TorusGeometry(24, 2.2, 6, 20), s * 32, 0, 0, { smooth: true }); rg.rotation.x = Math.PI / 2; gl.add(rg); } gl.add(rod(kit, [-8, 0, 0], [8, 0, 0], 2, 2, 'lo')); gl.position.set(0, top + 3, 10); gl.rotation.y = 0.5; g.add(gl); }
