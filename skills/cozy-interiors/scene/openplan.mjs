@@ -92,3 +92,24 @@ export function seamLine(H, s) {
   const b = H.list.find((q) => q.id === s.b), x = b.rect[0] + s.share / 2;
   return { a: s.a, b: s.b, layout: s.layout, share: s.share, p0: b.P([x, 0]), p1: b.P([x, b.rect[3]]), normal: b.P([1, 0]).map((v, i) => v - b.O[i]), kinds: s.kinds || [] };
 }
+
+// ---- floor change: H.floorZones({ kitchen: 'tiles', dining: 'boards', living: 'boards' }) gives areas of a group their own floor style (tiles in the kitchen, boards beyond). The floor then changes along the seam's midline in one straight, clean line with a divider drawn on it.
+// Do it for areas that are joined; the zones are worked out at write time. A floor change belongs with a furniture separator (check-home: it stands within 500 mm of the line).
+export function zoneList(H) {
+  if (!H.zoneStyles) return null;
+  const M = 1500, out = [];
+  for (const G of H.groups || []) for (const id of G.areas) {
+    const st = H.zoneStyles[id]; if (!st) continue;
+    const a = H.list.find((q) => q.id === id), b = a.worldBounds(), r = [b.x0 - M, b.z0 - M, b.x1 + M, b.z1 + M];   // [x0, z0, x1, z1]
+    const edges = [];
+    for (const s of G.seams.map((q) => seamLine(H, q))) {
+      if (s.a !== id && s.b !== id) continue;
+      const n = s.normal, ax = Math.abs(n[0]) > 0.5 ? 0 : 1, sg = Math.sign(n[ax]), c = s.p0[ax], other = H.zoneStyles[s.a === id ? s.b : s.a];
+      const far = s.a === id;   // a's far edge along the normal, b's near edge
+      if (ax === 0) { if (far === (sg > 0)) r[2] = c; else r[0] = c; } else { if (far === (sg > 0)) r[3] = c; else r[1] = c; }
+      if (other && other !== st && s.b === id) edges.push([s.p0, s.p1]);   // the divider is drawn once, by the later area's zone
+    }
+    out.push({ area: id, style: st, rect: r.map((v) => Math.round(v)), ...(edges.length ? { edge: edges[0] } : {}) });
+  }
+  return out;
+}

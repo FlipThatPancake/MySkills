@@ -30,9 +30,9 @@ export async function bakeLight({ THREE: T, renderer, scene, kit, walls, areas, 
   const quad = new T.Mesh(new T.PlaneGeometry(2, 2)), ortho_cam = new T.OrthographicCamera(-1, 1, 1, -1, 0, 1), qs = new T.Scene(); qs.add(quad);
   const accMat = new T.ShaderMaterial({
     blending: T.CustomBlending, blendEquation: T.AddEquation, blendSrc: T.OneFactor, blendDst: T.OneFactor, transparent: true, depthTest: false, depthWrite: false,
-    uniforms: { uO: { value: new T.Vector3() }, uU: { value: new T.Vector3() }, uV: { value: new T.Vector3() }, uN: { value: new T.Vector3() }, uRef: { value: new T.Vector3() }, uAxis: { value: new T.Vector3() }, uOrtho: { value: 0 }, uDepth: { value: null }, uVP: { value: new T.Matrix4() }, uClipOut: { value: 0 }, uWallR: { value: 0 }, uWA: { value: Array.from({ length: 4 }, () => new T.Vector4()) }, uWB: { value: Array.from({ length: 4 }, () => new T.Vector4()) }, uNW: { value: 0 } },
+    uniforms: { uO: { value: new T.Vector3() }, uU: { value: new T.Vector3() }, uV: { value: new T.Vector3() }, uN: { value: new T.Vector3() }, uRef: { value: new T.Vector3() }, uAxis: { value: new T.Vector3() }, uOrtho: { value: 0 }, uDepth: { value: null }, uVP: { value: new T.Matrix4() }, uClipOut: { value: 0 }, uWallR: { value: 0 }, uWA: { value: Array.from({ length: 8 }, () => new T.Vector4()) }, uWB: { value: Array.from({ length: 8 }, () => new T.Vector4()) }, uNW: { value: 0 } },
     vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }',
-    fragmentShader: `uniform vec3 uO, uU, uV, uN, uRef, uAxis; uniform float uOrtho, uClipOut; uniform sampler2D uDepth; uniform mat4 uVP; uniform float uWallR, uNW; uniform vec4 uWA[4], uWB[4]; varying vec2 vUv;
+    fragmentShader: `uniform vec3 uO, uU, uV, uN, uRef, uAxis; uniform float uOrtho, uClipOut; uniform sampler2D uDepth; uniform mat4 uVP; uniform float uWallR, uNW; uniform vec4 uWA[8], uWB[8]; varying vec2 vUv;
       void main() {
         vec3 P = uO + uU * vUv.x + uV * vUv.y + uN * 20.0;   // clear of a rug's 7 mm and of the wall's own face
         vec3 L = uOrtho > 0.5 ? -uAxis : normalize(uRef - P);
@@ -45,7 +45,7 @@ export async function bakeLight({ THREE: T, renderer, scene, kit, walls, areas, 
           if (dd > bias) {
             vec3 B = P + L * dd;
             if (uWallR > 0.5) { if (dot(B - uO, uN) < 340.0) { vis = 1.0; near = 0.0; } }   // what hangs on a wall (a shelf, a frame) leaves no blob on it: only a thin line from its own thickness
-            else if (uOrtho > 0.5) for (int i = 0; i < 4; i++) if (float(i) < uNW) { vec2 rel = B.xz - uWA[i].xy; float al = dot(rel, uWA[i].zw), di = dot(rel, uWB[i].xy); if (abs(di) < 30.0 && al > -30.0 && al < uWB[i].z + 30.0) near = 0.0; }   // the floor takes no contact shade from the wall's own face
+            else if (uOrtho > 0.5) for (int i = 0; i < 8; i++) if (float(i) < uNW) { vec2 rel = B.xz - uWA[i].xy; float al = dot(rel, uWA[i].zw), di = dot(rel, uWB[i].xy); if (abs(di) < 30.0 && al > -30.0 && al < uWB[i].z + 30.0) near = 0.0; }   // the floor takes no contact shade from the wall's own face
           } }
         gl_FragColor = vec4(vis * c, c, near * c, 1.0);
       }`,
@@ -86,14 +86,15 @@ export async function bakeLight({ THREE: T, renderer, scene, kit, walls, areas, 
     quad.material = accMat; renderer.setRenderTarget(rt); renderer.render(qs, ortho_cam);
   };
   for (const A of areas) {
-    const b = A.bounds, ws = walls.filter((w) => w.id && w.id.startsWith(A.id + '-')), pad = 500, H = Math.min(2500, (b.top || 2500));
+    const b = A.bounds, ws = walls.filter((w) => w.id && (A.ids || [A.id]).some((i) => w.id.startsWith(i + '-'))),   // an open-plan group is one floor sheet and one light: A.ids lists its areas
+     pad = 500, H = Math.min(2500, (b.top || 2500));
     const cx = (b.x0 + b.x1) / 2, cz = (b.z0 + b.z1) / 2, bw = b.x1 - b.x0 + 2 * pad, bd = b.z1 - b.z0 + 2 * pad, px = 0.08 * quality;
     const recs = [{ kind: 'floor', O: new T.Vector3(b.x0 - pad, 0, b.z1 + pad), U: new T.Vector3(bw, 0, 0), V: new T.Vector3(0, 0, -bd), N: new T.Vector3(0, 1, 0), w: bw, h: bd }];
     for (const W of ws) {
       const nd = W.node, o = nd.localToWorld(new T.Vector3(0, 0, 0)), ux = nd.localToWorld(new T.Vector3(W.len, 0, 0)), vy = nd.localToWorld(new T.Vector3(0, H, 0)), nz = nd.localToWorld(new T.Vector3(0, 0, 1)).sub(o);
       recs.push({ kind: 'wall', W, O: o, U: ux.sub(o), V: vy.sub(o), N: nz.normalize(), w: W.len, h: H });
     }
-    wallsOf = recs.filter((r) => r.kind === 'wall').slice(0, 4);
+    wallsOf = recs.filter((r) => r.kind === 'wall').slice(0, 8);
     for (const r of recs) {
       const rw = Math.max(8, Math.min(1024, Math.round(r.w * px))), rh = Math.max(8, Math.min(1024, Math.round(r.h * px)));
       r.win = new T.WebGLRenderTarget(rw, rh, { ...rtOpts, depthBuffer: false }); r.sky = new T.WebGLRenderTarget(rw, rh, { ...rtOpts, depthBuffer: false });

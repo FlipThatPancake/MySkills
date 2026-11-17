@@ -394,6 +394,7 @@ for (const i of areaIssues) issues.push(i);
   try { execSync(`node ${join(here, 'physics.mjs')} ${html} --json ${tmp}`, { stdio: 'ignore', timeout: 280000 }); for (const i of JSON.parse(readFileSync(tmp, 'utf8')).out) issues.push({ rule: i.rule === 'floating' ? 'floating' : i.rule === 'penetrates' ? 'penetrates' : i.rule, what: i.text }); unlinkSync(tmp); } catch (e) { issues.push({ rule: 'physics', what: 'physics.mjs did not run: ' + String(e.message).slice(0, 120) }); }
 }
 { const { openPlanIssues } = await import('./check-openplan.mjs'); for (const i of await openPlanIssues(page, scene, { quick: QUICK })) issues.push(i); }   // open-plan homes (scene.groups): layout, separators, glimpse, glide
+{ const { motionIssues } = await import('./check-motion.mjs'); for (const i of await motionIssues(page, scene)) issues.push(i); }   // living things (src/motion): rolled kinds, open-window rule, nothing through furniture or walls in 240 s of simulated motion
 await browser.close();
 for (const e of errors) console.log('PAGE ERROR', e);
 for (const i of issues) console.log(`[${i.rule}] ${i.what}`);
