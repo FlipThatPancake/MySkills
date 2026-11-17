@@ -37,7 +37,8 @@ export function windowSeat(kit, { w = 1500, d = 520, h = 440, form = 'storage', 
   if (throwOn === 'yes') {   // a folded throw across the cushion beside an end cushion, one corner falling over the front edge; the home's accent when the roll gives it
     const s = ends.length === 2 ? (R() < 0.5 ? -1 : 1) : ends.length ? -ends[0] : 1, tx = s * (cw2 / 2 - 62 - 50 - 200), zf = 14 + cd / 2, tn = { tone: throwTone };
     const t = kit.group(); [[400, 34, cd - 70, 0], [360, 30, cd - 110, 12]].forEach(([tw, th, td, dx], i) => { const l = softBox(kit, tw, th, td, { r: 15, bulge: 6, ...tn }); l.position.set(dx, i ? 34 + 15 - 4 : 17, -8); t.add(l); });
-    const tg = kit.group(), tc = softBox(kit, 290, 26, 115, { r: 12, bulge: 5, ...tn }); tc.position.set(0, 0, 58); tg.add(tc); tg.position.set(-20, 38, zf - 14 - 34); tg.rotation.x = 1.2; tg.rotation.z = 0.06; t.add(tg);
+    const br = softBox(kit, 290, 30, 130, { r: 12, bulge: 4, ...tn }); br.position.set(-20, 45, 190); t.add(br);   // the corner crosses the cushion's front edge and drops down its face
+    const dr = softBox(kit, 290, 120, 24, { r: 11, bulge: 4, ...tn }); dr.position.set(-20, 0, 252); dr.rotation.x = -0.04; t.add(dr);
     t.position.set(tx, cy + cuH, 14); g.add(t);
   }
   return kit.merge(g);
