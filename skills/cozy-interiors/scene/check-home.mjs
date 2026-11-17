@@ -148,7 +148,7 @@ const issues = await page.evaluate(() => {
   }
   // 4. a door or arch keeps a path 1000 mm wide and 1500 mm deep straight ahead (floor pieces; rugs and lamps do not count)
   for (const W of home.walls) for (const b of W.built) {
-    if (b.op.kind === 'window') continue;
+    if (b.op.kind === 'window' || b.op.sill > 0 || /pass$/.test(b.op.style || '')) continue;
     const xc = W.len - b.op.at, zone = { x0: xc - 500, x1: xc + 500, z0: 0, z1: b.op.kind === 'arch' ? 2400 : 1500, y0: 0, y1: 1900 };
     for (const id of Object.keys(objs)) { if (sc(id).mount !== 'floor' || ['rug'].includes(sc(id).asset)) continue; if (hit3(toLocal(W, boxes[id]), zone, 20)) out.push({ rule: 'path', what: `${id} blocks the path in front of the ${b.op.kind} on ${W.id || W.i} at ${b.op.at}` }); }
   }

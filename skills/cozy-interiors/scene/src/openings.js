@@ -8,6 +8,8 @@ import { canvasOf, sheet, glow } from './sheet.js';
 const rad = (d) => d * Math.PI / 180;
 export const DEFAULTS = { window: { width: 1200, height: 1100, sill: 1000 }, door: { width: 900, height: 2050, sill: 0 }, arch: { width: 1100, height: 2250, sill: 0 } };
 
+// the passages beyond a plain round arch: default sizes (mm); pass and widepass sit on a counter (sill 950)
+export const STYLE = { cased: { width: 1000, height: 2150 }, pass: { width: 1100, height: 1050 }, widepass: { width: 2000, height: 1050 }, portal: { width: 1300, height: 2300 }, pocket: { width: 900, height: 2050 } };
 const archPts = (w, h, inset = 0, n = 18) => {   // rectangle with a half-round top: [z, y] from the floor
   const r = w / 2 - inset, top = h - inset - r, pts = [[-r, 0], [r, 0]];
   for (let i = 0; i <= n; i++) { const a = Math.PI * i / n; pts.push([r * Math.cos(a), top + r * Math.sin(a)]); }
@@ -16,7 +18,7 @@ const archPts = (w, h, inset = 0, n = 18) => {   // rectangle with a half-round 
 const rectPts = (z0, y0, z1, y1) => [[z0, y0], [z1, y0], [z1, y1], [z0, y1]];
 
 export function opening(kit, op, vis = null) {
-  const T = kit.THREE, d = DEFAULTS[op.kind], w = op.width ?? d.width, h = op.height ?? d.height, sill = op.sill ?? d.sill;
+  const T = kit.THREE, d = DEFAULTS[op.kind], SD = op.kind === 'arch' ? STYLE[op.style] || {} : {}, w = op.width ?? SD.width ?? d.width, h = op.height ?? SD.height ?? d.height, sill = op.sill ?? d.sill;
   const g = kit.group(), mid = { tone: 'mid' }, lo = { tone: 'lo' };
   // A flat outline [z, y] (with optional holes) extruded `len` mm along x from x0. Shape x is -z; a quarter turn about y puts it in world z.
   const ext = (pts, holes, x0, len, opts = mid) => {
@@ -102,15 +104,30 @@ export function opening(kit, op, vis = null) {
     pivot.userData.open = { kind: 'door', dir: -sgn, max: 85, v: ajar / 85, target: ajar / 85, states: [ajar / 85, 1, 0], i: 0 };
     if (op.to) { pivot.userData.go = op.to; delete pivot.userData.open; hit = hitPlane(); g.add(hit); } else openables.push(pivot);
     g.add(pivot);
-  } else {   // arch
-    const DEPTH = op.depth ?? 200, ring = 40;
-    hole = archPts(w, h);
-    beyond(DEPTH, w, h);
+  } else {   // arch (op.style: round (default) | cased | pass | widepass | portal | pocket)
+    const st = op.style || 'round', rectStyle = st !== 'round' && st !== 'portal' || op.shape === 'rect';
+    const DEPTH = op.depth ?? (st === 'portal' ? 420 : 200), ring = 40, S0 = (st === 'pass' || st === 'widepass') ? (op.sill ?? 950) : 0, H1 = S0 + h;
+    hole = rectStyle ? rectPts(Z0, S0, Z1, H1) : archPts(w, h);
     if (op.to) { hit = hitPlane(); g.add(hit); }
-    if (DEPTH > 0) g.add(ext(archPts(w, h), [archPts(w, h, 6)], -DEPTH, DEPTH));   // a deep reveal with a 6 mm lining (depth 0: the casing alone, where the other room's arch has the reveal)
-    // a slim architrave round the arch, 10 mm proud: its outer outline is the arch grown by `ring`
-    const R = w / 2 + ring, r = w / 2, arc = (rr, top) => Array.from({ length: 19 }, (_, i) => { const a = Math.PI * (1 - i / 18); return [rr * Math.cos(a), top + rr * Math.sin(a)]; });
-    g.add(ext([[-R, 0], ...arc(R, h + ring - R), [R, 0], [r, 0], ...arc(r, h - r).reverse(), [-r, 0]], null, 0, 10));
+    const shape = (inset) => rectStyle ? rectPts(Z0 + inset, S0 + (S0 ? inset : 0), Z1 - inset, H1 - inset) : archPts(w, h, inset);
+    if (DEPTH > 0) g.add(ext(shape(0), [shape(6)], -DEPTH, DEPTH));   // a deep reveal with a 6 mm lining (depth 0: the casing alone, where the other room's arch has the reveal)
+    // the reveal reads darker: close hatch lines across its sides and head
+    { const pts = [], n = Math.round(DEPTH / 18), jam = (z) => { for (let i = 1; i < n; i++) { const x = -DEPTH + i * DEPTH / n; pts.push([x, S0 + 20, z], [x, Math.min(H1 - (rectStyle ? 20 : w / 2), 2000), z]); } };
+      jam(Z0 + 7); jam(Z1 - 7); if (rectStyle) for (let i = 1; i < n; i++) { const x = -DEPTH + i * DEPTH / n; pts.push([x, H1 - 7, Z0 + 20], [x, H1 - 7, Z1 - 20]); } g.add(kit.lines(pts, 'mid')); }
+    if (rectStyle) {   // a casing round a square-headed opening: 50 mm wide, 12 mm proud (a pass-through has it on four sides)
+      const CW = st === 'cased' || st === 'pocket' ? 60 : 45;
+      g.add(ext([[Z0 - CW, S0 ? S0 - CW : 0], [Z0 - CW, H1 + CW], [Z1 + CW, H1 + CW], [Z1 + CW, S0 ? S0 - CW : 0], [Z1, S0 ? S0 - CW : 0], [Z1, S0 ? S0 : 0], [Z1, H1], [Z0, H1], [Z0, S0 ? S0 : 0], [Z0, S0 ? S0 - CW : 0]], null, 0, 12));
+      if (S0) { g.add(kit.rbox(-90, S0 - 40, (w + 120) / 2, 190, 40, w + 120, 6)); }   // the counter ledge, 90 mm out each side
+    } else {
+      const R = w / 2 + ring, r = w / 2, arc = (rr, top) => Array.from({ length: 19 }, (_, i) => { const a = Math.PI * (1 - i / 18); return [rr * Math.cos(a), top + rr * Math.sin(a)]; });
+      g.add(ext([[-R, 0], ...arc(R, h + ring - R), [R, 0], [r, 0], ...arc(r, h - r).reverse(), [-r, 0]], null, 0, 10));   // a slim architrave, 10 mm proud
+    }
+    if (st === 'portal') { g.add(kit.rbox(-DEPTH, 0, (w + 160) / 2, DEPTH + 90, 45, w + 160, 6));   // a threshold step through the deep reveal, running 90 mm out into the room
+      g.add(kit.lines([[90, 46, Z0 - 80], [90, 46, Z1 + 80]], 'mid')); }
+    if (st === 'pocket') {   // a door half slid into the wall: its leaf shows over one half, with a flush pull
+      const lw = w / 2 + 20, z0 = op.slid === 'l' ? Z0 - 10 : Z1 - lw + 10; g.add(kit.rbox(-3, 0, z0 + lw, 22, h, lw, 4, { tone: 'lo' }));
+      g.add(kit.cyl(20, 1000, op.slid === 'l' ? Z0 + lw - 70 : Z1 - lw + 70, 40, 10, { axis: 'x', seg: 20, tone: 'mid' }));
+      g.add(kit.lines([[19, 40, z0], [19, h - 40, z0], [19, h - 40, z0 + lw], [19, 40, z0 + lw]], 'lo')); }
   }
   return { group: g, hole, width: w, height: h, sill: Y0, openables, hit, kind: op.kind };
 }

@@ -68,7 +68,7 @@ export function buildHome(kit, home, registry, areas = []) {
       b.group.rotation.y = -Math.PI / 2; b.group.position.set(xc, 0, 0);
       W.frames.add(b.group); W.built.push({ op, group: b.group, openables: b.openables }); openables.push(...b.openables); 
       W.holes.push(b.hole.map(([z, y]) => [xc - z, y]));
-      if (op.kind !== 'window') W.through.push([xc - b.width / 2, xc + b.width / 2]);
+      if (op.kind !== 'window' && !(op.sill > 0 || /pass$/.test(op.style || ''))) W.through.push([xc - b.width / 2, xc + b.width / 2]);
     }
     const square = (o) => Math.abs(o.d[0] * W.d[0] + o.d[1] * W.d[1]) < 0.9;   // a corner, square or wide (120 degrees); two walls in a line are no corner
     W.joinedTo = walls_.some((o) => o !== W && near(o.from, W.to) && square(o)); W.joinedFrom = walls_.some((o) => o !== W && near(o.to, W.from) && square(o));

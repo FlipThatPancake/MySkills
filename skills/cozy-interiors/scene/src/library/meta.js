@@ -10,7 +10,7 @@ export const ASSETS = {
   hob: A('front-left', [900, 600, 20], 'on', '-', { y: 0, slot: 'hob', note: 'sits in the worktop over a hob module: y 0' }),
   hood: A('front-left', [900, 500, 900], 'wall', '-', { y: 0, slot: 'hob', note: 'over a hob module: y 0' }),
   pan: A('centre', [260, 260, 60], 'on', '-', { y: 940, slot: 'hob' }),
-  cuttingBoard: A('centre', [300, 40, 400], 'on', '-', { y: 904, note: 'leans against the wall' }),
+  cuttingBoard: A('centre', [300, 40, 400], 'on', 'form leaning|flat|hanging|stacked (roll.board says which)', { y: 904, note: 'leaning: against the wall at y 904. flat or stacked: lies on a worktop or the table (460 x 300 on the top: put it with y at the surface). hanging: upright on a wall rail or hook, y 1100' }),
   fruitBowl: A('centre', [300, 300, 120], 'on', '-', { y: 'top' }),
   plant: A('centre', [120, 120, 300], 'on', '-', { y: 'top', note: 'a pot on a surface; for the floor use floorPlant' }),
   floorPlant: A('centre', [560, 560, 950], 'floor', 'h 950, seed'),

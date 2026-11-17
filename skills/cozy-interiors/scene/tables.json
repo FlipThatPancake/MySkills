@@ -904,5 +904,56 @@
    "hex": "#d9a85c"
   }
  ],
- "accentNote": "One warm accent per home, from terracotta, ochre, rust, sage, clay rose or honey: its hex goes to new Home({ accent }). Each area names the textile that carries it (accentOn); set tone: 'accent' on that piece (cushion, foldedThrow, cloth, tablecloth, teaTowel, benchCushion, floorCushion, runner, tableRunner, duvetCloth)."
+ "accentNote": "One warm accent per home, from terracotta, ochre, rust, sage, clay rose or honey: its hex goes to new Home({ accent }). Each area names the textile that carries it (accentOn); set tone: 'accent' on that piece (cushion, foldedThrow, cloth, tablecloth, teaTowel, benchCushion, floorCushion, runner, tableRunner, duvetCloth).",
+ "passages": [
+  {
+   "style": "round",
+   "say": "round arch"
+  },
+  {
+   "style": "cased",
+   "say": "cased opening (square head, casing)"
+  },
+  {
+   "style": "pass",
+   "say": "pass-through (a counter-height opening with a ledge; not walked through: a window-like hatch)",
+   "counter": true
+  },
+  {
+   "style": "widepass",
+   "say": "wide pass-through (a half-wall or counter opening, 2000 mm wide)",
+   "counter": true
+  },
+  {
+   "style": "portal",
+   "say": "portal (deep reveal, a step in the threshold)"
+  },
+  {
+   "style": "pocket",
+   "say": "pocket-door opening (door half slid into the wall)"
+  }
+ ],
+ "passageNote": "roll gives each arch an opening style from `passages`; a counter style (pass, widepass) sits on a wall that has a counter or sideboard in front of it and is not a way through, so give it no `to`, or use the arch/cased kind for a connection. Style goes in the opening: { kind: 'arch', style, x }.",
+ "boardPlaces": [
+  {
+   "id": "flat with a loaf",
+   "say": "flat on the worktop with a loaf, knife and a few vegetables on it"
+  },
+  {
+   "id": "table",
+   "say": "on the breakfast table, with bread or cheese on it"
+  },
+  {
+   "id": "hanging",
+   "say": "hanging from a rail or hook by its hole"
+  },
+  {
+   "id": "stacked",
+   "say": "two boards stacked on the worktop"
+  },
+  {
+   "id": "leaning",
+   "say": "leaning against the wall (the old way, at most one home in five)"
+  }
+ ]
 }
