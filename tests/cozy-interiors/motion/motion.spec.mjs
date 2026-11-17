@@ -25,7 +25,7 @@ T.on('jug', { y: 757, dx: -180 }); T.on('candlesticks', { y: 757, dx: 260 });
 // A seating group: an armchair, a side table and a floor lamp, in the free corner by the window.
 a.put('chair', 'armchair', [5700, 2300], -35, { group: 'nook', y: 7, lift: 7 });
 a.put('side', 'sideTable', [5700, 3150], 0, { group: 'nook' });
-a.put('fern', 'floorPlant', [5900, 700], 0, { group: 'nook', params: { form: 2 } });   // a floor plant without blades of its own: the wind leans it as a whole
+a.put('fern', 'floorPlant', [6100, 1500], 0, { group: 'nook', params: { form: 2 } });   // a floor plant without blades of its own: the wind leans it as a whole
 // A chest of drawers by the right wall: a flat top a bird may land on (src/motion/bird.js stands on wardrobes, cabinets, shelves, chests).
 a.put('chest', 'chestOfDrawers', [6350, 3000], -90, { group: 'nook' });
 // Shots: a.shot(name, from, look, fov, group). fitshots.mjs finds the cameras; its numbers go in here.
