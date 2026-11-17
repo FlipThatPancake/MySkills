@@ -24,7 +24,7 @@ function frond(kit, g, R, from, a, len, { el = 1.1, droop = 1.4, pairs = 13, pin
 
 export function fiddle(kit, { h = 950, seed = 6 } = {}) {   // a fiddle-leaf fig: a bare lower trunk, then broad violin-shaped leaves with wavy edges and pale veins set close up the trunk, mostly facing out, a folded new leaf at the tip
   const g = kit.group(), R = rnd(seed); pot(kit, g, 140, 180, 300);
-  const top = h - 40, lean = (R() - 0.5) * 0.22, n = 20, S = 10;
+  const top = h - 200, lean = (R() - 0.5) * 0.22, n = 20, S = 10;
   const trunk = curvedStem(kit, g, [0, 315, 0], [lean, 1, 0.05], top - 315, 0.25, S, 12);
   for (let i = 0; i < n; i++) {
     const t = 0.3 + 0.7 * i / (n - 1), q = trunk.pts[Math.min(S, Math.round(t * S))], a = i * 2.4 + R() * 0.5;
@@ -44,7 +44,7 @@ export function palm(kit, { h = 950, seed = 6 } = {}) {   // a parlour palm: a c
     const cane = curvedStem(kit, g, base, [Math.sin(a) * lean, 1, Math.cos(a) * lean], top - 310, 0.1, 5, 7);
     for (let k = 1; k < 4; k++) { const q = cane.pts[Math.min(5, 1 + k)]; g.add(kit.lines([[q[0] - 8, q[1], q[2]], [q[0] + 8, q[1], q[2] + 4]], 'green')); }   // the rings where old fronds fell
     const f = 4 + (c % 2);
-    for (let k = 0; k < f; k++) frond(kit, g, R, cane.end, a + k / f * Math.PI * 2 + R() * 0.5, 230 + R() * 110, { el: 1.2 + R() * 0.3, droop: 1.8 + R() * 0.6, pairs: 13, pinna: 105, wid: 12, r0: 3 });
+    for (let k = 0; k < f; k++) frond(kit, g, R, cane.end, a + k / f * Math.PI * 2 + R() * 0.5, 200 + R() * 90, { el: 1.2 + R() * 0.3, droop: 1.8 + R() * 0.6, pairs: 13, pinna: 105, wid: 12, r0: 3 });
   }
   return kit.merge(g);
 }
@@ -52,11 +52,11 @@ export function monstera(kit, { h = 950, seed = 6 } = {}) {   // a monstera: lon
   const g = kit.group(), R = rnd(seed); pot(kit, g, 150, 190, 300);
   const n = 7;
   for (let i = 0; i < n; i++) {
-    const a = i * 2.4 + R() * 0.5, young = i === 2, spread = 0.25 + 0.2 * (i % 3) + 0.03 * i, hh = (h - 300 - 250) * (0.4 + 0.6 * ((i * 5) % 7) / 6);
-    const st = curvedStem(kit, g, [Math.sin(a) * 25, 310, Math.cos(a) * 25], [Math.sin(a) * spread, 1, Math.cos(a) * spread], hh + 80, 1.0 + 0.5 * R(), 7, 7);
-    const L = (young ? 150 : 250) + 50 * R(), lf = monsteraLeaf(kit, L, { slits: young ? 0 : 4 + (i % 2), depth: 0.6 + 0.2 * R(), seed: seed + i, fold: 0.1 + 0.08 * R(), bow: -0.12 - 0.2 * R() });
-    const el = -0.75 + 0.55 * R();   // the stalk bends the leaf outward and down, its face turned outward and up
-    place(kit, g, lf, st.end, norm([Math.sin(a), el, Math.cos(a)]), 0, [Math.sin(a) * 0.8, 0.7, Math.cos(a) * 0.8]);
+    const a = i * 2.4 + R() * 0.5, young = i === 2, spread = 0.08 + 0.07 * (i % 3) + 0.012 * i, hh = (h - 300 - 260) * (0.5 + 0.5 * ((i * 5) % 7) / 6);
+    const st = curvedStem(kit, g, [Math.sin(a) * 25, 310, Math.cos(a) * 25], [Math.sin(a) * spread, 1, Math.cos(a) * spread], hh + 80, 0.5 + 0.3 * R(), 7, 7);
+    const L = (young ? 110 : 185) + 30 * R(), lf = monsteraLeaf(kit, L, { slits: young ? 0 : 4 + (i % 2), depth: 0.6 + 0.2 * R(), seed: seed + i, fold: 0.1 + 0.08 * R(), bow: -0.12 - 0.2 * R() });
+    const el = -0.95 + 0.4 * R();   // the stalk bends the leaf outward, its face turned outward and slightly up
+    place(kit, g, lf, st.end, norm([Math.sin(a), el, Math.cos(a)]), 0, [Math.sin(a) * 1.5, 0.5, Math.cos(a) * 1.5]);
   }
   return kit.merge(g);
 }
@@ -72,19 +72,21 @@ export function snake(kit, { h = 950, seed = 6 } = {}) {   // a snake plant: sti
 }
 export function fern(kit, { h = 950, seed = 6 } = {}) {   // a big Boston fern: a fountain of arching fronds of many fine paired leaflets, some over the rim
   const g = kit.group(), R = rnd(seed); pot(kit, g, 150, 190, 300);
-  for (let k = 0; k < 17; k++) frond(kit, g, R, [0, 312, 0], k * 2.4 + R() * 0.4, 330 + R() * 260, { el: 0.85 + R() * 0.6, droop: 1.2 + R() * 0.7, pairs: 22, pinna: 78, wid: 15, sweep: 0.7 });
+  for (let k = 0; k < 17; k++) frond(kit, g, R, [0, 312, 0], k * 2.4 + R() * 0.4, 200 + R() * 130, { el: 0.85 + R() * 0.6, droop: 1.2 + R() * 0.7, pairs: 22, pinna: 78, wid: 15, sweep: 0.7 });
   return kit.merge(g);
 }
-export function pothos(kit, { seed = 6 } = {}) {   // pothos: vines that arch over the rim and hang down the pot and along the shelf, heart leaves on short stalks, smaller toward the tips
+export function pothos(kit, { seed = 6 } = {}) {   // pothos: a few short vines hang down the pot and stop at the surface it stands on, 2-3 longer ones run along the surface; heart leaves on short stalks, smaller toward the tips
   const g = kit.group(), R = rnd(seed); g.add(kit.cyl(0, 0, 0, 50, 80, { rTop: 58, seg: 20, ...lo })); const t = potTop(kit, 58); t.position.y = 80; g.add(t);
-  const nv = 8, K = 18;
-  for (let v = 0; v < nv; v++) {
-    const a = v / nv * Math.PI * 2 + R() * 0.4, ex = 30 + R() * 90, hang = R() < 0.5, pts = [];
-    for (let i = 0; i <= K; i++) { const u = i / K, rho = 20 + 42 * Math.min(1, u * 3) + ex * Math.max(0, u - 0.3), y = Math.max(hang && u > 0.5 ? 8 + 55 * (1 - u) : 6, 86 + 80 * Math.sin(Math.PI * Math.min(1, u / 0.45)) * (u < 0.45 ? 1 : 0) - (u > 0.3 ? 260 * (u - 0.3) * (u - 0.3) * 3 : 0)); pts.push([Math.sin(a) * rho, Math.max(6, y), Math.cos(a) * rho]); }
-    for (let i = 0; i < K; i++) g.add(stem(kit, pts[i], pts[i + 1], 2.2, 2));
-    for (let i = 2; i <= K; i++) {
-      const q = pts[i], p0 = pts[i - 1], tg = norm([q[0] - p0[0], q[1] - p0[1], q[2] - p0[2]]), s = i % 2 ? 1 : -1, size = (50 - 1.6 * i + R() * 10) * (i === K ? 0.7 : 1);
-      const dr = norm([tg[0] + Math.cos(a) * s * 0.9, tg[1] * 0.5 - 0.1, tg[2] - Math.sin(a) * s * 0.9]);
+  const K = 18, run = R() * 6.28, vines = [];
+  for (let v = 0; v < 4; v++) vines.push({ a: v / 4 * 6.28 + R() * 0.6, ex: 0, K: 7 });   // hanging vines: over the rim and down the pot side
+  for (let v = 0; v < 3; v++) vines.push({ a: run + (v - 1) * 0.5 + R() * 0.2, ex: 30 + R() * 25, K });   // vines that run along the surface
+  for (const { a, ex, K: n } of vines) {
+    const pts = [];
+    for (let i = 0; i <= n; i++) { const u = i / n, over = Math.min(1, u * (ex ? 4 : 2.2)); pts.push([Math.sin(a) * (22 + 40 * over + ex * Math.max(0, u - 0.25)), Math.max(5, ex ? 84 + 70 * Math.sin(Math.PI * Math.min(1, u / 0.3)) * (u < 0.3 ? 1 : 0) - 150 * Math.max(0, u - 0.3) : 84 + 30 * Math.sin(Math.PI * Math.min(1, u / 0.2)) * (u < 0.2 ? 1 : 0) - 82 * u * 1.1), Math.cos(a) * (22 + 40 * over + ex * Math.max(0, u - 0.25))]); }
+    for (let i = 0; i < n; i++) g.add(stem(kit, pts[i], pts[i + 1], 2.2, 2));
+    for (let i = 2; i <= n; i++) {
+      const q = pts[i], p0 = pts[i - 1], tg = norm([q[0] - p0[0], q[1] - p0[1], q[2] - p0[2]]), s = i % 2 ? 1 : -1, size = (40 - 1.2 * i * (18 / n) + R() * 6) * (i === n ? 0.7 : 1), onSurface = q[1] <= 8;
+      const dr = onSurface ? norm([tg[0] + Math.cos(a) * s * 1.2, 0.05, tg[2] - Math.sin(a) * s * 1.2]) : norm([tg[0] + Math.cos(a) * s * 0.9, tg[1] * 0.5 - 0.1, tg[2] - Math.sin(a) * s * 0.9]);
       place(kit, g, blade(kit, size, size * 0.85, { profile: 'heart', fold: 0.1, bow: 0.12, curl: 0.1, veins: 3, N: 6, M: 4 }), [q[0], Math.max(4, q[1]), q[2]], dr, i, [0, 1, 0]);
     }
   }
@@ -94,10 +96,10 @@ export function basil(kit, { seed = 6 } = {}) {   // basil: a bushy rounded moun
   const g = kit.group(), R = rnd(seed); g.add(kit.cyl(0, 0, 0, 46, 70, { rTop: 56, seg: 20, ...lo })); const t = potTop(kit, 56); t.position.y = 70; g.add(t);
   const ns = 8;
   for (let s = 0; s < ns; s++) {
-    const a = s / ns * Math.PI * 2 + R(), r = s === 0 ? 0 : 14 + R() * 16, top = (s === 0 ? 150 : 105 - 10 * R()) + R() * 20, base = [Math.sin(a) * r, 70, Math.cos(a) * r];
-    const st = curvedStem(kit, g, base, [Math.sin(a) * (s ? 0.55 : 0.1), 1, Math.cos(a) * (s ? 0.55 : 0.1)], top, 0.2, 6, 2.5);
+    const a = s / ns * Math.PI * 2 + R(), r = s === 0 ? 0 : 8 + R() * 14, top = (s === 0 ? 150 : 105 - 10 * R()) + R() * 20, base = [Math.sin(a) * r, 70, Math.cos(a) * r];
+    const st = curvedStem(kit, g, base, [Math.sin(a) * (s ? 0.1 : 0.1), 1, Math.cos(a) * (s ? 0.1 : 0.1)], top, 0.2, 6, 2.5);
     for (let i = 1; i <= 6; i++) {
-      const q = st.pts[i], size = 66 - (i - 1) * 5 + R() * 10;
+      const q = st.pts[i], size = 42 - (i - 1) * 3 + R() * 6;
       for (const m of [0, 1]) { if (i > 1 && R() < 0.2) continue; const b = a + (i % 2 ? 0 : Math.PI / 2) + m * Math.PI + (R() - 0.5) * 0.7; place(kit, g, blade(kit, size, size * 0.8, { profile: 'oval', fold: 0.3, bow: 0.3, curl: 0.06, veins: 2, N: 5, M: 4 }), q, norm([Math.sin(b), 0.1 + 0.05 * i + 0.3 * (R() - 0.3), Math.cos(b)]), b, [0, 1, 0]); }
     }
     place(kit, g, blade(kit, 34, 24, { profile: 'oval', fold: 0.3, bow: 0.1, veins: 0, N: 4, M: 3 }), st.end, [0, 1, 0], a, [0, 0, 1]);
