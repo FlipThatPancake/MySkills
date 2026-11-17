@@ -91,19 +91,19 @@ export function pinboard(kit, { w = 900, h = 600, notes = 6, frame = 'wood', see
   return kit.merge(g);
 }
 
-export function binders(kit, { n = 5, h = 300, form = 'row', seed = 1 } = {}) {   // lever-arch files standing in a row (spines to +z with a label and a finger hole), slim ring binders in a row, lying in a stack, or one binder lying open with its rings and ruled pages
-  const g = kit.group(), R = rnd(seed), B = bx(kit), Rb = rb(kit), pts = []; let x = 0;
+export function binders(kit, { n = 5, h = 300, form = 'row', tone = 'mid', seed = 1 } = {}) {   // lever-arch files standing in a row (spines to +z with a label and a finger hole), slim ring binders in a row, lying in a stack, or one binder lying open with its rings and ruled pages
+  const g = kit.group(), R = rnd(seed), B = bx(kit), Rb = rb(kit), pts = [], ac = tone === 'accent' ? { tone: 'accent' } : {}; let x = 0;   // tone accent: every other file takes the home's accent
   if (form === 'open') {
     const s = h / 300, L = 250 * s, H = 300 * s;
-    g.add(Rb(-L / 2 - 14, 0, 0, L, 7, H, 3, lo)); g.add(Rb(L / 2 + 14, 0, 0, L, 7, H, 3, lo)); g.add(Rb(0, 0, 0, 32, 9, H, 3, lo));
+    const cv = tone === 'accent' ? ac : lo; g.add(Rb(-L / 2 - 14, 0, 0, L, 7, H, 3, cv)); g.add(Rb(L / 2 + 14, 0, 0, L, 7, H, 3, cv)); g.add(Rb(0, 0, 0, 32, 9, H, 3, cv));
     g.add(Rb(-L / 2 - 12, 7, 0, L - 14, 10 + R() * 4, H - 14, 2)); g.add(Rb(L / 2 + 14, 7, 0, L - 14, 28, H - 14, 2));
     for (const z of [-H * 0.32, 0, H * 0.32]) g.add(kit.solid(new kit.THREE.TorusGeometry(15, 2.6, 6, 14), 0, 40, z, { smooth: true, tone: 'lo' }));
     const ln = []; for (let k = 0; k < 14; k++) { const z = -H / 2 + 30 + k * (H - 60) / 13; ln.push([44, 35.6, z], [L - 8, 35.6, z]); } g.add(kit.lines(ln, 'faint'));
     return kit.merge(g);
   }
-  if (form === 'stack') { let y = 0; for (let i = 0; i < n; i++) { const hh = 44 + R() * 18, dw = 300 + R() * 20; g.add(Rb((R() - 0.5) * 14, y, 0, 230 + R() * 16, hh, dw, 4, i % 2 ? lo : {})); pts.push([-70, y + hh / 2, dw / 2 + 0.6], [70, y + hh / 2, dw / 2 + 0.6]); y += hh; } g.add(kit.lines(pts, 'lo')); return kit.merge(g); }
+  if (form === 'stack') { let y = 0; for (let i = 0; i < n; i++) { const hh = 44 + R() * 18, dw = 300 + R() * 20; g.add(Rb((R() - 0.5) * 14, y, 0, 230 + R() * 16, hh, dw, 4, i % 2 ? lo : ac)); pts.push([-70, y + hh / 2, dw / 2 + 0.6], [70, y + hh / 2, dw / 2 + 0.6]); y += hh; } g.add(kit.lines(pts, 'lo')); return kit.merge(g); }
   const ws = Array.from({ length: n }, () => form === 'slim' ? 34 + R() * 14 : 56 + R() * 26), tot = ws.reduce((a, b) => a + b, 0); x = -tot / 2;
-  for (let i = 0; i < n; i++) { const w = ws[i], hh = h * (0.92 + R() * 0.12), cx = x + w / 2; g.add(Rb(cx, 0, 0, w, hh, 290, 6, i % 2 ? lo : {})); const zf = 290 / 2 + 0.6; pts.push(...rect(cx - w * 0.3, hh * 0.55, cx + w * 0.3, hh * 0.9, zf)); for (let k = 0; k < 14; k++) { const a = k / 14 * 6.2832, b = (k + 1) / 14 * 6.2832; pts.push([cx + Math.cos(a) * w * 0.22, hh * 0.18 + Math.sin(a) * w * 0.1, zf], [cx + Math.cos(b) * w * 0.22, hh * 0.18 + Math.sin(b) * w * 0.1, zf]); } x += w; }
+  for (let i = 0; i < n; i++) { const w = ws[i], hh = h * (0.92 + R() * 0.12), cx = x + w / 2; g.add(Rb(cx, 0, 0, w, hh, 290, 6, i % 2 ? lo : ac)); const zf = 290 / 2 + 0.6; pts.push(...rect(cx - w * 0.3, hh * 0.55, cx + w * 0.3, hh * 0.9, zf)); for (let k = 0; k < 14; k++) { const a = k / 14 * 6.2832, b = (k + 1) / 14 * 6.2832; pts.push([cx + Math.cos(a) * w * 0.22, hh * 0.18 + Math.sin(a) * w * 0.1, zf], [cx + Math.cos(b) * w * 0.22, hh * 0.18 + Math.sin(b) * w * 0.1, zf]); } x += w; }
   g.add(kit.lines(pts, 'lo')); return kit.merge(g);
 }
 

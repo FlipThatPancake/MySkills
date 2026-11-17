@@ -158,6 +158,16 @@
    "teaTowel",
    "tablecloth",
    "runner"
+  ],
+  "above": [
+   "wall units over the run (wallRun)",
+   "an open shelf with plates and jars over the worktop (openShelf)",
+   "a pot rail with pans over the hob (potRail)"
+  ],
+  "aboveNote": "something always hangs over a kitchen's straight run (above, one per kitchen, plus the range hood when the hero is the hood)",
+  "produce": [
+   "a crate of fruit (crate)",
+   "a basket of vegetables (basket)"
   ]
  },
  "dining": {

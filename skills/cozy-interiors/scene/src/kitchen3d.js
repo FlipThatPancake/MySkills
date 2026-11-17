@@ -147,7 +147,7 @@ export function createKit() {
     setFade(centre, half, r0, r1) { fadeFill.uniforms.uC.value.copy(centre); fadeFill.uniforms.uH.value.copy(half); fadeFill.uniforms.uR.value.set(r0, r1); },
     // The window size in CSS pixels; call it on every resize so lines stay 1 px.
     // The home's accent colour (a hex string): the line takes it as is, the fill a soft tint of it. Textiles ask for it with tone: 'accent'.
-    setAccent(hex) { const c = new THREE.Color(hex), hsl = {}; c.getHSL(hsl); lineAccent.color.copy(new THREE.Color().setHSL(hsl.h, Math.min(0.55, hsl.s), Math.min(0.46, hsl.l))); const t = new THREE.Color().setHSL(hsl.h, Math.min(0.5, hsl.s), 0.86); accentFill.uniforms.uTint.value.set(t.r, t.g, t.b); },
+    setAccent(hex) { const c = new THREE.Color(hex), hsl = {}; c.getHSL(hsl); lineAccent.color.copy(new THREE.Color().setHSL(hsl.h, Math.min(0.55, hsl.s), Math.min(0.46, hsl.l))); const t = new THREE.Color().setHSL(hsl.h, Math.min(0.5, hsl.s * 0.7), Math.min(0.76, hsl.l + 0.27)); accentFill.uniforms.uTint.value.set(t.r, t.g, t.b); },   // close to the hex itself (a rust stays rust, not pink), a little lighter so the line work still reads
     setResolution(w, h) { lineFaint.resolution.set(w, h); lineMid.resolution.set(w, h); lineLo.resolution.set(w, h); seamLine.resolution.set(w, h); fadables.forEach((fa) => { fa.mid.resolution.set(w, h); fa.lo.resolution.set(w, h); fa.seam.resolution.set(w, h); }); lineGreen.resolution.set(w, h); lineAccent.resolution.set(w, h); loopMat.resolution.set(w, h); hullU.uRes.value.set(w, h); },
     // 0..1, fills and lines together. Only a fade is transparent; at 1 everything is opaque,
     // so three.js does not sort the meshes every frame.
