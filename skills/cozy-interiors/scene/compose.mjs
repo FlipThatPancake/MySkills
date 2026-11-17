@@ -22,6 +22,7 @@ import { dealParams } from './src/library/space.js';
 import { dropCloth, heightField } from './src/cloth.js';
 import { createKit } from './src/kitchen3d.js';
 import { REGISTRY } from './src/library/index.js';
+import { joinAreas, seamLine } from './openplan.mjs';
 const rad = (d) => d * Math.PI / 180, deg = (r) => r * 180 / Math.PI, r0 = (v) => Math.round(v * 10) / 10;
 export const GAP = 3000;
 export class Home {
@@ -31,8 +32,9 @@ export class Home {
     if (!O) { const prev = this.list[this.list.length - 1], b = a.worldBounds(), x0 = prev ? prev.worldBounds().x1 + GAP : 0; a.O = [r0(x0 - b.x0), r0(-b.z0)]; }
     this.list.push(a); return a;
   }
+  join(a, b, o) { return joinAreas(this, a, b, o); }   // open plan: b joins a on one floor (openplan.mjs): H.join(a, b, { layout: 'row' | 'corner', share: 0 to 1000 mm })
   sign(areaId, kind) { (this.signs ||= {})[areaId] = [...(this.signs[areaId] || []), kind]; }
-  write(file, fs) { this.S.areas = this.list.map((a) => a.out()); if (this.signs) for (const [a, k] of Object.entries(this.signs)) console.log(`signs ${a}: ${k.join(', ')}`); fs.writeFileSync(file, JSON.stringify(this.S, null, 1)); return this.S; }
+  write(file, fs) { this.S.areas = this.list.map((a) => a.out()); if (this.groups) this.S.groups = this.groups.map((g) => ({ id: g.id, areas: g.areas, seams: g.seams.map((q) => seamLine(this, q)) })); if (this.signs) for (const [a, k] of Object.entries(this.signs)) console.log(`signs ${a}: ${k.join(', ')}`); fs.writeFileSync(file, JSON.stringify(this.S, null, 1)); return this.S; }
 }
 const pickForm = (h, asset, params) => {   // the next form of an asset that has several (started from the seed); an explicit params.form stays
   if (!ASSETS[asset].variants || params?.form !== undefined) return params;
@@ -223,6 +225,6 @@ class Area {
     let y = 0; for (const [a, b] of [[0, 0], [1, 1], [1, -1], [-1, 1], [-1, -1]]) y = Math.max(y, hf(p[0] + a * w / 3, p[1] + b * d / 3));
     this.put(id, asset, p, turn, { y: Math.round(y), mount: 'on', group: group || this.h.S.home.objects.find((q) => q.id === `${this.id}-${targetId}`)?.group.split(':')[1], params: pr });
   }
-  out() { this.liftOnRugs(); const b = this.worldBounds(); return { id: this.id, name: this.name, O: this.O, psi: this.psi, bounds: { ...b, top: this.top }, camera: { home: this.cam, shots: this.shots } }; }
+  out() { this.liftOnRugs(); const b = this.worldBounds(); return { id: this.id, name: this.name, ...(this.group ? { group: this.group } : {}), O: this.O, psi: this.psi, bounds: { ...b, top: this.top }, camera: { home: this.cam, shots: this.shots } }; }
 }
 export const facing = (from, to) => deg(Math.atan2(to[0] - from[0], to[1] - from[1]));   // the turn that makes an object at `from` face `to`, in local x/z

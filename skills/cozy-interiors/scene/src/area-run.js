@@ -72,8 +72,11 @@ export function createAreaScene(canvas, S) {
     const v = { target, az: h.az ?? 20, el: h.el ?? 15, dist: h.dist || fit(b) };
     return h.fit === 'objects' ? fitView(A, v) : v;
   };
+  // open plan: areas of one group share a floor and are drawn together, and the fade box is the group's bounds, so nothing thins out at a seam
+  const groupOf = (id) => areas[id].group || id, together = (a, b) => !!a && !!b && groupOf(a) === groupOf(b);
+  const boundsOf = (A) => { if (!A.group) return A.bounds; const m = S.areas.filter((x) => x.group === A.group).map((x) => x.bounds); return { x0: Math.min(...m.map((b) => b.x0)), x1: Math.max(...m.map((b) => b.x1)), z0: Math.min(...m.map((b) => b.z0)), z1: Math.max(...m.map((b) => b.z1)), top: A.bounds.top }; };
   const fadeOf = (A) => {
-    let b = A.bounds; const top = b.top || 2500, w = Math.max(b.x1 - b.x0, b.z1 - b.z0), r0 = 0;
+    let b = boundsOf(A); const top = b.top || 2500, w = Math.max(b.x1 - b.x0, b.z1 - b.z0), r0 = 0;
     for (const W of home.walls) if (W.walk.length && W.id && W.id.startsWith(A.id + '-')) b = { ...b, ...[W.from, W.to].reduce((e, q) => { const x = q[0] - W.n[0] * 1600, z = q[1] - W.n[1] * 1600; return { x0: Math.min(e.x0, x), x1: Math.max(e.x1, x), z0: Math.min(e.z0, z), z1: Math.max(e.z1, z) }; }, { x0: b.x0, x1: b.x1, z0: b.z0, z1: b.z1 }) };   // the floor beyond a way through stays in view
     const bx = b.x1 - b.x0, bz = b.z1 - b.z0;   // objects past the bounds thin from the edge: about 35% gone at 1 m, all gone at 2 m
     return [(b.x0 + b.x1) / 2, top / 2 - 150, (b.z0 + b.z1) / 2, bx / 2, top / 2 + 300, bz / 2, FADE[0] * w, FADE[1] * w, r0, 900];
@@ -102,7 +105,8 @@ export function createAreaScene(canvas, S) {
     api.tour = tour;
   }
   // at rest only the current area exists: other areas' walls (frames, seams, shadows) and objects are hidden outright, so no half-faded ghost of a neighbour shows in any view or tour shot; a glide shows everything
-  const only = (id) => { for (const W of home.walls) W.node.visible = id === null || (W.id || '').startsWith(id + '-'); for (const o of Object.values(home.objects)) o.visible = id === null || o.userData.scene.area === id; };
+  const shown = (id, area) => id === null || (area ? area === id || groupOf(area) === groupOf(id) : false);
+  const only = (id) => { for (const W of home.walls) W.node.visible = id === null || shown(id, order.find((a) => (W.id || '').startsWith(a + '-'))); for (const o of Object.values(home.objects)) o.visible = shown(id, o.userData.scene.area); };   // an area's whole open-plan group is drawn at rest
   function arrive(id) {
     cur = id; api.area = id; only(id);
     const v = viewOf(areas[id]);
@@ -118,7 +122,7 @@ export function createAreaScene(canvas, S) {
     const from = stance(), to = viewOf(areas[id]);
     let daz = ((to.az - from.az + 540) % 360) - 180;   // the short way round
     glide = { id, from, to, daz, fade0: cur ? fadeOf(areas[cur]) : fadeOf(areas[id]), fade1: fadeOf(areas[id]), t0: performance.now(), hold, k: 0 };
-    controls.enabled = false; markLabels(id); only(null);
+    controls.enabled = false; markLabels(id); if (!together(cur, id)) only(null);   // between areas of one group nothing switches on or off
   }
   function glideAt(k) {
     const g = glide, e = smooth(Math.min(1, Math.max(0, k))); g.k = k;
@@ -162,17 +166,24 @@ export function createAreaScene(canvas, S) {
     for (let o = hit && hit.object; o; o = o.parent) if (o.userData.open || o.userData.go) return o;
     return null;
   };
+  const neighbourAt = (e) => {   // the open-plan neighbour a click lands on: the area of the object hit, when it is not the current area but shares its group
+    if (!cur || !areas[cur].group) return null;
+    const r = canvas.getBoundingClientRect(); ndc.set((e.clientX - r.left) / r.width * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1); ray.setFromCamera(ndc, camera);
+    const hit = ray.intersectObjects(home.group.children, true).find((h) => h.object.isMesh && !h.object.isLineSegments2 && h.object.visible && !h.object.material.isMeshBasicMaterial);
+    for (let o = hit && hit.object; o; o = o.parent) { const a = o.userData.scene?.area; if (a) return a !== cur && together(a, cur) ? a : null; }
+    return null;
+  };
   let downAt = null;
   canvas.addEventListener('pointerdown', (e) => { downAt = [e.clientX, e.clientY]; });
   canvas.addEventListener('pointerup', (e) => {
     if (!downAt || glide || Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 5) return;
-    const f = targetAt(e); if (!f) return;
+    const f = targetAt(e); if (!f) { const n = neighbourAt(e); if (n) setArea(n); return; }   // a click on a piece of an open-plan neighbour glides there
     if (f.userData.go) { setArea(f.userData.go); return; }
     const o = f.userData.open;
     if (o.states) { o.i = (o.i + 1) % o.states.length; for (const m of (o.pair || [f])) { const mo = m.userData.open; mo.i = o.i; mo.target = mo.states[o.i]; } }
     else o.target = 1 - o.target;
   });
-  canvas.addEventListener('pointermove', (e) => { if (!e.buttons) canvas.style.cursor = !glide && targetAt(e) ? 'pointer' : ''; });
+  canvas.addEventListener('pointermove', (e) => { if (!e.buttons) canvas.style.cursor = !glide && (targetAt(e) || neighbourAt(e)) ? 'pointer' : ''; });
   const moveFronts = (dt, snap) => {
     for (const f of home.openables) {
       const o = f.userData.open; o.v = snap ? o.target : o.v + (o.target - o.v) * (1 - Math.exp(-dt * 7));
@@ -182,7 +193,7 @@ export function createAreaScene(canvas, S) {
 
   let last = performance.now();
   const api = {
-    scene, camera, controls, kit, home, areas, areaIds: order, area: null, setArea, startGlide, glideAt, look, at, S, tour: null,
+    groupOf, groupBounds: (id) => boundsOf(areas[id]), scene, camera, controls, kit, home, areas, areaIds: order, area: null, setArea, startGlide, glideAt, look, at, S, tour: null,
     get glide() { return glide; }, objects: home.objects, openables: home.openables,
     openAll(on) { home.openables.forEach((f) => { f.userData.open.target = on ? 1 : 0; }); moveFronts(1, true); },
   };

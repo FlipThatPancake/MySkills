@@ -74,11 +74,13 @@ export function buildHome(kit, home, registry, areas = []) {
     }
     const square = (o) => Math.abs(o.d[0] * W.d[0] + o.d[1] * W.d[1]) < 0.9;   // a corner, square or wide (120 degrees); two walls in a line are no corner
     W.joinedTo = walls_.some((o) => o !== W && near(o.from, W.to) && square(o)); W.joinedFrom = walls_.some((o) => o !== W && near(o.to, W.from) && square(o));
+    const line = (o) => Math.abs(o.d[0] * W.d[0] + o.d[1] * W.d[1]) > 0.999;   // an open-plan seam: the next wall runs on in a straight line, so this one does not thin out or draw a corner there
+    W.runsOnTo = walls_.some((o) => o !== W && near(o.from, W.to) && line(o)); W.runsOnFrom = walls_.some((o) => o !== W && near(o.to, W.from) && line(o));
     const s = new T.Shape([[0, -4], [len, -4], [len, H], [0, H]].map(([a, y]) => new T.Vector2(a, y)));
     W.holes.forEach((h) => s.holes.push(new T.Path(h.map(([a, y]) => new T.Vector2(a, y)))));
     const sg = new T.ShapeGeometry(s); { const ps = sg.attributes.position, uv = new Float32Array(ps.count * 2); for (let k = 0; k < ps.count; k++) { uv[2 * k] = ps.getX(k) / len; uv[2 * k + 1] = ps.getY(k) / H; } sg.setAttribute('uv', new T.BufferAttribute(uv, 2)); }
     // a free end and the top edge melt into the backdrop over their last END mm: the plane carries an alpha map (1 inside, 0 at the very edge)
-    const plane = new T.Mesh(sg, endMat(len, H, !W.joinedTo, !W.joinedFrom)); plane.position.z = -4; plane.userData.caster = true;
+    const plane = new T.Mesh(sg, endMat(len, H, !W.joinedTo && !W.runsOnTo, !W.joinedFrom && !W.runsOnFrom)); plane.position.z = -4; plane.userData.caster = true;
     node.add(plane, W.frames);
     // seams: the wall meets the floor (broken where a door or arch lets the floor through), and the corner it makes with the next wall
     const seams = kit.group(); let a = 0;
