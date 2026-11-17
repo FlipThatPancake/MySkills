@@ -87,7 +87,7 @@ export function sleeper(kit, { seed = 1 } = {}) {
     const g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
     const m = kit.solid(g, 0, 0, 0, { linen: true }); m.clear(); return m;   // no outline: a soft patch, not a crease
   };
-  for (const [t, w] of [[0.08, 15], [0.16, 18], [0.24, 18], [0.33, 15], [0.42, 14], [0.51, 14], [0.6, 13], [0.69, 12]]) breath.add(band(t, 22, 88, w));
+  for (const [t, w] of [[0.36, 14], [0.45, 14], [0.54, 13], [0.63, 12], [0.72, 11]]) breath.add(band(t, 22, 88, w));
   // head: resting on the front paws, against the shoulder, nose toward the haunch side of the opening
   const hd = V().subVectors(spine[N - 1], spine[N - 4]).normalize(), headAt = spine[N - 1].clone().addScaledVector(hd, 58); headAt.y = 52;
   const front = kit.group(); front.position.copy(headAt); front.rotation.y = Math.atan2(hd.x, hd.z) + 0.25;
