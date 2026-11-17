@@ -7,27 +7,31 @@
 //   v0 330, v1 130 (cruise speed v0 + v1 (1 + sin)), vmax 700, vIn 260 (through the window), turn 2.2 (steering rate), wob { xz 66, y [150, 60], f [1.7, 1.3, 2.3, 5.1] } wander;
 //   pre 170 (height above a landing it approaches from), sill { dn 25, up 36, preDn 350, preUp 50 } or null for no sill perch, sites(h) -> [{ name, perch, spot, pre }] replaces the default
 //   landings (h = { at, free, room, objects, rnd, T }), reach 70 / sillReach 35 / legReach 130 (how near counts as arrived),
+//   span (R) how far the body and its wings reach from the centre: the keep-out distance from every camera is 900 mm + span; extra() -> [{ c: [x, y, z], r }] more spheres it fills now (wing tips),
+//   measured by check-motion like the main body.
 //   t { first [1.5, 4], away [14, 26], perch [3, 6], leave [2, 4], visit 50 } seconds, orient(g, vel, yaw, hs) sets the body's tilt (default: nose follows the climb).
 import { PAD } from './rules.js';
 export function createFlight(ctx, g, cfg = {}) {
-    const { T, rnd, via, room, solids, objects, walls } = ctx, tmp = new T.Vector3(), probe = new T.Vector3();
+    const { T, rnd, via, room, solids, objects, walls, cameras = () => [] } = ctx, tmp = new T.Vector3(), probe = new T.Vector3();
     const R = cfg.R ?? 42, pad = cfg.pad ?? PAD, flap = cfg.flap || (() => {}), t = { first: [1.5, 4], away: [14, 26], perch: [3, 6], leave: [2, 4], visit: 50, ...(cfg.t || {}) };
     const v0 = cfg.v0 ?? 330, v1 = cfg.v1 ?? 130, vmax = cfg.vmax ?? 700, vIn = cfg.vIn ?? 260, turn = cfg.turn ?? 2.2, wob = { xz: 66, y: [150, 60], f: [1.7, 1.3, 2.3, 5.1], ...(cfg.wob || {}) };
     const reach = cfg.reach ?? 70, sillReach = cfg.sillReach ?? 35, legReach = cfg.legReach ?? 130, preUp = cfg.pre ?? 170, bodyR = (st) => (st === 'land' || st === 'to-spot' || st === 'takeoff' ? cfg.perchR ?? R : R);
     const orient = cfg.orient || ((g, vel, yaw, hs) => g.rotation.set(-Math.atan2(vel.y, Math.max(hs, 80)) * 0.5, yaw, 0));
+    const KEEP = 900 + (cfg.span ?? R), camOk = (p) => cameras().every((c) => p.distanceTo(c) > KEEP + 60);   // a flier keeps 900 mm from the home-view camera and every tour shot camera (else a half-clipped giant fills the frame)
     const sillCfg = cfg.sill === undefined ? { dn: 25, up: 36, preDn: 350, preUp: 50 } : cfg.sill;
     // ---- places, in the world: the window's door (inside and outside), perches
     const c = via.centre, n = via.n, at = (dn, y) => new T.Vector3(c[0] + n[0] * dn, y, c[1] + n[1] * dn);   // a point on the window's middle line, dn mm into the room
     const dnOf = (p, W = via.W) => (p.x - W.to[0]) * W.n[0] + (p.z - W.to[1]) * W.n[1];
-    const free = (p, pad) => !solids.some(({ box }) => p.x > box.min.x - pad && p.x < box.max.x + pad && p.y > box.min.y - pad && p.y < box.max.y + pad && p.z > box.min.z - pad && p.z < box.max.z + pad);
+    const free = (p, pad) => camOk(p) && !solids.some(({ box }) => p.x > box.min.x - pad && p.x < box.max.x + pad && p.y > box.min.y - pad && p.y < box.max.y + pad && p.z > box.min.z - pad && p.z < box.max.z + pad);
     const clearLine = (a, b) => { for (let i = 1; i < 14; i++) if (!free(probe.lerpVectors(a, b, i / 14), pad)) return false; return true; };
     // the height it goes through: the middle of the opening, else other heights across it, whichever has clear air in line with the opening
     const mid = via.sill + via.height / 2, ys = [mid, mid + 150, mid - 150, mid + 300, mid - 300].map((y) => Math.min(Math.max(y, via.sill + 140, 300), via.sill + via.height - 140)).filter((y) => y > 0);
     const yIn = ys.find((y) => clearLine(at(-450, y), at(380, y)) && free(at(380, y), pad + 20));
     if (yIn === undefined) return { error: `${cfg.name || 'flier'}: the air in front of the opening is blocked (a tall thing stands in line with it)`, update() {} };
     const OUT = at(-450, yIn), GATE = at(380, yIn);
-    const sites = cfg.sites ? cfg.sites({ at, free, room, objects, rnd, T, solids, via }) : objects.filter((o) => o.landing && o.landing[1] + preUp >= room.ymin - 100).map((o) => ({ name: o.id, perch: o.id, spot: new T.Vector3(...o.landing), pre: new T.Vector3(o.landing[0], o.landing[1] + preUp, o.landing[2]) }));
-    if (sillCfg && via.op.kind === 'window') { const spot = at(sillCfg.dn, via.sill + sillCfg.up), pre = at(sillCfg.preDn, via.sill + sillCfg.preUp); if (pre.y >= room.ymin - 100 && free(pre, pad) && free(spot, 8)) sites.push({ name: 'sill', perch: null, spot, pre }); }
+    const sites = cfg.sites ? cfg.sites({ at, free, room, objects, rnd, T, solids, via }) : objects.filter((o) => o.landing && o.landing[1] + preUp >= room.ymin - 100).map((o) => ({ name: o.id, perch: o.id, spot: new T.Vector3(...o.landing), pre: new T.Vector3(o.landing[0], o.landing[1] + preUp, o.landing[2]) })).filter((q) => camOk(q.spot) && camOk(q.pre));
+    if (sillCfg && via.op.kind === 'window') {   // a sill perch faces the window (face): wings spread along the wall, and the take-off keeps that heading until it is clear of the wall
+       const spot = at(sillCfg.dn, via.sill + sillCfg.up), pre = at(sillCfg.preDn, via.sill + sillCfg.preUp); if (pre.y >= room.ymin - 100 && free(pre, pad) && free(spot, 8)) sites.push({ name: 'sill', perch: null, spot, pre, face: [-n[0], -n[1]] }); }
     const flyZone = { lat: 1800, dn0: 350, dn1: 2600 };
 
     // ---- flight
@@ -51,6 +55,7 @@ export function createFlight(ctx, g, cfg = {}) {
         const d = [pos.x - (b0.x - pad), (b1.x + pad) - pos.x, pos.y - (b0.y - pad), (b1.y + pad) - pos.y, pos.z - (b0.z - pad), (b1.z + pad) - pos.z], k = d.indexOf(Math.min(...d)), ax = 'xyz'[k >> 1], dir = k & 1 ? 1 : -1;
         pos[ax] += dir * d[k]; if (vel[ax] * dir < 0) vel[ax] = 0; blocked = 0.4;
       }
+      for (const c of cameras()) { const d = pos.distanceTo(c); if (d < KEEP && d > 1e-6) { pos.addScaledVector(probe.copy(pos).sub(c).normalize(), KEEP - d); blocked = 0.4; } }
       if (!corridor) for (const { W } of walls) {
         const s = -((pos.x - W.to[0]) * W.d[0] + (pos.z - W.to[1]) * W.d[1]), dn = (pos.x - W.to[0]) * W.n[0] + (pos.z - W.to[1]) * W.n[1];
         if (s > -40 && s < W.len + 40 && dn < pad) { pos.x += W.n[0] * (pad - dn); pos.z += W.n[1] * (pad - dn); const vn = vel.x * W.n[0] + vel.z * W.n[1]; if (vn < 0) { vel.x -= vn * W.n[0]; vel.z -= vn * W.n[1]; } }
@@ -69,7 +74,7 @@ export function createFlight(ctx, g, cfg = {}) {
       if (vel.length() > vmax) vel.setLength(vmax);
       pos.addScaledVector(vel, dt); push(corridor);
       const hs = Math.hypot(vel.x, vel.z);
-      if (hs > 40) { let d = Math.atan2(vel.x, vel.z) - yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); yaw += d * Math.min(1, 5 * dt); }
+      if (hs > 40 && !(st === 'takeoff' && site && site.face && pos.distanceTo(site.spot) < 260)) { let d = Math.atan2(vel.x, vel.z) - yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); yaw += d * Math.min(1, 5 * dt); }
       orient(g, vel, yaw, hs); place(); flap(dt, true, st);
       return dist;
     };
@@ -123,10 +128,14 @@ export function createFlight(ctx, g, cfg = {}) {
         const sp = (v0 + v1 * (1 + Math.sin(clock * 0.9 + ph))) * slow;
         const k = st === 'fly' || st === 'to-gate' ? 1 : Math.min(1, dist / 260);
         // to-spot eases in (speed follows the distance), so it never overshoots a spot next to a wall
-        if (st === 'to-spot') { const to = tmp.copy(tgt).sub(pos), d = to.length(); to.normalize().multiplyScalar(Math.min(sp, Math.max(50, d * 3.5))); vel.lerp(to, Math.min(1, 4 * dt)); if (blocked > 0) blocked = 0; pos.addScaledVector(vel, dt); place(); flap(dt, true, st); return; }
+        if (st === 'to-spot') { const to = tmp.copy(tgt).sub(pos), d = to.length(); to.normalize().multiplyScalar(Math.min(sp, Math.max(50, d * 3.5))); vel.lerp(to, Math.min(1, 4 * dt)); if (blocked > 0) blocked = 0; pos.addScaledVector(vel, dt); if (site.face) { let d = Math.atan2(site.face[0], site.face[1]) - yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); yaw += d * Math.min(1, 6 * dt); g.rotation.y = yaw; } place(); flap(dt, true, st); return; }
         steer(dt, k, sp, false);
       },
-      bodies() { return shown ? [{ c: pos.toArray(), r: bodyR(st), perch: site && (st === 'land' || st === 'to-spot' || st === 'takeoff') ? site.perch : null, outside: dnOf(pos) < 0 ? via.id : null }] : []; },
+      bodies() {
+        if (!shown) return [];
+        const main = { c: pos.toArray(), r: bodyR(st), perch: site && (st === 'land' || st === 'to-spot' || st === 'takeoff') ? site.perch : null, outside: dnOf(pos) < 0 ? via.id : null };
+        return [main, ...(cfg.extra && st !== 'land' ? cfg.extra() : []).map((e) => ({ ...e, perch: main.perch, outside: main.outside }))];
+      },
     };
     return th;
 }

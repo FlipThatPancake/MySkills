@@ -31,12 +31,16 @@ export async function motionIssues(page, sceneFile, { seconds = 240 } = {}) {
       }
       if (needs.includes('plant') && !th.ctx.objects.some((o) => PLANTS.includes(o.asset))) say(tag + 'plant', `${tag}: needs a plant and the area has none`);
     }
+    // every area's cameras (home view, tour shots): setArea fits each home view, then the list is kept
+    const cams = {};
+    for (const th of motion.things) if (th.sampled && !cams[th.area]) { window.cozyScene.setArea?.(th.area, true); cams[th.area] = motion.cameraOf ? motion.cameraOf(th.area).map((v) => v.clone()) : []; }
     const bodiesSeen = {};
     motion.run(seconds, (th, t, bodies) => {
       const { ctx } = th, via = ctx.via, tag = `${th.area}: ${th.kind}`;
       for (const b of bodies) {
         const c = new T.Vector3(...b.c), r = b.r;
         bodiesSeen[tag] = (bodiesSeen[tag] || 0) + 1;
+        for (const cam of cams[th.area] || []) if (c.distanceTo(cam) < 900) say(tag + 'cam', `${tag}: comes within ${Math.round(c.distanceTo(cam))} mm of a camera at ${t.toFixed(1)} s (900 mm at least: a flier that close fills the frame, clipped)`);
         for (const o of ctx.objects) {
           if (b.perch === o.id) continue;
           if (o.box.distanceToPoint(c) < r - 6 && o.box.max.y > 100) say(tag + o.id, `${tag}: passes through ${o.id} at ${t.toFixed(1)} s (${c.toArray().map(Math.round)})`);
