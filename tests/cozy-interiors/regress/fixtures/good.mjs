@@ -13,7 +13,7 @@ export const fixtures = [
   { name: 'good-kettle-beside-sink', from: 'R.on(sink, kettle) puts the kettle on the next worktop module', kind: 'good',
     build({ Home }) { const { H, a, back } = room(Home), R = a.run(back, 'run', 500, [{ w: 600, kind: 'doors' }, { w: 900, kind: 'sink' }, { w: 600, kind: 'doors' }], { group: 'run' }); R.on('sink', 'kettle'); return H; } },
   { name: 'good-sofa-on-rug', from: 'a rug under the sofa front legs, a coffee table on it, seat soft things on the sofa', kind: 'good',
-    build({ Home }) { const { H, a } = room(Home); a.put('rug', 'rug', [3000, 1300], 0, { group: 'g', params: { w: 2800, d: 1900 } }); a.put('sofa', 'sofa', [3000, 560], 0, { group: 'g', hero: true }); a.put('ct', 'coffeeTable', [3000, 1500], 0, { group: 'g' }); a.seatSoft('sofa', { tone: 'lo', group: 'g' }); return H; } },
+    build({ Home }) { const { H, a } = room(Home); a.put('rug', 'rug', [3000, 1300], 0, { group: 'g', params: { w: 2800, d: 1900 } }); a.put('sofa', 'sofa', [3000, 560], 0, { group: 'g', hero: true }); a.put('ct', 'coffeeTable', [3000, 1740], 0, { group: 'g', params: { w: 1100 } }); a.seatSoft('sofa', { tone: 'lo', group: 'g' }); return H; } },
   { name: 'good-table-set', from: 'a round table with four chairs on its rug, a cloth and a pendant over it', kind: 'good',
     build({ Home }) { const { H, a } = room(Home); const T = a.table('dt', { at: [3000, 2200], r: 650, chairs: 4, cloth: true }); T.over('pendantLamp'); return H; } },
   { name: 'good-books-on-shelf-top', from: 'a book stack resting on top of a shelf', kind: 'good',

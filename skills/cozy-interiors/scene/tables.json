@@ -114,10 +114,10 @@
   ],
   "accents": [
    "fruit bowl",
-   "cutting board",
+   "cutting board (leaning at the back of the prep worktop, flat by the sink with a knife, or hanging from the rail)",
    "pan on the hob",
    "jars",
-   "kettle",
+   "kettle on the worktop by the sink",
    "tea towel on a rail",
    "herbs on the worktop",
    "stool",
@@ -127,13 +127,13 @@
   ],
   "more": [
    "dish rack by the sink (dishRack)",
-   "utensil crock (utensilCrock)",
+   "utensil crock beside the hob (utensilCrock)",
    "bread bin (breadBin)",
-   "toaster (toaster)",
+   "toaster on the worktop by the bread bin (toaster)",
    "moka pot on the hob (mokaPot)",
-   "pot rail with pans (potRail)",
-   "spice rack (spiceRack)",
-   "oven glove on a hook (ovenGlove)",
+   "pot rail with pans over or beside the hob (potRail)",
+   "spice rack on the wall by the hob (spiceRack)",
+   "oven glove on a hook by the hob (ovenGlove)",
    "wall clock (wallClock)",
    "cookbook on a stand (cookbookStand)",
    "watering can (wateringCan)",
@@ -218,10 +218,10 @@
    "vase of branches",
    "book stack",
    "basket",
-   "mirror",
+   "mirror over the sideboard",
    "wall shelf",
    "cushion on a chair",
-   "floor lamp",
+   "floor lamp beside the seat",
    "bench"
   ],
   "more": [
@@ -306,10 +306,10 @@
    "cat",
    "basket",
    "pouf",
-   "mirror",
+   "picture or gallery over the sofa",
    "wall shelf",
-   "floor lamp",
-   "side table"
+   "floor lamp beside the seat",
+   "side table at the arm of the seat"
   ],
   "more": [
    "floor cushion (floorCushion)",
@@ -385,13 +385,13 @@
   ],
   "accents": [
    "cushion",
-   "mirror",
+   "leaning mirror by the wall, or mirror over the chest of drawers",
    "basket",
    "cat",
-   "floor lamp",
+   "floor lamp beside the chair or bench",
    "bench at the foot of the bed",
    "wall shelf",
-   "picture",
+   "picture over the bed, or on open wall at eye level",
    "book stack"
   ],
   "more": [
@@ -470,10 +470,10 @@
   "accents": [
    "cushion",
    "book stack",
-   "side table",
+   "side table at the arm of the seat",
    "cat",
    "basket",
-   "picture",
+   "picture over the seat, or on open wall at eye level",
    "wall shelf",
    "vase of branches",
    "floor books",
@@ -538,7 +538,7 @@
    "coatHooks",
    "bench",
    "console",
-   "mirror",
+   "mirror over the console",
    "rug",
    "shoeRack",
    "coatStand",
@@ -547,9 +547,9 @@
   "accents": [
    "basket",
    "plant",
-   "picture",
+   "picture over the bench or console, or on open wall at eye level",
    "vase of branches",
-   "floor lamp",
+   "floor lamp in a corner clear of the door",
    "stool",
    "key bowl (keyBowl)",
    "letter tray (letterTray)",
@@ -628,12 +628,12 @@
   ],
   "accents": [
    "book stack",
-   "floor lamp",
+   "floor lamp beside the reading chair or in a corner",
    "basket",
-   "picture",
+   "picture over the desk or shelf, or on open wall at eye level",
    "wall shelf",
    "cushion",
-   "mirror",
+   "mirror over the console",
    "task lamp (taskLamp)",
    "monitor",
    "notebook and pens (notebook)",
@@ -1141,10 +1141,10 @@
     "id": "worktop",
     "say": "the worktop beside the hob",
     "things": [
-     "utensil crock (utensilCrock)",
+     "utensil crock beside the hob (utensilCrock)",
      "jars (jars)",
      "herbs in a pot (herbs)",
-     "cutting board with a loaf (cuttingBoard)",
+     "cutting board with a loaf, leaning at the back of the prep worktop (cuttingBoard)",
      "fruit bowl (fruitBowl)",
      "moka pot (mokaPot)",
      "bread bin (breadBin)",
@@ -1166,8 +1166,8 @@
   ],
   "wall": [
    "open shelf with plates and jars (openShelf)",
-   "pot rail with pans (potRail)",
-   "spice rack (spiceRack)",
+   "pot rail with pans over or beside the hob (potRail)",
+   "spice rack on the wall by the hob (spiceRack)",
    "wall clock with a tea towel (wallClock, teaTowel)",
    "picture over the table (picture)"
   ]
@@ -1202,7 +1202,7 @@
   "wall": [
    "mirror over the sideboard (mirror)",
    "plates on the wall (wallPlates)",
-   "wall shelf with jars and a plant (wallShelf)",
+   "wall shelf over the sideboard, its bottom 400-600 over the top (wallShelf)",
    "picture group over the sideboard (picture)",
    "glazed cabinet with dishes (glazedCabinet)"
   ]
@@ -1235,9 +1235,9 @@
   ],
   "wall": [
    "gallery wall of frames over the sofa (galleryWall)",
-   "wall shelf with books and a plant (wallShelf)",
+   "wall shelf above the side table, its bottom 400-600 over the top (wallShelf)",
    "big picture over the sofa (picture)",
-   "mirror on the wall beside the window (mirror)"
+   "mirror on the wall beside the window, never over the sofa (mirror)"
   ]
  },
  "bedroom": {
@@ -1341,7 +1341,7 @@
   ],
   "wall": [
    "pinboard over the desk (pinboard)",
-   "wall shelf with binders and books (wallShelf)",
+   "wall shelf over the desk, its bottom 400-600 over the top (wallShelf)",
    "picture or calendar over the desk (picture)",
    "window with a curtain (curtain)"
   ]

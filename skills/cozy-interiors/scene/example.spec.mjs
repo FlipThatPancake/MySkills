@@ -10,7 +10,7 @@ const left = a.left(4400, [{ kind: 'window', x: 2300, width: 1000, height: 1100,
 // The L: run A stands on the back wall; its `joins` says run B stands at A's start and reaches 2200 mm out from A's front.
 // A builds the L-shaped worktop for both; B (on the left wall) is built with ownsTop: false and starts 1200 mm along the wall,
 // where A's front ends (A's depth 600 + B's width 600). A { kind: 'blind' } module is the corner cabinet over B's dead end.
-const R = a.run(back, 'run', 0, [{ w: 900, kind: 'blind', dead: 'l' }, { w: 600, kind: 'drawers', n: 3, ajar: 0.3 }, { w: 900, kind: 'hob' }, { w: 600, kind: 'doors' }], { group: 'run', hero: true, joins: { side: 'start', length: 2200 } });
+const R = a.run(back, 'run', 0, [{ w: 900, kind: 'blind', dead: 'l' }, { w: 600, kind: 'drawers', n: 3, ajar: 0.3 }, { w: 900, kind: 'hob' }, { w: 900, kind: 'doors' }], { group: 'run', hero: true, joins: { side: 'start', length: 2200 } });
 R.on('hob', 'hob', { group: 'cook' }); R.on('hob', 'hood', { group: 'cook' }); R.on('hob', 'pan', { group: 'cook' });
 R.on('drawers', 'cuttingBoard', { group: 'cook' }); R.on('doors', 'fruitBowl', { group: 'cook', dx: -170 }); R.on('doors', 'plant', { group: 'cook', dx: 190 });
 const B = a.run(left, 'lrun', 1200, [{ w: 600, kind: 'drawers', n: 3 }, { w: 900, kind: 'sink' }, { w: 400, kind: 'door', hinge: 'r' }], { group: 'run', ownsTop: false });
