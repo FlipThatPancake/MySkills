@@ -103,7 +103,7 @@ export async function openPlanIssues(page, sceneFile, { quick = false } = {}) {
 async function lightAcross(page, q, feet) {   // feet: footprints of the objects; a sample point within 900 mm of one is skipped (the baked contact shadows reach that far) (its contact shadow is no step)
   const url = page.url().replace(/\?check.*$/, ''), ctx = await page.context().browser().newContext(), p2 = await ctx.newPage(); await p2.setViewportSize({ width: 1200, height: 750 });
   try {
-    await p2.goto(url); await p2.waitForFunction(() => window.cozyScene && window.cozyBaked, null, { timeout: 240000 });
+    await p2.goto(url, { timeout: 180000 }); await p2.waitForFunction(() => window.cozyScene && window.cozyBaked, null, { timeout: 240000 });
     await p2.evaluate(() => { const c = window.cozyScene; c.setArea(c.areaIds[0], true); c.controls.enabled = false; c.tour.update = () => false; for (const g of Object.values(c.objects)) { g.visible = false; g.userData.tick = null; g.userData.update = null; } for (const w of c.home.walls) w.node.visible = false; });
     const mid = [(q.p0[0] + q.p1[0]) / 2, (q.p0[1] + q.p1[1]) / 2], len = Math.hypot(q.p1[0] - q.p0[0], q.p1[1] - q.p0[1]), n = q.normal;
     await p2.evaluate(([mid, len]) => { const c = window.cozyScene; c.camera.fov = 30; c.camera.up.set(0, 0, -1); c.camera.position.set(mid[0], len * 2.2 + 3000, mid[1]); if (c.controls.target) c.controls.target.set(mid[0], 0, mid[1]); c.camera.lookAt(mid[0], 0, mid[1]); c.camera.updateProjectionMatrix(); c.camera.updateMatrixWorld(true); }, [mid, len]);

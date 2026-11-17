@@ -91,7 +91,6 @@
       "width": 1000,
       "height": 1100,
       "sill": 1000,
-      "sash": "fixed",
       "at": 1900
      }
     ]
@@ -206,12 +205,14 @@
     "id": "dining-dining-pendantLamp",
     "asset": "pendantLamp",
     "at": [
-     2480,
+     2900,
      0,
      3500
     ],
     "mount": "ceiling",
-    "params": {},
+    "params": {
+     "rim": 1582
+    },
     "group": "dining:table set",
     "area": "dining"
    },
@@ -236,21 +237,15 @@
     "dx": -120
    },
    {
-    "id": "dining-dining-breadBasket",
-    "asset": "breadBasket",
+    "id": "dining-dining-bookStack",
+    "asset": "bookStack",
     "at": [
      3120,
      757,
      3500
     ],
     "mount": "on",
-    "params": {
-     "r": 142,
-     "bread": "loaf",
-     "seed": 51,
-     "cloth": "no",
-     "rim": "plain"
-    },
+    "params": {},
     "group": "dining:table set",
     "area": "dining",
     "dx": 220
@@ -277,7 +272,7 @@
     "id": "dining-side-vase",
     "asset": "vase",
     "at": [
-     1953.3,
+     1906.7,
      800,
      130
     ],
@@ -292,9 +287,9 @@
     "id": "dining-side-plant",
     "asset": "plant",
     "at": [
-     2466.7,
+     2443.3,
      800,
-     110
+     180
     ],
     "mount": "on",
     "params": {
@@ -308,7 +303,7 @@
     "asset": "picture",
     "at": [
      2200,
-     1550,
+     1250,
      0
     ],
     "mount": "wall",
@@ -586,6 +581,48 @@
     "sep": "openShelf"
    },
    {
+    "id": "kitchen-trolley",
+    "asset": "trolley",
+    "at": [
+     2000,
+     0,
+     9100
+    ],
+    "turn": -90,
+    "mount": "floor",
+    "params": {},
+    "group": "kitchen:cooking",
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-tm1",
+    "asset": "mug",
+    "at": [
+     2020,
+     820,
+     9030
+    ],
+    "turn": -90,
+    "mount": "on",
+    "params": {},
+    "group": "kitchen:cooking",
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-tm2",
+    "asset": "mug",
+    "at": [
+     1970,
+     820,
+     9190
+    ],
+    "turn": -90,
+    "mount": "on",
+    "params": {},
+    "group": "kitchen:cooking",
+    "area": "kitchen"
+   },
+   {
     "id": "kitchen-runner",
     "asset": "rug",
     "at": [
@@ -602,20 +639,6 @@
      "fringe": "ends",
      "border": 120
     },
-    "group": "kitchen:cooking",
-    "area": "kitchen"
-   },
-   {
-    "id": "kitchen-trolley",
-    "asset": "trolley",
-    "at": [
-     2000,
-     0,
-     9100
-    ],
-    "turn": -90,
-    "mount": "floor",
-    "params": {},
     "group": "kitchen:cooking",
     "area": "kitchen"
    },
@@ -658,7 +681,7 @@
     "asset": "picture",
     "at": [
      5400,
-     1450,
+     1200,
      2400
     ],
     "turn": -90,

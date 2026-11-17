@@ -29,30 +29,30 @@ let k, d, l;
   const back = a.back(4400, [{ kind: 'window', x: 3500, width: 1200, height: 1200, sill: 900 }]);
   a.put('rug', 'rug', [2700, 2600], 0, { group: 'table set', params: { w: 2500, d: 2500, form: 'round', fringe: 'ends', border: 40 } });
   const T = a.table('dining', { at: [2700, 2600], r: 700, chairs: 4, rug: false, group: 'table set', hero: true });
-  T.over('pendantLamp', { group: 'table light' }); T.on('jug', { dx: -120 }); T.on('breadBasket', { dx: 220 });
+  T.over('pendantLamp', { group: 'table light', params: { rim: 1582 } }); T.on('jug', { dx: -120 }); T.on('breadBasket', { dx: 220 });
   back.place('side', 'sideboard', 750, { group: 'wall', params: { w: 1400, h: 800 } });
   a.onTop('side', [{ id: 'side-vase', asset: 'jug' }, { id: 'side-books', asset: 'bookStack' }], { at: 'back', group: 'wall' });
-  back.place('pic', 'picture', 750, { y: 1550, group: 'wall', shadow: false, params: { w: 700, h: 500 } });
+  back.place('pic', 'picture', 750, { y: 1250, group: 'wall', shadow: false, params: { w: 700, h: 500 } });
   a.put('fplant', 'floorPlant', [4150, 800], 0, { group: 'wall' });
   a.put('basket', 'basket', [4200, 4000], 10, { group: 'table light' });
   a.view({ target: [2300, 800, 2000], az: 7, el: 14 });
 }
 { // ---------- living (the end: a right wall is allowed, the roll dealt none)
   const a = l = H.area('living', 'Living', { rect: [0, 0, 5400, 4800] }); H.join(d, l, { layout: 'row', share: 500, separators: ['sofaBack'] });
-  const back = a.back(5400, [{ kind: 'window', x: 2500, width: 1500, height: 1300, sill: 700, sash: 'fixed' }]);
+  const back = a.back(5400, [{ kind: 'window', x: 2500, width: 1500, height: 1300, sill: 700 }]);
   // the sofa, the separator: its back to the dining area, its front toward the room
-  a.put('sofa', 'sofa', [650, 2400], 90, { group: 'seating', hero: true, sep: 'sofaBack', y: 7, lift: 7, params: { seats: 3 } });
-  a.seatSoft('sofa', { cushions: 1, throw: 'band', tone: 'accent', group: 'seating' });
+  a.put('sofa', 'sofa', [650, 2400], 90, { group: 'seating', hero: true, sep: 'sofaBack', y: 8, lift: 8, params: { seats: 3 } });
+  a.seatSoft('sofa', { cushions: 1, throw: 'drape', tone: 'accent', group: 'seating' });
   a.put('rug', 'rug', [2500, 2400], 0, { group: 'seating', params: { w: 2800, d: 2400, form: 'striped', fringe: 'none', border: 90, w: 3000, d: 2200 } });
-  a.put('coffee', 'coffeeTable', [2200, 2400], 90, { group: 'seating', y: 7, lift: 7 });
-  a.put('arm', 'armchair', [3650, 1700], facing([3650, 1700], [2200, 2400]), { group: 'seating', y: 7, lift: 7 });
+  a.put('coffee', 'coffeeTable', [2600, 2400], 90, { group: 'seating', y: 7, lift: 7 });
+  a.put('arm', 'armchair', [3800, 1800], facing([3800, 1800], [2200, 2400]), { group: 'seating', y: 8, lift: 8 });
   back.place('shelf', 'sideboard', 4800, { group: 'shelves', params: { w: 1100, h: 800 } });
   a.onTop('shelf', [{ id: 'shelf-vase', asset: 'jug' }, { id: 'shelf-books', asset: 'bookStack' }], { at: 'back', group: 'shelves' });
-  back.place('spic', 'picture', 4800, { y: 1350, group: 'shelves', shadow: false, params: { w: 800, h: 600 } });
-  back.place('flamp', 'floorLamp', 1450, { group: 'window' });
-  a.put('lplant', 'floorPlant', [650, 700], 0, { group: 'window' });
-  a.put('mug', 'mug', [2200, 2300], 0, { group: 'seating', y: a.topOf('coffee'), mount: 'on' });
-  a.view({ target: [2400, 800, 2000], az: 14, el: 14 });
+  back.place('spic', 'picture', 4800, { y: 1200, group: 'shelves', shadow: false, params: { w: 800, h: 600 } });
+  a.put('flamp', 'floorLamp', [700, 950], 0, { group: 'window' });
+  a.put('lplant', 'floorPlant', [650, 4300], 0, { group: 'window' });
+  a.put('mug', 'mug', [2600, 2300], 0, { group: 'seating', y: a.topOf('coffee'), mount: 'on' });
+  a.view({ target: [2400, 800, 2000], az: 6, el: 14 });
 }
 H.floorZones({ kitchen: 'tiles', dining: 'boards', living: 'boards' });
 H.write(new URL('./row.json', import.meta.url).pathname, fs);

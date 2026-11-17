@@ -123,7 +123,6 @@
       "width": 1500,
       "height": 1300,
       "sill": 700,
-      "sash": "fixed",
       "at": 2900
      }
     ]
@@ -523,7 +522,9 @@
      2600
     ],
     "mount": "ceiling",
-    "params": {},
+    "params": {
+     "rim": 1582
+    },
     "group": "dining:table light",
     "area": "dining"
    },
@@ -622,7 +623,7 @@
     "asset": "picture",
     "at": [
      5550,
-     1550,
+     1250,
      0
     ],
     "mount": "wall",
@@ -671,7 +672,7 @@
     "asset": "sofa",
     "at": [
      9850,
-     7,
+     8,
      2400
     ],
     "turn": 90,
@@ -693,14 +694,14 @@
     "hero": true,
     "area": "living",
     "sep": "sofaBack",
-    "lift": 7
+    "lift": 8
    },
    {
     "id": "living-sofa-cushion1",
     "asset": "cushion",
     "at": [
      9870,
-     419,
+     420,
      1680
     ],
     "turn": 98,
@@ -724,7 +725,7 @@
     "asset": "foldedThrow",
     "at": [
      10200,
-     417,
+     418,
      1710
     ],
     "turn": 90,
@@ -761,7 +762,7 @@
     "id": "living-coffee",
     "asset": "coffeeTable",
     "at": [
-     11400,
+     11800,
      7,
      2400
     ],
@@ -781,11 +782,11 @@
     "id": "living-arm",
     "asset": "armchair",
     "at": [
-     12850,
-     7,
-     1700
+     13000,
+     8,
+     1800
     ],
-    "turn": -64.2,
+    "turn": -69.4,
     "mount": "floor",
     "params": {
      "shape": "sling",
@@ -802,7 +803,7 @@
     },
     "group": "living:seating",
     "area": "living",
-    "lift": 7
+    "lift": 8
    },
    {
     "id": "living-shelf",
@@ -859,7 +860,7 @@
     "asset": "picture",
     "at": [
      14000,
-     1350,
+     1200,
      0
     ],
     "mount": "wall",
@@ -876,9 +877,9 @@
     "id": "living-flamp",
     "asset": "floorLamp",
     "at": [
-     10650,
+     9900,
      0,
-     190
+     950
     ],
     "mount": "floor",
     "params": {},
@@ -891,7 +892,7 @@
     "at": [
      9850,
      0,
-     700
+     4300
     ],
     "mount": "floor",
     "params": {
@@ -904,7 +905,7 @@
     "id": "living-mug",
     "asset": "mug",
     "at": [
-     11400,
+     11800,
      357,
      2300
     ],
@@ -1016,7 +1017,7 @@
       800,
       2000
      ],
-     "az": 14,
+     "az": 6,
      "el": 14,
      "fit": "objects"
     },
