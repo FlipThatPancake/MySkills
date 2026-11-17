@@ -14,7 +14,7 @@ export const lowest = (o) => { let y = Infinity; for (const p of o.parts) y = Ma
 export const supports = (c, mine) => {
   const A = mine === 'a' ? c.a : c.b, B = mine === 'a' ? c.b : c.a;
   if (B.role === 'wall') return false; if (B.mn[1] > A.mn[1] + 5) return false;
-  return c.approx || Math.abs(c.normal.y) > 0.3;
+  return c.approx || c.d < 0 || Math.abs(c.normal.y) > 0.3;   // inside each other the normal is no guide: the position test decides
 };
 
 export function applyRules(Q, list) {
