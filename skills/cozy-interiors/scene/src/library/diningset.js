@@ -97,6 +97,11 @@ export function wallPlates(kit, { n = 5, r = 110, seed = 4, layout = 'cluster' }
   else if (layout === 'row') for (let i = 0; i < n; i++) spots.push([(i - (n - 1) / 2) * (r * 2.3), r, r * (0.8 + 0.5 * R())]);
   else if (layout === 'ring') { spots.push([0, r * 2.4, r * 1.1]); for (let i = 0; i < n - 1; i++) { const a = i / (n - 1) * 6.2832; spots.push([Math.cos(a) * r * 2.3, r * 2.4 + Math.sin(a) * r * 2.3, r * 0.6]); } }
   else for (let i = 0; i < n; i++) { const a = i * 2.4 + R(), d = Math.sqrt(i + 0.5) * r * 1.1; spots.push([Math.cos(a) * d, r * 2.5 + Math.sin(a) * d * 0.8, r * (0.6 + 0.6 * R())]); }
+  for (let it = 0; it < 500; it++) for (let i = 0; i < spots.length; i++) for (let j = i + 1; j < spots.length; j++) {   // keep a 30 mm gap between rims
+    const A = spots[i], B = spots[j]; let dx = B[0] - A[0], dy = B[1] - A[1], d = Math.hypot(dx, dy); const need = A[2] + B[2] + 30; if (d >= need) continue;
+    if (d < 1e-3) { dx = 1; dy = 0.3; d = Math.hypot(dx, dy); } const k = (need - d) / 2 / d; A[0] -= dx * k; A[1] -= dy * k; B[0] += dx * k; B[1] += dy * k;
+  }
+  { const x0 = Math.min(...spots.map((s) => s[0] - s[2])), x1 = Math.max(...spots.map((s) => s[0] + s[2])), y0 = Math.min(...spots.map((s) => s[1] - s[2])); for (const s of spots) { s[0] -= (x0 + x1) / 2; s[1] -= y0; } }   // origin: bottom middle
   spots.forEach(([x, y, rr], i) => { g.add(kit.cyl(x, y, 20, rr, 14, { axis: 'z', seg: 32 })); g.add(kit.cyl(x, y, 25, rr * 0.7, 8, { axis: 'z', seg: 28, tone: 'lo' })); pts.push(...ringXY(x, y, rr * 0.82, 26.5, 28)); if (i % 3 === 0) for (let k = 0; k < 8; k++) { const a = k / 8 * 6.2832; pts.push([x + Math.cos(a) * rr * 0.12, y + Math.sin(a) * rr * 0.12, 26.5], [x + Math.cos(a) * rr * 0.5, y + Math.sin(a) * rr * 0.5, 26.5]); } else if (i % 3 === 1) pts.push(...ringXY(x, y, rr * 0.5, 26.5, 20)); });
   g.add(kit.lines(pts, 'lo'));
   return kit.merge(g);

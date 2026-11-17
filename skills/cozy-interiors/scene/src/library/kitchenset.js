@@ -9,6 +9,16 @@ const ringXY = (cx, cy, r, z, n = 28) => { const p = []; for (let i = 0; i < n; 
 const ringXZ = (r, y, n = 28) => { const p = []; for (let i = 0; i < n; i++) { const a = i / n * 6.2832, b = (i + 1) / n * 6.2832; p.push([Math.cos(a) * r, y, Math.sin(a) * r], [Math.cos(b) * r, y, Math.sin(b) * r]); } return p; };
 const tilt = (kit, m, x, y, z, rx = 0, rz = 0) => { const q = kit.group(); q.add(m); q.position.set(x, y, z); q.rotation.set(rx, 0, rz); return q; };   // a part swung about its own foot
 
+// a drying cup: an open rim, no lid; pose 'down' stands upside down on a peg, 'side' lies on its side, 'up' stands upright. Adds to g at x, z on the rack's tray (top at 22).
+function dryCup(kit, g, x, z, pose, R) {
+  const T = kit.THREE, r = 38, h = 88, c = kit.group(), pr = [[0.01, 0], [r * 0.9, 0], [r, 4], [r, h], [r - 4, h], [r - 4, 8], [0.01, 8]].map(([a, b]) => new T.Vector2(a, b));
+  c.add(kit.solid(new T.LatheGeometry(pr, 24), 0, 0, 0, { smooth: true, tone: 'lo' }));
+  const hp = [[r - 2, h * 0.8], [r + 20, h * 0.76], [r + 26, h * 0.5], [r + 18, h * 0.26], [r - 2, h * 0.22]]; for (let i = 0; i < hp.length - 1; i++) c.add(rod(kit, [hp[i][0], hp[i][1], 0], [hp[i + 1][0], hp[i + 1][1], 0], 5, 5, 'lo'));
+  if (pose === 'down') { g.add(rod(kit, [x, 22, z], [x, 24 + h - 20, z], 5, 5, 'lo')); c.rotation.x = Math.PI; c.position.set(x, 24 + h, z); }
+  else if (pose === 'side') { c.rotation.z = Math.PI / 2; c.position.set(x + h / 2, 24 + r, z); c.rotation.y = (R() - 0.5) * 0.5; }
+  else c.position.set(x, 24, z);
+  g.add(c);
+}
 export function dishRack(kit, { w = 480, d = 320, form = 'plates', seed = 1 } = {}) {   // a tray with a wire frame; plates or cups stand in it
   const g = kit.group(), R = rnd(seed), pts = [];
   g.add(kit.rbox(-w / 2, 0, d / 2, w, 22, d, 10));
@@ -19,9 +29,9 @@ export function dishRack(kit, { w = 480, d = 320, form = 'plates', seed = 1 } = 
     for (let i = 0; i < n + 1; i++) { const x = -w / 2 + 44 + i * step; g.add(rod(kit, [x, 22, d * 0.22], [x, 70, d * 0.22], 3, 3, 'lo')); g.add(rod(kit, [x, 22, -d * 0.22], [x, 70, -d * 0.22], 3, 3, 'lo')); }
   } else if (form === 'mixed') {   // three plates on the left, two cups on pegs on the right
     for (let i = 0; i < 3; i++) { const x = -w / 2 + 60 + i * (w * 0.5 - 60) / 3, p = kit.group(), r = 100 + R() * 14; p.add(kit.cyl(0, r, 0, r, 8, { axis: 'z', seg: 32 })); p.add(kit.lines(ringXY(0, r, r * 0.72, 4.5, 28), 'lo')); p.position.set(x, 24, -d * 0.04); p.rotation.x = -0.12; g.add(p); g.add(rod(kit, [x - 14, 22, d * 0.22], [x - 14, 70, d * 0.22], 3, 3, 'lo')); g.add(rod(kit, [x - 14, 22, -d * 0.22], [x - 14, 70, -d * 0.22], 3, 3, 'lo')); }
-    for (let i = 0; i < 2; i++) { const x = w / 2 - 70 - i * 100, z = (i ? 1 : -1) * d * 0.1; g.add(rod(kit, [x, 22, z], [x, 130, z], 5, 5, 'lo')); const q = kit.group(); q.add(mug(kit, { r: 38, h: 88 })); q.rotation.x = Math.PI; q.position.set(x, 24 + 88 + 6, z); g.add(q); }
+    for (let i = 0; i < 2; i++) dryCup(kit, g, w / 2 - 70 - i * 100, (i ? 1 : -1) * d * 0.1, i ? (R() < 0.5 ? 'side' : 'up') : 'down', R);
   } else {   // cups upside down on pegs
-    const n = 4; for (let i = 0; i < n; i++) { const x = -w / 2 + 70 + i * (w - 140) / (n - 1), z = (i % 2 ? 1 : -1) * d * 0.1; g.add(rod(kit, [x, 22, z], [x, 130, z], 5, 5, 'lo')); const m = mug(kit, { r: 38, h: 88 }); const q = kit.group(); q.add(m); q.rotation.x = Math.PI; q.position.set(x, 24 + 88 + 6, z); g.add(q); }
+    const n = 4; for (let i = 0; i < n; i++) dryCup(kit, g, -w / 2 + 70 + i * (w - 140) / (n - 1), (i % 2 ? 1 : -1) * d * 0.1, R() < 0.6 ? 'down' : R() < 0.5 ? 'side' : 'up', R);
   }
   return kit.merge(g);
 }

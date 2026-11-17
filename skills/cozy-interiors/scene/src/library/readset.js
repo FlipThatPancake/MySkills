@@ -102,7 +102,8 @@ export function readShelf(kit, { form = 'ledge', w = 800, seed = 1 } = {}) {   /
     for (let i = 0; i < 2; i++) g.add(kit.cyl(-w / 2 + 120 + i * 130, 404, 100, 40, 84, { rTop: 44, seg: 22 })); g.add(kit.cyl(w / 2 - 130, 404, 100, 54, 130, { rTop: 40, seg: 22, ...lo }));
   } else if (form === 'pegs') {   // a peg rail with a hung cloth and a hung bag
     g.add(Rb(0, 0, 0, w, 90, 24, 4)); const k = Math.max(3, Math.round(w / 220));
-    for (let i = 0; i < k; i++) { const x = -w / 2 + 80 + i * (w - 160) / (k - 1); g.add(rod(kit, [x, 45, 12], [x, 45, 90], 10, 10, 'lo')); g.add(kit.cyl(x, 45, 94, 15, 12, { axis: 'z', seg: 12 })); if (i === 1) g.add(kit.rbox(x - 70, -260, 108, 140, 300, 12, 6, lo)); if (i === 2 || (i === k - 1 && k === 3)) g.add(kit.rbox(x - 80, -240, 130, 160, 220, 60, 22)); }
+    for (let i = 0; i < k; i++) { const x = -w / 2 + 80 + i * (w - 160) / (k - 1); g.add(rod(kit, [x, 45, 12], [x, 45, 100], 10, 10, 'lo')); g.add(kit.cyl(x, 45, 104, 15, 12, { axis: 'z', seg: 12 })); if (i === 1) g.add(kit.rbox(x - 70, -260, 118, 140, 312, 14, 6, lo));   // a folded throw over a peg
+      if (i === k - 1) { g.add(kit.rbox(x - 75, -280, 162, 150, 250, 46, 18)); g.add(kit.lines([[x - 8, 45, 108], [x - 62, -30, 140], [x + 8, 45, 108], [x + 62, -30, 140]], 'lo')); g.add(kit.rbox(x - 56, -40, 152, 34, 130, 26, 2, lo)); g.add(kit.rbox(x - 8, -40, 152, 30, 105, 26, 2)); g.add(kit.rbox(x + 26, -40, 152, 26, 118, 26, 2, lo)); } }   // a tote with books standing in it
   } else {
     g.add(Rb(0, 0, 0, w, 28, 220, 4)); for (const s of [-1, 1]) { const x = s * (w / 2 - 110); g.add(B(x, -150, -103, 22, 170, 14, lo)); g.add(rod(kit, [x, -140, -96], [x, -10, 80], 8, 8, 'lo')); g.add(B(x, -22, -10, 22, 22, 200, lo)); }
     let x = -w / 2 + 60; for (let i = 0; i < 7 && x < w / 2 - 330; i++) { const bw = 30 + R() * 22, bh = 170 + R() * 80; g.add(kit.rbox(x, 28, 130, bw, bh, 150, 2, { tone: i % 2 ? 'lo' : 'mid' })); x += bw + 2; }
