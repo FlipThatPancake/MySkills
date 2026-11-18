@@ -1,8 +1,7 @@
 {
  "floor": [
   "tiles",
-  "boards",
-  "plain"
+  "boards"
  ],
  "backing": [
   {
@@ -55,7 +54,7 @@
     {
      "kind": "window",
      "on": "first",
-     "sash": "fixed"
+     "sash": "out"
     }
    ],
    [
@@ -72,7 +71,7 @@
     {
      "kind": "window",
      "on": "second",
-     "sash": "fixed"
+     "sash": "out"
     },
     {
      "kind": "arch",
@@ -83,7 +82,7 @@
     {
      "kind": "window",
      "on": "first",
-     "sash": "fixed"
+     "sash": "out"
     },
     {
      "kind": "window",
@@ -94,7 +93,7 @@
     {
      "kind": "window",
      "on": "first",
-     "sash": "fixed"
+     "sash": "out"
     },
     {
      "kind": "arch",
@@ -1006,7 +1005,7 @@
    "say": "sliding glass doors to the outside (two panels, one half slid, 2400 x 2250 mm; keep the floor in front clear)"
   }
  ],
- "windowsNote": "roll gives each window a style from `windows`; at most one wall, bay, french or slider per area, and a window with sash 'fixed' (over a sink) stays a two-sash window. Style goes in the opening: { kind: 'window', style: 'picture' | 'pair' | 'wall' | 'bay', x } or { kind: 'door', style: 'french' | 'slider', x }; width, height and sill default from the style (opening.js STYLE). A glass door or wall of glass counts as an opening for the 1200 mm of clear wall rule, and its sheet of daylight lights the area.",
+ "windowsNote": "roll gives each window a style from `windows`; at most one wall, bay, french or slider per area, and a window with sash 'out' (over a sink: it opens outward, so the worktop and the sink do not stop it) stays a two-sash window. Style goes in the opening: { kind: 'window', style: 'picture' | 'pair' | 'wall' | 'bay', x } or { kind: 'door', style: 'french' | 'slider', x }; width, height and sill default from the style (opening.js STYLE). A glass door or wall of glass counts as an opening for the 1200 mm of clear wall rule, and its sheet of daylight lights the area.",
  "boardPlaces": [
   {
    "id": "flat with a loaf",
@@ -1425,7 +1424,7 @@
   "cat": {
    "say": "a cat asleep, curled on a sofa, bed, chair, rug or the floor, breathing slowly",
    "needs": [],
-   "in": ["dining", "living", "bedroom", "reading-corner", "home-office"],
+   "in": ["kitchen", "dining", "living", "bedroom", "reading-corner", "hallway", "home-office"],
    "weight": 3
   },
   "paw": {

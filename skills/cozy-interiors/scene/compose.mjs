@@ -6,6 +6,12 @@
 //   const back = a.back(6600, [openings]);            // along the back, z = 0, from x = 0 to the right
 //   const left = a.left(4200, [openings], angle);     // meeting the back's left end; angle 90 (default) or 120 between the two walls; its left end is the front one
 //   const right = a.right(4200, [openings], angle);   // meeting the back's right end; its left end is the back one
+//   Wall x, in one sentence: seen from inside the room, x counts from the wall's left end to its right end, so it runs left to right on the back wall, from the front corner to the back corner on the left wall, and from the back corner to the front corner on the right wall.
+//        x grows ->       back                 plan from above, the room inside:
+//        (left wall)  +------------------+  (right wall)
+//       x grows  ^    |                  |   x grows
+//       front->back   |       room       |   back->front  v
+//                     +------------------+  front (open to the viewer)
 //   Placing on a wall (xc is where the middle of the thing is along the wall, measured like an opening's x; the distance out from the wall comes from the asset, see assets.mjs):
 //   back.place('fridge', 'fridge', 5100);   back.place('sofa', 'sofa', 3200, { y: 7, lift: 7, params: { seats: 2 } });   back.place('pic', 'picture', 2000, { y: 1400 });   onSill: back.onSill('herbs', 'plant', 2400, { params })  a pot or small thing on a window's sill (xc inside a window of that wall; it stands at the sill + 30 mm, its front inside the 110 mm lip);   options: y, turn (added to facing out from the wall), params, off (override), group, hero, shadow
 //   A cabinet run with slots:  const R = a.run(back, 'run', 1650, [modules], { group: 'run' });  R.on('hob', 'hob');  R.on('hob', 'hood');  R.on('hob', 'pan');  R.on('sink', 'kettle');  (the thing goes on the middle of that module)
@@ -26,6 +32,8 @@ import { restOn as geomRestOn, fits as geomFits, topAt } from './geom/place.mjs'
 import { REGISTRY } from './src/library/index.js';
 import { joinAreas, seamLine, zoneList } from './openplan.mjs';
 import { checkAlive, pickVia, MOTION } from './motion-roll.mjs';
+import { installDocument } from './geom/load.mjs';
+installDocument();   // the Node canvas stand-in (geom/load.mjs), so a.onTop and the textures work in a plain Node spec
 const rad = (d) => d * Math.PI / 180, deg = (r) => r * 180 / Math.PI, r0 = (v) => Math.round(v * 10) / 10;
 export const GAP = 3000;
 const headLine = (o, head) => o.kind !== 'window' || o.feature || ['picture', 'pair', 'wall', 'bay'].includes(o.style) ? o : o.sill != null && o.height == null ? { ...o, height: head - o.sill } : o.height != null && o.sill == null ? { ...o, sill: head - o.height } : o;   // windows on one wall share a head height: a sill alone fixes the height, a height alone fixes the sill
@@ -101,6 +109,7 @@ class Area {
     const p = this, to = p.P([x, z]), ph = rad(phi + p.psi), r = [Math.cos(ph), Math.sin(ph)];
     const from = [r0(to[0] + r[0] * len), r0(to[1] + r[1] * len)];
     p.h.S.home.walls.push({ id: `${p.id}-${id}`, from, to, openings: openings.map(({ x: ox, ...o }) => ({ ...headLine(o, p.h.head), at: len - ox })) });
+    let taken = [];
     const F = {
       id, len, phi,
       at: (ox, off = 0) => [x + Math.cos(rad(phi)) * ox - Math.sin(rad(phi)) * off, z + Math.sin(rad(phi)) * ox + Math.cos(rad(phi)) * off],   // the local point
@@ -113,10 +122,14 @@ class Area {
       },
       place(oid, asset, xc, o = {}) {   // by the asset's own origin and size: xc is its middle along the wall
         if (asset === 'windowSeat') { const W = openings.find((q) => q.kind === 'window' && Math.abs(q.x - xc) <= q.width / 2 + 300); if (W) { const h = o.params?.h ?? Math.min(480, Math.max(400, (W.sill ?? 1000) - 130)); o = { ...o, params: { ...o.params, h, pillowMax: (W.sill ?? 1000) - (h + 70) - 30 }, }; } }   // under a window the seat is as tall as the sill allows (its cushion top within 100 of the sill: a sill of 530-610 fits h 400-480; a higher sill leaves a gap the placement check names)
-        o = { ...o, params: vary(p.h, asset, o.params, p.id) }; const { w, d, m } = sizeOf(asset, o.params), mount = o.mount || m.mount; if (o.y === undefined && m.y === 'top') throw new Error(`place('${oid}', '${asset}'): give y, the height of the surface it stands on in mm (for example y: 520 on a bedside table, 740 on a desk)`); const y = o.y ?? (typeof m.y === 'number' ? m.y : 0);
+        o = { ...o, params: vary(p.h, asset, o.params, p.id) }; const { w, d, h, m } = sizeOf(asset, o.params), mount = o.mount || m.mount; if (o.y === undefined && m.y === 'top') throw new Error(`place('${oid}', '${asset}'): give y, the height of the surface it stands on in mm (for example y: 520 on a bedside table, 740 on a desk)`); const y = o.y ?? (typeof m.y === 'number' ? m.y : 0);
         const backOf = () => { const kit = (p.h.kit ||= createKit()), key = asset + JSON.stringify(o.params || {}), cache = (p.h.backCache ||= {}); if (cache[key] === undefined) { const g = REGISTRY[asset](kit, { ...(o.params || {}) }); g.updateMatrixWorld(true); cache[key] = Math.max(0, -new kit.THREE.Box3().setFromObject(g).min.z); } return cache[key]; };   // the model's own back, measured: a cornice or a rolled arm stands further out than the table size says
         const sillWin = asset === 'curtain' && o.off === undefined ? openings.find((q) => q.kind === 'window' && (q.sill ?? 1000) >= 300 && Math.abs(q.x - xc) <= (q.width + w) / 2) : null;   // a curtain at a sill window hangs in front of the sill's lip (the sill reaches 110 mm into the room): the curtain model's back stands 60 mm out of its origin, so 60 mm off the wall puts it 10 mm past the lip
         const off = o.off ?? (sillWin ? 60 : m.origin === 'centre' ? Math.max(d / 2, backOf()) : m.origin === 'front-left' ? (o.depth ?? d) : m.origin === 'front-centre' ? (o.depth ?? 600) : 0);
+        { const bx = [xc - w / 2, xc + w / 2], by = [y ?? 0, (y ?? 0) + (h ?? 0)], bd = [Math.max(0, off - (m.origin === 'centre' ? d / 2 : 0)), Math.max(0, off - (m.origin === 'centre' ? d / 2 : 0)) + d]; (taken ||= []);   // round 4 G6: a piece never lands inside another on the same wall
+          const hit = taken.find((t) => Math.min(t.x[1], bx[1]) - Math.max(t.x[0], bx[0]) > 30 && Math.min(t.y[1], by[1]) - Math.max(t.y[0], by[0]) > 30 && Math.min(t.d[1], bd[1]) - Math.max(t.d[0], bd[0]) > 30);
+          if (hit && !o.overlap) throw new Error(`place('${oid}', '${asset}', ${xc}): lands inside '${hit.id}' (${hit.asset}) on the same wall: x ${Math.round(hit.x[0])} to ${Math.round(hit.x[1])} is taken at that height; move it along the wall or give it a y above it (x runs as the plan in the header shows)`);
+          taken.push({ id: oid, asset, x: bx, y: by, d: bd }); }
         const ox = m.origin === 'front-left' ? xc - w / 2 : xc;
         const res = F.put(oid, asset, ox, off, { ...o, y, mount });
         return res;

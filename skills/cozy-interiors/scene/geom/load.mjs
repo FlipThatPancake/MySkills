@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { classify } from './shapes.mjs';
 const SRC = join(dirname(fileURLToPath(import.meta.url)), '../src');
 const ctx = new Proxy({}, { get: (t, k) => k === 'getImageData' ? () => ({ data: new Uint8ClampedArray(4) }) : k === 'createImageData' ? (w, h) => ({ data: new Uint8ClampedArray(w * h * 4) }) : () => ({ addColorStop() {} }), set: () => true });
+export const installDocument = () => { globalThis.document ??= DOC; };   // the Node canvas stand-in: compose installs it so onTop and the textures build in Node
 const DOC = { createElement: () => ({ getContext: () => ctx, width: 0, height: 0 }) };
 
 export async function loadScene(scene, { src = SRC } = {}) {

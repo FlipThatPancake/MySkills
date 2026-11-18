@@ -74,7 +74,7 @@ fixtures.push(
 }
 fixtures.push(
   { name: 'open-shelf-beside-a-picture-at-shelf-height', from: 'round 4 G2b: the left-wall open shelf with jars stands next to the bench picture and crosses it in the home view; rule 4 read a name list that left openShelf out', kind: 'bug', expect: { rules: ['placement-4'], ids: ['mm from'] },
-    build({ Home }) { const { H, back } = room(Home); back.place('sh', 'openShelf', 2000, { group: 'g' }); back.place('pic', 'picture', 2760, { group: 'g', y: 1100, params: { w: 600, h: 500 } }); return H; } },
+    build({ Home }) { const { H, back } = room(Home); back.place('sh', 'openShelf', 2000, { group: 'g' }); back.place('pic', 'picture', 2760, { overlap: true, group: 'g', y: 1100, params: { w: 600, h: 500 } }); return H; } },
   { name: 'good-open-shelf-and-picture-well-apart', from: 'round 4 G2b: the same two pieces 600 mm apart', kind: 'good', counts: ['placement-4'],
     build({ Home }) { const { H, back } = room(Home); back.place('sh', 'openShelf', 1500, { group: 'g' }); back.place('pic', 'picture', 3400, { group: 'g', y: 1250, params: { w: 600, h: 500 } }); return H; } },
 );
@@ -106,3 +106,10 @@ fixtures.push(
       build({ Home }) { return homeOf(Home, true); } },
   );
 }
+// G6: compose refuses a piece that lands inside another on the same wall
+fixtures.push(
+  { name: 'compose-refuses-a-piece-landing-inside-another', from: 'round 4 confusion 3: back.place put a picture and a shelf on the same spot of one wall after a mix-up about which way x runs', kind: 'bug', refuses: 'lands inside', expect: { rules: ['refused'], ids: [] },
+    build({ Home }) { const { H, back } = room(Home); back.place('sh', 'openShelf', 2000, { group: 'g' }); back.place('sh2', 'openShelf', 2100, { group: 'g' }); return H; } },
+  { name: 'good-compose-allows-a-picture-above-a-sideboard', from: 'round 4 G6: a piece above another on the same wall is fine', kind: 'good', counts: ['placement-4'],
+    build({ Home }) { const { H, back } = room(Home); back.place('sb', 'sideboard', 2000, { group: 'g', params: { w: 1400 } }); back.place('pic', 'picture', 2000, { group: 'g', y: 1250, params: { w: 900, h: 600 } }); return H; } },
+);

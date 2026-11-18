@@ -23,6 +23,8 @@ for (let seed = 1; seed <= N; seed++) for (const kinds of sets) {
       const unnamed = [...(a.accents || []), ...(a.foreground ? [a.foreground] : []), ...(a.pieces || []), ...(a.signs || [])].filter((t) => !NAMES.things[t] && !UNNAMED.test(t) && !/\([A-Za-z, ]+\)\s*$/.test(t)).concat((a.groups || []).slice(1).map(stripG).filter((t) => !NAMES.groups[t]), a.hero && !NAMES.hero[a.hero] ? [a.hero] : [], a.accentOn && !NAMES.things[a.accentOn] ? [a.accentOn] : []);
       for (const t of unnamed) bad('roll-phrase-without-asset-names', seed, kinds, id, `"${t}" (add it to tables.json names)`); }
     if (seen.has('bedsideLamp') && /wallSconce/.test(JSON.stringify([a.wallArr, a.groups, a.more, a.accents]))) bad('sconce-and-bedside-lamp', seed, kinds, id, 'a wall sconce and a bedside lamp dealt together (two light sources a side)');   // round 4 G4
+    if (a.plantAt.includes('sill') && !a.openings.some((o) => o.kind === 'window' && !['wall', 'bay'].includes(o.style))) bad('sill-plant-without-a-ledge', seed, kinds, id, 'a sill plant and no window with a ledge');   // round 4 G6
+    if ((a.motion || []).length < 2 && a.openings.some((o) => o.kind === 'window' && o.sash !== 'fixed' && (!o.style || o.style === 'sash' || o.style === 'pair'))) bad('fewer-than-two-movers', seed, kinds, id, `${(a.motion || []).map((m) => m.kind).join(',') || 'none'} (each area wants two living things)`);   // round 4 G6
     if (a.plants !== a.plantAt.length) bad('plants-count', seed, kinds, id);
   }
   for (const b of R.openPlan?.behind || []) if (!(R.areas[b]?.passages || []).length) bad('behind-without-passage', seed, kinds, b);
