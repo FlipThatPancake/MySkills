@@ -155,9 +155,8 @@ export function woodStove(kit, { w = 520, d = 430, h = 600, flueH = 1700, ceil, 
     for (const y of [h + 120]) g.add(kit.cyl(0, y, fz, 90, 30, { seg: 24, tone: 'lo', through: true }));
     return kit.merge(g);
   }
-  const FADE = Math.min(450, (flueH - h) * 0.4);   // the pipe is solid up to flueH - 450 mm, then its two edges melt out toward the ceiling (like the pendant's cord)
-  g.add(kit.cyl(0, h, fz, 80, flueH - h - FADE, { seg: 24, open: true }));
-  for (const sx of [-80, 80]) g.add(kit.meltingLine([sx, flueH - FADE, fz], [sx, flueH, fz], (p) => Math.min(1, (p[1] - (flueH - FADE)) / FADE), 24));
+  const FADE = Math.min(450, (flueH - h) * 0.4);   // the pipe runs up to flueH: the home's top fade (kit.setTopFade) melts it out; the upper collar stays below the fade
+  g.add(kit.cyl(0, h, fz, 80, flueH - h, { seg: 24, open: true }));
   for (const y of [h + 120, flueH - FADE - 140]) g.add(kit.cyl(0, y, fz, 90, 30, { seg: 24, tone: 'lo', through: true }));   // two collars
   return kit.merge(g);
 }
