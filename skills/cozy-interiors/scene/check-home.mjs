@@ -11,14 +11,17 @@ import { existsSync, statSync } from 'node:fs';
 import { dirname, join, resolve, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 const here = dirname(fileURLToPath(import.meta.url)), scene = process.argv.slice(2).find((a) => !a.startsWith('--')) ? resolve(process.argv.slice(2).find((a) => !a.startsWith('--'))) : (console.error('usage: node check-home.mjs <scene.json>   (the scene a spec wrote)'), process.exit(2));
+const T0 = Date.now(); let TL = T0; const lap = (what) => { if (process.argv.includes('--time')) { console.error(`[time] ${what}: ${((Date.now() - TL) / 1000).toFixed(1)} s (total ${((Date.now() - T0) / 1000).toFixed(1)} s)`); TL = Date.now(); } };   // --time prints where the minutes go
 const QUICK = process.argv.includes('--quick'), REUSE = process.argv.includes('--reuse');   // --quick skips the ghost renders (the slow part: run it on the final pass only); --reuse keeps the built page when it is newer than the scene
 if (!(REUSE && existsSync(scene.replace(/\.json$/, '.html')) && statSync(scene.replace(/\.json$/, '.html')).mtimeMs > statSync(scene).mtimeMs)) execSync(`node ${join(here, 'build.mjs')} ${scene}`, { stdio: 'ignore' });
+lap('build');
 const { chromium } = createRequire(join(execSync('npm root -g', { encoding: 'utf8' }).trim(), 'x.js'))('playwright');
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 1200, height: 750 } }); const errors = [];
 page.on('pageerror', (e) => errors.push(String(e)));
 await page.goto('file://' + scene.replace(/\.json$/, '.html') + '?check');
 await page.waitForFunction(() => window.cozyScene);
+lap('page load');
 const issues = await page.evaluate(() => {
   const { home, kit } = window.cozyScene, T = kit.THREE, out = [], objs = home.objects;
   home.group.updateMatrixWorld(true);
@@ -215,6 +218,7 @@ const issues = await page.evaluate(() => {
   return out;
 });
 
+lap('rules on all objects');
 const areaIssues = await page.evaluate(() => {
   const api = window.cozyScene; if (!api.areaIds) return [];
   const { home, kit, camera } = api, T = kit.THREE, out = [], objs = home.objects, ids = Object.keys(objs), sc = (id) => objs[id].userData.scene;
@@ -363,32 +367,38 @@ const areaIssues = await page.evaluate(() => {
   if ((window.__poufAreas || new Set()).size > 1) out.push({ rule: 'variety', what: `${[...window.__poufAreas].join(', ')} all use a pouf: one area per home at most; use a stool, bench end, basket or plant elsewhere` });
   return out;
 });
+lap('per-area rules');
 for (const i of areaIssues) issues.push(i);
 // ghosts in tour shots: render each shot twice, once as it is and once with everything of the other areas hidden; any pixels that differ are a partly faded neighbour
 {
   const list = QUICK ? [] : await page.evaluate(() => window.cozyScene.areaIds ? window.cozyScene.areaIds.map((id) => [id, (window.cozyScene.areas[id].camera.shots || []).map((x) => x.name)]) : []);
+  // one frame per image, drawn on demand and compared inside the page (no screenshots: each took 6 s in software GL): the live loop stops, the fades settle, the shot is drawn, then drawn again with every other area hidden
+  if (list.length) await page.evaluate(() => window.cozyScene.loop(false));
   for (const [id, names] of list) for (let i = 0; i < names.length; i++) {
-    const go = () => page.evaluate(([id, i]) => { const c = window.cozyScene, s = c.areas[id].camera.shots[i]; c.setArea(id, true); c.controls.minDistance = 10; c.at(s.from, s.look); c.camera.fov = s.fov || 30; c.camera.updateProjectionMatrix(); for (const g of Object.values(c.objects)) { g.userData.tick = null; g.userData.update = null; } c.tour.update = () => false; }, [id, i]);   // frozen: no sway, no butterfly, so two frames of one shot are the same
-    await go(); await page.waitForTimeout(300);
-    const snap = async () => (await page.screenshot({ clip: { x: 0, y: 0, width: 1200, height: 690 } })).toString('base64');
-    const a = await snap(), a2 = await snap();   // two untouched frames: whatever moves by itself (the butterfly, the cat's sway) is not a ghost
-    await page.evaluate((id) => { const { home } = window.cozyScene; window.__hid = []; for (const k of Object.keys(home.objects)) if (window.cozyScene.groupOf(home.objects[k].userData.scene.area) !== window.cozyScene.groupOf(id)) { home.objects[k].visible = false; window.__hid.push(home.objects[k]); } for (const W of home.walls) if (!(window.cozyScene.areaIds.some((q) => (W.id || '').startsWith(q + '-') && window.cozyScene.groupOf(q) === window.cozyScene.groupOf(id)))) { W.node.visible = false; window.__hid.push(W.node); } }, id);
-    await page.waitForTimeout(150);
-    const b = await snap();
-    await page.evaluate(() => { for (const o of window.__hid) o.visible = true; });
-    const n = await page.evaluate(async ([a, a2, b]) => { const load = (d) => new Promise((r) => { const im = new Image(); im.onload = () => r(im); im.src = 'data:image/png;base64,' + d; }), g = (im) => { const c = document.createElement('canvas'); c.width = im.width; c.height = im.height; const x = c.getContext('2d'); x.drawImage(im, 0, 0); return x.getImageData(0, 0, c.width, c.height).data; }; const A = g(await load(a)), A2 = g(await load(a2)), B = g(await load(b)), d = (P, Q, j) => Math.abs(P[j] - Q[j]) + Math.abs(P[j + 1] - Q[j + 1]) + Math.abs(P[j + 2] - Q[j + 2]); let k = 0; for (let j = 0; j < A.length; j += 4) if (d(A, B, j) > 30 && d(A, A2, j) < 10) k++; return k; }, [a, a2, b]);
+    const n = await page.evaluate(([id, i]) => {
+      const c = window.cozyScene, s = c.areas[id].camera.shots[i], { home } = c; c.setArea(id, true); c.controls.minDistance = 10; c.at(s.from, s.look); c.camera.fov = s.fov || 30; c.camera.updateProjectionMatrix(); for (const g of Object.values(c.objects)) { g.userData.tick = null; g.userData.update = null; } c.tour.update = () => false;   // frozen: no sway, no butterfly
+      c.advance(1.5);
+      const grab = () => { const cv = c.draw(), w = cv.width, h = Math.round(cv.height * 690 / 750), k = document.createElement('canvas'); k.width = w; k.height = h; const x = k.getContext('2d'); x.drawImage(cv, 0, 0, w, h, 0, 0, w, h); return x.getImageData(0, 0, w, h).data; };
+      const A = grab(), hid = []; for (const k of Object.keys(home.objects)) if (c.groupOf(home.objects[k].userData.scene.area) !== c.groupOf(id)) { home.objects[k].visible = false; hid.push(home.objects[k]); } for (const W of home.walls) if (!(c.areaIds.some((q) => (W.id || '').startsWith(q + '-') && c.groupOf(q) === c.groupOf(id)))) { W.node.visible = false; hid.push(W.node); }
+      const B = grab(); for (const o of hid) o.visible = true;
+      let k = 0; for (let j = 0; j < A.length; j += 4) if (Math.abs(A[j] - B[j]) + Math.abs(A[j + 1] - B[j + 1]) + Math.abs(A[j + 2] - B[j + 2]) > 30) k++; return k;
+    }, [id, i]);
     if (n > 150) issues.push({ rule: 'ghost', what: `${id} shot "${names[i]}": ${n} pixels belong to another area, partly faded (a ghost of a neighbour): aim the camera away from the neighbouring area or move the shot` });
   }
+  if (list.length) await page.evaluate(() => window.cozyScene.loop(true));
 }
+lap('ghost renders');
 // variety by parameter distance: two areas may share a base asset when its variants clearly differ (distance 2 or more: two style choices, or the same in sizes), see library/space.js
 {
   const { readFileSync } = await import('node:fs'), { distance } = await import('./src/library/space.js'), { SPACE } = await import('./src/library/meta.js');
   const objs = JSON.parse(readFileSync(scene, 'utf8')).home.objects.filter((o) => SPACE[o.asset] && !['cushion'].includes(o.asset));
   for (let i = 0; i < objs.length; i++) for (let j = i + 1; j < objs.length; j++) { const a = objs[i], b = objs[j]; if (a.asset === b.asset && a.area !== b.area && distance(a.asset, a.params, b.params) < 2) issues.push({ rule: 'variety', what: `${a.id} and ${b.id} are the same ${a.asset} (parameter distance ${distance(a.asset, a.params, b.params).toFixed(1)}, needs 2): change two style choices or sizes` }); }
 }
+lap('variety distance');
 {   // rigid bodies: the geometry core (geom/) measures the real parts in Node: contacts, support, overhang, sinking, one second of settling (no page needed)
   try { const { checkScene } = await import('./geom/index.mjs'); for (const f of (await checkScene(scene)).findings) issues.push({ rule: f.rule, what: f.text }); } catch (e) { issues.push({ rule: 'physics', what: 'geom/index.mjs did not run: ' + String(e.stack || e.message).slice(0, 200) }); }
 }
+lap('geom (rigid bodies)');
 {   // windows on one back wall share a head height (the top of the glass): in an area, and along a row home's one long back wall; a feature window (style picture, pair, wall, bay, or feature: true) may differ
   const S = JSON.parse((await import('node:fs')).readFileSync(scene, 'utf8')), FEATURE = ['picture', 'pair', 'wall', 'bay'], lines = {};
   const rowOf = (area) => { const g = (S.groups || []).find((q) => q.areas.includes(area)); return g && g.seams.every((q) => q.layout === 'row') ? g.id : area; };
@@ -410,8 +420,11 @@ for (const i of areaIssues) issues.push(i);
   }
   if (R0?.accent && S.home.accent !== R0.accent) issues.push({ rule: 'rolled', what: `the roll's accent is ${R0.accent} and the home uses ${S.home.accent}` });
 }
+lap('window heads and roll');
 { const { openPlanIssues } = await import('./check-openplan.mjs'); for (const i of await openPlanIssues(page, scene, { quick: QUICK })) issues.push(i); }   // open-plan homes (scene.groups): layout, separators, glimpse, glide
+lap('open plan');
 { const { motionIssues } = await import('./check-motion.mjs'); for (const i of await motionIssues(page, scene)) issues.push(i); }   // living things (src/motion): rolled kinds, open-window rule, nothing through furniture or walls in 240 s of simulated motion
+lap('motion');
 await browser.close();
 for (const e of errors) console.log('PAGE ERROR', e);
 for (const i of issues) console.log(`[${i.rule}] ${i.what}`);
