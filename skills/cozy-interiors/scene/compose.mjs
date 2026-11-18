@@ -22,7 +22,7 @@ import { ASSETS, SPACE } from './src/library/meta.js';
 import { dealParams } from './src/library/space.js';
 import { dropCloth, heightField } from './src/cloth.js';
 import { createKit } from './src/kitchen3d.js';
-import { restOn as geomRestOn, fits as geomFits } from './geom/place.mjs';
+import { restOn as geomRestOn, fits as geomFits, topAt } from './geom/place.mjs';
 import { REGISTRY } from './src/library/index.js';
 import { joinAreas, seamLine, zoneList } from './openplan.mjs';
 import { checkAlive, pickVia, MOTION } from './motion-roll.mjs';
@@ -180,9 +180,11 @@ class Area {
   }
   // a folded throw laid across a placed thing: layers stacked like a folded blanket, resting on the highest point under it. a.bandOn('throw', 'bed', { w: 1500, d: 380, at: [x, z] or dx/dz, layers: 3, tone, group })
   bandOn(id, targetId, { w = 1400, d = 380, at, dx = 0, dz = 0, layers = 3, tone = 'lo', group, spin = 0 } = {}) {
-    const { tris, all, T } = this.targetTris('bandOn', targetId), f = heightField(tris), c = all.getCenter(new T.Vector3()), p = at || [c.x + dx, c.z + dz];
-    let top = 0; for (let a = -w / 2; a <= w / 2; a += 40) for (let b = -d / 2; b <= d / 2; b += 40) top = Math.max(top, f(p[0] + a, p[1] + b));
-    this.put(id, 'foldedThrow', p, spin, { group, y: Math.round(top), mount: 'on', params: { w, d, layers, tone } });
+    const { tris, all, T } = this.targetTris('bandOn', targetId), f = heightField(tris), c = all.getCenter(new T.Vector3()), p0 = at || [c.x + dx, c.z + dz], sr = rad(spin), cs = Math.cos(sr), sn = Math.sin(sr);
+    const flat = (q) => { const hs = []; for (let a = -w / 2; a <= w / 2; a += 40) for (let b = -d / 2; b <= d / 2; b += 40) hs.push(f(q[0] + a * cs + b * sn, q[1] - a * sn + b * cs)); const top = Math.max(...hs); return { top, share: top > 0 ? hs.filter((h) => h > top - 30).length / hs.length : 0 }; };   // the share of the throw's footprint that rests on the highest flat patch
+    let p = p0, best = flat(p0);
+    if (best.share < 0.85) { const R = Math.max(w, d), cand = []; for (let a = -R; a <= R; a += 40) for (let b = -R; b <= R; b += 40) cand.push([p0[0] + a, p0[1] + b, Math.hypot(a, b)]); cand.sort((u, v) => u[2] - v[2]); const hit = cand.find((q) => flat(q).share >= 0.85); if (!hit) throw new Error(`bandOn('${id}', '${targetId}'): no flat patch under a ${w} x ${d} throw carries 85% of it; make it smaller or lay it elsewhere`); p = [hit[0], hit[1]]; best = flat(p); console.log(`bandOn('${id}'): moved ${Math.round(Math.hypot(p[0] - p0[0], p[1] - p0[1]))} mm so ${Math.round(best.share * 100)}% of the throw rests on a flat patch of ${targetId}`); }
+    this.put(id, 'foldedThrow', p, spin, { group, y: Math.round(best.top), mount: 'on', params: { w, d, layers, tone } });
   }
   // the soft things of a seat in one call: a.seatSoft('sofa', { cushions: 2, throw: 'drape' | 'band' | false, tone: 'accent' | 'lo' | 'mid', group }). Cushions lean on the back, one per seat end (a sofa: seats - 1, at least 1; an armchair: 1); the throw drops onto the arm end ('drape', frozen cloth) or lies folded across the seat ('band').
   seatSoft(targetId, { cushions, throw: thr = 'drape', tone = 'lo', throwTone = tone, group } = {}) {
@@ -193,10 +195,16 @@ class Area {
     const toArea = (lx, lz) => [org[0] + lx * Math.cos(th) + lz * Math.sin(th), org[1] - lx * Math.sin(th) + lz * Math.cos(th)], f = heightField(tris), zo = lb.min.z + 480;
     const seats = tgt.params?.seats || (tgt.asset === 'armchair' ? 1 : 2), n = cushions ?? (tgt.asset === 'armchair' ? 1 : Math.max(1, seats - 1)), grp = group || tgt.group;
     const inset = 330 + ({ rolled: 100, flared: 60 }[tgt.params?.arms] || 0);   // a rolled or flared arm is wider: the end cushion stands inside it
-    for (let i = 0; i < n; i++) { const lx = n === 1 ? cx + (tgt.asset === 'armchair' ? 0 : W / 2 - inset) : cx - (W / 2 - inset) + i * (W - 2 * inset) / (n - 1), [px, pz] = toArea(lx, zo), [sx, sz] = toArea(lx, zo + 60), y = Math.round(f(sx, sz)) + 6 + Math.round(65 * Math.sin(rad(17 + 4 * (i % 2))));   // the seat height is read in front of the back; a leaning cushion's lower edge dips by half its thickness times the sine of the lean, so it stands that much higher
-      this.put(`${targetId}-cushion${i + 1}`, 'cushion', [px, pz], tn + (i % 2 ? -6 : 8), { group: grp, y, mount: 'on', params: { w: 400, h: 320, thick: 130, lean: 17 + 4 * (i % 2), tone } }); }
-    if (thr === 'drape') { try { const [ax, az] = toArea(cx - (W / 2 - 420), zo + 330); this.drapeOver(`${targetId}-throw`, targetId, { w: 1000, d: 700, wave: 10, at: [ax, az], spin: tn + 20, tone: throwTone, group: grp }); } catch (e) { if (process.env.SOFT_DEBUG) console.error(e.message); thr = 'band'; } }
-    if (thr === 'band') { const [bx, bz] = toArea(cx + (W / 2 - 360), zo + 330); this.bandOn(`${targetId}-throw`, targetId, { w: 700, d: 380, at: [bx, bz], spin: tn, tone: throwTone, group: grp }); }
+    const cushion = this.thingTris('cushion', { w: 400, h: 320, thick: 130, lean: 17, tone }), cl = Math.min(...cushion.map((t) => Math.min(t[1], t[4], t[7])));
+    const rim = []; { const seen = new Set(); for (const t of cushion) for (let k = 0; k < 9; k += 3) { if (t[k + 1] < cl + 140) continue; const key = `${Math.round(t[k] / 15)},${Math.round(t[k + 1] / 15)},${Math.round(t[k + 2] / 15)}`; if (!seen.has(key)) { seen.add(key); rim.push([t[k], t[k + 1], t[k + 2]]); } } }   // the cushion's upper vertices, thinned: the ones that can meet the backrest
+    const against = (px, pz, turn) => { const c = Math.cos(rad(turn)), sn = Math.sin(rad(turn)), y = geomRestOn(tris, cushion, [px, pz], turn); for (const v of rim) { const vy = v[1] + y, h = f(px + v[0] * c + v[2] * sn, pz - v[0] * sn + v[2] * c); if (h > vy - 1) return true; } return false; };   // an upper vertex that lies inside the back: the cushion touches the backrest
+    for (let i = 0; i < n; i++) { const lx = n === 1 ? cx + (tgt.asset === 'armchair' ? 0 : W / 2 - inset) : cx - (W / 2 - inset) + i * (W - 2 * inset) / (n - 1), turn = tn + (i % 2 ? -6 : 8), lean = 17 + 4 * (i % 2);
+      let lz = lb.max.z - 100, found = false; for (; lz >= lb.min.z; lz -= 10) { const [qx, qz] = toArea(lx, lz); if (against(qx, qz, turn)) { found = true; lz += 10; break; } }   // slide the cushion back from the front until its top meets the backrest, then step off 10 mm
+      if (!found) { lz = zo; console.log(`seatSoft('${targetId}'): cushion${i + 1} finds no back to lean on; it rests on the seat`); }
+      const [px, pz] = toArea(lx, lz), prm = vary(this.h, 'cushion', { w: 400, h: 320, thick: 130, lean, tone }, this.id), y = Math.round(geomRestOn(tris, this.thingTris('cushion', prm), [px, pz], turn));   // the dealt piping and pattern change the shape a little: rest the real one
+      this.put(`${targetId}-cushion${i + 1}`, 'cushion', [px, pz], turn, { group: grp, y, mount: 'on', params: prm }); }
+    if (thr === 'drape') { try { const [ax, az] = toArea(cx - (W / 2 - 420), zo + 330); this.drapeOver(`${targetId}-throw`, targetId, { w: 1000, d: 700, wave: 10, at: [ax, az], spin: tn + 20, tone: throwTone, group: grp }); } catch (e) { console.log(`seatSoft('${targetId}'): the throw would not drape (${e.message}); folded on the seat instead`); thr = 'band'; } }
+    if (thr === 'band') { const [bx, bz] = toArea(cx + (W / 2 - 360), zo + 330); try { this.bandOn(`${targetId}-throw`, targetId, { w: 700, d: 380, at: [bx, bz], spin: tn, tone: throwTone, group: grp }); } catch (e) { console.log(`seatSoft('${targetId}'): no throw laid: ${e.message}`); } }
   }
   // ---- a cabinet run with slots: R.on('hob', 'pan') puts a pan on the middle of the first hob module
   run(F, id, left, modules, o = {}) {

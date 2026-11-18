@@ -44,4 +44,6 @@ export const fixtures = [
     build({ Home }) { const { H, a } = room(Home); a.put('rug1', 'rug', [2000, 1800], 45, { group: 'g', params: { w: 1600, d: 600 } }); a.put('rug2', 'rug', [2566, 2366], 45, { group: 'g', params: { w: 1600, d: 600 } }); return H; } },
   { name: 'good-roll-left-out-with-reasons', from: 'round 3 E8: every roll item the scene leaves out says why (a.skip), so the check stays silent', kind: 'good',
     build({ Home }) { const { H, a } = room(Home); H.roll({ seed: 1, accent: { name: 'honey', hex: '#d9a85c' }, areas: { t: { still: [{ top: 'coffee table', things: ['vase (vase)'] }], groups: ['a', 'b', 'c'], plantAt: ['floor'], passages: [] } }, openPlan: { behind: [] } }); a.skip('vase', 'a vase cannot stand on this top'); a.skip('floor', 'no corner is free'); a.skip('groups', 'a small test room'); return H; } },
+  { name: 'good-bandon-moves-off-the-arm-end', from: 'round 3 E1: a folded throw asked for the end of a sofa arm is moved onto the flat seat (compose says so) and stands', kind: 'good',
+    build({ Home }) { const { H, a } = room(Home); a.put('sofa', 'sofa', [3000, 600], 0, { group: 'g', hero: true, params: { seats: 3, arms: 'rolled' } }); a.bandOn('throw', 'sofa', { w: 700, d: 380, at: [3000 + 1000, 600], group: 'g' }); return H; } },
 ];

@@ -1,5 +1,5 @@
 // the rules that need contacts: penetrates, floating, overhangs, sunk. One table of tolerances, one place.
-import { BUILT_IN, FLATMARK, PAN, RUG, SOFT, isFree, softKind } from './kinds.mjs';
+import { BUILT_IN, FLATMARK, PAN, RUG, SOFT, isFree, holdsRules, softKind } from './kinds.mjs';
 import { pairs } from './world.mjs';
 
 export const TOL = { hard: 2, soft: 30, wall: 10, floatGap: 2, overhang: 0.15, sunk: { cloth: 8, seat: 30, rug: 5, hard: 2 } };
@@ -37,7 +37,7 @@ export function applyRules(Q, list) {
   // ---------- floating, overhangs, sunk: one pass per free object
   const bySupporter = {}, supportPolys = {};
   for (const o of Q.loadedObjects) {
-    if (!isFree(o)) continue;
+    if (!holdsRules(o) || o.mount === 'wall') continue;
     const cs = list.filter((c) => c.a.owner === o.id || c.b.owner === o.id);
     const sup = [], deepest = {}; let gap = Infinity;
     for (const c of cs) {
@@ -59,12 +59,14 @@ export function applyRules(Q, list) {
       if (!sk) continue;
       if (-d > tol) find.push({ rule: 'sunk', id: o.id, asset: o.asset, into: sid, depth: +(-d).toFixed(1), text: `${o.id} (${o.asset}): its base is ${Math.round(-d)} mm below the surface of ${sid} (${asset(sid)}); at most ${tol} mm` });
     }
+    // a leaning cushion needs a back: something beside its lower edge (a backrest, a wall, a cheek) within 12 mm and above its seat
+    if (o.asset === 'cushion' && (o.scene?.params?.lean ?? 0) > 5) { const back = cs.some((c) => { const mine = c.a.owner === o.id ? 'a' : 'b', other = mine === 'a' ? c.b : c.a; return c.d <= 12 && other.owner !== o.id && Math.abs(c.normal.y) < 0.6 && (other.role === 'wall' || other.mx[1] > o.parts[0].box.mn[1] + 100); }); if (!back) find.push({ rule: 'floating', id: o.id, asset: o.asset, text: `${o.id} (cushion): it leans (${o.scene.params.lean} degrees) with nothing behind it to lean on: put a backrest, a wall or a window cheek behind it, or stand it upright` }); }
     // overhangs
     const y0 = lowest(o), base = hull2(ptsNear(o.parts, y0, 3)), Ba = parea(base); if (Ba < 1) continue;
     let cover = 0, onFloor = sup.some((s) => s.other.owner === 'floor'); const tops = new Set(), names = new Set();
     for (const { other } of sup) { names.add(other.owner); if (other.owner === 'floor') continue; tops.add(other); }
     const polys = [];
-    for (const e of tops) { const top = hull2(ptsNear([e.part], y0, 4)); if (top.length >= 3) polys.push(top); }
+    for (const e of tops) { const top = hull2(ptsNear([e.part], y0, SOFT.test(o.asset) || SOFT.test(asset(e.owner)) ? 12 : 4));   /* a thing sunk a few mm into upholstery still stands on its top */ if (top.length >= 3) polys.push(top); }
     if (PAN.test(o.asset)) for (const id of names) if (/^hob$/.test(asset(id))) { const ho = O[id], all = []; for (const p of ho.parts) for (let i = 0; i < p.tris.length; i += 3) all.push([p.tris[i], p.tris[i + 2]]); polys.push(hull2(all)); }   // a pan stands anywhere inside the hob's outline
     const held = []; if (onFloor) { cover = Ba; held.push(...base); } else for (const top of polys) { const c = clip(base, top); cover += parea(c); held.push(...c); }
     supportPolys[o.id] = hull2(held);

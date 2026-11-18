@@ -9,3 +9,5 @@ export const RUG = /rug/i;
 export const PAN = /^(pan|pot|saucepan|frypan)$/i;
 export const isFree = (o) => !/^(wall|ceiling|lines|in)/.test(o.mount) && !FLATMARK.test(o.asset || '') && !BUILT_IN.test(o.asset || '') && !DRAPE.test(o.asset || '');
 export const softKind = (asset) => (CLOTH.test(asset || '') ? 'cloth' : SEAT.test(asset || '') ? 'seat' : null);
+export const FOLDED = /^(foldedThrow|cushion|benchCushion|floorCushion|pillow)$/;                         // folded cloth things lie on a surface like any piece: the support rules (floating, overhangs, sunk) read them, the settle test leaves them be
+export const holdsRules = (o) => isFree(o) || FOLDED.test(o.asset || '');

@@ -42,7 +42,7 @@ export function cushion(kit, { w = 440, h = 420, thick = 120, tone = 'mid', pipi
     for (let t = 1; t <= 5; t++) { const x = x0 - sx * Math.cos(a) * L * t / 5, y = y0 - sy * Math.sin(a) * L * t / 5 + 4 * Math.sin(t), q = [x, y + h / 2, pz(x, y)]; if (t < 5) P.push(p, q); p = q; }
   }
   if (P.length) g.add(kit.lines(P, 'mid'));
-  const out = kit.merge(g); out.rotation.x = -lean * Math.PI / 180; return out;
+  const out = kit.merge(g); out.rotation.order = "YXZ"; out.rotation.x = -lean * Math.PI / 180; return out;   // YXZ: the lean tilts about the cushion's own x axis, so it follows the turn the scene gives the piece (XYZ tipped a turned cushion sideways)
 }
 
 // a pointed leaf standing from `base` along `dir` (unit), length len, width wid

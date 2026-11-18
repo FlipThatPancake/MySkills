@@ -106,7 +106,7 @@ export function placementRules(L, S = {}) {
   for (const s of A(/^sofa$/)) for (const i of islands.concat(A(/^(table|roundTable)$/))) { if (!inArea(s, i)) continue; const back = (i.cx - s.cx) * -s.f[0] + (i.cz - s.cz) * -s.f[1]; if (back <= 0) continue; const g = gapOf(s.bb, i.bb); if (g < 900) push('17b', s, `its back is ${Math.round(g)} mm from ${i.id} (900 or more behind a sofa that divides the area): move one`, i); }
   // 17. small things on tops stay 20 inside the top's edge and 10 apart
   const TOPS = /^(desk|console|sideboard|chestOfDrawers|bedsideTable|table|coffeeTable|sideTable|bench)$/;
-  for (const o of O.filter((o) => o.mount === 'on' && !/^(tablecloth|tableRunner|cloth|rug|foldedThrow|benchCushion|cushion|pendantLamp|duvetCloth|scuff|leaf)$/.test(o.asset))) {
+  for (const o of O.filter((o) => o.mount === 'on' && !/^(tablecloth|tableRunner|cloth|rug|benchCushion|cushion|pendantLamp|duvetCloth|scuff|leaf)$/.test(o.asset))) {
     const s = O.find((t) => TOPS.test(t.asset) && inArea(t, o) && Math.abs(t.bb.y1 - o.bb.y0) < 25 && o.cx > t.top.x0 && o.cx < t.top.x1 && o.cz > t.top.z0 && o.cz < t.top.z1); if (!s) continue;
     const tb = s.top, m = { l: o.base.x0 - tb.x0, r: tb.x1 - o.base.x1, f: o.base.z0 - tb.z0, b: tb.z1 - o.base.z1 }, wallSide = { l: wallDist(tb.x0, s.cz) < 60, r: wallDist(tb.x1, s.cz) < 60, f: wallDist(s.cx, tb.z0) < 60, b: wallDist(s.cx, tb.z1) < 60 };
     for (const k of Object.keys(m)) if (!wallSide[k] && m[k] < 20) { push(17, o, `${Math.round(m[k])} mm inside the edge of ${s.id} (20 at least): move it in`, s); break; }
