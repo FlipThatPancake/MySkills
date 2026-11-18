@@ -31,9 +31,16 @@ export const GAP = 3000;
 const headLine = (o, head) => o.kind !== 'window' || o.feature || ['picture', 'pair', 'wall', 'bay'].includes(o.style) ? o : o.sill != null && o.height == null ? { ...o, height: head - o.sill } : o.height != null && o.sill == null ? { ...o, sill: head - o.height } : o;   // windows on one wall share a head height: a sill alone fixes the height, a height alone fixes the sill
 export class Home {
   constructor({ seed, floor = 'auto', height = 2700, accent, head = 2100 }) { this.head = head;   /* the head height of plain windows: a window given a sill or a height gets the other from it */ if (floor === 'auto') floor = seed % 5 === 3 ? 'tiles' : 'boards'; this.S = { units: 'mm', seed, home: { height, ...(accent ? { accent } : {}), floor: { style: floor, seed }, tiles: { origin: [0, 0] }, walls: [], objects: [] }, areas: [] }; this.list = []; }
-  area(id, name, { O, psi = 0, rect }) {
+  // passage: { from: 'living', wall: 'right', x: 2100, via: { wall: 'left', x: 1500 } } places this area behind the arch the area `from` has on that wall (x along the wall, as in its openings), turned and moved so its own arch (on via.wall at via.x) stands on the same spot, the two rooms back to back: the glide then crosses a doorway, not a gap. Both areas give the arch to: <the other area>; check-home 'passage' compares the two ends.
+  area(id, name, { O, psi = 0, rect, passage }) {
+    if (passage && !O) { const A = this.list.find((q) => q.id === passage.from), W = A && this.S.home.walls.find((w) => w.id === `${A.id}-${passage.wall}`); if (!W) throw new Error(`area('${id}'): passage.from '${passage.from}' has no ${passage.wall} wall yet (build that area's walls first)`);
+      const len = Math.hypot(W.to[0] - W.from[0], W.to[1] - W.from[1]), ua = [(W.to[0] - W.from[0]) / len, (W.to[1] - W.from[1]) / len], pa = [W.from[0] + ua[0] * (len - passage.x), W.from[1] + ua[1] * (len - passage.x)], na = [ua[1], -ua[0]];   // a wall runs from its far end to the corner; the room stands on its right-hand side
+      const [rx0, rz0, rx1, rz1] = rect, via = passage.via || {}, loc = { back: { p: [rx0 + via.x, rz0], n: [0, 1] }, left: { p: [rx0, rz1 - via.x], n: [1, 0] }, right: { p: [rx1, rz0 + via.x], n: [-1, 0] } }[via.wall];
+      if (!loc) throw new Error(`area('${id}'): passage.via.wall must be back, left or right`);
+      const q = loc.p, ang = (v) => Math.atan2(v[1], v[0]) * 180 / Math.PI;
+      psi = Math.round((ang([-na[0], -na[1]]) - ang(loc.n)) / 90) * 90; const c = Math.cos(rad(psi)), sn = Math.sin(rad(psi)); O = [r0(pa[0] - (q[0] * c - q[1] * sn)), r0(pa[1] - (q[0] * sn + q[1] * c))]; }
     const a = new Area(this, id, name, O || [0, 0], psi, rect);
-    if (!O) { const prev = this.list[this.list.length - 1], b = a.worldBounds(), x0 = prev ? prev.worldBounds().x1 + GAP : 0; a.O = [r0(x0 - b.x0), r0(-b.z0)]; }
+    if (!O) { const prev = this.list[this.list.length - 1], b = a.worldBounds(), x0 = prev ? Math.max(...this.list.map((q) => q.worldBounds().x1)) + GAP : 0; a.O = [r0(x0 - b.x0), r0(-b.z0)]; }
     this.list.push(a); return a;
   }
   // the whole roll: H.roll(rollJson) keeps what roll.mjs dealt (still-life assets, groups, plant places, passages, the accent), so the check 'rolled' can compare every dealt thing with the scene; the home's accent is the roll's unless the constructor got one. a.skip(what, 'why') leaves one out: an asset name, 'groups', 'passage', or a plant place (sill, shelf, worktop, hanging, floor)
@@ -60,6 +67,7 @@ const pickForm = (h, asset, params) => {   // the next form of an asset that has
   const c = (h.counts ||= {}); return { ...(params || {}), form: (c[asset] = (c[asset] ?? h.S.seed % ASSETS[asset].variants) + 1) % ASSETS[asset].variants };
 };
 const vary = (h, asset, params, areaId = '') => {
+  if (params?.pair !== undefined) { const { pair, ...rest } = params, m = (h.pairs ||= {}), k = `${areaId}/${pair}/${asset}`; return m[k] ? { ...m[k], ...rest } : (m[k] = vary(h, asset, rest, areaId)); }   // params.pair: the two sides of a bed or sofa name one pair and take one seed (the first deal), so their forms and finishes match
   let p = pickForm(h, asset, params);
   const named = ['rug', 'table', 'sideboard', 'bench'].includes(asset) ? [...new Set(SPACE[asset]?.form)] : null;   // named forms (rug, table, sideboard, bench): the next one in turn, so two of them in a home differ
   if (named && asset !== 'chair' && p?.form === undefined) { const c = (h.counts ||= {}); p = { ...(p || {}), form: named[(c['f-' + asset] = (c['f-' + asset] ?? h.S.seed) + 1) % named.length] }; }

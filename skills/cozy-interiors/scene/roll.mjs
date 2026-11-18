@@ -24,6 +24,8 @@ function consistent(a, id, home) {   // home: the assets of this home already de
     for (const x of st.things) { used.add(asset(x)); if (ONCE.test(asset(x) || '')) home.add(asset(x)); }
   }
   { const SL = T.stillLife[id]; if (SL && a.wallArr && /\(picture\)/.test(a.wallArr)) { if (home.has('picture')) { const alt = SL.wall.filter((q) => !/\(picture\)/.test(q)); if (alt.length) a.wallArr = alt[(a.wallArr.length + id.length) % alt.length]; } if (/\(picture\)/.test(a.wallArr)) home.add('picture'); } }   // a wall arrangement with a picture is dealt to one area only
+  if ((a.still || []).some((st) => st.things.some((w) => /\(bedsideLamp\)/.test(w)))) a.more = (a.more || []).filter((w) => !/\(wallSconce\)/.test(w));
+  { const SL = T.stillLife[id]; if (SL && a.wallArr && /\(wallSconce\)/.test(a.wallArr) && (a.still || []).some((st) => st.things.some((w) => /\(bedsideLamp\)/.test(w)))) { const alt = SL.wall.filter((q) => !/\(wallSconce\)/.test(q)); if (alt.length) a.wallArr = alt[(a.wallArr.length + id.length) % alt.length]; } }   // round 4 G4: a bedside lamp is the light of each side, so the wall holds no sconce as well
   { const L = T.groups?.list[id] || [], lampAt = (a.groups || []).map((g, k) => (/\blamp\b/.test(g) ? k : -1)).filter((k) => k >= 0);   // two groups that both stand a lamp: the later one is another group of the list
     for (const k of lampAt.slice(1)) { const at = a.groups[k].lastIndexOf(', on the '), place = at < 0 ? '' : a.groups[k].slice(at + 2), pick = L.find((q) => !/\blamp\b/.test(q) && !a.groups.some((g) => g.startsWith(q))); if (pick) a.groups[k] = place ? `${pick}, ${place}` : pick; } }
   if ((a.groups || []).some((g) => /floor plant/.test(g)) && !a.plantAt.includes('floor')) { a.plantAt = [...a.plantAt, 'floor']; a.plants = a.plantAt.length; }
@@ -88,6 +90,10 @@ export function roll(seed, kinds = ['kitchen', 'dining', 'living']) {
   dealMotion(out, seed);   // living things (motion-roll.mjs): 2 or 3 kinds per area, from tables.json motion; its own random stream, so no older pick moves
   dealOpenPlan(out, seed, kinds, describe);   // open plan (openplan.mjs): about 2 homes in 5 with two joinable areas; its own random stream, so no older pick moves
   for (const b of out.openPlan?.behind || []) { const a = out.areas[b]; if (a && !(a.passages || []).length) { a.openings = [...a.openings, { kind: 'arch', on: 'first' }]; a.passages = [T.passages[0].style]; a.say += `; arch ${a.passages[0]} on the ${a.side} wall (the passage this area is behind)`; } }   // an area behind a passage has the arch of its own (it is the way through)
+  { const pass = []; for (const b of out.openPlan?.behind || []) { const fromId = out.openPlan.chain[out.openPlan.chain.length - 1], f = out.areas[fromId], t = out.areas[b]; if (!f || !t) continue;   // round 4 G5: a passage has two ends: the last area of the chain gets the arch on its right wall, the area behind it the arch on its left wall
+      f.openings = [...f.openings, { kind: 'arch', on: 'right' }]; f.passages = [...(f.passages || []), t.passages[0]]; f.say += `; arch ${t.passages[0]} on the right wall (the passage to ${b})`; t.say += `; its arch is on the left wall, facing ${fromId}'s`;
+      pass.push({ from: fromId, to: b, fromWall: 'right', toWall: 'left' }); }
+    if (pass.length) out.openPlan.passages = pass; }   // compose: H.area(b, ..., { passage: { from, wall: 'right', x, via: { wall: 'left', x } } }), both arches with to:
   return out;
 }
 if (process.argv[1] && process.argv[1].endsWith('roll.mjs')) {

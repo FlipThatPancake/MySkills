@@ -78,3 +78,31 @@ fixtures.push(
   { name: 'good-open-shelf-and-picture-well-apart', from: 'round 4 G2b: the same two pieces 600 mm apart', kind: 'good', counts: ['placement-4'],
     build({ Home }) { const { H, back } = room(Home); back.place('sh', 'openShelf', 1500, { group: 'g' }); back.place('pic', 'picture', 3400, { group: 'g', y: 1250, params: { w: 600, h: 500 } }); return H; } },
 );
+// G4: the two sides of a bed are a pair
+{
+  const bed = (a, p1, p2) => { a.put('bed', 'bed', [3000, 1100], 0, { group: 'g', hero: true }); for (const [id, x, p] of [['n1', 1950, p1], ['n2', 4050, p2]]) { a.put(id, 'bedsideTable', [x, 350], 0, { group: 'g' }); a.put('l' + id, 'bedsideLamp', [x, 350], 0, { group: 'g', y: 520, mount: 'on', ...(p ? { params: p } : {}) }); } };
+  fixtures.push(
+    { name: 'pair-bedside-lamps-differ-either-side-of-a-bed', from: 'round 4 mistake 7: the two bedside lamps of one bed were dealt different shades and bases', kind: 'bug', expect: { rules: ['pair'], ids: ['ln2'] },
+      build({ Home }) { const { H, a } = room(Home); bed(a, { shade: 'drum', base: 'gourd' }, { shade: 'globe', base: 'tripod' }); return H; } },
+    { name: 'good-bedside-lamps-of-one-pair-match', from: 'round 4 G4: params pair gives both sides one deal', kind: 'good', counts: ['pair'],
+      build({ Home }) { const { H, a } = room(Home); bed(a, { pair: 'bed' }, { pair: 'bed' }); return H; } },
+  );
+}
+// G5: a passage has two ends
+{
+  const homeOf = (Home, connect) => {
+    const H = new Home({ seed: 5, floor: 'plain' }), a = H.area('a', 'A', { rect: [0, 0, 5000, 4000] });
+    a.back(5000); a.right(4000, [{ kind: 'arch', x: 2000, width: 1200, to: 'b', beyond: false, depth: 200 }]);
+    const b = H.area('b', 'B', { rect: [0, 0, 4000, 4000], ...(connect ? { passage: { from: 'a', wall: 'right', x: 2000, via: { wall: 'left', x: 1500 } } } : {}) });
+    b.back(4000); b.left(4000, [{ kind: 'arch', x: 1500, width: 1200, to: 'a', beyond: false, depth: 200 }]);
+    a.view({ target: [2500, 700, 2000], az: 20, el: 15 }); b.view({ target: [2000, 700, 2000], az: 20, el: 15 });
+    a.put('sofa', 'sofa', [2500, 600], 0, { group: 'seat', hero: true }); b.put('sofa', 'sofa', [2800, 600], 0, { group: 'bed', hero: true });
+    return H;
+  };
+  fixtures.push(
+    { name: 'passage-leads-across-a-gap', from: 'round 4 mistake 8: the arch of one area opens 3 m from the arch of the area it leads to, so the glide crosses nothing', kind: 'bug', expect: { rules: ['passage'], ids: ['leads to b'] },
+      build({ Home }) { return homeOf(Home, false); } },
+    { name: 'good-passage-with-both-ends-on-one-spot', from: 'round 4 G5: area b placed by its passage: the two arches stand on one spot', kind: 'good', counts: ['passage'],
+      build({ Home }) { return homeOf(Home, true); } },
+  );
+}

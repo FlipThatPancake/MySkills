@@ -22,9 +22,12 @@ for (let seed = 1; seed <= N; seed++) for (const kinds of sets) {
     { const stripG = (g) => g.replace(/ \(the hero group.*\)$/, '').replace(/, on the [^,]*(, [a-z ]*third)?$/, '');
       const unnamed = [...(a.accents || []), ...(a.foreground ? [a.foreground] : []), ...(a.pieces || []), ...(a.signs || [])].filter((t) => !NAMES.things[t] && !UNNAMED.test(t) && !/\([A-Za-z, ]+\)\s*$/.test(t)).concat((a.groups || []).slice(1).map(stripG).filter((t) => !NAMES.groups[t]), a.hero && !NAMES.hero[a.hero] ? [a.hero] : [], a.accentOn && !NAMES.things[a.accentOn] ? [a.accentOn] : []);
       for (const t of unnamed) bad('roll-phrase-without-asset-names', seed, kinds, id, `"${t}" (add it to tables.json names)`); }
+    if (seen.has('bedsideLamp') && /wallSconce/.test(JSON.stringify([a.wallArr, a.groups, a.more, a.accents]))) bad('sconce-and-bedside-lamp', seed, kinds, id, 'a wall sconce and a bedside lamp dealt together (two light sources a side)');   // round 4 G4
     if (a.plants !== a.plantAt.length) bad('plants-count', seed, kinds, id);
   }
   for (const b of R.openPlan?.behind || []) if (!(R.areas[b]?.passages || []).length) bad('behind-without-passage', seed, kinds, b);
+  for (const p of R.openPlan?.passages || []) if (!(R.areas[p.from]?.passages || []).length || !(R.areas[p.to]?.passages || []).length) bad('passage-one-ended', seed, kinds, p.to, 'a passage with an arch on one area only');   // round 4 G5
+  for (const b of R.openPlan?.behind || []) if (!(R.openPlan.passages || []).some((p) => p.to === b)) bad('passage-one-ended', seed, kinds, b, 'the area behind a passage has no passage record naming both ends');
 }
 console.log(Object.keys(count).length ? Object.entries(count).map(([k, n]) => `${k}: ${n} (first: ${first[k]})`).join('\n') : `rollstats: ${N * sets.length} homes, no case found`);
 process.exit(Object.keys(count).length ? 1 : 0);
