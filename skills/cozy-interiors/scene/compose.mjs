@@ -39,7 +39,7 @@ export class Home {
   // the whole roll: H.roll(rollJson) keeps what roll.mjs dealt (still-life assets, groups, plant places, passages, the accent), so the check 'rolled' can compare every dealt thing with the scene; the home's accent is the roll's unless the constructor got one. a.skip(what, 'why') leaves one out: an asset name, 'groups', 'passage', or a plant place (sill, shelf, worktop, hanging, floor)
   roll(json) {
     const R = typeof json === 'string' ? JSON.parse(json) : json, home = this.S.home, asset = (x) => (x.match(/\(([A-Za-z]+)\)\s*$/) || [])[1], areas = {};
-    for (const [id, a] of Object.entries(R.areas || {})) areas[id] = { still: (a.still || []).flatMap((st) => st.things.map(asset).filter(Boolean)), groups: (a.groups || []).length, plantAt: a.plantAt || [], passages: (a.passages || []).length, heroWindow: /\bwindow\b/.test(a.hero || '') };
+    for (const [id, a] of Object.entries(R.areas || {})) areas[id] = { still: (a.still || []).flatMap((st) => st.things.map(asset).filter(Boolean)), groups: (a.groups || []).length, plantAt: a.plantAt || [], passages: (a.passages || []).length, heroWindow: /\bwindow\b/.test(a.hero || ''), hero: a.hero || '', side: a.side || null, accents: a.accents || [], foreground: a.foreground || null, accentOn: a.accentOn || null, signs: a.signs || [], pieces: a.pieces || [], named: [a.above, a.wallArr, a.produce, ...(a.more || [])].filter(Boolean), groupTexts: (a.groups || []).map((g) => g.replace(/ \(the hero group.*\)$/, '').replace(/, on the [^,]*(, [a-z ]*third)?$/, '')) };
     home.roll = { seed: R.seed, accent: R.accent?.hex, behind: R.openPlan?.behind || [], areas };
     if (!home.accent && R.accent?.hex) home.accent = R.accent.hex;
     return this;

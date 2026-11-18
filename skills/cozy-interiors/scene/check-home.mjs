@@ -248,6 +248,7 @@ const areaIssues = await page.evaluate(() => {
     // the home view
     api.setArea(A, true); camera.updateMatrixWorld(true); camera.updateProjectionMatrix();
     const R = Object.fromEntries(ids.map((i) => [i, rect(boxes[i])]));
+    { const hid = mine.find((i) => sc(i).hero); if (hid) { const g = sc(hid).group, ms = mine.filter((i) => sc(i).group === g && sc(i).asset !== 'rug'); out.push({ rule: '_heroside', area: A, cx: (Math.min(...ms.map((i) => R[i].x0)) + Math.max(...ms.map((i) => R[i].x1))) / 2 - (Math.min(...mine.map((i) => R[i].x0)) + Math.max(...mine.map((i) => R[i].x1))) / 2 }); } }   // the hero group's middle against the middle of everything in the area's home view, for the roll's `side` (checked on the Node side)
     for (const i of mine) { const r = R[i]; if (Math.abs(r.x0) > 0.93 || Math.abs(r.x1) > 0.93 || r.y0 < -0.94 || r.y1 > 0.94) out.push({ rule: 'frame', what: `${A}: ${i} reaches ${(Math.max(Math.abs(r.x0), Math.abs(r.x1), Math.abs(r.y0), Math.abs(r.y1)) * 100).toFixed(0)}% toward the edge of the home view (keep within 93%): the area's objects and back-wall openings must fit the frame: remove a stray piece or bring it nearer the group` }); }
     for (const W of home.walls) { if (!W.id || W.id !== A + '-back') continue; for (const b of W.built) { const r = rect(box(b.group)); if (Math.abs(r.x0) > 0.93 || Math.abs(r.x1) > 0.93 || r.y0 < -0.94 || r.y1 > 0.94) out.push({ rule: 'frame', what: `${A}: the ${b.op.kind} on ${W.id} at ${b.op.at} reaches the edge of the home view (x ${r.x0.toFixed(2)} to ${r.x1.toFixed(2)}, y ${r.y0.toFixed(2)} to ${r.y1.toFixed(2)})` }); } }
     const bd = api.areas[A].bounds, bg = api.groupBounds(A);   // bg: the open-plan group's bounds (the fade box); bd: the area's own
@@ -379,7 +380,8 @@ const areaIssues = await page.evaluate(() => {
   return out;
 });
 lap('per-area rules');
-for (const i of areaIssues) issues.push(i);
+const heroSide = Object.fromEntries(areaIssues.filter((i) => i.rule === '_heroside').map((i) => [i.area, i.cx]));
+for (const i of areaIssues) if (i.rule !== '_heroside') issues.push(i);
 // ghosts in tour shots: render each shot twice, once as it is and once with everything of the other areas hidden; any pixels that differ are a partly faded neighbour
 {
   const list = QUICK ? [] : await page.evaluate(() => window.cozyScene.areaIds ? window.cozyScene.areaIds.map((id) => [id, (window.cozyScene.areas[id].camera.shots || []).map((x) => x.name)]) : []);
@@ -426,6 +428,18 @@ lap('geom (rigid bodies)');
     const plants = mine.filter((o) => PLANT.includes(o.asset));
     for (const pl of ra.plantAt) { if (skipped(pl)) continue; const ok = pl === 'floor' ? plants.some((o) => o.mount === 'floor') : pl === 'hanging' ? mine.some((o) => /hang/i.test(o.asset)) : plants.some((o) => o.mount !== 'floor'); if (!ok) issues.push({ rule: 'rolled', what: `${A}: the roll puts a plant ${pl === 'floor' ? 'on the floor' : 'at: ' + pl} and the area has none there: add it, or a.skip('${pl}', 'why')` }); }
     const gs = new Set(mine.filter((o) => o.asset !== 'rug').map((o) => o.group).filter(Boolean)); if (!skipped('groups') && gs.size < ra.groups) issues.push({ rule: 'rolled', what: `${A}: the roll deals ${ra.groups} groups and the area has ${gs.size}: add groups, or a.skip('groups', 'why')` });
+    if (ra.side && heroSide[A] !== undefined && !skipped('side') && ((ra.side === 'left' && heroSide[A] > 0.08) || (ra.side === 'right' && heroSide[A] < -0.08))) issues.push({ rule: 'rolled', what: `${A}: the roll puts the hero group on the ${ra.side} of the home view and it stands ${heroSide[A] > 0 ? 'right' : 'left'} of the middle of the area's things: move the group (or the view) or a.skip('side', 'why')` });
+    { // every roll field that names a thing: accents, foreground, pieces, signs, accentOn, the named extras (bracket names), the hero and each group, by the asset names tables.json `names` carries
+      const N = (await import('./tables.json', { with: { type: 'json' } })).default.names, parse = (t) => (N.things[t] || N.groups[t] || N.hero[t] || ((t.match(/\(([A-Za-z, ]+)\)\s*$/) || [])[1] || '').split(',').map((x) => x.trim()).join('+')).split('+').filter(Boolean).map((x) => x.split('|')), motionKinds = (S.areas.find((q) => q.id === A)?.motion || []).map((m) => m.kind);
+      const found = (alts) => alts.some((a) => a.startsWith('motion:') ? motionKinds.includes(a.slice(7)) : has(a)), skippedAny = (t, sets) => sk.includes(t) || sets.some((alts) => alts.some(skipped));
+      const need = (field, t, sets, hint) => { if (!sets.length || skippedAny(t, sets)) return; for (const alts of sets) if (!found(alts)) { issues.push({ rule: 'rolled', what: `${A}: the roll's ${field} "${t}" needs ${alts.join(' or ')} and the area has none${hint || ''}: add it, or a.skip('${alts[0]}', 'why')` }); break; } };
+      for (const t of ra.accents || []) need('accent', t, parse(t)); if (ra.foreground) need('foreground piece', ra.foreground, parse(ra.foreground));
+      for (const t of ra.pieces || []) need('piece', t, parse(t)); for (const t of ra.signs || []) need('sign', t, parse(t));
+      for (const t of ra.named || []) { const br = (t.match(/\(([A-Za-z, ]+)\)\s*$/) || [])[1]; if (br) for (const n of br.split(',').map((x) => x.trim())) need('extra', t, [[n]]); }
+      if (ra.hero) { const sets = parse(ra.hero); if (sets.length && !skipped('hero')) { const gh = mine.filter((o) => o.hero).map((o) => o.group); const inHero = (alts) => mine.some((o) => gh.includes(o.group) && alts.includes(o.asset)); for (const alts of sets) if (!inHero(alts) && !skippedAny(ra.hero, [alts])) { issues.push({ rule: 'rolled', what: `${A}: the roll's hero "${ra.hero}" needs ${alts.join(' or ')} in the hero group: add it to that group, or a.skip('hero', 'why')` }); break; } } }
+      if (!skipped('groups')) for (const t of (ra.groupTexts || []).slice(1)) { const sets = parse(t); if (!sets.length || sk.includes(t) || sets.some((alts) => alts.some(skipped))) continue; const byGroup = {}; for (const o of mine) (byGroup[o.group] ||= new Set()).add(o.asset); if (!Object.values(byGroup).some((g) => sets.every((alts) => alts.some((x) => g.has(x))))) issues.push({ rule: 'rolled', what: `${A}: the roll's group "${t}" is not in the scene as one group (${sets.map((a) => a.join('|')).join(' + ')}): build it as one group, or a.skip('groups', 'why')` }); }
+      if (ra.accentOn) { const sets = parse(ra.accentOn); if (sets.length && !skipped('accentOn') && !skippedAny(ra.accentOn, sets)) { const alts = sets[0]; if (!mine.some((o) => alts.includes(o.asset) && JSON.stringify(o.params || {}).includes('"accent"'))) issues.push({ rule: 'rolled', what: `${A}: the roll puts the accent on the ${ra.accentOn} and no ${alts.join(' or ')} in the area has tone: 'accent': give one that tone, or a.skip('accentOn', 'why')` }); } }
+    }
     const arches = S.home.walls.filter((W) => W.id && W.id.startsWith(A + '-')).flatMap((W) => W.openings || []).filter((o) => o.kind === 'arch').length, want = Math.max(ra.passages, R0.behind.includes(A) ? 1 : 0);
     if (!skipped('passage') && arches < want) issues.push({ rule: 'rolled', what: `${A}: the roll deals ${want} passage(s) and the area has ${arches} arch(es): add one with to: <area>, or a.skip('passage', 'why')` });
   }

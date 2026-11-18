@@ -1,7 +1,9 @@
 // node rollstats.mjs [seeds=150] → rolls many homes and counts the deals that break a check or contradict themselves. Exit 1 when any case is found.
 // Cases: a still life with more than two things on one top; the same thing on two tops of one area; two lamps in one area; a named asset the library lacks; the cutting board dealt twice; a plant corner without a floor plant place; an area behind a passage that has no arch or door of its own.
 import { roll } from '../../../skills/cozy-interiors/scene/roll.mjs';
+import fs from 'node:fs';
 import { ASSETS } from '../../../skills/cozy-interiors/scene/src/library/meta.js';
+const NAMES = JSON.parse(fs.readFileSync(new URL('../../../skills/cozy-interiors/scene/tables.json', import.meta.url), 'utf8')).names, UNNAMED = /^(drawer ajar|pillow creased|cloth dropped|unmade bed|tablecloth|runner|cloth|cushion|teaTowel|duvetCloth|floorCushion|foldedThrow|benchCushion|tableRunner|hungBag|binders|hungHat|boots)$/;   // a sign that is a state of another piece (a drawer ajar) has no asset to look for
 const N = Number(process.argv[2] || 150), sets = [['kitchen', 'dining', 'living'], ['kitchen', 'reading-corner', 'bedroom'], ['home-office', 'hallway', 'kitchen'], ['dining', 'living', 'kitchen']];
 const asset = (x) => (x.match(/\(([A-Za-z]+)\)\s*$/) || [])[1], count = {}, first = {};
 const bad = (k, seed, kinds, id, extra = '') => { count[k] = (count[k] || 0) + 1; first[k] ||= `seed ${seed} ${kinds.join(',')} ${id} ${extra}`; };
@@ -17,6 +19,9 @@ for (let seed = 1; seed <= N; seed++) for (const kinds of sets) {
     if (id === 'kitchen' && /\(mirror\)|mirror over|leaning mirror/.test(JSON.stringify([a.still, a.wallArr, a.accents, a.more, a.foreground, a.groups]))) bad('kitchen-mirror', seed, kinds, id, 'a mirror in a kitchen');   // the check 'variety' keeps mirrors out of kitchens (a vase and a picture are fine there)
     if (a.board && seen.has('cuttingBoard')) bad('board-twice', seed, kinds, id);
     if ((a.groups || []).some((g) => /floor plant/.test(g)) && !a.plantAt.includes('floor')) bad('plant-corner-without-floor-place', seed, kinds, id);
+    { const stripG = (g) => g.replace(/ \(the hero group.*\)$/, '').replace(/, on the [^,]*(, [a-z ]*third)?$/, '');
+      const unnamed = [...(a.accents || []), ...(a.foreground ? [a.foreground] : []), ...(a.pieces || []), ...(a.signs || [])].filter((t) => !NAMES.things[t] && !UNNAMED.test(t) && !/\([A-Za-z, ]+\)\s*$/.test(t)).concat((a.groups || []).slice(1).map(stripG).filter((t) => !NAMES.groups[t]), a.hero && !NAMES.hero[a.hero] ? [a.hero] : [], a.accentOn && !NAMES.things[a.accentOn] ? [a.accentOn] : []);
+      for (const t of unnamed) bad('roll-phrase-without-asset-names', seed, kinds, id, `"${t}" (add it to tables.json names)`); }
     if (a.plants !== a.plantAt.length) bad('plants-count', seed, kinds, id);
   }
   for (const b of R.openPlan?.behind || []) if (!(R.areas[b]?.passages || []).length) bad('behind-without-passage', seed, kinds, b);

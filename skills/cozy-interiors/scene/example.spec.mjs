@@ -14,15 +14,13 @@ const left = a.left(5200);
 // One run on the back wall: a sink, drawers, the hob and a cupboard. (A corner kitchen takes a second run: a.run(wall, id, at, modules, { joins, ownsTop: false }); its group is whole in the cook shot, so give the room the depth the shot needs.)
 const R = a.run(back, 'run', 0, [{ w: 900, kind: 'sink' }, { w: 600, kind: 'drawers', n: 3, ajar: 0.3 }, { w: 900, kind: 'hob' }, { w: 600, kind: 'doors' }], { group: 'cook', hero: true });
 R.on('hob', 'hob', { group: 'cook' }); R.on('hob', 'hood', { group: 'cook' }); R.on('hob', 'pan', { group: 'cook' });
-R.on('drawers', 'cuttingBoard', { group: 'cook' }); R.on('doors', 'fruitBowl', { group: 'cook', dx: -170 }); R.on('doors', 'plant', { group: 'cook', dx: 150 });
+R.on('drawers', 'herbs', { group: 'cook' }); R.on('doors', 'fruitBowl', { group: 'cook' });   // the roll's herbs stand on the worktop
 back.place('wc1', 'wallRun', 2700, { group: 'cook', params: { modules: [{ w: 500, kind: 'door' }] } });
 back.place('shelf', 'openShelf', 450, { group: 'cook' });
-a.put('runner', 'rug', [1500, 1250], 0, { group: 'runner', params: { w: 2400, d: 700, form: 'plain', fringe: 'ends', border: 40 } });   // a runner in front of the cooking
-left.place('pic', 'picture', 1600, { group: 'bench' }); left.place('shelf2', 'openShelf', 3700, { group: 'bench' });   // a picture and a shelf keep the left wall from standing bare
-a.put('bench', 'bench', [330, 2300], 90, { group: 'bench' });   // a bench under the left window
-// A seating group: an armchair and a floor lamp in the free corner by the left wall.
-a.put('chair', 'armchair', [2000, 4300], 70, { group: 'nook' });
-a.put('lamp', 'floorLamp', [1300, 4750], 0, { group: 'nook' });
+a.put('runner', 'runner', [1900, 1250], 90, { group: 'cook', params: { w: 700, l: 2400, form: 'stripe', tone: 'accent' } });   // the roll's accent (rust) is on a runner in front of the cooking
+left.place('dresser', 'sideboard', 3300, { group: 'dresser' }); left.place('dpic', 'picture', 3300, { group: 'dresser', y: 1000, params: { w: 1000, h: 600 } }); a.onTop('dresser', [{ id: 'dplant', asset: 'plant' }, { id: 'djug', asset: 'jug' }], { group: 'dresser' });   // the roll's dresser group: a sideboard with a still life under a picture
+left.place('shelves', 'openShelf', 600, { group: 'shelves' }); a.put('kstool', 'stool', [300, 4650], 0, { group: 'shelves' });   // the roll's shelves group: open shelves with a stool below
+a.put('bench', 'bench', [330, 3750], 90, { group: 'bench' }); left.place('bpic', 'picture', 1450, { group: 'bench' });   // a bench on the left wall
 // A table set: a round table with two chairs and a rug, standing in open floor within reach of the cooking.
 const T = a.table('bt', { at: [4800, 2800], r: 520, chairs: 2, group: 'breakfast', cloth: 'accent' });   // the roll's accent (rust) is on the tablecloth (it names the runner; any textile of the area may carry it)
 T.on('mug', { y: 757, dx: -180 }); T.on('saltPepper', { y: 757, dx: 260 });   // the roll's table still life: a mug and salt and pepper
@@ -32,8 +30,8 @@ a.skip('hanging', 'no hanging-plant asset yet: the plant stands on the sill and 
 a.skip('mokaPot', 'the hob carries a pan under the hood: a moka pot would stand in its place');
 a.skip('utensilCrock', 'the hob has no room beside it for a crock: pans hang on the rail instead');   // a thing the roll dealt and the scene leaves out says why
 // Shots: a.shot(name, from, look, fov, group). fitshots.mjs finds the cameras; its numbers go in here.
-a.shot('cook', ...C('kitchen', 'cook', [[500, 1400, 5700], [571, 1100, 215], 40]), 'cook');   // C(area, name, fallback): the fitted camera, or the fallback on the first run
+a.shot('cook', ...C('kitchen', 'cook', [[3800, 1100, 6000], [2610, 1100, 345], 40]), 'cook');   // C(area, name, fallback): the fitted camera, or the fallback on the first run
 a.shot('table', ...C('kitchen', 'table', [[6350, 1700, 6150], [4116, 300, 3027], 34]), 'breakfast');
-a.shot('cook2', ...C('kitchen', 'cook2', [[3800, 1000, 5550], [2474, 1100, -44], 40]), 'cook');
-a.view({ target: [3000, 700, 2300], az: 10, el: 18 });
+a.shot('cook2', ...C('kitchen', 'cook2', [[500, 700, 5850], [1050, 900, 699], 40]), 'cook');
+a.view({ target: [2800, 700, 2000], az: 14, el: 20 });
 H.write(out, fs);
