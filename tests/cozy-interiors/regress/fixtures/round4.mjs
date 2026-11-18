@@ -82,9 +82,9 @@ fixtures.push(
 {
   const bed = (a, p1, p2) => { a.put('bed', 'bed', [3000, 1100], 0, { group: 'g', hero: true }); for (const [id, x, p] of [['n1', 1950, p1], ['n2', 4050, p2]]) { a.put(id, 'bedsideTable', [x, 350], 0, { group: 'g' }); a.put('l' + id, 'bedsideLamp', [x, 350], 0, { group: 'g', y: 520, mount: 'on', ...(p ? { params: p } : {}) }); } };
   fixtures.push(
-    { name: 'pair-bedside-lamps-differ-either-side-of-a-bed', from: 'round 4 mistake 7: the two bedside lamps of one bed were dealt different shades and bases', kind: 'bug', expect: { rules: ['pair'], ids: ['ln2'] },
+    { name: 'pair-bedside-lamps-differ-either-side-of-a-bed', from: 'round 4 mistake 7: the two bedside lamps of one bed were dealt different shades and bases', kind: 'bug', expect: { rules: ['lights'], ids: ['ln2'] },
       build({ Home }) { const { H, a } = room(Home); bed(a, { shade: 'drum', base: 'gourd' }, { shade: 'globe', base: 'tripod' }); return H; } },
-    { name: 'good-bedside-lamps-of-one-pair-match', from: 'round 4 G4: params pair gives both sides one deal', kind: 'good', counts: ['pair'],
+    { name: 'good-bedside-lamps-of-one-pair-match', from: 'round 4 G4: params pair gives both sides one deal', kind: 'good', counts: ['pair', 'lights'],
       build({ Home }) { const { H, a } = room(Home); bed(a, { pair: 'bed' }, { pair: 'bed' }); return H; } },
   );
 }
@@ -113,3 +113,42 @@ fixtures.push(
   { name: 'good-compose-allows-a-picture-above-a-sideboard', from: 'round 4 G6: a piece above another on the same wall is fine', kind: 'good', counts: ['placement-4'],
     build({ Home }) { const { H, back } = room(Home); back.place('sb', 'sideboard', 2000, { group: 'g', params: { w: 1400 } }); back.place('pic', 'picture', 2000, { group: 'g', y: 1250, params: { w: 900, h: 600 } }); return H; } },
 );
+// U10: one type per light in a room
+fixtures.push(
+  { name: 'lights-sconces-of-one-room-differ', from: 'round 4 U10: the two wall sconces of the bedroom were a cone and a globe, one swing arm and one short', kind: 'bug', expect: { rules: ['lights'], ids: ['s2'] },
+    build({ Home }) { const { H, a, back } = room(Home); a.put('bed', 'bed', [3000, 1100], 0, { group: 'g', hero: true }); back.place('s1', 'wallSconce', 1900, { group: 'g', params: { arm: 'swing', shade: 'cone' } }); back.place('s2', 'wallSconce', 4100, { group: 'g', params: { arm: 'short', shade: 'globe' } }); return H; } },
+  { name: 'good-lights-dealt-by-compose-match', from: 'round 4 U10: compose gives every sconce of an area the first one form', kind: 'good', counts: ['lights'],
+    build({ Home }) { const { H, a, back } = room(Home); a.put('bed', 'bed', [3000, 1100], 0, { group: 'g', hero: true }); a.put('n1', 'bedsideTable', [1950, 350], 0, { group: 'g' }); a.put('n2', 'bedsideTable', [4050, 350], 0, { group: 'g' }); back.place('s1', 'wallSconce', 1900, { group: 'g' }); back.place('s2', 'wallSconce', 4100, { group: 'g' }); return H; } },
+);
+// U7 / U8
+{
+  const win = { kind: 'window', x: 1100, width: 1200, height: 1200, sill: 900, sash: 'out' };
+  fixtures.push(
+    { name: 'tall-piece-beside-a-window-round-the-corner', from: 'round 4 U7: a wardrobe on the left wall stands against the corner and covers the bedroom window on the back wall', kind: 'bug', expect: { rules: ['cornerop'], ids: ['a tall piece stands'] },
+      build({ Home }) { const { H, a } = room(Home, { openings: [win] }); const left = a.left(4000, []); left.place('wd', 'wardrobe', 3400, { group: 'g', hero: true }); return H; } },
+    { name: 'good-tall-piece-far-from-the-window-corner', from: 'round 4 U7: the same wardrobe at the front of the left wall', kind: 'good', counts: ['cornerop'],
+      build({ Home }) { const { H, a } = room(Home, { openings: [win] }); const left = a.left(4000, []); left.place('wd', 'wardrobe', 800, { group: 'g', hero: true }); return H; } },
+    { name: 'wall-art-too-low-over-a-sideboard', from: 'round 4 U8: a picture 50 mm above the sideboard top is half hidden behind it in angled views', kind: 'bug', expect: { rules: ['artbehind'], ids: ['t-pic'] },
+      build({ Home }) { const { H, back } = room(Home); back.place('sb', 'sideboard', 3000, { group: 'g', params: { w: 1400 } }); back.place('pic', 'picture', 3000, { group: 'g', y: 850, params: { w: 900, h: 500 } }); return H; } },
+    { name: 'good-art-without-y-hangs-above-the-piece-below', from: 'round 4 U8: compose hangs art given no y 200 mm above the piece under it', kind: 'good', counts: ['artbehind'],
+      build({ Home }) { const { H, back } = room(Home); back.place('sb', 'sideboard', 3000, { group: 'g', params: { w: 1400 } }); back.place('pic', 'picture', 3000, { group: 'g', params: { w: 900, h: 500 } }); return H; } },
+    { name: 'plant-in-front-of-a-chest-of-drawers', from: 'round 4 U9: a floor plant stands in the front zone of the bedroom chest, so a drawer cannot open', kind: 'bug', expect: { rules: ['path'], ids: ['t-fp'] },
+      build({ Home }) { const { H, a, back } = room(Home); back.place('ch', 'chestOfDrawers', 3000, { group: 'g', hero: true }); a.put('fp', 'floorPlant', [3000, 750], 0, { group: 'g' }); return H; } },
+  );
+}
+// U11: a bedroom window has a curtain
+{
+  const bedroom = (Home, curtain) => { const H = new Home({ seed: 5, floor: 'boards' }), a = H.area('bedroom', 'Bedroom', { rect: [0, 0, 6000, 4000] }), back = a.back(6000, [{ kind: 'window', x: 4500, width: 1400, height: 1400, sill: 900, sash: 'out' }]); a.view({ target: [3000, 700, 2000], az: 20, el: 15 }); a.put('sofa', 'sofa', [1300, 600], 0, { group: 'g', hero: true }); if (curtain) back.place('cu', 'curtain', 4500, { group: 'g' }); return H; };
+  fixtures.push(
+    { name: 'bedroom-window-without-a-curtain', from: 'round 4 U11: the bedroom window had no curtain or blind', kind: 'bug', expect: { rules: ['curtain'], ids: ['bedroom window'] }, build({ Home }) { return bedroom(Home, false); } },
+    { name: 'good-bedroom-window-with-a-curtain', from: 'round 4 U11: the same bedroom with a curtain', kind: 'good', counts: ['curtain'], build({ Home }) { return bedroom(Home, true); } },
+  );
+}
+// the user, Nov 18: nothing driven by wind moves where no window opens; one mover is enough
+{
+  const homeW = (Home, sash) => { const { H, a, back } = room(Home, { openings: [{ kind: 'window', x: 4500, width: 1400, height: 1400, sill: 900, sash }] }); a.put('sofa', 'sofa', [1300, 600], 0, { group: 'g', hero: true }); back.place('cu', 'curtain', 4500, { group: 'g' }); return H; };
+  fixtures.push(
+    { name: 'wind-mover-in-an-area-without-an-open-window', from: 'the user, Nov 18: a wind-stirred plant in an area whose only window is fixed', kind: 'bug', expect: { rules: ['windmover'], ids: ['driven by wind'] }, build({ Home }) { return homeW(Home, 'fixed'); }, patch(S) { S.areas[0].motion = [{ kind: 'wind' }]; } },
+    { name: 'good-cat-alone-where-no-window-opens', from: 'the user, Nov 18: one mover that needs no wind is enough', kind: 'good', counts: ['windmover'], build({ Home }) { return homeW(Home, 'fixed'); }, patch(S) { S.areas[0].motion = [{ kind: 'cat' }]; } },
+  );
+}

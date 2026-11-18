@@ -24,7 +24,8 @@ for (let seed = 1; seed <= N; seed++) for (const kinds of sets) {
       for (const t of unnamed) bad('roll-phrase-without-asset-names', seed, kinds, id, `"${t}" (add it to tables.json names)`); }
     if (seen.has('bedsideLamp') && /wallSconce/.test(JSON.stringify([a.wallArr, a.groups, a.more, a.accents]))) bad('sconce-and-bedside-lamp', seed, kinds, id, 'a wall sconce and a bedside lamp dealt together (two light sources a side)');   // round 4 G4
     if (a.plantAt.includes('sill') && !a.openings.some((o) => o.kind === 'window' && !['wall', 'bay'].includes(o.style))) bad('sill-plant-without-a-ledge', seed, kinds, id, 'a sill plant and no window with a ledge');   // round 4 G6
-    if ((a.motion || []).length < 2 && a.openings.some((o) => o.kind === 'window' && o.sash !== 'fixed' && (!o.style || o.style === 'sash' || o.style === 'pair'))) bad('fewer-than-two-movers', seed, kinds, id, `${(a.motion || []).map((m) => m.kind).join(',') || 'none'} (each area wants two living things)`);   // round 4 G6
+    if ((a.motion || []).length < 1 && a.openings.some((o) => o.kind === 'window' && o.sash !== 'fixed' && (!o.style || o.style === 'sash' || o.style === 'pair'))) bad('no-mover', seed, kinds, id, `${(a.motion || []).map((m) => m.kind).join(',') || 'none'} (an area with a window that opens deals one living thing at least)`);   // round 4 G6
+    if (/bedroom/.test(id) && a.openings.some((o) => o.kind === 'window') && !(a.pieces || []).some((p) => /curtain|blind/.test(p))) bad('bedroom-window-uncovered', seed, kinds, id, 'a bedroom window dealt no curtain or blind');   // round 4 U11
     if (a.plants !== a.plantAt.length) bad('plants-count', seed, kinds, id);
   }
   for (const b of R.openPlan?.behind || []) if (!(R.areas[b]?.passages || []).length) bad('behind-without-passage', seed, kinds, b);
