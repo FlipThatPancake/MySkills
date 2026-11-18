@@ -16,12 +16,12 @@ await page.waitForFunction(() => window.cozyScene && window.cozyBaked, null, { t
 await page.evaluate(() => window.cozyScene.setArea('sheet', true));
 const S = JSON.parse((await import('node:fs')).readFileSync(scene, 'utf8')), cells = [];
 for (const o of S.home.objects) {
-  if (!/^(fp|p)\d/.test(o.id.replace(/^sheet-/, ''))) continue;
+  if (!/^(fp|p|v)\d/.test(o.id.replace(/^sheet-/, ''))) continue;
   const big = o.asset === 'floorPlant', [x, , z] = o.at, key = o.id.replace(/^sheet-/, '');
-  const views = big ? [['whole', 3200, [x + 300, 500, z]], ['crown', 1300, [x + 200, 720, z]]] : [['whole', 1100, [x + 110, 130 + o.at[1], z]]];
-  for (const [name, d, t] of views) {
-    await page.evaluate(([d, t]) => { window.cozyScene.controls.minDistance = 10; window.cozyScene.look(d, 12, 8, t); }, [d, t]);
-    await page.waitForTimeout(500);
+  const views = o.asset === 'vase' ? [['whole', 2300, [x, 330, z]], ['close', 2300, [x, 480, z], 11]] : big ? [['whole', 3200, [x + 300, 500, z]], ['crown', 1300, [x + 200, 720, z]]] : [['whole', 1100, [x + 110, 130 + o.at[1], z]]];
+  for (const [name, d, t, fov] of views) {
+    await page.evaluate(([d, t, fov]) => { window.cozyScene.controls.minDistance = 10; window.cozyScene.look(d, 12, 8, t); const c = window.cozyScene.camera; c.fov = fov || 30; c.updateProjectionMatrix(); }, [d, t, fov]);
+    await page.waitForTimeout(1500);
     const f = join(out, key + '-' + name + '.png'); await page.screenshot({ path: f, timeout: 120000 }); cells.push({ id: key, asset: o.asset, form: o.params.form, view: name, file: f });
   }
 }

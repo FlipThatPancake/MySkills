@@ -1,0 +1,129 @@
+{
+ "units": "mm",
+ "seed": 0,
+ "home": {
+  "height": 2700,
+  "floor": {
+   "style": "plain",
+   "seed": 0
+  },
+  "tiles": {
+   "origin": [
+    0,
+    0
+   ]
+  },
+  "walls": [
+   {
+    "id": "sheet-back",
+    "from": [
+     13600,
+     0
+    ],
+    "to": [
+     0,
+     0
+    ],
+    "openings": []
+   }
+  ],
+  "objects": [
+   {
+    "id": "sheet-v0",
+    "asset": "vase",
+    "at": [
+     1500,
+     0,
+     2000
+    ],
+    "mount": "floor",
+    "params": {
+     "form": 0,
+     "seed": 3
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-v1",
+    "asset": "vase",
+    "at": [
+     4900,
+     0,
+     2000
+    ],
+    "mount": "floor",
+    "params": {
+     "form": 1,
+     "seed": 3
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-v2",
+    "asset": "vase",
+    "at": [
+     8300,
+     0,
+     2000
+    ],
+    "mount": "floor",
+    "params": {
+     "form": 2,
+     "seed": 3
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-v3",
+    "asset": "vase",
+    "at": [
+     11700,
+     0,
+     2000
+    ],
+    "mount": "floor",
+    "params": {
+     "form": 3,
+     "seed": 3
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   }
+  ]
+ },
+ "areas": [
+  {
+   "id": "sheet",
+   "name": "Sheet",
+   "O": [
+    0,
+    0
+   ],
+   "psi": 0,
+   "bounds": {
+    "x0": 0,
+    "x1": 13600,
+    "z0": 0,
+    "z1": 4000,
+    "top": 2500
+   },
+   "camera": {
+    "home": {
+     "target": [
+      3000,
+      400,
+      2000
+     ],
+     "az": 0,
+     "el": 10,
+     "fit": "objects",
+     "dist": 9000
+    },
+    "shots": []
+   }
+  }
+ ]
+}
