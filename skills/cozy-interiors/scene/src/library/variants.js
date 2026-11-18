@@ -7,7 +7,7 @@ import { fridge as fridge0 } from '../kitchen/fridge.js';
 import { stool as stool0 } from './living.js';
 import { basket as basket0 } from './decor.js';
 import { potTop } from './pots.js';
-import { fiddle, palm, monstera, snake, fern, pothos, basil, smallFern } from './plants.js';
+import { fiddle, palm, monstera, snake, fern, pothos, basil, smallFern, vaseStems } from './plants.js';
 const rimTop = (kit, g, r, y) => { const t = potTop(kit, r); t.position.y = y; g.add(t); };
 const rnd = (seed) => { let r = (seed || 1) * 9301 + 49297; return () => { r = (r * 9301 + 49297) % 233280; return r / 233280; }; };
 const lo = { tone: 'lo' };
@@ -54,21 +54,9 @@ export function plant(kit, { form = 0, seed = 6 } = {}) {   // the small pot on 
   return kit.merge(g);
 }
 
-export function vase(kit, { form = 0, h = 280, stems = 5, seed = 3 } = {}) {
+export function vase(kit, { form = 0, h = 280, stems = 5, seed = 3 } = {}) {   // 0 the bottle vase with bare twigs and buds (decor.js) | 1 eucalyptus | 2 leafy branches | 3 olive twigs (plants.js)
   if (!form) return vase0(kit, { h, stems, seed });
-  const g = kit.group(), R = rnd(seed + form * 5), pts = [];
-  if (form === 1) {   // a round jug with tall straight dried grasses
-    g.add(kit.cyl(0, 0, 0, 80, h * 0.45, { rTop: 85, seg: 24 })); g.add(kit.cyl(0, h * 0.45, 0, 85, h * 0.3, { rTop: 42, seg: 24 }));
-    for (let s = 0; s < 9; s++) { const a = (s - 4) * 0.12 + R() * 0.05, len = 520 + R() * 260; pts.push([0, h * 0.75, 0], [Math.sin(a) * len, h * 0.75 + Math.cos(a) * len, 0]); g.add(leafAt(kit, Math.sin(a) * len, h * 0.75 + Math.cos(a) * len, 0, 9, 38, 0, -a)); }
-  } else if (form === 2) {   // a low cylinder with three big leaves
-    g.add(kit.cyl(0, 0, 0, 70, h * 0.7, { rTop: 70, seg: 24 }));
-    for (let s = 0; s < 3; s++) { const a = (s - 1) * 0.35, len = 360 + R() * 160; pts.push([0, h * 0.7, 0], [Math.sin(a) * len * 0.7, h * 0.7 + len * 0.9, 0]); g.add(leafAt(kit, Math.sin(a) * len * 0.7, h * 0.7 + len * 0.95, 0, 70, 130, 0, -a)); }
-  } else {   // a bowl-shaped vase with a few round blossoms
-    g.add(kit.cyl(0, 0, 0, 40, h * 0.3, { rTop: 80, seg: 24 })); g.add(kit.cyl(0, h * 0.3, 0, 80, h * 0.25, { rTop: 60, seg: 24 }));
-    for (let s = 0; s < 5; s++) { const a = (s - 2) * 0.3, len = 260 + R() * 150, x = Math.sin(a) * len, y = h * 0.55 + Math.cos(a) * len; pts.push([0, h * 0.55, 0], [x, y, 0]); g.add(leafAt(kit, x, y, 0, 38, 38, 0, 0)); }
-  }
-  g.add(kit.lines(pts, 'mid'));
-  return kit.merge(g);
+  return vaseStems(kit, { form, h, stems, seed });
 }
 
 export function picture(kit, { form = 0, w = 600, h = 800, seed = 2 } = {}) {
