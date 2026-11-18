@@ -57,3 +57,16 @@ if (!args.includes('--no-settle')) {
   const moved = res.findings.filter((f) => f.rule === 'moves' && !/^top-/.test(f.id));
   console.log(moved.map((f) => `[settle] ${f.text}`).join('\n') || 'every small thing stands still'); console.log(`${moved.length} of ${n} small thing variant(s) move on a flat top (${small.length} assets)`);
 }
+
+// Chair kinds keep their real overall width (references/objects/chairs/*/notes.md): each armchair shape at the smallest and largest width the space deals, and each dining chair form, measured on the built geometry.
+{
+  const { CHAIR_FIT } = await import('./src/library/meta.js'), { dealParams } = await import('./src/library/space.js'), kk = createKit(), T = kk.THREE;
+  const LIM = { wing: [560, 720], lounge: [600, 770], rocking: [480, 640], beanbag: [800, 1000], sling: [610, 800] }, bad = [];
+  const width = (m) => { m.updateMatrixWorld(true); const b = new T.Box3().setFromObject(m); return [b.max.x - b.min.x, b.max.z - b.min.z]; };
+  for (const [shape, [lo, hi]] of Object.entries(LIM)) for (const wv of [0, 5000]) {
+    const p = dealParams({ S: { seed: 3 }, decks: {} }, 'armchair', { shape, w: wv || 1, d: 1 }), [w] = width(REGISTRY.armchair(kk, p));
+    if (w < lo || w > hi) bad.push(`armchair ${shape} (w ${p.w}): overall ${Math.round(w)} mm wide, notes say ${lo}-${hi}`);
+  }
+  for (const form of ['ladder', 'spindle', 'bentwood', 'upholstered']) { const [w] = width(REGISTRY.chair(kk, { form })); if (w > 560) bad.push(`dining chair ${form}: overall ${Math.round(w)} mm wide, notes say about 420-460 seat, 560 at most`); }
+  console.log(bad.map((x) => `[chair-width] ${x}`).join('\n') || 'every chair kind keeps its real width'); console.log(`${bad.length} chair width problem(s)`);
+}
