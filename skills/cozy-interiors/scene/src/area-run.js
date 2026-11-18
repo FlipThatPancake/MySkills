@@ -26,6 +26,7 @@ export function createAreaScene(canvas, S) {
   kit.keepParts = q.has('check');
   const camera = new THREE.PerspectiveCamera(FOV, 1, 10, 400000);
   const home = buildHome(kit, S.home, REGISTRY, S.areas);
+  kit.setTopFade((S.home.height || 2700) - 400, S.home.height || 2700);   // the shared top rule: anything that reaches the home's top melts out over its last 400 mm (a chimney, a flue, a cord)
   scene.add(home.group);
   kit.setOpacity(1, 1);
   const controls = new OrbitControls(camera, canvas);

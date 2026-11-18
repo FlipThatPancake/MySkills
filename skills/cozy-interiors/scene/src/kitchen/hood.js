@@ -10,9 +10,8 @@ export function hood(kit, { ceil = 2250 } = {}) {
   const canopy = kit.solid(geo, 0, 0, -100);
   canopy.rotation.y = Math.PI / 2;
   g.add(canopy);
-  const FADE = 450, ct = Math.max(1650 + 600, ceil);   // the chimney is solid up to ceil - 450 mm, then its four edges melt out toward the ceiling (like the pendant's cord)
-  g.add(kit.box(300, 1650, -300, 300, ct - FADE - 1650, 300));
-  for (const [x, z] of [[300, -300], [600, -300], [300, -600], [600, -600]]) g.add(kit.meltingLine([x, ct - FADE, z], [x, ct, z], (p) => Math.min(1, (p[1] - (ct - FADE)) / FADE), 24));
+  const ct = Math.max(1650 + 600, ceil);   // the chimney runs up to the ceiling: the home's top fade (kit.setTopFade) melts fill and edges out over its last 400 mm, no cap or edge line
+  g.add(kit.box(300, 1650, -300, 300, ct - 1650, 300));
   g.add(kit.box(0, 1500, -90, 900, 30, 20));                // front lower lip (proud 10 mm)
   g.add(kit.box(30, 1536, -96, 840, 22, 4));                // control strip
   g.add(kit.cyl(790, 1547, -92, 7, 4, { axis: 'z', seg: 20 }));   // two buttons
