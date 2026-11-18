@@ -77,8 +77,8 @@ export function picture(kit, { form = 0, w = 600, h = 800, seed = 2 } = {}) {
   g.add(kit.rbox(-w / 2, 0, D, w, h, D, 4)); g.add(kit.box(-w / 2 + F, F, D + 2, w - 2 * F, h - 2 * F, 2, lo));
   const x0 = -w / 2 + F + 36, x1 = w / 2 - F - 36, y0 = F + 36, y1 = h - F - 36, z = D + 4.5, cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
   const ring = (x, y, r, n = 26) => { for (let i = 0; i < n; i++) { const a = i / n * 6.2832, b = (i + 1) / n * 6.2832; pts.push([x + r * Math.cos(a), y + r * Math.sin(a), z], [x + r * Math.cos(b), y + r * Math.sin(b), z]); } };
-  if (form === 1) { const r = (x1 - x0) * 0.3; ring(cx - r * 0.5, cy + r * 0.3, r); ring(cx + r * 0.7, cy - r * 0.3, r * 0.7); pts.push([x0, y0 + (y1 - y0) * 0.12, z], [x1, y0 + (y1 - y0) * 0.12, z]); }   // two overlapping circles
-  else if (form === 2) { let px = cx, py = y0; for (let i = 1; i <= 10; i++) { const nx = cx + Math.sin(i * 0.7 + R()) * (x1 - x0) * 0.12, ny = y0 + (y1 - y0) * i / 10; pts.push([px, py, z], [nx, ny, z]); if (i > 2) { const sd = i % 2 ? 1 : -1; pts.push([nx, ny, z], [nx + sd * (x1 - x0) * 0.22, ny + (y1 - y0) * 0.06, z]); } px = nx; py = ny; } }   // a botanical stem
+  if (form === 1) { const r = Math.min((x1 - x0) * 0.3, (y1 - y0) * 0.42); ring(cx - r * 0.5, cy + r * 0.1, r); ring(cx + r * 0.7, cy - r * 0.1, r * 0.7); pts.push([x0, y0 + (y1 - y0) * 0.12, z], [x1, y0 + (y1 - y0) * 0.12, z]); }   // two overlapping circles
+  else if (form === 2) { let px = cx, py = y0; for (let i = 1; i <= 10; i++) { const nx = cx + Math.sin(i * 0.7 + R()) * (x1 - x0) * 0.12, ny = y0 + (y1 - y0) * i / 10; pts.push([px, py, z], [nx, ny, z]); if (i > 2) { const sd = i % 2 ? 1 : -1; pts.push([nx, ny, z], [nx + sd * (x1 - x0) * 0.22, Math.min(y1, ny + (y1 - y0) * 0.06), z]); } px = nx; py = ny; } }   // a botanical stem
   else { for (let i = 0; i <= 3; i++) for (let k = 0; k <= 3; k++) if ((i + k) % 2 === 0) { const sx = (x1 - x0) / 4, sy = (y1 - y0) / 4; pts.push([x0 + i * sx, y0 + k * sy, z], [x0 + (i + 1) * sx * 0.9, y0 + k * sy, z], [x0 + (i + 1) * sx * 0.9, y0 + k * sy, z], [x0 + (i + 1) * sx * 0.9, y0 + (k + 1) * sy * 0.9, z], [x0 + (i + 1) * sx * 0.9, y0 + (k + 1) * sy * 0.9, z], [x0 + i * sx, y0 + (k + 1) * sy * 0.9, z], [x0 + i * sx, y0 + (k + 1) * sy * 0.9, z], [x0 + i * sx, y0 + k * sy, z]); } }   // a grid of squares
   g.add(kit.lines(pts, 'mid'));
   return kit.merge(g);
@@ -104,11 +104,24 @@ export function stool(kit, { form = 0, h = 650 } = {}) {
   return kit.merge(g);
 }
 // a basket: form 0 the blanket basket; 1 a low round tray basket with two rope handles; 2 a tall lidded wicker hamper
-export function basket(kit, { form = 0, r = 230, h = 320 } = {}) {
+export function basket(kit, { form = 0, r = 230, h = 320, fill = 'empty' } = {}) {
   if (!form) return basket0(kit, { r, h });
   const T = kit.THREE, g = kit.group(), pts = [];
   const ring = (y, rr) => { for (let i = 0; i < 36; i++) { const a = i / 36 * 6.2832, b = (i + 1) / 36 * 6.2832; pts.push([Math.cos(a) * rr, y, Math.sin(a) * rr], [Math.cos(b) * rr, y, Math.sin(b) * rr]); } };
-  if (form === 1) { const hh = 190, rt = r * 1.1; g.add(kit.cyl(0, 0, 0, r * 0.8, hh, { rTop: rt, seg: 36, ...lo })); for (const f of [0.3, 0.6, 0.9]) ring(hh * f, r * 0.8 + (rt - r * 0.8) * f + 1); for (const s of [-1, 1]) { const hd = kit.solid(new T.TorusGeometry(48, 8, 8, 20, Math.PI), s * rt, hh - 20, 0, { smooth: true }); hd.rotation.z = s > 0 ? -Math.PI / 2 : Math.PI / 2; g.add(hd); } }
+  if (form === 1) {   // an open wicker tub: a hollow wall with a rolled, woven rim, two loop handles, and (fill: 'produce') fruit and a loaf standing in it
+    const hh = 230, rf = r * 0.78, rt = r * 1.08, wall = 16, P = [[0.01, 0], [rf, 0], [rf * 1.03, 8]];
+    for (let k = 1; k <= 6; k++) { const t = k / 6; P.push([rf + (rt - rf) * t + 2 * Math.sin(t * 3), 8 + (hh - 8) * t]); }
+    P.push([rt + 5, hh + 4], [rt + 2, hh + 11], [rt - wall * 0.45, hh + 12], [rt - wall, hh + 4], [rt - wall - 3, hh - 20], [rf * 0.9, 34], [0.01, 28]);
+    g.add(kit.solid(new T.LatheGeometry(P.map(([x, y]) => new T.Vector2(x, y)), 40), 0, 0, 0, { smooth: true, tone: 'lo' }));
+    for (const f of [0.18, 0.36, 0.54, 0.72, 0.9]) ring(hh * f + 8, rf + (rt - rf) * f + 3);
+    for (let i = 0; i < 44; i++) { const a = i / 44 * 6.2832, rr = rf + (rt - rf) * 0.5 + 3, y0 = 8 + hh * (0.18 + 0.18 * (i % 2)), y1 = y0 + hh * 0.18; pts.push([Math.cos(a) * (rr * (y0 / hh * 0.4 + 0.85)), y0, Math.sin(a) * (rr * (y0 / hh * 0.4 + 0.85))], [Math.cos(a) * rr * 1.0 * (y1 / hh * 0.4 + 0.85), y1, Math.sin(a) * rr * 1.0 * (y1 / hh * 0.4 + 0.85)]); }   // the weave: short uprights between the rings
+    for (let i = 0; i < 48; i++) { const a = i / 48 * 6.2832; pts.push([Math.cos(a) * (rt + 3), hh + 7, Math.sin(a) * (rt + 3)], [Math.cos(a + 0.09) * (rt + 3), hh + 1, Math.sin(a + 0.09) * (rt + 3)]); }   // the rolled rim: slanted ties
+    for (const s of [-1, 1]) { const hd = kit.solid(new T.TorusGeometry(44, 7, 8, 20, Math.PI), s * (rt - 4), hh - 26, 0, { smooth: true, tone: 'lo' }); hd.rotation.z = s > 0 ? -Math.PI / 2 : Math.PI / 2; g.add(hd); }
+    if (fill === 'produce') for (const [x, z, k, sz] of [[-0.35, 0.1, 0, 52], [0.1, -0.28, 1, 48], [0.38, 0.12, 0, 50], [-0.05, 0.3, 2, 46], [0.12, 0.05, 1, 54]]) {
+      const ge = new T.SphereGeometry(1, 18, 12); ge.scale(sz * (k === 2 ? 1.5 : 1), sz * (k === 2 ? 0.8 : 0.95), sz); const fx = x * rt, fz = z * rt, y = hh - 26 + (x * x + z * z < 0.05 ? 14 : 0) + sz * 0.5;
+      g.add(kit.solid(ge, fx, y, fz, { smooth: true, tone: k === 1 ? 'mid' : 'lo' })); if (k !== 2) pts.push([fx, y + sz * 0.9, fz], [fx + 5, y + sz * 0.9 + 14, fz + 3]);
+    }
+  }
   else { const hh = 560, rr = r * 0.78; g.add(kit.cyl(0, 0, 0, rr, hh, { rTop: rr * 1.04, seg: 36, ...lo })); g.add(kit.cyl(0, hh, 0, rr * 1.08, 50, { rTop: rr * 1.04, seg: 36 })); g.add(kit.cyl(0, hh + 50, 0, 36, 26, { seg: 16, ...lo })); for (let k = 1; k < 7; k++) ring(hh * k / 7, rr * 1.01 + 1); for (let i = 0; i < 20; i++) { const a = i / 20 * 6.2832; pts.push([Math.cos(a) * (rr + 1), 8, Math.sin(a) * (rr + 1)], [Math.cos(a) * (rr * 1.04 + 1), hh - 8, Math.sin(a) * (rr * 1.04 + 1)]); } }
   g.add(kit.lines(pts, 'mid'));
   return kit.merge(g);

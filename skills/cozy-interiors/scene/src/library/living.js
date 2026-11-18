@@ -5,6 +5,7 @@
 // floorLamp({ h = 1650 }), picture({ w = 600, h = 800, seed }), sideboard({ w = 1600, h = 800, d = 420, doors = 3 }), stool({ h = 650 }), bench({ w = 1200, d = 380, h = 450 }), curtain({ w = 1500, h = 2300, panels = 2 }).
 const rnd = (seed) => { let r = (seed || 1) * 9301 + 49297; return () => { r = (r * 9301 + 49297) % 233280; return r / 233280; }; };
 const lo = { tone: 'lo' };
+import { bookRow } from './books.js';
 
 function boxes(kit) {   // boxes by their middle (x, z) and bottom (y), not by a corner
   return {
@@ -51,14 +52,9 @@ export function shelf(kit, { w = 800, h = 1800, d = 320, shelves = 5, seed = 3, 
   if (base === 'plinth') g.add(bx(0, 0, 8, w - 2 * T, P, d - 30, lo));   // the plinth, set back
   else { const pts = []; for (const sx of [-1, 1]) for (const sz of [-1, 1]) pts.push([sx * (w / 2 - 50), sz * (d / 2 - 40)]); g.add(legParts(kit, base === 'legs' ? 'tapered' : 'block', pts, P + 2, { r: base === 'legs' ? 24 : 30, out: [0, 0] })); }
   const T3 = kit.THREE, inner = w - 2 * T, x0s = -inner / 2 + 12, dep = d - 90;
-  const run = (x, y, gap, len) => {   // a row of books as one skyline: mixed heights and widths, one leaning at the end, a few spine lines
-    const pts = [[x, 0]], hmax = Math.min(gap - 30, 300); let cx = x; const sp = [];
-    while (cx < x + len - 60) { const bw = 20 + R() * 32, bh = Math.min(hmax, 150 + R() * 170); pts.push([cx, bh], [cx + bw, bh]); if (R() < 0.45) sp.push(cx + bw); cx += bw; }
-    pts.push([cx, 0]);
-    const geo = new T3.ExtrudeGeometry(new T3.Shape(pts.map(([a, b]) => new T3.Vector2(a, b))), { depth: dep, bevelEnabled: false }), m = kit.solid(geo, 0, y, -dep / 2, { tone: 'lo' }); g.add(m);
-    if (sp.length) g.add(kit.lines(sp.flatMap((a) => [[a, y + 12, dep / 2 + 0.5], [a, y + Math.min(hmax, 150 + R() * 100), dep / 2 + 0.5]]), 'lo'));
-    const lb = bx(cx + 70, 0, 0, 30, Math.min(hmax, 240), dep, lo); lb.position.set(cx + 50, y + Math.min(hmax, 240) / 2, 0); lb.rotation.z = 0.2 + R() * 0.1; lb.position.x = cx + 60 + 12; g.add(lb);   // a leaning book
-    return cx + 130;
+  const run = (x, y, gap, len) => {   // a row of separate books: mixed heights, widths, depths and tones, spine bands, sometimes one leaning at the end
+    const { group, end } = bookRow(kit, { x, y, z: 0, len, dep, hmax: Math.min(gap - 30, 300), R, lean: R() < 0.5 }); g.add(group);
+    return end + 20;
   };
   const stack = (x, y, gap) => { let yy = y; const n = 2 + (R() * 2 | 0); for (let k = 0; k < n; k++) { const bh = 24 + R() * 14, bw = 200 - k * 14 + R() * 20; const b = bx(x + bw / 2, yy, 0, bw, bh, dep * 0.8, k % 2 ? lo : {}); b.rotation.y = (R() - 0.5) * 0.2; g.add(b); yy += bh; } return x + 230; };
   const bowl = (x, y, gap) => { const r = 60 + R() * 30, hh = Math.min(gap - 40, 70 + R() * 90), v = vessel(kit, PROFILES[R() < 0.5 ? 'tulip' : 'belly'](r, hh), { contents: 'none', seg: 24 }); v.position.set(x + r, y, 0); g.add(v); return x + 2 * r + 30; };
@@ -87,7 +83,7 @@ export function picture(kit, { w = 600, h = 800, seed = 2 } = {}) {
     let px = x0, py = y0 + (y1 - y0) * (0.18 + 0.2 * k);
     for (let i = 1; i <= 12; i++) { const nx = x0 + (x1 - x0) * i / 12, ny = y0 + (y1 - y0) * (0.18 + 0.2 * k) + Math.sin(i * 0.8 + R() * 2 + k) * (y1 - y0) * 0.05; pts.push([px, py, z], [nx, ny, z]); px = nx; py = ny; }
   }
-  for (let i = 0; i < 24; i++) { const a = i / 24 * Math.PI * 2, b = (i + 1) / 24 * Math.PI * 2, cx = x1 - (x1 - x0) * 0.22, cy = y1 - (y1 - y0) * 0.16, r = (x1 - x0) * 0.09; pts.push([cx + r * Math.cos(a), cy + r * Math.sin(a), z], [cx + r * Math.cos(b), cy + r * Math.sin(b), z]); }
+  for (let i = 0; i < 24; i++) { const a = i / 24 * Math.PI * 2, b = (i + 1) / 24 * Math.PI * 2, cx = x1 - (x1 - x0) * 0.22, cy = y1 - (y1 - y0) * 0.16, r = Math.min((x1 - x0) * 0.09, (y1 - y0) * 0.11); pts.push([cx + r * Math.cos(a), cy + r * Math.sin(a), z], [cx + r * Math.cos(b), cy + r * Math.sin(b), z]); }
   g.add(kit.lines(pts, 'mid'));
   return kit.merge(g);
 }

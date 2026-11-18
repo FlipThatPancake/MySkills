@@ -1160,7 +1160,7 @@
      "mug (mug)",
      "vase of branches (vase)",
      "bread basket (breadBasket)",
-     "salt and pepper (jars)"
+     "salt and pepper (saltPepper)"
     ]
    }
   ],
@@ -1355,10 +1355,10 @@
   ],
   "kinds": {
    "wind": {
-    "say": "a plant stirs in a breeze from the open window",
+    "say": "a leafy plant by the open window stirs in the breeze",
     "needs": [
      "openWindow",
-     "plant"
+     "plantNear"
     ],
     "in": [
      "kitchen",
@@ -1429,8 +1429,8 @@
    "weight": 3
   },
   "paw": {
-   "say": "a cat's paw reaches out from behind the curtain, searching, and goes back",
-   "needs": ["curtain"],
+   "say": "a cat's paw reaches out from behind a full-width curtain panel on a solid wall or sill, searching, and goes back",
+   "needs": ["curtain", "noGlass"],
    "in": ["dining", "living", "bedroom", "reading-corner", "home-office"],
    "weight": 2
   }

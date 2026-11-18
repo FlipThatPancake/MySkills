@@ -77,10 +77,28 @@ export function cloth(kit, { nx = 2, ny = 2, pts = [0, 0, 0, 1, 0, 0, 0, 0, 1, 1
   return g;
 }
 
-// A folded throw lying on a surface: three or so layers of soft cloth, each a little narrower than the one below, origin the middle of its footprint at the surface.
-export function foldedThrow(kit, { w = 1400, d = 380, layers = 3, tone = 'lo' } = {}) {
-  const g = kit.group(); let y = 0;
-  for (let i = 0; i < layers; i++) { const h = 24 + (i % 2) * 4, b = softBox(kit, w - i * 36, h, d - i * 18, { r: 10, bulge: 3, tone }); b.position.set(i * 6 - 6, y + h / 2, (i % 2 ? 5 : -4)); g.add(b); y += h - 3; }
+// A folded throw lying on a surface: one soft body, w x d on the surface, about 26 mm per layer high. Ends and edges are rounded, each fold edge is a shallow groove with the layers a few mm out of line, the top sags `sag` mm between its ends, and short lines follow the folds. Origin the middle of its footprint at the surface.
+export function foldedThrow(kit, { w = 1400, d = 380, layers = 3, tone = 'lo', sag = 14, seed = 1 } = {}) {
+  const T = kit.THREE, g = kit.group(), H = layers * 26 + 6, a = w / 2, c = d / 2, rr = Math.min(18, H * 0.45), NX = 64, NP = 56, ph = Math.sin(seed * 12.9898) * 2, lo = [];
+  const hump = (t) => Math.min(1, Math.min(t, 1 - t) * 7);   // 0 on a fold line, 1 between
+  const section = (u, j) => {   // u along the length -1..1, j round the cross-section 0..NP-1 (0 = front, +z, going up and over)
+    const ang = j / NP * 2 * Math.PI, ca = Math.cos(ang), sa = Math.sin(ang), e = Math.max(0, Math.abs(u) * a - (a - rr * 1.8)) / (rr * 1.8), end = Math.max(0.03, Math.sqrt(Math.max(0, 1 - e * e)));
+    const sx = Math.sign(ca) * Math.pow(Math.abs(ca), 0.18), sy = Math.sign(sa) * Math.pow(Math.abs(sa), 0.22);
+    const top = H - sag * (1 - u * u) - 1.5 * Math.sin(u * 3 + ph), y = (sy + 1) / 2 * top * end, t = y / Math.max(top, 1) * layers, k = Math.floor(Math.min(layers - 1e-6, Math.max(0, t))), f = t - k;
+    const open = ca > 0 ? 1 : 0, groove = open * 9 * Math.exp(-Math.pow(Math.min(f, 1 - f) / 0.1, 2)) * (y > 4 && y < top - 4 ? 1 : 0), off = (k % 2 ? 1 : -1) * 3 * hump(f);
+    return [u * a * (1 - 0.001), y, sx * c * end - groove * (ca > 0 ? 1 : 0) + off * end];
+  };
+  const pos = [], idx = [];
+  for (let i = 0; i <= NX; i++) for (let j = 0; j < NP; j++) pos.push(...section(i / NX * 2 - 1, j));
+  for (let i = 0; i < NX; i++) for (let j = 0; j < NP; j++) { const A = i * NP + j, B = i * NP + (j + 1) % NP, C = (i + 1) * NP + j, D = (i + 1) * NP + (j + 1) % NP; idx.push(A, C, B, B, C, D); }
+  const geo = new T.BufferGeometry(); geo.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); geo.setIndex(idx); geo.computeVertexNormals();
+  g.add(kit.solid(geo, 0, 0, 0, { smooth: true, tone, crease: 100 }));
+  for (let k = 1; k < layers; k++) {   // the groove of each fold edge on the open side, in two runs with a gap, so the line reads as cloth
+    let jj = 0, best = 1e9; for (let j = 0; j < NP; j++) { const [, y, z] = section(0, j); if (z > 0 && Math.abs(y - k / layers * (H - sag)) < best) { best = Math.abs(y - k / layers * (H - sag)); jj = j; } }
+    for (const [i0, i1] of [[8, 30], [36, NX - 8]]) for (let i = i0; i < i1; i++) { const p = section(i / NX * 2 - 1, jj), q = section((i + 1) / NX * 2 - 1, jj); lo.push([p[0], p[1], p[2] + 1], [q[0], q[1], q[2] + 1]); }
+  }
+  if (lo.length) g.add(kit.lines(lo, 'lo'));
+  g.userData.size = { w: 1, d: 1, h: 1 };
   return g;
 }
 
@@ -110,12 +128,12 @@ export function tablecloth(kit, { w = 1600, d = 900, r = 0, drop = 400, fold = 6
   return cloth(kit, { ...grid, thick: 5, tone, folds: false });
 }
 // A round tablecloth: flat over the top (radius r), then a skirt of folds that widens as it falls. The seam of the grid is turned to the back of the table.
-export function roundCloth(kit, { r: rt = 520, drop = 260, fold = 8, amp = 40, tone = 'lo', seed = 1 } = {}) {
-  const T = kit.THREE, r = rt + 30, M = 72, top = 6, hang = 11, rings = top + hang, ph = Math.sin(seed * 12.9898) * 3, thick = 5, pos = [0, 16, 0];   // vertex 0 is the centre; ring k holds M points; the grid wraps, so the top is one plain sheet with no seam
+export function roundCloth(kit, { r: rt = 520, drop = 260, fold: fold0 = 8, amp = 40, tone = 'lo', seed = 1 } = {}) {
+  const T = kit.THREE, fold = Math.round(fold0), fold2 = Math.round(fold0 * 2.3), r = rt + 30, M = 120, top = 6, hang = 11, rings = top + hang, ph = Math.sin(seed * 12.9898) * 3, thick = 5, pos = [0, 16, 0];   // vertex 0 is the centre; ring k holds M points; the grid wraps, so the top is one plain sheet with no seam
   for (let k = 1; k <= rings; k++) for (let m = 0; m < M; m++) {
     const a = (m / M) * Math.PI * 2; let rr, y;
     if (k <= top) { rr = r * k / top; y = 16 + 1.2 * Math.sin(a * 3 + ph) * (k / top) * (k / top); }
-    else { const t = (k - top) / hang; rr = r + drop * 0.1 * t + amp * 0.5 * Math.sin(a * fold + ph + t * 2) * Math.min(1, t * 2.5) + amp * 0.18 * Math.sin(a * fold * 2.3 + 2 * ph) * t; y = 16 - drop * t * (1 + 0.04 * Math.sin(a * fold + ph)); }
+    else { const t = (k - top) / hang; rr = r + drop * 0.1 * t + amp * 0.5 * Math.sin(a * fold + ph + t * 2) * Math.min(1, t * 2.5) + amp * 0.18 * Math.sin(a * fold2 + 2 * ph) * t; y = 16 - drop * t * (1 + 0.04 * Math.sin(a * fold + ph)); }
     pos.push(Math.cos(a) * rr, y, Math.sin(a) * rr);
   }
   const N = pos.length / 3, id = (k, m) => 1 + (k - 1) * M + (m % M), idx = [];

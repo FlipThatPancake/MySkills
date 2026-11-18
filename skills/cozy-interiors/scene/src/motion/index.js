@@ -13,6 +13,7 @@
 //     solids (boxes of everything solid in the area), walls ([{ W, id }]; W.d runs along the wall, W.n points into the room, W.len, W.to), openings ([opening]),
 //     via (the opening named by the roll, or null), room: { x0, x1, z0, z1, ymin, ymax } (where a flier may be: the area's floor shrunk 150 mm, above 1000 mm, below the lamp line) }
 //   cameras() -> [THREE.Vector3]: the area's home-view camera and tour shot cameras; a flier keeps 900 mm + its reach from each (flight.js does; check-motion measures it).
+//   now(): the shared clock in seconds (fliers keep 4 s apart at one opening with it).
 //   opening = { id, W, op, centre: [x, z], n: [nx, nz] (into the room), u: [ux, uz] (along the wall), width, height, sill, open() 0 shut .. 1 wide, gap() the clear width at the middle now (mm), usable(r) gap >= 2 r + 30 }
 // Rule for every plug-in: anything that comes in from outside uses `ctx.via` and goes only while via.usable(r) holds (the window is open); nothing passes through furniture at any frame.
 // Fliers (butterfly, bee, bird) share their flight, perches and window rules in flight.js: a new flier builds its body and calls createFlight(ctx, group, { R, flap, ...numbers }); see the header there.
@@ -35,6 +36,7 @@ const seeded = (seed) => { let s = seed >>> 0; return (a = 0, b = 1) => { s = (s
 
 export function createMotion(kit, home, S) {
   let api;   // the object returned below; `api.cameraOf(areaId)` (set by area-run.js) lists the cameras of an area: its home view and its tour shots
+  let time = 0;   // the shared clock (s) of the things: fliers use it to keep apart at a window
   const T = THREE, things = [], where = (g) => new T.Box3().setFromObject(g);
   home.group.updateMatrixWorld(true);
   // plants that sway are driven by the wind thing of their area only (kitchen/plant.js keeps its own blade update under userData.windUpdate)
@@ -57,7 +59,7 @@ export function createMotion(kit, home, S) {
       const L = g.userData.landing; return { id, g, asset: g.userData.scene?.asset, box: solidBox(g), landing: L ? new T.Vector3(...L).applyMatrix4(g.matrixWorld).toArray() : null };
     }).filter((o) => !o.box.isEmpty());
     const b = A.bounds, via = entry.via ? openings.find((o) => o.W.id === entry.via[0] && o.index === entry.via[1]) || null : null;
-    return { T, kit, home, entry, area: A, rnd: seeded(hash(`${S.seed}/${A.id}/${entry.kind}`)), objects, solids: objects.filter((o) => o.box.max.y > 500), walls: ws, openings, via, cameras: () => (api?.cameraOf ? api.cameraOf(A.id) : []),
+    return { T, kit, home, entry, area: A, now: () => time, rnd: seeded(hash(`${S.seed}/${A.id}/${entry.kind}`)), objects, solids: objects.filter((o) => o.box.max.y > 500), walls: ws, openings, via, cameras: () => (api?.cameraOf ? api.cameraOf(A.id) : []),
       room: { x0: b.x0 + 150, x1: b.x1 - 150, z0: b.z0 + 150, z1: b.z1 - 150, ymin: 1000, ymax: Math.min((b.top || 2500) - 250, 2150) } };
   };
   for (const A of S.areas) for (const entry of A.motion || []) {
@@ -74,7 +76,7 @@ export function createMotion(kit, home, S) {
     // each frame: the things of the area on show move (the others wait where they are)
     update(dt, areaId) {
       if (paused) return;
-      dt = Math.min(dt, 0.05);
+      dt = Math.min(dt, 0.05); time += dt;
       for (const th of things) {
         const on = !areaId || th.area === areaId;
         if (on && th.update) th.update(dt);
@@ -83,7 +85,7 @@ export function createMotion(kit, home, S) {
     },
     // the checks (check-motion.mjs): step every sampled thing `seconds` of simulated time in fixed steps; fn(thing, t, bodies) sees each frame
     run(seconds, fn, dt = 1 / 30) {
-      for (let t = 0; t < seconds; t += dt) for (const th of things) if (th.sampled && th.update) { th.update(dt); fn(th, t, th.bodies ? th.bodies() : []); }
+      for (let t = 0; t < seconds; t += dt) { time += dt; for (const th of things) if (th.sampled && th.update) { th.update(dt); fn(th, t, th.bodies ? th.bodies() : []); } }
       if (paused) for (const th of things) if (th.group) th.group.visible = false;
     },
   });

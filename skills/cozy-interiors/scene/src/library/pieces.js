@@ -26,7 +26,7 @@ export function sideTable(kit, { r = 230, h = 520, top = 'round', legs = 'splay'
   return kit.merge(g);
 }
 
-export function cushion(kit, { w = 440, h = 420, thick = 120, tone = 'mid', piping = 'none', pattern = 'plain', lean = 0, skew = 0, crease = 'none' } = {}) {
+export function cushion(kit, { w = 440, h = 420, thick = 120, tone = 'mid', piping = 'edge', pattern = 'plain', lean = 0, skew = 0, crease = 'none' } = {}) {
   const T = kit.THREE, g = kit.group(), edge = Math.min(26, thick * 0.25), dent = pattern === 'tufted' ? thick * 0.22 : thick * 0.08, pz = (x, y) => pillowZ(w, h, thick, edge, dent, x, y);
   g.add(kit.solid(pillowGeometry(T, { w, h, thick, edge, dent, skew: pattern === 'plain' ? skew : 0, crease: crease === 'soft' && pattern === 'plain' ? thick * 0.3 : 0 }), 0, h / 2, 0, { smooth: true, tone }));
   const m = Math.min(46, w * 0.1), P = [], face = (pairs, cut = 14) => { for (let i = 0; i < pairs.length; i += 2) { const [x0, y0] = pairs[i], [x1, y1] = pairs[i + 1]; let p = [x0, y0 + h / 2, pz(x0, y0)]; for (let k = 1; k <= cut; k++) { const x = x0 + (x1 - x0) * k / cut, y = y0 + (y1 - y0) * k / cut, q = [x, y + h / 2, pz(x, y)]; P.push(p, q); p = q; } } };
@@ -37,7 +37,11 @@ export function cushion(kit, { w = 440, h = 420, thick = 120, tone = 'mid', pipi
   else if (pattern === 'inset') face(loop(w / 2 - m * 1.4, h / 2 - m * 1.4));
   else if (pattern === 'diamond') face([[-w / 2 + m, 0], [0, h / 2 - m], [0, h / 2 - m], [w / 2 - m, 0], [w / 2 - m, 0], [0, -h / 2 + m], [0, -h / 2 + m], [-w / 2 + m, 0]]);
   else if (pattern === 'tufted') { const bp = (x, y) => [x, y + h / 2, pz(x, y) + 1.5]; for (let k = 0; k < 12; k++) { const a0 = k / 12 * 6.2832, a1 = (k + 1) / 12 * 6.2832; P.push(bp(Math.cos(a0) * 8, Math.sin(a0) * 8), bp(Math.cos(a1) * 8, Math.sin(a1) * 8)); } const L = Math.min(w, h) * 0.2; for (let k = 0; k < 6; k++) { const a = k / 6 * 6.2832 + 0.4, mid = L * 0.55; P.push(bp(Math.cos(a) * 14, Math.sin(a) * 14), bp(Math.cos(a + 0.12) * mid, Math.sin(a + 0.12) * mid), bp(Math.cos(a + 0.12) * mid, Math.sin(a + 0.12) * mid), bp(Math.cos(a) * L, Math.sin(a) * L)); } }   // a button with soft pleats radiating from its dimple
-  if (P.length) g.add(kit.lines(P, 'lo'));
+  if (pattern !== 'tufted') for (const [sx, sy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) for (const k of [0, 1]) {   // soft pinch wrinkles running in from each corner: the stuffing pulls toward the middle
+    const a = Math.atan2(h, w) + (k ? 0.22 : -0.1), L = Math.min(w, h) * (k ? 0.17 : 0.24), x0 = sx * (w / 2 - 22), y0 = sy * (h / 2 - 22); let p = [x0, y0 + h / 2, pz(x0, y0)];
+    for (let t = 1; t <= 5; t++) { const x = x0 - sx * Math.cos(a) * L * t / 5, y = y0 - sy * Math.sin(a) * L * t / 5 + 4 * Math.sin(t), q = [x, y + h / 2, pz(x, y)]; if (t < 5) P.push(p, q); p = q; }
+  }
+  if (P.length) g.add(kit.lines(P, 'mid'));
   const out = kit.merge(g); out.rotation.x = -lean * Math.PI / 180; return out;
 }
 
