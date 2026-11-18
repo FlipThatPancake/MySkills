@@ -3,10 +3,16 @@
 export const openable = (op) => (op.open ?? 1) > 0 && (op.kind === 'window' ? op.sash !== 'fixed' && (!op.style || op.style === 'sash' || op.style === 'pair') : op.kind === 'door' && !op.to && (op.style === 'french' || op.style === 'slider'));
 // does any of these walls ({ openings }) hold an opening that is rendered open?
 export const hasOpenWindow = (walls) => walls.some((w) => (w.openings || []).some(openable));
+// a passage a flier may use too: an arch (any style, always open) or a plain door rendered open 60 degrees or more. A window or glass door is still its first choice (pickVia).
+export const passage = (op) => op.kind === 'arch' || (op.kind === 'door' && !op.style && (op.open ?? 0) >= 60);
+export const flyable = (op) => openable(op) || passage(op);
+export const hasOpenWay = (walls) => walls.some((w) => (w.openings || []).some(flyable));
 // the gap an opening's moving parts leave at its middle, in mm, from the opening's width and how far its leaves stand open (v 0 shut .. 1 wide, `max` degrees at 1).
 // Two leaves hinged at the outer jambs swing inward: their free edges, which met at the middle, part by 2 L (1 - cos angle). A slider leaves about half its width.
 export function gapOf(op, v, max = 75) {
   const w = op.width || 1000, a = v * max * Math.PI / 180;
+  if (op.kind === 'arch') return w - 120;   // jambs and casing
+  if (op.kind === 'door' && !op.style) return w * 0.45;   // the open leaf stands in the room beside the hinge: the middle of the doorway is clear
   if (op.kind === 'door' && op.style === 'slider') return v > 0.02 ? w / 2 - 120 : 0;
   return Math.min(w - 160, 2 * (w / 2 - 60) * (1 - Math.cos(a)));
 }

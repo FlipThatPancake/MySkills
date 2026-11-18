@@ -22,7 +22,7 @@
 //   2. src/motion/<kind>.js: export default { sampled: true, build(ctx) } as above; chance only from ctx.rnd; bodies() lists the spheres it fills (a paw from a cabinet lists the sphere it sweeps).
 //   3. Register it in PLUGINS below. check-motion.mjs (part of check-home) then replays it for 240 s and names any crossing of furniture, walls or a shut window.
 import * as THREE from '../vendor/three/three.module.js';
-import { openable, gapOf } from './rules.js';
+import { openable, passage, flyable, gapOf } from './rules.js';
 import butterfly from './butterfly.js';
 import bee from './bee.js';
 import bird from './bird.js';
@@ -52,7 +52,7 @@ export function createMotion(kit, home, S) {
     const openings = ws.flatMap(({ W }) => W.built.map((b, index) => {
       const p = b.group.getWorldPosition(new T.Vector3()), st = b.openables[0]?.userData.open, op = b.op;
       const o = { id: `${W.id}#${index}`, index, W, op, centre: [p.x, p.z], n: W.n, u: W.d, width: op.width, height: op.height, sill: op.sill || 0,
-        open: () => (st ? st.v : 0), gap: () => (openable(op) ? gapOf(op, st ? st.v : 0, st?.max) : 0), usable: (r) => o.gap() >= 2 * r + 30 };
+        open: () => (passage(op) ? 1 : st ? st.v : 0), gap: () => (flyable(op) ? gapOf(op, st ? st.v : 0, st?.max) : 0), usable: (r) => o.gap() >= 2 * r + 30 };
       return o;
     }));
     const objects = Object.entries(home.objects).filter(([, g]) => inArea(A, g)).map(([id, g]) => {
