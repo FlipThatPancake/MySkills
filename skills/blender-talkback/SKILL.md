@@ -27,7 +27,7 @@ you read or change anything.
 ## Tools
 
 With the Talkback MCP server connected (tools `list_comments`, `get_comment`,
-`get_context`, `read_unread`, `history`, `add_comment`, `start_conversation`, `open_conversation`) call them directly. Otherwise run the
+`get_context`, `read_unread`, `history`, `add_comment`, `start_conversation`, `open_conversation`, `move_conversation`) call them directly. Otherwise run the
 same functions as `talkback_api` (the old name `chat_comments_api` works too) in Blender through your Blender MCP's
 run-Python tool (the MCP server is named `mcp__blender__` where it is installed
 in this project, for example `mcp__blender__execute_blender_code` with `code`):
@@ -112,6 +112,32 @@ only a speech bubble appears (`typing: true` in the result): do not ask again. T
 conversation use `open_conversation(n)` (any message number in it). Do not open conversations the user
 did not need: one clear question per conversation. The result has `opened` (selected and shown) and
 `typing`. Records also carry `collection` (the collection's name, or `None`).
+
+## Notes dropped in 3D (v1.2)
+
+Sometimes the user wants something *somewhere* and nothing is there yet ("put a lamp here"). They press
+**Drop note** (an Empty with a speech bubble that they move like G, then click to place) or **Note on surface**
+(one click on the object or spot): either way Talkback adds a small Empty called "Talkback note" at that spot
+(in the collection "Talkback notes") and opens a conversation on it. Both look the same to you. You read it like any other
+conversation, but its record has `"is_note": true` and also:
+
+- `location`: where the note is, world coordinates in scene units,
+- `on_object`: the object whose surface it was dropped on, or `None` (it was dropped in empty space),
+- `nearest`: the closest objects, `[{"name", "distance"}]`, nearest first (distance 0 = inside the object),
+- `note_object`: the Empty's name.
+
+What to do:
+
+1. Read the message, use `location` and `nearest` to understand where and what is around it
+   (`get_context` still works on the note).
+2. Do the work (for example create the lamp at `location`).
+3. **Move the conversation onto what you made and remove the note**: `move_conversation(n, objects=["Lamp"])`
+   (or `collection=...`). It keeps all messages and deletes the note's Empty in one undo step
+   (`delete_note=False` keeps it). Then answer with `add_comment(..., reply_to=n, done=True)` as usual.
+4. If you make nothing (you only answer or ask), leave the note where it is.
+
+Do not delete a note Empty yourself and do not create notes. When the user resolves or deletes a note conversation,
+Talkback deletes the Empty by itself, so a resolved note has no object any more.
 
 ## Rules the API keeps
 
