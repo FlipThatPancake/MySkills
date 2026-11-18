@@ -81,7 +81,7 @@ const obj = (a, id) => H.S.home.objects.find((o) => o.id === `${a.id}-${id}`);
   a.put('floorplant', 'floorPlant', [4600, 800], 0, { group: 'shelf' });
   a.put('wside', 'sideTable', [900, 420], 0, { group: 'seat', params: { r: 200, h: 480 } });
   a.put('sillplant', 'plant', [900, 420], 0, { group: 'seat', y: a.topOf('wside'), mount: 'on' });
-  a.put('mag', 'magazineRack', [1800, 2950], 0, { group: 'chair' });
+  a.put('mag', 'magazineBox', [1800, 2950], 0, { group: 'chair' });
   a.shot('seat', [500, 1250, 4500], [2371, 700, 461], 36, 'seat');
   a.shot('chair', [3800, 2100, 6300], [2315, 700, 2380], 34, 'chair');
   a.view({ target: [2800, 700, 1500], az: 20, el: 16 });

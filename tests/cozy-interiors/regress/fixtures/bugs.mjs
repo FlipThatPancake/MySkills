@@ -20,7 +20,7 @@ export const fixtures = [
   { name: 'toaster-through-kettle', from: 'round-2 physics: toaster 22 mm into kettle, both sunk', kind: 'bug', expect: { rules: ['on-overlap', 'penetrates', 'sunk'], ids: ['t-kettle', 't-toaster'] },
     build({ Home }) { const { H, a, back } = room(Home), R = run(a, back, [['doors', 1200], ['drawers', 600]]); const x = R.mod('doors').xc; R.F.place('kettle', 'kettle', x - 90, { group: 'run', y: 900, off: 330 }); R.F.place('toaster', 'toaster', x + 90, { overlap: true, group: 'run', y: 900, off: 330 }); return H; } },
   { name: 'stack-through-magazine-rack', from: 'Paul 13: magazines through the rack (the asset case is asset-through-parts in assets.mjs; this is the scene-level twin)', kind: 'bug', expect: { rules: ['penetrates', 'on-overlap', 'sunk', 'support'], ids: ['t-stack', 't-rack'] },
-    build({ Home }) { const { H, a } = room(Home); a.put('rack', 'magazineRack', [2000, 600], 0, { group: 'g' }); a.put('stack', 'bookStack', [2000, 600], 0, { group: 'g', y: 150, mount: 'on' }); return H; } },
+    build({ Home }) { const { H, a } = room(Home); a.put('rack', 'magazineBox', [2000, 600], 0, { group: 'g' }); a.put('stack', 'bookStack', [2000, 600], 0, { group: 'g', y: 150, mount: 'on' }); return H; } },
   { name: 'chair-sunk-7mm-in-rug', from: 'Paul 13 / round-2 physics: chair base 7 mm below the rug top (compose now lifts it; the check must still say so)', kind: 'bug', expect: { rules: ['sunk', 'support'], ids: ['t-chair'] },
     patch(S) { S.home.objects.find((o) => o.id === 't-chair').at[1] = 0; },
     build({ Home }) { const { H, a } = room(Home); a.put('rug', 'rug', [2000, 2000], 0, { group: 'g', params: { w: 2400, d: 1700 } }); a.put('chair', 'deskChair', [2000, 2000], 180, { group: 'g', y: 7 }); return H; } },
