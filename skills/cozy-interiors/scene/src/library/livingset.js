@@ -53,10 +53,20 @@ export function chair(kit, { shape = 'wing', legs: legsOpt, w = 840, d = 860, to
     g.add(kit.rbox(-X + 8, sh - 10, 215, 2 * X - 16, 32, 430, 8, { tone: 'mid' }));   // the seat
     g.add(rod(kit, [-X, 980, -280], [X, 980, -280], 18, 18, 'mid')); g.add(rod(kit, [-X, 760, -255], [X, 760, -255], 14, 14, 'mid'));
     for (let i = 1; i < 6; i++) { const x = -X + 2 * X * i / 6; g.add(rod(kit, [x, sh + 30, -215], [x, 760, -255], 8, 8, 'mid')); g.add(rod(kit, [x, 760, -255], [x, 975, -280], 8, 8, 'mid')); }
-  } else if (shape === 'beanbag') {   // a bean bag: no frame, no legs; a slumped round form, flat on the floor, the top dipped where it is sat in
-    const r = w / 2, prof = [[0.01, 0], [0.62, 0], [0.86, 25], [0.99, 140], [0.96, 270], [0.78, 370], [0.66, 405], [0.5, 380], [0.3, 350], [0.01, 340]].map(([k, y]) => new kit.THREE.Vector2(k * r, y));
-    const bag = kit.solid(new kit.THREE.LatheGeometry(prof, 40), 0, 0, 0, { smooth: true, tone }); bag.scale.z = 0.92; g.add(bag);
-    const sm = []; for (let i = 0; i < 6; i++) { const a = i / 6 * 6.2832; sm.push([Math.cos(a) * r * 0.66, 400, Math.sin(a) * r * 0.66 * 0.92], [Math.cos(a) * r * 0.97, 150, Math.sin(a) * r * 0.97 * 0.92]); } g.add(kit.lines(sm, 'faint'));
+  } else if (shape === 'beanbag') {   // a bean bag: no frame, no legs; a slouchy sack, raised at the back, a dent where you sit, soft creases running into it
+    const T = kit.THREE, Rx = w / 2, Rz = d / 2, sm = (a, b, v) => { const t = Math.min(1, Math.max(0, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
+    const H = (z) => 230 + 410 * sm(-0.35, 0.75, -z), dent = (x, z) => 200 * Math.exp(-((x / 0.55) ** 2 + ((z - 0.2) / 0.5) ** 2));   // the height of the back (z < 0) and the seat's dent, as functions of the unit footprint
+    const geo = new T.SphereGeometry(1, 56, 36), p = geo.attributes.position;
+    for (let i = 0; i < p.count; i++) {
+      let x = p.getX(i), y = p.getY(i), z = p.getZ(i);
+      const yy = y > 0 ? y * H(z) - dent(x, z) * Math.min(1, y * 2) : Math.max(y * 80, -40);   // the lower half is squashed flat, then lifted to the floor
+      p.setXYZ(i, x * Rx * (1 + 0.1 * Math.max(0, y)), Math.max(yy, y > 0 ? 6 : -40) + 40, z * Rz * (1 + 0.06 * Math.max(0, y)));
+    }
+    geo.computeVertexNormals();
+    g.add(kit.solid(geo, 0, 0, 0, { smooth: true, tone }));
+    const surf = (x, z) => { const q = 1 - x * x - z * z; return q <= 0 ? -1 : Math.max(6, Math.sqrt(q) * H(z) - dent(x, z)) + 40 + 1.5; }, cr = [];   // soft creases: curves from the rim of the dent out over the sides, a few short ones at the back
+    for (let k = 0; k < 7; k++) { const a = (k / 7) * 6.2832 + 0.4, o = []; for (let t = 0.38; t <= 0.92; t += 0.06) { const x = 0.12 * Math.cos(a) + t * Math.cos(a + t * 0.5), z = 0.12 + t * Math.sin(a + t * 0.5) * 0.9, y = surf(x, z); if (y > 0) o.push([x * Rx * (1 + 0.1 * 0.8), y, z * Rz * (1 + 0.06 * 0.8)]); } for (let i = 0; i < o.length - 1; i++) cr.push(o[i], o[i + 1]); }
+    g.add(kit.lines(cr, 'faint'));
   } else {   // a sling: a leather seat-and-back hung from a bent frame
     const sh = 360, X = w / 2 - 40, Z = d / 2 - 30;
     for (const sx of [-1, 1]) { const pts = [[sx * X, 8, Z], [sx * X, sh * 0.8, Z - 30], [sx * X, sh, -Z + 160], [sx * X, 700, -Z - 60]]; for (let i = 0; i < 3; i++) g.add(rod(kit, pts[i], pts[i + 1], 15, 15, 'mid')); g.add(rod(kit, [sx * X, 8, -Z + 120], [sx * X, 8, Z], 14, 14, 'mid')); }

@@ -20,9 +20,12 @@ export function fruitBowl(kit) {
   g.add(kit.lines(rim, 'mid'));
   // @js:kitchen-fruit — the fruit: a pear and painted apples and orange, piled in the bowl
   // the pear, off-white: a lathe bulb (its origin at the bulb's middle) with a narrow neck, lying with its neck toward +x
-  const d0 = 58, pearProf = [[0.01, 0], [18, 1], [30, 12], [34, 28], [28, 45], [19, 60], [15, 72], [11, 86], [6, 94], [0.01, 96]].map(([r, y]) => new T.Vector2(r, y - 28));
-  const pear = kit.solid(new T.LatheGeometry(pearProf, 28), d0 * 0.707, 46 + 29.5, -d0 * 0.707, { smooth: true, smoothShade: true, ...lo });   // the pear takes one apple's slot, lying on the bowl floor with its neck toward the rim
-  pear.rotation.set(0, 0.3, -1.45);
+  const d0 = 58, pearProf = [[0.01, -2], [16, 0], [28, 8], [34, 24], [33, 40], [27, 54], [21, 66], [19.5, 76], [21.5, 86], [20, 97], [12, 105], [3, 108], [0.01, 109]].map(([r, y]) => new T.Vector2(r, y - 22));   // a pear turned like a vase: a round lower bulb, a waist, a narrower rounded top
+  const pear = kit.group();
+  pear.add(kit.solid(new T.LatheGeometry(pearProf, 32), 0, 0, 0, { smooth: true, smoothShade: true, ...lo }));
+  pear.add(kit.solid(new T.CylinderGeometry(1.8, 2.4, 16, 6), 0.8, 94, 0, { smooth: true, ...lo }));   // the short stalk
+  pear.position.set(d0 * 0.707, 46 + 29.5, -d0 * 0.707);   // the pear takes one apple's slot, lying on its side on the bowl floor with its top toward the rim
+  pear.rotation.set(0, -0.8, -1.5);
   pear.scale.setScalar(0.85);
   g.add(pear);
   const merged = kit.merge(g);

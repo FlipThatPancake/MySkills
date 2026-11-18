@@ -5,6 +5,7 @@
 // floorLamp({ h = 1650 }), picture({ w = 600, h = 800, seed }), sideboard({ w = 1600, h = 800, d = 420, doors = 3 }), stool({ h = 650 }), bench({ w = 1200, d = 380, h = 450 }), curtain({ w = 1500, h = 2300, panels = 2 }).
 const rnd = (seed) => { let r = (seed || 1) * 9301 + 49297; return () => { r = (r * 9301 + 49297) % 233280; return r / 233280; }; };
 const lo = { tone: 'lo' };
+import { rod } from './parts.js';
 import { bookRow } from './books.js';
 
 function boxes(kit) {   // boxes by their middle (x, z) and bottom (y), not by a corner
@@ -135,23 +136,25 @@ export function stool(kit, { h = 650 } = {}) {   // a bar stool: round seat, fou
 // a window blind, drawn part way: origin the middle of the window's full width at the bottom of its full height, standing out from the wall (+z). form roller (a flat fabric on a tube, a hem bar, a pull cord)
 // or roman (a flat fabric with soft horizontal folds, a headrail); w, h: the window the blind covers; drawn: how much of h is lowered from the top (0.2 to 0.9).
 export function blind(kit, { w = 1200, h = 1500, form = 'roller', drawn = 0.5, tone = 'mid' } = {}) {
-  const T = kit.THREE, g = kit.group(), L = Math.round(h * drawn), top = h + 50, bw = w - 20;
+  const T = kit.THREE, g = kit.group(), L = Math.round(h * drawn), top = h + 50, bw = w - 20, S = 200;   // S: the blind stands S mm off the wall on two end brackets, clearing the sill's lip and open sashes
+  const bracket = (x, zRail, yRail) => { g.add(kit.box(x - 12, yRail - 30, 6, 24, 60, 6, lo)); g.add(rod(kit, [x, yRail, 6], [x, yRail, zRail], 7, 7, 'lo')); };   // a wall plate and an arm that reaches the rail
   if (form === 'roman') {
-    g.add(kit.box(-w / 2, top - 6, 50, w, 56, 50, lo));   // the headrail
-    const N = Math.max(2, Math.round(L / 170)), A = 24, TH = 10, pts = [];   // a side view, extruded across: the front surface zigzags softly down the drop
-    for (let k = 0; k <= N * 2; k++) pts.push([30 + (k % 2 ? A : 0), top - L * k / (N * 2)]);
-    const sh = new T.Shape([...pts, ...pts.map(([z, y]) => [z + TH, y]).reverse()].map(([z, y]) => new T.Vector2(z, y))), geo = new T.ExtrudeGeometry(sh, { depth: bw, bevelEnabled: false }); geo.rotateY(Math.PI / 2); geo.translate(-bw / 2, 0, 0);
+    g.add(kit.box(-w / 2, top - 6, S + 50, w, 56, 50, lo));   // the headrail, its back face at S
+    for (const sx of [-1, 1]) bracket(sx * (w / 2 - 50), S, top + 14);
+    const fold = Math.min(Math.round(L * 0.5), 280), N = Math.max(2, Math.round(fold / 90)), A = 26, TH = 10, y0 = top - L + fold, pts = [[S + 6, top - 6], [S + 6, y0]];   // a side view: hangs flat, then the folds stack at the bottom only
+    for (let k = 1; k <= N * 2; k++) pts.push([S + 6 + (k % 2 ? A : 0), y0 - fold * k / (N * 2)]);
+    const sh = new T.Shape([...pts, ...pts.map(([z, y]) => [z + TH, y]).reverse()].map(([z, y]) => new T.Vector2(z, y))), geo = new T.ExtrudeGeometry(sh, { depth: bw, bevelEnabled: false }); geo.rotateY(-Math.PI / 2); geo.translate(bw / 2, 0, 0);   // the shape's first coordinate becomes the depth from the wall
     g.add(kit.solid(geo, 0, 0, 0, { tone }));
-    g.add(kit.box(-bw / 2, top - L - 8, 54, bw, 16, 22, { tone: 'lo' }));   // the bottom batten
   } else {
-    g.add(kit.cyl(-w / 2, top - 22, 60, 24, w, { axis: 'x', seg: 20, ...lo }));   // the roller tube
-    g.add(kit.box(-bw / 2, top - 44 - L, 40 + 10, bw, L, 5, { tone }));   // the fabric, hanging flat just in front of the tube
-    g.add(kit.rbox(-bw / 2, top - 44 - L - 14, 54, bw, 20, 16, 6, { tone: 'lo' }));   // the hem bar
-    g.add(kit.lines([[bw / 2 - 40, top - 44 - L - 4, 64], [bw / 2 - 40, top - 44 - L - 4 - 140, 64]], 'lo'));   // the pull cord
+    g.add(kit.cyl(-w / 2, top - 22, S + 24, 24, w, { axis: 'x', seg: 20, ...lo }));   // the roller tube, its back at S
+    for (const sx of [-1, 1]) bracket(sx * (w / 2 + 14), S + 24, top - 22);
+    g.add(kit.box(-bw / 2, top - 44 - L, S + 40 + 10, bw, L, 5, { tone }));   // the fabric, hanging flat just in front of the tube
+    g.add(kit.rbox(-bw / 2, top - 44 - L - 14, S + 40 + 14, bw, 20, 16, 6, { tone: 'lo' }));   // the hem bar
+    g.add(kit.lines([[bw / 2 - 40, top - 44 - L - 4, S + 64], [bw / 2 - 40, top - 44 - L - 4 - 140, S + 64]], 'lo'));   // the pull cord
   }
-  g.position.z = form === 'roman' ? 60 : 24;   // the blind's back stands 60 mm out of its origin, like the curtain's: placed with a window's sill it clears the sill's lip
   return kit.merge(g);
 }
+
 export function curtain(kit, { w = 1500, h = 2300, panels = 2 } = {}) {
   const T = kit.THREE, g = kit.group(), pw = w * 0.22, N = 9, A = 34, TH = 14, ROD = h + 70;
   g.add(kit.cyl(-w / 2 - 70, ROD, 90, 12, w + 140, { axis: 'x', seg: 14, ...lo }));

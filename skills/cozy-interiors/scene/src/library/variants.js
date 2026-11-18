@@ -6,6 +6,7 @@ import { plant as plant0 } from '../kitchen/plant.js';
 import { fridge as fridge0 } from '../kitchen/fridge.js';
 import { stool as stool0 } from './living.js';
 import { basket as basket0 } from './decor.js';
+import { PAINTINGS } from './paintings.js';
 import { potTop } from './pots.js';
 import { fiddle, palm, monstera, snake, fern, pothos, basil, smallFern } from './plants.js';
 const rimTop = (kit, g, r, y) => { const t = potTop(kit, r); t.position.y = y; g.add(t); };
@@ -71,8 +72,36 @@ export function vase(kit, { form = 0, h = 280, stems = 5, seed = 3 } = {}) {
   return kit.merge(g);
 }
 
-export function picture(kit, { form = 0, w = 600, h = 800, seed = 2 } = {}) {
+// Forms 4+: a classic public-domain painting (paintings.js) on a paper mat inside the frame. colour keep (a little muted, to sit with the scene) | soft (mostly faded to the paper tone) | ink (greyscale, near the line style); the seed picks one when unset.
+const PAPER = [244, 243, 238], LOADED = new Map();
+function adapt(q, x, y, w, h, mode) {
+  const d = q.getImageData(x, y, w, h), a = d.data, k = { keep: 0.18, soft: 0.6, ink: 0.28 }[mode] ?? 0.18;
+  for (let i = 0; i < a.length; i += 4) {
+    let r = a[i], g = a[i + 1], b = a[i + 2]; const l = 0.3 * r + 0.59 * g + 0.11 * b;
+    if (mode === 'ink') r = g = b = l; else { const m = mode === 'soft' ? 0.45 : 0.82; r = l + (r - l) * m; g = l + (g - l) * m; b = l + (b - l) * m; }   // desaturate: soft by more
+    a[i] = r + (PAPER[0] - r) * k; a[i + 1] = g + (PAPER[1] - g) * k; a[i + 2] = b + (PAPER[2] - b) * k;
+  }
+  q.putImageData(d, x, y);
+}
+function paintedPicture(kit, { form, w, h, seed, colour }) {
+  const T = kit.THREE, F = 28, D = 24, P = PAINTINGS[(form - 4) % PAINTINGS.length], mode = colour || ['keep', 'soft', 'ink'][seed % 3], iw = w - 2 * F, ih = h - 2 * F;
+  const g = kit.group(); g.add(kit.rbox(-w / 2, 0, D, w, h, D, 4)); g.add(kit.box(-w / 2 + F, F, D + 2, iw, ih, 2, { tone: 'lo' }));
+  const out = kit.merge(g);
+  const cw = 480, ch = Math.max(120, Math.min(720, Math.round(cw * ih / iw))), c = document.createElement('canvas'); c.width = cw; c.height = ch;
+  const q = c.getContext('2d'); q.fillStyle = `rgb(${PAPER})`; q.fillRect(0, 0, cw, ch);
+  const mat = kit.paint(c), m = new T.Mesh(new T.PlaneGeometry(iw, ih), mat); m.position.set(0, F + ih / 2, D + 2.8); out.add(m);
+  const mm = 0.09, bw = cw * (1 - 2 * mm), bh = ch * (1 - 2 * mm), s = Math.min(bw / P.w, bh / P.h), dw = Math.round(P.w * s), dh = Math.round(P.h * s), dx = Math.round((cw - dw) / 2), dy = Math.round((ch - dh) / 2);   // the painting fitted inside a paper mat, keeping its own proportions
+  if (typeof Image !== 'undefined') {   // the page decodes the JPEG, then draws it (the node checks have no image decoder and keep the blank mat)
+    const draw = (img) => { q.drawImage(img, dx, dy, dw, dh); adapt(q, dx, dy, dw, dh, mode); mat.uniforms.uMap.value.needsUpdate = true; };
+    let img = LOADED.get(P.src); if (!img) { img = new Image(); img.src = P.src; LOADED.set(P.src, img); }
+    if (img.complete && img.naturalWidth) draw(img); else img.addEventListener('load', () => draw(img));
+  }
+  out.userData.painting = P.name;
+  return out;
+}
+export function picture(kit, { form = 0, w = 600, h = 800, seed = 2, colour } = {}) {
   if (!form) return picture0(kit, { w, h, seed });
+  if (form >= 4) return paintedPicture(kit, { form, w, h, seed, colour });
   const F = 28, D = 24, R = rnd(seed + form * 3), pts = [], g = kit.group();
   g.add(kit.rbox(-w / 2, 0, D, w, h, D, 4)); g.add(kit.box(-w / 2 + F, F, D + 2, w - 2 * F, h - 2 * F, 2, lo));
   const x0 = -w / 2 + F + 36, x1 = w / 2 - F - 36, y0 = F + 36, y1 = h - F - 36, z = D + 4.5, cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
