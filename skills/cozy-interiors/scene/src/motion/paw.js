@@ -12,7 +12,7 @@ export default {
     const side = panels > 1 && rnd() < 0.5 ? 1 : -1, ex = side * (w / 2 + 40 - pw), px = ex - side * 8;   // the panel's inner edge and the shoulder, in the curtain's own frame (x along the wall, +z into the room)
     const M = cur.g.matrixWorld;
     // a cat hides behind a full-width panel (at least 300 mm of fabric) that hangs by a solid wall, or at a window with a sill (it stands on the sill); a bundle on a glass wall or glass door has nothing behind it
-    if (pw < 300) return { error: `paw: the curtain panel is ${Math.round(pw)} mm wide: too narrow to hide a cat (a panel at least 300 mm wide: curtain w 1400 or more)`, update() {} };
+    if (pw < 300) return { error: `paw: the curtain panel is ${Math.round(pw)} mm wide: too narrow to hide a cat (a panel at least 300 mm wide: curtain w 1370 or more)`, update() {} };
     const pc = new T.Vector3(ex - side * pw / 2, 0, 0).applyMatrix4(M); let sillY = 0;
     for (const o of ctx.openings) {
       const lat = (pc.x - o.centre[0]) * o.u[0] + (pc.z - o.centre[1]) * o.u[1], dn = (pc.x - o.W.to[0]) * o.W.n[0] + (pc.z - o.W.to[1]) * o.W.n[1];

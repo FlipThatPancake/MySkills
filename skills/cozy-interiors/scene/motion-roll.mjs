@@ -1,6 +1,6 @@
 // motion-roll.mjs — the roll of living, moving things (roll.mjs calls dealMotion; compose.mjs calls checkAlive).
 // Each area gets 2 or 3 kinds from tables.json `motion` (never the same kind twice, so one butterfly, one wind-moved plant, one cat ...), drawn from the kinds whose needs the area meets:
-//   openWindow: the area has a window or glass door that opens, rendered open (rules.js `openable`);  plant: the area deals a plant;  plantNear: a plant stands on a window sill (wind needs a leafy plant within 1.5 m of the open window);  noGlass: no glass wall or glass door (a cat's paw needs a solid wall or a sill behind its curtain).
+//   openWindow: the area has a window or glass door that opens, rendered open (rules.js `openable`);  plant: the area deals a plant;  plantNear: a plant stands on a window sill (wind needs a leafy plant within 1.5 m of the open window);  noGlass: no glass wall or glass door; curtain: the area deals a curtain and has a window with a sill, at least 1340 mm wide, to hang it at (a cat's paw needs both, and compose widens the panel to 300 mm or more).
 // Anything that flies in needs `openWindow`, so a closed or fixed window can never have a visitor; `flies` may be a number: the narrowest window in mm the visitor can use (a bird). It uses its own random stream, so no older pick moves.
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -12,7 +12,7 @@ export function dealMotion(out, seed, say) {
   let s = (seed ^ 0x1b873593) >>> 0;
   const rnd = () => { s = (s + 0x6d2b79f5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
   for (const [id, a] of Object.entries(out.areas)) {
-    const has = { openWindow: a.openings.some(openable), plant: (a.plantAt || []).length > 0, plantNear: (a.plantAt || []).includes('sill'), noGlass: !a.openings.some((o) => o.style === 'wall' || o.style === 'slider' || o.style === 'french'), curtain: /curtain/.test(JSON.stringify(a)) }, widest = Math.max(0, ...a.openings.filter(openable).map((op) => op.width || 1000));
+    const has = { openWindow: a.openings.some(openable), plant: (a.plantAt || []).length > 0, plantNear: (a.plantAt || []).includes('sill'), noGlass: !a.openings.some((o) => o.style === 'wall' || o.style === 'slider' || o.style === 'french'), curtain: /curtain/.test(JSON.stringify(a)) && a.openings.some((o) => o.style !== 'wall' && o.style !== 'slider' && o.style !== 'french' && (o.kind === 'window' || o.sill > 0) && (o.width || 1000) >= 1340) }, widest = Math.max(0, ...a.openings.filter(openable).map((op) => op.width || 1000));
     const pool = Object.entries(T.kinds).filter(([, k]) => k.in.includes(id) && k.needs.every((n) => has[n]) && (typeof k.flies !== 'number' || widest >= k.flies)).map(([kind, k]) => ({ kind, k }));
     const want = T.count[0] + Math.floor(rnd() * (T.count[1] - T.count[0] + 1)), picked = [];
     while (picked.length < want && pool.length) {
