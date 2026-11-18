@@ -3,6 +3,7 @@
 // size: [width, depth, height] mm with the default params (width runs along the wall). mount: 'floor' | 'on' (stands on something: give y) | 'wall' | 'ceiling'. y: the height it sits at when mounted `on` or `wall`.
 // backed: { form, off }: with that form the thing leans on the wall, so R.on stands its origin off mm from the wall instead of mid-worktop.
 // facing: all floor pieces face +z (turn them), a bed has its head toward -z. slot: what it goes into.
+import { PAINTINGS } from './paintings.js';   // picture's forms 0-3 are drawn; every painting adds one form
 const A = (origin, size, mount, params, extra = {}) => ({ origin, size, mount, params, ...extra });
 export const ASSETS = {
   baseRun: A('front-left', [0, 600, 900], 'floor', 'modules [{ w, kind, ... }] or length; depth 600, top 900, joins, finishedBack, backOverhang, legEnds (start, end), ownsTop, trimStart, trimEnd, endPanels', { slots: ['hob', 'sink'], note: 'kinds: doors, door (hinge l|r), drawers (n), drawerDoors, sink, hob, filler, open, tall (h), blind (dead l|r)' }),
@@ -41,7 +42,7 @@ export const ASSETS = {
   console: A('centre', [1100, 330, 800], 'floor', 'w 1100, d 330, h 800'),
   bench: A('centre', [1200, 380, 450], 'floor', 'w 1200, d 380, h 450, form plank|slatted|upholstered|trestle'),
   stool: A('centre', [370, 370, 650], 'floor', 'h 650'),
-  picture: A('wall-centre', [600, 52, 800], 'wall', 'w 600, h 800, seed, colour keep|soft|ink (forms 4-6: classic paintings)', { y: 1100, note: 'on open wall its middle stands at 1500: y = 1500 - h / 2 (1100 for h 800); over furniture 150-250 above its top, about 0.5-0.8 of its width' }),
+  picture: A('wall-centre', [600, 52, 800], 'wall', 'w 600, h 800, seed, colour keep|soft|ink (forms 4 and up: classic paintings)', { y: 1100, note: 'on open wall its middle stands at 1500: y = 1500 - h / 2 (1100 for h 800); over furniture 150-250 above its top, about 0.5-0.8 of its width' }),
   mirror: A('wall-centre', [700, 56, 1000], 'wall', 'w 700, h 1000, shape arch|round|pill', { y: 800 }),
   wallShelf: A('wall-centre', [900, 230, 280], 'wall', 'w 900, seed', { y: 1300, note: 'books, a pot and a bowl on it' }),
   blind: A('wall-centre', [1200, 300, 1500], 'wall', 'w 1200, h 1500 (the window it covers), form roller|roman, drawn 0.2-0.9 (the share of h lowered from the top), tone mid|lo', { y: 800, note: 'a window blind drawn part way; y is the window sill (the bottom of the covered height); stands in front of the window' }),
@@ -138,7 +139,7 @@ export const ASSETS = {
   daybed: A('centre', [1900, 850, 810], 'floor', 'w 1900, d 850'),
   pot: A('centre', [200, 200, 220], 'on', 'see the parameter space', { y: 'top', note: 'an empty plant pot with rim, dip and soil, a sprig or bush in it; on a surface or the floor (mount floor, y 0)' }),
 };
-for (const [k, n] of Object.entries({ floorPlant: 5, plant: 6, vase: 4, picture: 7, wallRun: 3, fridge: 3, stool: 3, basket: 3 })) { ASSETS[k].variants = n; ASSETS[k].params = (ASSETS[k].params === '-' ? '' : ASSETS[k].params + ', ') + `form 0-${n - 1}`; }   // compose.mjs picks a form from the seed
+for (const [k, n] of Object.entries({ floorPlant: 5, plant: 6, vase: 4, picture: 4 + PAINTINGS.length, wallRun: 3, fridge: 3, stool: 3, basket: 3 })) { ASSETS[k].variants = n; ASSETS[k].params = (ASSETS[k].params === '-' ? '' : ASSETS[k].params + ', ') + `form 0-${n - 1}`; }   // compose.mjs picks a form from the seed
 
 // ---- parameter spaces: what a variant of a base asset may be. A range [lo, hi] is a size or proportion (mm unless noted); a list is a style choice. compose.mjs deals unset ones from the home's seed (each value used before the deck runs out
 // of new ones, so two instances differ); named presets are points in the space. A variant = asset + seed + overrides; assets.mjs prints this, the asset sheet shows 8 of them.

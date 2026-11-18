@@ -13,7 +13,7 @@ import { picture } from './src/library/variants.js';
   const rec = []; const node = () => new Proxy(function () {}, { get: (_, k) => (k === 'then' ? undefined : node()), apply: () => node() });
   const kit = new Proxy({}, { get: (_, k) => (k === 'lines' ? (pts) => { rec.push(...pts); return node(); } : k === 'merge' ? () => node() : k === 'THREE' ? node() : () => node()) });
   let bad = 0, n = 0;
-  for (const [w, h] of [[1100, 500], [1400, 450], [800, 600], [600, 800], [500, 500], [300, 400], [400, 1200]]) for (const form of [0, 1, 2, 3, 4, 5, 6]) for (const seed of [2, 9]) {
+  for (const [w, h] of [[1100, 500], [1400, 450], [800, 600], [600, 800], [500, 500], [300, 400], [400, 1200]]) for (const form of Array.from({ length: ASSETS.picture.variants }, (_, k) => k)) for (const seed of [2, 9]) {
     rec.length = 0; picture(kit, { form, w, h, seed }); n++;
     const out = rec.filter(([x, y]) => Math.abs(x) > w / 2 - 28 + 0.5 || y < 28 - 0.5 || y > h - 28 + 0.5);
     if (out.length) { bad++; console.log(`[art] picture form ${form} ${w}x${h} seed ${seed}: ${out.length} line point(s) outside the frame, first at x ${Math.round(out[0][0])} y ${Math.round(out[0][1])}`); }
