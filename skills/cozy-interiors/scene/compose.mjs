@@ -203,7 +203,10 @@ class Area {
     const { group = 'run', depth = 600, hero, ...params } = o, mods = [], p = this; let x = left;
     for (const m of modules) { mods.push({ ...m, xc: x + m.w / 2 }); x += m.w; }
     const length = x - left;
-    F.put(id, 'baseRun', left, depth, { group, hero, params: { ...params, depth, modules } });
+    const abut = (this._runEnds ||= []).find((q) => q.F === F && Math.abs(q.end - left) < 3 && q.depth === depth && q.top === (params.top || 900) && params.ownsTop !== false && !params.joins);   // a run starting where another in line ends: neither draws its end of the worktop outline
+    F.put(id, 'baseRun', left, depth, { group, hero, params: { ...params, depth, modules, ...(abut ? { abutStart: true } : {}) } });
+    if (abut) { const po = this.h.S.home.objects.find((o) => o.id === `${this.id}-${abut.id}`); if (po) po.params = { ...po.params, abutEnd: true }; }
+    if (params.ownsTop !== false && !params.joins) this._runEnds.push({ F, id, end: left + length, depth, top: params.top || 900 });
     if (modules.some((m) => m.ajar)) this.h.sign(this.id, 'drawer ajar');   // a module { kind: 'drawers', ajar: 0.4 } leaves its top drawer pulled out 0.4 of its travel
     let n = 0;
     return {
