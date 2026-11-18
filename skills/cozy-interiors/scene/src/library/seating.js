@@ -12,7 +12,7 @@ function seat(kit, { seats, seatN, w, d, arms: arm = 'track', armW, legs = 'tape
   g.add(armParts(kit, arm, { w, d, y0: legH + baseH * 0.5, top: legH + 540, armW: aw }));
   const rawBack = Math.max(backH - y0, 300), tightBack = back === 'tight' || back === 'fixed' || slipper;
   if (slipper) {   // a tall back that curves: a pillow shape, pinched at the seam, leaning
-    const hb = rawBack + 140, b = kit.solid(pillowGeometry(kit.THREE, { w: w - 20, h: hb, thick: 210, edge: 80, n: 26 }), 0, 0, 0, { smooth: true, tone }); b.position.set(0, y0 + hb / 2 - 30, -d / 2 + 105); b.rotation.x = -9 * DEG; g.add(b);
+    const hb = rawBack + 140, b = kit.solid(pillowGeometry(kit.THREE, { w: w - 20, h: hb, thick: 260, edge: 150, n: 30 }), 0, 0, 0, { smooth: true, tone }); b.position.set(0, y0 + hb / 2 - 30, -d / 2 + 130); b.rotation.x = -9 * DEG; g.add(b);
   } else if (back === 'tight') {
     const b = softBox(kit, inner - 6, rawBack, 170, { r: 70, bulge: 26, piping, tone }); b.position.set(0, y0 + rawBack / 2, -d / 2 + 147); b.rotation.x = -7 * DEG; g.add(b);
   } else if (back === 'fixed') {   // a firm back with a roll along its top and two channels

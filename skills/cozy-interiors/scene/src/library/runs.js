@@ -44,7 +44,7 @@ function carcass(kit, add, x, w, y0, y1, depth, back = 0) {
   add(kit.box(x + SIDE, y0, -back, w - 2 * SIDE, SIDE, depth - SIDE - back, lo));
 }
 
-export function baseRun(kit, { modules, depth = 600, top = 900, overhang = 20, trimStart = 0, trimEnd = 0, joins = null, ownsTop = true, finishedBack = false, backOverhang = 0, endPanels = [], legEnds = ['start', 'end'] }) {
+export function baseRun(kit, { modules, depth = 600, top = 900, overhang = 20, trimStart = 0, trimEnd = 0, joins = null, ownsTop = true, finishedBack = false, backOverhang = 0, endPanels = [], legEnds = ['start', 'end'], abutStart = false, abutEnd = false }) {
   const g = kit.group(), leaves = [], P = parts(kit, g, leaves), { T, add, hbar, vbar, front, leaf } = P;
   const length = modules.reduce((s, m) => s + m.w, 0), CT = 38, TOP = top - CT, y0 = PL + 1.5, y1 = TOP - 1.5, H = y1 - y0;
   // plinth, recessed 50; round a corner it is one L-shaped piece
@@ -114,6 +114,10 @@ export function baseRun(kit, { modules, depth = 600, top = 900, overhang = 20, t
     const s = new T.Shape(topPts.map(([a, b]) => new T.Vector2(a, -b)));
     for (const c of cuts) s.holes.push(new T.Path(c.map(([a, b]) => new T.Vector2(a, -b))));
     const wt = kit.solid(new T.ExtrudeGeometry(s, { depth: CT, bevelEnabled: false }), 0, TOP, 0); wt.rotation.x = -Math.PI / 2; add(wt);
+    if (!J && (abutStart || abutEnd)) {   // another run in line shares this worktop's end: drop the end's outline, so the two slabs read as one worktop with no seam mark
+      const xs = [abutStart ? trimStart : null, abutEnd ? length - trimEnd : null].filter((v) => v !== null), old = wt.children.find((c) => c.userData.kitLine);
+      if (old) { const A = old.geometry.attributes.instanceStart, B = old.geometry.attributes.instanceEnd, keep = []; for (let i = 0; i < A.count; i++) { const a = [A.getX(i), A.getY(i), A.getZ(i)], b = [B.getX(i), B.getY(i), B.getZ(i)]; if (!xs.some((x) => Math.abs(a[0] - x) < 0.5 && Math.abs(b[0] - x) < 0.5)) keep.push(a, b); } wt.remove(old); old.geometry.dispose(); wt.add(kit.lines(keep, 'mid')); }
+    }
   }
   return finish(kit, g, leaves, { length, depth, top });
 }

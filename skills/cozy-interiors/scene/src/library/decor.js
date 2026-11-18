@@ -5,6 +5,7 @@
 // sideTable({ r = 230, h = 520 }), roundTable({ r = 650, h = 750 }), cat({ scale = 1 }), basket({ r = 230, h = 320 }), pouf({ r = 280, h = 380 }).
 const rnd = (seed) => { let r = (seed || 1) * 9301 + 49297; return () => { r = (r * 9301 + 49297) % 233280; return r / 233280; }; };
 import { potTop } from './pots.js';
+import { bookRow } from './books.js';
 const lo = { tone: 'lo' };
 
 export function vase(kit, { h = 280, stems = 5, seed = 3 } = {}) {   // a bottle vase with branches: thin curved lines with a few leaves
@@ -42,8 +43,7 @@ export function mirror(kit, { w = 700, h = 1000, shape = 'arch', frame = 'thin' 
 export function wallShelf(kit, { w = 900, seed = 4 } = {}) {   // a floating board with a row of books, a pot and a bowl
   const g = kit.group(), R = rnd(seed), T = 30, D = 230;
   g.add(kit.rbox(-w / 2, 0, D, w, T, D, 6));
-  let x = -w / 2 + 40; const end = -w / 2 + w * 0.5;
-  while (x < end) { const bw = 26 + R() * 20, bh = 150 + R() * 100; g.add(kit.box(x, T, D - 40, bw, bh, D - 80, lo)); x += bw + 2; }
+  { const { group } = bookRow(kit, { x: -w / 2 + 40, y: T, z: D / 2, len: w * 0.5 - 40, dep: D - 80, hmax: 250, hmin: 150, R, lean: R() < 0.6 }); g.add(group); }
   g.add(kit.cyl(w * 0.2, T, D / 2, 52, 110, { rTop: 66, seg: 20, ...lo })); g.add(kit.cyl(w * 0.38, T, D / 2, 70, 56, { rTop: 84, seg: 24 }));
   return kit.merge(g);
 }

@@ -21,7 +21,8 @@ import { table, chair } from './dining.js';
 import { bookStack, mirror, wallShelf, roundTable, cat, pouf } from './decor.js';
 import { sideTable, cushion, pot, mug, openBook } from './pieces.js';
 import { floorPlant, plant, vase, picture, fridge, stool, basket } from './variants.js';
-import { jars, kettle, herbs, trolley, teaTowel } from './kitchenware.js';
+import { jars, kettle, herbs, trolley, teaTowel, saltPepper } from './kitchenware.js';
+import { hangingPlant } from './hanging.js';
 import { bed, bedsideTable, wardrobe, desk, deskChair, coatHooks, daybed, readingChair, footstool, console_ } from './rooms.js';
 import { stepStool, crate, wateringCan, umbrellaStand, shoes, wasteBin, fileBox, laptop } from './small.js';
 import { sofa, armchair, coffeeTable, rug, shelf, floorLamp, sideboard, bench, curtain } from './living.js';
@@ -36,7 +37,7 @@ export const REGISTRY = {
   wallRun: (kit, p) => wallRun(kit, fitted(p)),
   floorPlant, cushion, pot, cloth, foldedThrow, tablecloth, tableRunner, duvetCloth, scuff, leaf, heightChart, mug, openBook, vase, bookStack, mirror, wallShelf, sideTable, roundTable, cat, basket, pouf,
   stepStool, crate, wateringCan, umbrellaStand, shoes, wasteBin, fileBox, laptop,
-  jars, kettle, herbs, trolley, teaTowel,
+  jars, kettle, herbs, trolley, teaTowel, saltPepper, hangingPlant,
   bed, bedsideTable, wardrobe, desk, deskChair, coatHooks, daybed, readingChair, footstool, console: console_,
   candlesticks, jug, breadBasket, placeSetting, glazedCabinet, benchCushion, wallPlates, pendantForm,
   dishRack, utensilCrock, breadBin, toaster, mokaPot, potRail, openShelf, spiceRack, ovenGlove, wallClock, cookbookStand,
