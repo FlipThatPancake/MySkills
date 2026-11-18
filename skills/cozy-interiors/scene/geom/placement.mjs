@@ -116,12 +116,11 @@ export function placementRules(L, S = {}) {
 
   // round 3 E2, composition by numbers: floor cover, the fridge by the run's end, the hero by its window, a seat that faces something
   const pushC = (rule, o, text) => out.push({ rule, id: o.id, text: `${o.id} (${o.asset}): ${text}` });
-  const toWorld = (ar, [lx, lz]) => { const t = rad(ar.psi || 0), c = Math.cos(t), sn = Math.sin(t); return [ar.O[0] + lx * c + lz * sn, ar.O[1] - lx * sn + lz * c]; };
   for (const ar of S.areas || []) {
     const b = ar.bounds, mine = O.filter((o) => o.area === ar.id); if (!b) continue; const few = mine.filter((o) => !o.wall).length < 3;
     // floorcover: what stands on the floor (footprints and rugs) is at least about 25% of the area's rect
     const flo = mine.filter((o) => !o.wall && o.mount !== 'on' && o.bb.y0 < 60 && !/^(scuff|leaf|curtain|cat|heightChart)$/.test(o.asset)); let cells = 0, hit = 0;
-    for (let x = b.x0 + 50; x < b.x1; x += 100) for (let z = b.z0 + 50; z < b.z1; z += 100) { cells++; const [wx, wz] = toWorld(ar, [x, z]); if (flo.some((o) => wx >= o.bb.x0 && wx <= o.bb.x1 && wz >= o.bb.z0 && wz <= o.bb.z1)) hit++; }
+    for (let x = b.x0 + 50; x < b.x1; x += 100) for (let z = b.z0 + 50; z < b.z1; z += 100) { cells++; const wx = x, wz = z; if (flo.some((o) => wx >= o.bb.x0 && wx <= o.bb.x1 && wz >= o.bb.z0 && wz <= o.bb.z1)) hit++; }
     if (!few && cells && hit / cells < 0.25) out.push({ rule: 'floorcover', id: mine[0].id, text: `${ar.id}: furniture and rugs cover ${Math.round(100 * hit / cells)}% of the ${Math.round((b.x1 - b.x0))} x ${Math.round(b.z1 - b.z0)} floor (25% at least): bring the groups together, add a rug or a piece, or make the rect smaller` });
     // fridge: within 1200 of an end of the run it belongs to
     const runs = mine.filter((o) => o.asset === 'baseRun'), fr = mine.filter((o) => o.asset === 'fridge');
