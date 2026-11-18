@@ -94,10 +94,11 @@ export async function openPlanIssues(page, sceneFile, { quick = false } = {}) {
     if (bad) out.push({ rule: 'open-shot', what: `${id} shot "${sh.name}": ${bad} (a neighbouring area) stands in front of the subject: a neighbour may show only behind the subject, never in front of it` });
   }
   // ---- glimpse: renders. Each neighbour's pixels (the frame with the group drawn, against the frame with that neighbour hidden) stay at one side edge, within 25% of the width, off the hero / subject; a middle area may show one neighbour at each edge
+  if (!quick) await page.evaluate(() => window.cozyScene.loop(false));   // renders are drawn on demand (cozyScene.draw): the live loop and page screenshots cost seconds a frame in software GL
   if (!quick) for (const G of S.groups) for (const id of G.areas) {
     const idx = G.areas.indexOf(id), views = [{ name: 'home view', shot: null }, ...(area[id].camera?.shots || []).map((s, i) => ({ name: `shot "${s.name}"`, shot: i, subject: s.subject, across: s.across }))];
     for (const v of views) {
-      const r = await glimpse(page, id, G.areas, idx, v);
+      const t0 = Date.now(), r = await glimpse(page, id, G.areas, idx, v); if (process.argv.includes('--time')) console.error(`[time]   glimpse ${id} ${v.name}: ${((Date.now() - t0) / 1000).toFixed(1)} s`);
       if (r.far > 150) out.push({ rule: 'open-glimpse', what: `${id} ${v.name}: ${r.far} pixels of an area two steps away show: aim away from it` });
       for (const n of r.each) {
         if (v.shot !== null) continue;   // a tour shot follows the behind-the-subject rule above, not the home-view glimpse
@@ -112,31 +113,34 @@ export async function openPlanIssues(page, sceneFile, { quick = false } = {}) {
   }
   // ---- light: with the light baked, the floor's brightness on both sides of a seam differs by a few percent at most (one floor sheet per group)
   if (!quick) for (const G of S.groups) for (const q of G.seams) {
-    const r = await lightAcross(page, q, Object.values(B).filter((b) => b.mount !== 'wall' && b.mount !== 'lines' && b.mount !== 'ceiling' && b.asset !== 'rug').map((b) => [b.min[0], b.min[2], b.max[0], b.max[2]]));
+    const t0 = Date.now(), r = await lightAcross(page, q, Object.values(B).filter((b) => b.mount !== 'wall' && b.mount !== 'lines' && b.mount !== 'ceiling' && b.asset !== 'rug').map((b) => [b.min[0], b.min[2], b.max[0], b.max[2]]));
+    if (process.argv.includes('--time')) console.error(`[time]   light across ${q.a} | ${q.b}: ${((Date.now() - t0) / 1000).toFixed(1)} s (brightness step ${r === null ? "not measured: " + (await page.evaluate(() => window.__lightK)) + " free samples, 4 needed" : r.toFixed(2)})`);
     if (r === null) continue;
     if (r > 8) out.push({ rule: 'open-light', what: `${q.a} | ${q.b}: the floor is ${(100 * r / 255).toFixed(1)}% brighter on one side of the seam (under 3%): the light bake shows a step` });
   }
+  await closeLightPage(page); if (!quick) await page.evaluate(() => window.cozyScene.loop(true));   // the live loop stays stopped while the second page loads: two software-GL pages drawing at once each take several times as long
   return out;
 }
+// the seam light frame is drawn on the checked page itself (a second page took a minute to load and draw next to the first): its objects, walls and camera are saved first and put back at the end of openPlanIssues
+const lightPage = async (page) => { await page.evaluate(() => { if (window.__lightSave) return; const c = window.cozyScene; window.__lightSave = { vis: Object.values(c.objects).map((g) => [g, g.visible]), walls: c.home.walls.map((w) => [w.node, w.node.visible]), up: c.camera.up.clone(), fov: c.camera.fov, area: c.area, ctl: c.controls.enabled }; }); return page; };
+const closeLightPage = (page) => page.evaluate(() => { const S = window.__lightSave; if (!S) return; for (const [g, v] of S.vis) g.visible = v; for (const [n, v] of S.walls) n.visible = v; const c = window.cozyScene; c.camera.up.copy(S.up); c.camera.fov = S.fov; c.controls.enabled = S.ctl; c.camera.updateProjectionMatrix(); c.setArea(S.area, true); window.__lightSave = null; });
 // the mean floor brightness 300 to 900 mm either side of a seam, from a top-down frame of the baked page with every object hidden
 async function lightAcross(page, q, feet) {   // feet: footprints of the objects; a sample point within 900 mm of one is skipped (the baked contact shadows reach that far) (its contact shadow is no step)
-  const url = page.url().replace(/\?check.*$/, ''), ctx = await page.context().browser().newContext(), p2 = await ctx.newPage(); await p2.setViewportSize({ width: 1200, height: 750 });
+  const p2 = await lightPage(page);   // the checked page itself, state saved once
   try {
-    await p2.goto(url, { timeout: 180000 }); await p2.waitForFunction(() => window.cozyScene && window.cozyBaked, null, { timeout: 240000 });
     await p2.evaluate(() => { const c = window.cozyScene; c.setArea(c.areaIds[0], true); c.controls.enabled = false; c.tour.update = () => false; for (const g of Object.values(c.objects)) { g.visible = false; g.userData.tick = null; g.userData.update = null; } for (const w of c.home.walls) w.node.visible = false; });
     const mid = [(q.p0[0] + q.p1[0]) / 2, (q.p0[1] + q.p1[1]) / 2], len = Math.hypot(q.p1[0] - q.p0[0], q.p1[1] - q.p0[1]), n = q.normal;
     await p2.evaluate(([mid, len]) => { const c = window.cozyScene; c.camera.fov = 30; c.camera.up.set(0, 0, -1); c.camera.position.set(mid[0], len * 2.2 + 3000, mid[1]); if (c.controls.target) c.controls.target.set(mid[0], 0, mid[1]); c.camera.lookAt(mid[0], 0, mid[1]); c.camera.updateProjectionMatrix(); c.camera.updateMatrixWorld(true); }, [mid, len]);
-    await p2.waitForTimeout(500);
-    const png = (await p2.screenshot()).toString("base64");
+    const png = await p2.evaluate(() => { const c = window.cozyScene; c.advance(1); return c.draw().toDataURL('image/png').split(',')[1]; });
     return await p2.evaluate(async ([png, q, n, feet]) => {
       const c = window.cozyScene, T = c.kit.THREE, im = await new Promise((r) => { const i = new Image(); i.onload = () => r(i); i.src = 'data:image/png;base64,' + png; }), cv = document.createElement('canvas'); cv.width = im.width; cv.height = im.height; const x = cv.getContext('2d'); x.drawImage(im, 0, 0);
       const lum = (wx, wz) => { const v = new T.Vector3(wx, 0, wz).project(c.camera), px = (v.x + 1) / 2 * im.width, py = (1 - v.y) / 2 * im.height, d = x.getImageData(Math.max(0, px - 6), Math.max(0, py - 6), 12, 12).data; let s = 0; for (let i = 0; i < d.length; i += 4) s += 0.3 * d[i] + 0.59 * d[i + 1] + 0.11 * d[i + 2]; return s / (d.length / 4); };
       const e = [q.p1[0] - q.p0[0], q.p1[1] - q.p0[1]], L = Math.hypot(...e); let sa = 0, sb = 0, k = 0;
       const free = (px, pz) => !feet.some((f) => px > f[0] - 900 && px < f[2] + 900 && pz > f[1] - 900 && pz < f[3] + 900);
       for (let i = 1; i < 20; i++) for (const off of [300, 500, 700, 900]) { const bx = q.p0[0] + e[0] * i / 20, bz = q.p0[1] + e[1] * i / 20, ax = bx - n[0] * off, az = bz - n[1] * off, cx = bx + n[0] * off, cz = bz + n[1] * off; if (!free(ax, az) || !free(cx, cz)) continue; sa += lum(ax, az); sb += lum(cx, cz); k++; }
-      return k < 4 ? null : Math.abs(sa - sb) / k;
+      window.__lightK = k; return k < 4 ? null : Math.abs(sa - sb) / k;
     }, [png, q, n, feet]);
-  } finally { await ctx.close(); }
+  } finally { /* state is put back by closeLightPage(page) */ }
 }
 // one view of area `id`: per neighbour, counts of its pixels at the left edge, the right edge and the middle
 async function glimpse(page, id, group, idx, v) {
@@ -148,9 +152,9 @@ async function glimpse(page, id, group, idx, v) {
     for (const g of Object.values(c.objects)) g.visible = !gone.includes(g.userData.scene.area);
     for (const w of c.home.walls) w.node.visible = !gone.includes(areaOfWall(w));
   }, [id, group, hide, v]);
-  const snap = async (hide) => { await set(hide); await page.waitForTimeout(250); return (await page.screenshot({ clip: { x: 0, y: 0, width: 1200, height: 690 } })).toString('base64'); };
+  const snap = async (hide) => { await set(hide); return page.evaluate(() => { const c = window.cozyScene; c.advance(0.5); const cv = c.draw(), w = cv.width, h = Math.round(cv.height * 690 / 750), k = document.createElement('canvas'); k.width = w; k.height = h; k.getContext('2d').drawImage(cv, 0, 0, w, h, 0, 0, w, h); return k.toDataURL('image/png').split(',')[1]; }); };   // one frame, the top 690 of 750 rows
   const nbrs = group.filter((q, i) => Math.abs(i - idx) === 1), twoAway = group.filter((q, i) => Math.abs(i - idx) >= 2);
-  const full = await snap([]), full2 = await snap([]), noFar = twoAway.length ? await snap(twoAway) : full, hid = [];
+  const full = await snap([]), full2 = full, noFar = twoAway.length ? await snap(twoAway) : full, hid = [];
   for (const n of nbrs) hid.push(await snap([n]));
   const rect = await page.evaluate(([id, v]) => {   // the hero's or the subject's rectangle in pixels
     const c = window.cozyScene, T = c.kit.THREE, ids = Object.keys(c.objects).filter((k) => { const s = c.objects[k].userData.scene; return s.area === id && (v.shot === null ? s.hero : v.subject && s.group === v.subject); });
