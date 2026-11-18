@@ -281,7 +281,8 @@ class Area {
       if (r ? Math.hypot(dx, dz) < r : Math.abs(dx) < ((c.params?.w ?? 1600) - 90) / 2 && Math.abs(dz) < ((c.params?.d ?? 900) - 90) / 2) { q.at[1] += 16; done.add(q); }
     }
   }
-  alive(list) { checkAlive(this.id, this.h.S.home.walls.filter((w) => w.id.startsWith(this.id + '-')), list); const ws = this.h.S.home.walls.filter((w) => w.id.startsWith(this.id + '-')); this.motion = list.map(({ kind }) => { const k = MOTION.kinds[kind]; return { kind, needs: k.needs, ...(k.needs.includes('openWindow') ? { via: pickVia(ws, k.flies) } : {}) }; }); return this; }   // living things (roll's `motion`; src/motion/index.js)
+  alive(list) { if (list.some((e) => e.kind === 'paw')) for (const c of this.h.S.home.objects.filter((o) => o.area === this.id && o.asset === 'curtain')) if ((c.params?.w ?? 1500) < 1370) c.params = { ...c.params, w: 1370 };   // a paw needs a panel (22% of w) of 300 mm or more to hide a cat
+  checkAlive(this.id, this.h.S.home.walls.filter((w) => w.id.startsWith(this.id + '-')), list); const ws = this.h.S.home.walls.filter((w) => w.id.startsWith(this.id + '-')); this.motion = list.map(({ kind }) => { const k = MOTION.kinds[kind]; return { kind, needs: k.needs, ...(k.needs.includes('openWindow') ? { via: pickVia(ws, k.flies) } : {}) }; }); return this; }   // living things (roll's `motion`; src/motion/index.js)
   out() { this.liftOnRugs(); this.liftOnCloths(); const b = this.worldBounds(); return { id: this.id, name: this.name, ...(this.motion?.length ? { motion: this.motion } : {}), ...(this.group ? { group: this.group } : {}), O: this.O, psi: this.psi, bounds: { ...b, top: this.top }, camera: { home: this.cam, shots: this.shots } }; }
 }
 export const facing = (from, to) => deg(Math.atan2(to[0] - from[0], to[1] - from[1]));   // the turn that makes an object at `from` face `to`, in local x/z
