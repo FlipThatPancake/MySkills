@@ -103,7 +103,7 @@ const res = await page.evaluate(([openGroups, only, nbrSrc]) => {
       search([[true, 0], [false, 0], [false, 1]]);
       let left = [];
       if (!best && !sh.core?.length && fit.length > 1) {   // no camera holds the whole group: frame its core (the pieces that matter), leaving out the secondary ones farthest from the biggest piece, and say which
-        const stat0 = { ...stat }, area0 = (i) => { const b = boxes[i]; return (b.max.x - b.min.x) * (b.max.z - b.min.z); }, anchor = fit.reduce((p, q) => area0(q) > area0(p) ? q : p), ac = boxes[anchor].getCenter(new T.Vector3()), SECOND = SMALLFG.concat(['floorLamp', 'lamp', 'chair', 'armchair', 'sideTable', 'mrack', 'magazineRack', 'bench']);
+        const stat0 = { ...stat }, area0 = (i) => { const b = boxes[i]; return (b.max.x - b.min.x) * (b.max.z - b.min.z); }, anchor = fit.reduce((p, q) => area0(q) > area0(p) ? q : p), ac = boxes[anchor].getCenter(new T.Vector3()), SECOND = SMALLFG.concat(['floorLamp', 'lamp', 'chair', 'armchair', 'sideTable', 'mrack', 'magazineBox', 'bench']);
         const order = fit.filter((i) => i !== anchor).sort((p, q) => (SECOND.includes(sc(q).asset) - SECOND.includes(sc(p).asset)) * 1e7 + boxes[q].getCenter(new T.Vector3()).distanceTo(ac) - boxes[p].getCenter(new T.Vector3()).distanceTo(ac));
         const dropped = []; for (const d of order.slice(0, 3)) { dropped.push(d); setMem(whole.filter((i) => !dropped.includes(i))); search([[false, 0], [false, 1]]); if (best) { left = dropped.slice(); best.core = true; break; } }
         if (!best) { setMem(whole); for (const k of Object.keys(stat)) delete stat[k]; Object.assign(stat, stat0); }

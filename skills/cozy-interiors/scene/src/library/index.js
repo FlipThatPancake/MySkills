@@ -5,7 +5,7 @@ import { windowSeat, readingLamp, floorBooks, teaSet, readShelf } from './readse
 import { taskLamp, monitor, notebook, pinboard, binders, deskOrganiser, printer, globe, wallCalendar } from './officeset.js';
 import { shoeRack, keyBowl, coatStand, hungHat, hungBag, boots, runner, letterTray } from './hallset.js';
 import { bedsideLamp, alarmClock, glassesBook, chestOfDrawers, clothesRail, clothesChair, hamper, leaningMirror, wallSconce } from './bedset.js';
-import { chair as armChair, chaise, coffeeShape, floorCushion, logBasket, woodStove, recordPlayer, magazineRack, plantStand, galleryWall, scratches } from './livingset.js';
+import { chair as armChair, chaise, coffeeShape, floorCushion, logBasket, woodStove, recordPlayer, magazineBox, plantStand, galleryWall, scratches } from './livingset.js';
 import { cloth, armThrow, foldedThrow, tablecloth, tableRunner, duvetCloth } from './softpieces.js';
 // @js:library-index — the asset registry: scene.json's `asset` name -> generator(kit, params) returning a group (origin and axes as each generator documents).
 // A run's params are { length, modules, joins, ownsTop, depth, ... }: with `length` and no `modules` the run is filled with standard widths (fillWidths); modules that fall short of `length` are topped up the same way.
@@ -45,7 +45,7 @@ export const REGISTRY = {
   taskLamp, monitor, notebook, pinboard, binders, deskOrganiser, printer, globe, wallCalendar,
   shoeRack, keyBowl, coatStand, hungHat, hungBag, boots, runner, letterTray,
   bedsideLamp, alarmClock, glassesBook, chestOfDrawers, clothesRail, clothesChair, hamper, leaningMirror, wallSconce,
-  floorCushion, logBasket, woodStove, recordPlayer, magazineRack, plantStand, galleryWall, scratches,
+  floorCushion, logBasket, woodStove, recordPlayer, magazineBox, plantStand, galleryWall, scratches,
   armchair: (kit, p = {}) => (p.shape && p.shape !== 'upholstered' ? armChair(kit, p) : armchair(kit, p)),
   coffeeTable: (kit, p = {}) => (p.shape && p.shape !== 'frame' ? coffeeShape(kit, p.shape, p.w ?? 1000, p.d ?? 600, p.h ?? 380) : coffeeTable(kit, p)),
   sofa: (kit, p = {}) => {

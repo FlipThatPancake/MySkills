@@ -1,6 +1,6 @@
 // @js:library-livingset — the Living batch: more forms for the living room's repeating pieces, each a generator with a parameter space (meta.js SPACE).
 // Floor pieces: origin the middle of the footprint on the floor, front toward +z. galleryWall and scratches: origin bottom middle on the wall face (or any vertical face), standing out toward +z.
-// chair(kit, { shape: 'wing' | 'cane' | 'sling', w, d, tone }), chaise (a sofa's extra unit), coffeeShape(kit, shape, w, d, h), floorCushion, logBasket, woodStove, recordPlayer, magazineRack, plantStand, galleryWall, scratches.
+// chair(kit, { shape: 'wing' | 'cane' | 'sling', w, d, tone }), chaise (a sofa's extra unit), coffeeShape(kit, shape, w, d, h), floorCushion, logBasket, woodStove, recordPlayer, magazineBox, plantStand, galleryWall, scratches.
 import { softBox, pillowGeometry } from './soft.js';
 import { rod, legs as legParts } from './parts.js';
 import { pot } from './pieces.js';
@@ -193,30 +193,19 @@ export function recordPlayer(kit, { w = 760, d = 400, h = 520, seed = 4, records
   if (lidP !== 'closed') g.add(rod(kit, [tx - 150, ty + 70, -168], [tx + 150, ty + 70, -168], 6, 6, 'lo'));   // the hinge
   return kit.merge(g);
 }
-export function magazineRack(kit, { w = 400, h = 460, seed = 6, form = 'frame' } = {}) {
-  const g = kit.group(), R = rnd(seed), pts = [], d = form === 'frame' ? 330 : 250;   // the frame is 330 deep (its magazines are 190 wide and lean a few degrees)
-  if (form === 'sling') {   // two wooden side frames with a canvas sling hung between them, magazines leaning in it
-    const T = kit.THREE, sd = 300, sy = h * 0.82;
-    for (const sx of [-1, 1]) { const x = sx * (w / 2 - 12); for (const sz of [-1, 1]) g.add(rod(kit, [x, 0, sz * (sd / 2 - 20)], [x, sy, sz * (sd / 2 - 40)], 12, 10, 'mid')); g.add(rod(kit, [x, sy, -sd / 2 + 40], [x, sy, sd / 2 - 40], 10, 10, 'mid')); g.add(rod(kit, [x, 30, -sd / 2 + 20], [x, 30, sd / 2 - 20], 9, 9, 'mid')); }
-    const prof = [], n = 12, th = 8; for (let i = 0; i <= n; i++) { const t = i / n * 2 - 1; prof.push([t * (sd / 2 - 30), sy - 20 - (1 - t * t) * h * 0.4]); }
-    const shp = new T.Shape([...prof, ...prof.slice().reverse().map(([a, b]) => [a, b + th])].map(([a, b]) => new T.Vector2(a, b)));
-    const geo = new T.ExtrudeGeometry(shp, { depth: w - 20, bevelEnabled: false, curveSegments: 4 }); geo.rotateY(Math.PI / 2); geo.translate(-(w - 20) / 2, 0, 0);
-    g.add(kit.solid(geo, 0, 0, 0, { smooth: true, tone: 'lo' }));
-    let x = -w / 2 + 70; for (let i = 0; i < 4 && x < w / 2 - 80; i++) { const t = 16 + R() * 14, m = kit.group(); m.add(kit.box(-t / 2, 0, 90, t, 250 + R() * 40, 190, lo)); const tt2 = 105 / (sd / 2 - 30), hs = sy - 20 - (1 - tt2 * tt2) * h * 0.4 + th + 4; m.position.set(x, hs, 0); m.rotation.x = -(2 + R() * 4) * DEG; kit.content(m); g.add(m); x += t + 10 + R() * 12; }   // each magazine rests on the two high edges of the sling's curve (its bottom edge is 190 mm wide), leaning a few degrees
+export function magazineBox(kit, { w = 300, h = 300, seed = 6, form = 'box' } = {}) {   // rigid: a wooden magazine file box with magazines standing in it, or a low stack of magazines on the floor; origin the middle of the footprint
+  const g = kit.group(), R = rnd(seed), pts = [], T = kit.THREE;
+  if (form === 'stack') {   // 5 to 8 magazines lying one on another, each a little turned
+    const n = 5 + Math.floor(R() * 4); let y = 0;
+    for (let i = 0; i < n; i++) { const t = 5 + R() * 5, mw = 215 + R() * 15, md = 290 + R() * 10, m = kit.group(); m.add(kit.box(-mw / 2, 0, md / 2, mw, t, md, lo)); m.add(kit.lines([[-mw / 2 + 4, t + 0.5, md / 2 - 6], [-mw / 2 + 4, t + 0.5, -md / 2 + 6]], 'lo')); m.position.set((R() - 0.5) * 18, y, (R() - 0.5) * 14); m.rotation.y = (R() - 0.5) * 0.2; g.add(m); y += t; }
     return kit.merge(g);
   }
-  if (form === 'crate') {   // a small slatted crate with magazines standing in it
-    const cw = w * 0.95, cd = 300, ch = h * 0.55, tt = 16, B2 = (cx, y, cz, ww, hh, dd, o) => kit.box(cx - ww / 2, y, cz + dd / 2, ww, hh, dd, o);
-    g.add(B2(0, 0, 0, cw, tt, cd)); for (const sx of [-1, 1]) g.add(B2(sx * (cw / 2 - tt / 2), 0, 0, tt, ch, cd)); for (const sz of [-1, 1]) g.add(B2(0, 0, sz * (cd / 2 - tt / 2), cw, ch, tt));
-    for (const f of [0.34, 0.67]) pts.push([-cw / 2, ch * f, cd / 2 + 0.6], [cw / 2, ch * f, cd / 2 + 0.6], [cw / 2 + 0.6, ch * f, cd / 2], [cw / 2 + 0.6, ch * f, -cd / 2]);
-    pts.push([-cw / 2 + 60, ch * 0.5, cd / 2 + 0.6], [-cw / 2 + 60, ch * 0.5 + 0.1, cd / 2 + 0.6]);
-    let x = -cw / 2 + 50; for (let i = 0; i < 6 && x < cw / 2 - 50; i++) { const t = 14 + R() * 14, m = kit.group(); m.add(kit.box(-t / 2, 0, 80, t, 120 + R() * 40, 200, lo)); m.position.set(x, tt + ch * 0.3, 0); m.rotation.z = (R() - 0.5) * 0.12; kit.content(m); g.add(m); x += t + 10 + R() * 14; }
-    g.add(kit.lines(pts, 'lo')); return kit.merge(g);
-  }
-  for (const sx of [-1, 1]) { g.add(rod(kit, [sx * w / 2, 0, d / 2 - 10], [sx * w / 2, h * 0.55, d / 2 - 40], 12, 12, 'mid')); g.add(rod(kit, [sx * w / 2, 0, -d / 2 + 10], [sx * w / 2, h, -d / 2 + 40], 12, 12, 'mid')); g.add(rod(kit, [sx * w / 2, h * 0.55, d / 2 - 40], [sx * w / 2, h, -d / 2 + 40], 11, 11, 'mid')); }
-  g.add(rod(kit, [-w / 2, h, -d / 2 + 40], [w / 2, h, -d / 2 + 40], 11, 11, 'mid')); g.add(rod(kit, [-w / 2, h * 0.55, d / 2 - 40], [w / 2, h * 0.55, d / 2 - 40], 11, 11, 'mid')); g.add(rod(kit, [-w / 2, 8, d / 2 - 10], [w / 2, 8, d / 2 - 10], 10, 10, 'mid')); g.add(rod(kit, [-w / 2, 8, -d / 2 + 10], [w / 2, 8, -d / 2 + 10], 10, 10, 'mid'));
-  g.add(kit.box(-w / 2 + 14, 4, d / 2 - 20, w - 28, 8, d - 30, lo));   // the base
-  let x = -w / 2 + 40; for (let i = 0; i < 5 && x < w / 2 - 70; i++) { const t = 18 + R() * 18, hh = 300 + R() * 60, m = kit.box(x, 14, 90, t, hh, 190, lo); m.rotation.x = -(3 + R() * 3) * DEG; kit.content(m); g.add(m); pts.push([x + t / 2, 70, 94], [x + t / 2, 70 + hh * 0.5, 96]); x += t + 8 + R() * 14; }
+  const bw = Math.min(w, 340), bd = 270, th = 14, hb = 300, hf = 190;   // box: a slanted wooden file, tall at the back and low at the front
+  g.add(kit.box(-bw / 2, 0, bd / 2, bw, th, bd, { tone: 'mid' }));
+  for (const sx of [-1, 1]) { const sh = new T.Shape([new T.Vector2(-bd / 2, 0), new T.Vector2(bd / 2, 0), new T.Vector2(bd / 2, hf), new T.Vector2(-bd / 2, hb)]), geo = new T.ExtrudeGeometry(sh, { depth: th, bevelEnabled: false }); geo.rotateY(-Math.PI / 2); geo.translate(sx > 0 ? bw / 2 : -bw / 2 + th, 0, 0); g.add(kit.solid(geo, 0, 0, 0, { tone: 'mid' })); }
+  g.add(kit.box(-bw / 2 + th, th, -bd / 2 + th, bw - 2 * th, hb - th, th, { tone: 'mid' }));   // the back
+  g.add(kit.box(-bw / 2 + th, th, bd / 2, bw - 2 * th, 60, th, { tone: 'mid' }));   // a low front lip
+  let x = -bw / 2 + th + 8; for (let i = 0; i < 5 && x < bw / 2 - th - 30; i++) { const t = 12 + R() * 12, hh = 230 + R() * 50, m = kit.box(x, th, -bd / 2 + th + 150, t, hh, 150, lo); kit.content(m); g.add(m); pts.push([x + t / 2, th + 40, -bd / 2 + th + 152], [x + t / 2, th + 40 + hh * 0.5, -bd / 2 + th + 152]); x += t + 6 + R() * 8; }
   g.add(kit.lines(pts, 'lo'));
   return kit.merge(g);
 }

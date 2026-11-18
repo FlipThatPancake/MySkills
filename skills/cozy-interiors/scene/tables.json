@@ -314,7 +314,7 @@
    "floor cushion (floorCushion)",
    "wood stove with a log basket (woodStove, logBasket)",
    "record player cabinet (recordPlayer)",
-   "magazine rack (magazineRack)",
+   "magazine box (magazineBox)",
    "plant stand (plantStand)",
    "gallery wall of frames (galleryWall)"
   ],
@@ -481,7 +481,7 @@
   ],
   "more": [
    "floor cushion (floorCushion)",
-   "magazine rack (magazineRack)",
+   "magazine box (magazineBox)",
    "plant stand (plantStand)",
    "wall sconce (wallSconce)",
    "gallery wall of frames (galleryWall)"
@@ -490,7 +490,7 @@
    "footstool",
    "basket",
    "floor cushion",
-   "magazine rack"
+   "magazine box"
   ],
   "accentOn": [
    "cushion",
@@ -561,7 +561,7 @@
    "pair of shoes (shoes)",
    "wall clock (wallClock)",
    "wall sconce (wallSconce)",
-   "magazine rack (magazineRack)"
+   "magazine box (magazineBox)"
   ],
   "foreground": [
    "stool",
@@ -648,7 +648,7 @@
    "file box (fileBox)",
    "laptop (laptop)",
    "wall clock (wallClock)",
-   "magazine rack (magazineRack)",
+   "magazine box (magazineBox)",
    "plant stand (plantStand)"
   ],
   "foreground": [
@@ -1217,7 +1217,7 @@
      "vase (vase)",
      "candle (candlesticks)",
      "bowl (fruitBowl)",
-     "magazine (magazineRack)"
+     "magazines (magazineBox)"
     ]
    },
    {
@@ -1557,7 +1557,7 @@
       "clothes chair": "clothesChair",
       "hamper": "hamper",
       "floor cushion": "floorCushion",
-      "magazine rack": "magazineRack",
+      "magazine box": "magazineBox",
       "shoes": "shoes",
       "umbrella stand": "umbrellaStand",
       "waste bin": "wasteBin",
