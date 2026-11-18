@@ -30,7 +30,7 @@ export function placementRules(L, S = {}) {
 
   // furniture under a wall piece: a piece of furniture with its top within 700 below the piece and the piece's middle in front of / over it
   const under = (w) => O.filter((f) => !f.wall && f.mount !== 'on' && FURN_TOP.test(f.asset) && inArea(w, f) && w.bb.y0 - f.bb.y1 > -450 && w.bb.y0 - f.bb.y1 < 700 && w.cx > f.bb.x0 - 450 && w.cx < f.bb.x1 + 450 && w.cz > f.bb.z0 - 450 && w.cz < f.bb.z1 + 450 && gapOf({ x0: w.bb.x0, x1: w.bb.x1, z0: w.bb.z0, z1: w.bb.z1 }, f.bb) < 450);
-  for (const w of O.filter((o) => o.wall && !/^(wallRun|hood|curtain|curtainRail|pelmet|windowSeat|coatHooks)$/.test(o.asset))) {   // round 4 G3/U8: a wall piece hides behind the piece in front of it: its bottom stays 150 mm above that piece's top
+  for (const w of O.filter((o) => o.wall && !/^(wallRun|hood|curtain|blind|curtainRail|pelmet|windowSeat|coatHooks)$/.test(o.asset))) {   // round 4 G3/U8: a wall piece hides behind the piece in front of it: its bottom stays 150 mm above that piece's top
     const ax = along(w); for (const f of under(w)) { const gap = w.bb.y0 - f.bb.y1, ov = Math.min(w.bb[ax + '1'], f.bb[ax + '1']) - Math.max(w.bb[ax + '0'], f.bb[ax + '0']); if (gap < 150 && ov > 50 && (/^bed$/.test(f.asset) || gap < 0 || ART.test(w.asset))) pushC('artbehind', w, `its bottom is ${Math.round(gap)} mm above the top of ${f.id} (${f.asset}) in front of it (150 at least): hang it higher, so the piece does not hide it`); }
   }
   for (const w of O.filter((o) => ART.test(o.asset))) {
@@ -45,7 +45,7 @@ export function placementRules(L, S = {}) {
     } else if (/^(picture|galleryWall)$/.test(w.asset)) { const m = (w.bb.y0 + w.bb.y1) / 2; if (m < 1400 || m > 1600) push(2, w, `on open wall its middle is at ${Math.round(m)} (1400-1600): move it to eye level, or over a piece of furniture`); }
   }
   // 4. wall pieces keep 100 apart in elevation from each other and from window, door and passage frames
-  const WP = O.filter((o) => o.wall && !/^(wallRun|hood|curtain|curtainRail|pelmet|windowSeat)$/.test(o.asset));   // round 4 G2b: every wall-mounted piece, not a name list
+  const WP = O.filter((o) => o.wall && !/^(wallRun|hood|curtain|blind|curtainRail|pelmet|windowSeat)$/.test(o.asset));   // round 4 G2b: every wall-mounted piece, not a name list
   const planeOf = (o) => walls.find((w) => { const dx = o.cx - w.from[0], dz = o.cz - w.from[1], s = dx * w.u[0] + dz * w.u[1], d = Math.abs(dx * w.n[0] + dz * w.n[1]); return d < 160 && s > -50 && s < w.len + 50; });
   for (let i = 0; i < WP.length; i++) {
     const a = WP[i], wa = planeOf(a); if (!wa) continue;

@@ -138,9 +138,10 @@ fixtures.push(
 }
 // U11: a bedroom window has a curtain
 {
-  const bedroom = (Home, curtain) => { const H = new Home({ seed: 5, floor: 'boards' }), a = H.area('bedroom', 'Bedroom', { rect: [0, 0, 6000, 4000] }), back = a.back(6000, [{ kind: 'window', x: 4500, width: 1400, height: 1400, sill: 900, sash: 'out' }]); a.view({ target: [3000, 700, 2000], az: 20, el: 15 }); a.put('sofa', 'sofa', [1300, 600], 0, { group: 'g', hero: true }); if (curtain) back.place('cu', 'curtain', 4500, { group: 'g' }); return H; };
+  const bedroom = (Home, curtain, blind) => { const H = new Home({ seed: 5, floor: 'boards' }), a = H.area('bedroom', 'Bedroom', { rect: [0, 0, 6000, 4000] }), back = a.back(6000, [{ kind: 'window', x: 4500, width: 1400, height: 1400, sill: 900, sash: 'out' }]); a.view({ target: [3000, 700, 2000], az: 20, el: 15 }); a.put('sofa', 'sofa', [1300, 600], 0, { group: 'g', hero: true }); if (curtain) back.place('cu', 'curtain', 4500, { group: 'g' }); if (blind) back.place('bl', 'blind', 4500, { group: 'g', y: 900, params: { w: 1700, h: 1400 } }); return H; };
   fixtures.push(
     { name: 'bedroom-window-without-a-curtain', from: 'round 4 U11: the bedroom window had no curtain or blind', kind: 'bug', expect: { rules: ['curtain'], ids: ['bedroom window'] }, build({ Home }) { return bedroom(Home, false); } },
+    { name: 'good-bedroom-window-with-a-blind', from: 'round 4 U11: a blind covers the bedroom window as well as a curtain does', kind: 'good', counts: ['curtain'], build({ Home }) { return bedroom(Home, false, true); } },
     { name: 'good-bedroom-window-with-a-curtain', from: 'round 4 U11: the same bedroom with a curtain', kind: 'good', counts: ['curtain'], build({ Home }) { return bedroom(Home, true); } },
   );
 }
