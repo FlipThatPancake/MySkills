@@ -1,10 +1,10 @@
-// @js:motion-butterfly — a butterfly (about 80 mm across, larger than life so it reads from the wide view) that comes in through the area's open window, wanders near it,
+// @js:motion-butterfly — a butterfly (about 165 mm across, much larger than life so it reads from the home view; a slow, wide wing beat of 3 to 4.5 flaps a second) that comes in through the area's open window, wanders near it,
 // now and then lands on a plant, a fruit bowl or the window sill and slowly opens and folds its wings, and after a while leaves the way it came. It keeps out of every solid
 // (the area's boxes, padded) and the walls; it goes through only `ctx.via`, only while that opening is open wide enough, and waits outside (hidden) otherwise.
 // Ported from the original kitchen's butterfly (the flap, glides and wandering are the same; the places are found in the area instead of listed). `sampled`: check-motion.mjs runs it.
 import { paintCanvas } from '../kitchen/paint.js';
 import { createFlight } from './flight.js';
-const R = 42;   // the body's reach in mm, wings included: what the checks measure
+const R = 84, SCALE = 1.8;   // the body's reach in mm, wings included (what the checks measure), and the model's scale: about 165 mm across, so it reads at the home view
 export default {
   sampled: true,
   build(ctx) {
@@ -44,19 +44,19 @@ export default {
       g.add(kit.lines([[side * 0.8, 1, 17], [side * 3.5, 4, 26], [side * 3.5, 4, 26], [side * 7, 6, 33]], 'lo'));
       g.add(kit.solid(new T.SphereGeometry(1.3, 8, 6), side * 7, 6, 33.6, { smooth: true, tone: 'mid' }));
     }
-    g.scale.setScalar(0.9); g.rotation.order = 'YXZ';
+    g.scale.setScalar(SCALE); g.rotation.order = 'YXZ';
 
     // ---- flight: the shared one (flight.js); the wings are this module's
-    let phase = 0, ang = 1.2, glide = 0, nextGlide = rnd(1.5, 4), freq = 7.5, clock = 0;
+    let phase = 0, ang = 1.2, glide = 0, nextGlide = rnd(1.5, 4), freq = 3.8, clock = 0;
     const flap = (dt, moving) => {
       clock += dt;
       if (moving) {
         nextGlide -= dt;
-        if (nextGlide < 0) { glide = rnd(0.3, 0.6); nextGlide = rnd(1.5, 4) + glide; freq = rnd(6, 9); }
-        if (glide > 0) { glide -= dt; ang += (0.55 - ang) * Math.min(1, 8 * dt); } else { phase += freq * 2 * Math.PI * dt; ang = 0.5 + 0.85 * Math.sin(phase); }
+        if (nextGlide < 0) { glide = rnd(0.3, 0.6); nextGlide = rnd(1.5, 4) + glide; freq = rnd(3.2, 4.6); }
+        if (glide > 0) { glide -= dt; ang += (0.55 - ang) * Math.min(1, 8 * dt); } else { phase += freq * 2 * Math.PI * dt; ang = 0.45 + 1.0 * Math.sin(phase); }
       } else { const s = 0.5 + 0.5 * Math.sin(clock * 2 * Math.PI / 1.8); ang += ((1.45 - 1.15 * s * s) - ang) * Math.min(1, 6 * dt); }
       pivots[0].rotation.z = ang; pivots[1].rotation.z = -ang;
     };
-    return createFlight(ctx, g, { name: 'butterfly', R, flap });
+    return createFlight(ctx, g, { name: 'butterfly', R, pad: R + 14, perchR: 56, flap, v0: 250, v1: 90, vmax: 520, vIn: 220, wob: { xz: 50, y: [110, 45] } });
   },
 };

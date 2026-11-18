@@ -27,6 +27,7 @@ const rectPts = (z0, y0, z1, y1) => [[z0, y0], [z1, y0], [z1, y1], [z0, y1]];
 export function opening(kit, op, vis = null) {
   const T = kit.THREE, d = DEFAULTS[op.kind], SD = STYLE[op.style] || {}, w = op.width ?? SD.width ?? d.width, h = op.height ?? SD.height ?? d.height, sill = op.sill ?? SD.sill ?? d.sill;
   const g = kit.group(), mid = { tone: 'mid' }, lo = { tone: 'lo' };
+  const OUT = op.sash === 'out' ? -1 : 1;   // sash: 'out' swings the leaves outward (the glass-door branch uses it too)
   // A flat outline [z, y] (with optional holes) extruded `len` mm along x from x0. Shape x is -z; a quarter turn about y puts it in world z.
   const ext = (pts, holes, x0, len, opts = mid) => {
     const sh = new T.Shape(pts.map(([z, y]) => new T.Vector2(-z, y)));
@@ -147,7 +148,7 @@ export function opening(kit, op, vis = null) {
     g.add(ext(rectPts(fz0, fy0, fz1, fy1), [rectPts(fz0 + FW, fy0 + FW, fz1 - FW, fy1 - FW)], XF - 45, 45));
     // two sashes meeting in the middle, 2 x 3 panes each, hinged at the outer sides and ajar inward
     const iz0 = fz0 + FW, iz1 = fz1 - FW, iy0 = fy0 + FW, iy1 = fy1 - FW, W = (iz1 - iz0) / 2 - 2, SD = 30, ST = 34, BAR = 20;
-    const pair = op.style === 'pair', NC = pair ? 1 : 2, NR = pair ? 5 : 3, cw = (W - 2 * ST - (NC - 1) * BAR) / NC, rh = (iy1 - iy0 - 2 * ST - (NR - 1) * BAR) / NR, ajar = op.sash === 'fixed' ? 0 : (op.open ?? 26), OUT = op.sash === 'out' ? -1 : 1;   // sash: 'out': the sashes open outward (nothing sweeps the room, a pot may stand on the sill)
+    const pair = op.style === 'pair', NC = pair ? 1 : 2, NR = pair ? 5 : 3, cw = (W - 2 * ST - (NC - 1) * BAR) / NC, rh = (iy1 - iy0 - 2 * ST - (NR - 1) * BAR) / NR, ajar = op.sash === 'fixed' ? 0 : (op.open ?? 26);   // sash: 'out': the sashes open outward (nothing sweeps the room, a pot may stand on the sill)
     const sash = (hinge, dir) => {
       const p = kit.group(), Zs = (u) => dir * u, panes = [];
       for (let i = 0; i < NC; i++) for (let j = 0; j < NR; j++) {

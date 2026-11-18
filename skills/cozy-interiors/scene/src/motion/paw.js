@@ -1,5 +1,5 @@
 // @js:motion-paw — a cat's paw reaching out from behind a curtain, searching: it slips round the inner edge of one panel of the area's curtain, sweeps the floor and the air in front of the curtain (patting now and then), and withdraws; then it waits 6 to 16 s and tries again.
-// Needs a curtain in the area (an `a.put`/`wall.place` of the 'curtain' asset). The cat itself stays behind the fabric: the shoulder sits 20 mm beside the panel's edge in the gap between the fabric and the wall, so the arm never crosses the fabric, and it stops short of any solid it would touch.
+// Needs a full-width curtain panel (300 mm or more) by a solid wall or a window with a sill, never on a glass wall or door; needs a curtain in the area (an `a.put`/`wall.place` of the 'curtain' asset). The cat itself stays behind the fabric: the shoulder sits 20 mm beside the panel's edge in the gap between the fabric and the wall, so the arm never crosses the fabric, and it stops short of any solid it would touch.
 // bodies(): three spheres along the arm and one on the paw, perched on the curtain. The look of the limb is in catmodel.js (foreleg).
 import { foreleg } from './catmodel.js';
 const ss = (x) => x * x * (3 - 2 * x);
@@ -10,7 +10,18 @@ export default {
     if (!cur) return { error: 'paw: no curtain in this area to reach out from (place the curtain asset)', update() {} };
     const sc = cur.g.userData.scene || {}, w = sc.params?.w ?? 1500, pw = w * 0.22, panels = sc.params?.panels ?? 2;
     const side = panels > 1 && rnd() < 0.5 ? 1 : -1, ex = side * (w / 2 + 40 - pw), px = ex - side * 8;   // the panel's inner edge and the shoulder, in the curtain's own frame (x along the wall, +z into the room)
-    const M = cur.g.matrixWorld, shoulder = new T.Vector3(px, 150, 44).applyMatrix4(M);
+    const M = cur.g.matrixWorld;
+    // a cat hides behind a full-width panel (at least 300 mm of fabric) that hangs by a solid wall, or at a window with a sill (it stands on the sill); a bundle on a glass wall or glass door has nothing behind it
+    if (pw < 300) return { error: `paw: the curtain panel is ${Math.round(pw)} mm wide: too narrow to hide a cat (a panel at least 300 mm wide: curtain w 1400 or more)`, update() {} };
+    const pc = new T.Vector3(ex - side * pw / 2, 0, 0).applyMatrix4(M); let sillY = 0;
+    for (const o of ctx.openings) {
+      const lat = (pc.x - o.centre[0]) * o.u[0] + (pc.z - o.centre[1]) * o.u[1], dn = (pc.x - o.W.to[0]) * o.W.n[0] + (pc.z - o.W.to[1]) * o.W.n[1];
+      if (Math.abs(dn) > 500 || Math.abs(lat) > o.width / 2 + pw / 2) continue;   // not this wall, or beside this opening
+      const glass = o.op.style === 'wall' || o.op.style === 'slider' || o.op.style === 'french' || (o.op.kind === 'window' && o.sill < 150);
+      if (glass) return { error: `paw: this curtain panel hangs on a glass wall or glass door (${o.id}): no wall for a cat to stand behind (hang it by a solid wall, or at a window with a sill)`, update() {} };
+      if (o.op.kind === 'window') sillY = Math.max(sillY, o.sill);   // the cat stands on the sill
+    }
+    const shoulder = new T.Vector3(px, sillY + 150, 44).applyMatrix4(M);
     const ax = new T.Vector3(1, 0, 0).transformDirection(M), az = new T.Vector3(0, 0, 1).transformDirection(M);   // world directions of the curtain's x and z
     const free = new T.Vector3().copy(ax).multiplyScalar(-side);   // toward the middle of the window
     const arm = foreleg(kit, { L: 190 }), g = kit.group(), pivot = kit.group();

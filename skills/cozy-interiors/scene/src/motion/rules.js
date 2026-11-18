@@ -11,5 +11,6 @@ export function gapOf(op, v, max = 75) {
   return Math.min(w - 160, 2 * (w / 2 - 60) * (1 - Math.cos(a)));
 }
 export const VISITOR_OPEN = 45;   // degrees: a window a flier uses stands at least this far open (an ajar 26 degrees leaves a gap narrower than a butterfly's wings)
-export const PLANT_ASSETS = ['plant', 'floorPlant', 'pot', 'plantStand'];   // what the wind counts as a plant
+export const PLANT_ASSETS = ['plant', 'floorPlant', 'pot', 'plantStand', 'herbs', 'hangingPlant'];   // what the wind counts as a plant (herbs and hanging plants too)
+export const WIND_REACH = 1500;   // mm: a plant farther than this from the open window does not feel the breeze, so it does not make wind a mover
 export const PAD = 55;   // what a flier keeps from a solid, mm
