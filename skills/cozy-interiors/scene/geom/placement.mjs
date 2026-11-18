@@ -26,9 +26,13 @@ export function placementRules(L, S = {}) {
   const wins = []; for (const w of walls) for (const [s0, s1, y0, y1] of w.holes || []) wins.push({ wall: w, x: w.from[0] + w.u[0] * (s0 + s1) / 2, z: w.from[1] + w.u[1] * (s0 + s1) / 2, s0, s1, y0, y1, door: y0 < 100 });
   const along = (o) => (o.bb.x1 - o.bb.x0 >= o.bb.z1 - o.bb.z0 ? 'x' : 'z'), len = (o, ax) => o.bb[ax + '1'] - o.bb[ax + '0'], mid = (o, ax) => (o.bb[ax + '0'] + o.bb[ax + '1']) / 2;
   const push = (n, o, text, other) => out.push({ rule: `placement-${n}`, id: o.id, ...(other ? { other: other.id } : {}), text: `${o.id} (${o.asset}): ${text}` });
+  const pushC = (rule, o, text) => out.push({ rule, id: o.id, text: `${o.id} (${o.asset}): ${text}` });
 
   // furniture under a wall piece: a piece of furniture with its top within 700 below the piece and the piece's middle in front of / over it
   const under = (w) => O.filter((f) => !f.wall && f.mount !== 'on' && FURN_TOP.test(f.asset) && inArea(w, f) && w.bb.y0 - f.bb.y1 > -450 && w.bb.y0 - f.bb.y1 < 700 && w.cx > f.bb.x0 - 450 && w.cx < f.bb.x1 + 450 && w.cz > f.bb.z0 - 450 && w.cz < f.bb.z1 + 450 && gapOf({ x0: w.bb.x0, x1: w.bb.x1, z0: w.bb.z0, z1: w.bb.z1 }, f.bb) < 450);
+  for (const w of O.filter((o) => ART.test(o.asset))) {   // round 4 G3: art hides behind the piece in front of it: its bottom stays 100 mm above that piece's top
+    const ax = along(w); for (const f of under(w)) { const gap = w.bb.y0 - f.bb.y1, ov = Math.min(w.bb[ax + '1'], f.bb[ax + '1']) - Math.max(w.bb[ax + '0'], f.bb[ax + '0']); if (gap < 100 && ov > 50 && (/^bed$/.test(f.asset) || gap < 0)) pushC('artbehind', w, `its bottom is ${Math.round(gap)} mm above the top of ${f.id} (${f.asset}) in front of it (100 at least): hang it higher, so the piece does not hide it`); }
+  }
   for (const w of O.filter((o) => ART.test(o.asset))) {
     const U = under(w).filter((f) => w.bb.y0 - f.bb.y1 < 400);
     if (/mirror/.test(w.asset)) { const bad = U.find((f) => UNDER_MIRROR_BAD.test(f.asset)) || under(w).find((f) => UNDER_MIRROR_BAD.test(f.asset)); if (bad) push(3, w, `a mirror over a ${bad.asset} (put it over a console, chest, sideboard or basin, in a hallway or beside a window, or lean one on the floor)`, bad); }
@@ -41,13 +45,13 @@ export function placementRules(L, S = {}) {
     } else if (/^(picture|galleryWall)$/.test(w.asset)) { const m = (w.bb.y0 + w.bb.y1) / 2; if (m < 1400 || m > 1600) push(2, w, `on open wall its middle is at ${Math.round(m)} (1400-1600): move it to eye level, or over a piece of furniture`); }
   }
   // 4. wall pieces keep 100 apart in elevation from each other and from window, door and passage frames
-  const WP = O.filter((o) => o.wall && WALLPIECE.test(o.asset) && o.asset !== 'coatHooks' || (o.wall && o.asset === 'coatHooks'));
+  const WP = O.filter((o) => o.wall && !/^(wallRun|hood|curtain|curtainRail|pelmet|windowSeat)$/.test(o.asset));   // round 4 G2b: every wall-mounted piece, not a name list
   const planeOf = (o) => walls.find((w) => { const dx = o.cx - w.from[0], dz = o.cz - w.from[1], s = dx * w.u[0] + dz * w.u[1], d = Math.abs(dx * w.n[0] + dz * w.n[1]); return d < 160 && s > -50 && s < w.len + 50; });
   for (let i = 0; i < WP.length; i++) {
     const a = WP[i], wa = planeOf(a); if (!wa) continue;
     const loc = (o) => { const xs = [o.bb.x0, o.bb.x1].flatMap((x) => [o.bb.z0, o.bb.z1].map((z) => (x - wa.from[0]) * wa.u[0] + (z - wa.from[1]) * wa.u[1])); return { s0: Math.min(...xs), s1: Math.max(...xs), y0: o.bb.y0, y1: o.bb.y1 }; };
     const ra = loc(a);
-    for (let j = i + 1; j < WP.length; j++) { const b = WP[j]; if (planeOf(b) !== wa || !inArea(a, b)) continue; const rb = loc(b), g = Math.hypot(Math.max(ra.s0 - rb.s1, rb.s0 - ra.s1, 0), Math.max(ra.y0 - rb.y1, rb.y0 - ra.y1, 0)); if (g < 100) push(4, a, `${Math.round(g)} mm from ${b.id} on the same wall (100 apart in elevation): move one`, b); }
+    for (let j = i + 1; j < WP.length; j++) { const b = WP[j]; if (planeOf(b) !== wa || !inArea(a, b)) continue; const rb = loc(b), g = Math.hypot(Math.max(ra.s0 - rb.s1, rb.s0 - ra.s1, 0), Math.max(ra.y0 - rb.y1, rb.y0 - ra.y1, 0)); const jut = (o) => { const ns = [o.bb.x0, o.bb.x1].flatMap((x) => [o.bb.z0, o.bb.z1].map((z) => (x - wa.from[0]) * wa.n[0] + (z - wa.from[1]) * wa.n[1])); return Math.max(...ns) - Math.min(...ns); }, flat = (o) => jut(o) <= 150, need = (jut(a) > 150 && flat(b)) || (jut(b) > 150 && flat(a)) ? 200 : 100; if (g < need) push(4, a, `${Math.round(g)} mm from ${b.id} on the same wall (${need} apart in elevation${need === 200 ? ': a piece that sticks out keeps 200 mm from a flat one' : ''}): move one`, b); }
     for (const h of wa.holes || []) { const g = Math.hypot(Math.max(ra.s0 - h[1], h[0] - ra.s1, 0), Math.max(ra.y0 - h[3], h[2] - ra.y1, 0)); if (g < 100) push(4, a, `${Math.round(g)} mm from a ${h[2] < 100 ? 'door' : 'window'} frame on ${wa.id} (100 apart in elevation): move it along the wall`); }
   }
   // 5. hooks at 1500-1800
@@ -115,7 +119,6 @@ export function placementRules(L, S = {}) {
   for (const s of A(/^windowSeat$/)) { const w = wins.filter((w) => !w.door).map((w) => ({ w, d: Math.hypot(w.x - s.cx, w.z - s.cz) })).sort((a, b) => a.d - b.d)[0]; if (!w || w.d > 1500) continue; const gap = w.w.y0 - ((s.sc.params?.h ?? 440) + 70);   if (gap > 100) push('seat-sill', s, `its top is ${Math.round(gap)} below the window sill (100 at most): make the seat taller or the sill lower`); }
 
   // round 3 E2, composition by numbers: floor cover, the fridge by the run's end, the hero by its window, a seat that faces something
-  const pushC = (rule, o, text) => out.push({ rule, id: o.id, text: `${o.id} (${o.asset}): ${text}` });
   for (const ar of S.areas || []) {
     const b = ar.bounds, mine = O.filter((o) => o.area === ar.id); if (!b) continue; const few = mine.filter((o) => !o.wall).length < 3;
     // floorcover: what stands on the floor (footprints and rugs) is at least about 25% of the area's rect
@@ -126,6 +129,23 @@ export function placementRules(L, S = {}) {
     const runs = mine.filter((o) => o.asset === 'baseRun'), fr = mine.filter((o) => o.asset === 'fridge');
     if (runs.length && fr.length) { const rx0 = Math.min(...runs.map((r) => r.bb.x0)), rx1 = Math.max(...runs.map((r) => r.bb.x1)), rz0 = Math.min(...runs.map((r) => r.bb.z0)), rz1 = Math.max(...runs.map((r) => r.bb.z1)), ax = rx1 - rx0 >= rz1 - rz0 ? 'x' : 'z', [r0, r1] = ax === 'x' ? [rx0, rx1] : [rz0, rz1];
       for (const f of fr) { const f0 = f.bb[ax + '0'], f1 = f.bb[ax + '1'], d = Math.min(Math.abs(f0 - r0), Math.abs(f1 - r0), Math.abs(f0 - r1), Math.abs(f1 - r1)), inside = f0 > r0 && f1 < r1 ? d : f1 < r0 ? r0 - f1 : f0 > r1 ? f0 - r1 : 0; if (inside > 1200) pushC('fridge', f, `${Math.round(inside)} mm from the nearest end of the run (1200 at most): stand it at an end of the run, or the run's cooking and washing zones are cut off from it`); } }
+    // round 4 G3: the largest bare patch, a rect no more than 1 m bigger than its things, a rug clear of runs, a footstool at a seat, a chair with room behind it
+    { const furn = mine.filter((o) => !o.wall && o.mount !== 'on' && o.bb.y0 < 200 && o.bb.y1 > 150 && !/^(rug|runner|scuff|leaf|curtain|cat|heightChart|cushion|foldedThrow|pouf|basket|stool|footstool)$/.test(o.asset) && !HOOKS.test(o.asset));
+      const nx = Math.floor((b.x1 - b.x0) / 100), nz = Math.floor((b.z1 - b.z0) / 100);
+      if (!few && nx > 3 && nz > 3 && furn.length) { const hts = new Array(nz).fill(0); let best = 0, bw = 0, bd = 0;   // largest empty rectangle: rows of x, a histogram along z
+        for (let i = 0; i < nx; i++) { const x = b.x0 + 50 + i * 100; for (let j = 0; j < nz; j++) { const z = b.z0 + 50 + j * 100; hts[j] = furn.some((o) => x >= o.bb.x0 && x <= o.bb.x1 && z >= o.bb.z0 && z <= o.bb.z1) ? 0 : hts[j] + 1; }
+          const st = []; for (let j = 0; j <= nz; j++) { const h = j < nz ? hts[j] : 0; let s = j; while (st.length && st[st.length - 1][1] >= h) { const [s0, h0] = st.pop(); if (h0 * (j - s0) > best) { best = h0 * (j - s0); bw = h0; bd = j - s0; } s = s0; } st.push([s, h]); } }
+        const pct = Math.round(100 * best / (nx * nz)); if (pct > 40) pushC('emptyfloor', mine[0], `${ar.id}: the largest patch of floor with no furniture on it is ${bw * 100} x ${bd * 100} mm, ${pct}% of the ${Math.round(b.x1 - b.x0)} x ${Math.round(b.z1 - b.z0)} rect (40% at most): bring the groups nearer, put a group on that floor, or make the rect smaller`); }
+      if (!few && furn.length) { const ex = { x0: Math.min(...furn.map((o) => o.bb.x0)), x1: Math.max(...furn.map((o) => o.bb.x1)), z0: Math.min(...furn.map((o) => o.bb.z0)), z1: Math.max(...furn.map((o) => o.bb.z1)) };
+        const seam = (side) => (S.areas || []).some((q) => q.id !== ar.id && q.bounds && (side === 'x1' ? Math.abs(q.bounds.x0 - b.x1) < 80 : side === 'x0' ? Math.abs(q.bounds.x1 - b.x0) < 80 : side === 'z1' ? Math.abs(q.bounds.z0 - b.z1) < 80 : Math.abs(q.bounds.z1 - b.z0) < 80));
+        for (const [side, gap] of [['x0', ex.x0 - b.x0], ['x1', b.x1 - ex.x1], ['z0', ex.z0 - b.z0], ['z1', b.z1 - ex.z1]]) if (gap > 1000 && !seam(side)) pushC('rectfit', mine[0], `${ar.id}: the rect reaches ${Math.round(gap)} mm past the furniture on its ${{ x0: 'left', x1: 'right', z0: 'back', z1: 'front' }[side]} (1000 at most; the smallest rect that holds the groups is x ${Math.round(ex.x0 - 500)} to ${Math.round(ex.x1 + 500)}, z ${Math.round(ex.z0 - 500)} to ${Math.round(ex.z1 + 500)} with 500 mm of floor around them): make the rect smaller`); } }
+    for (const r of mine.filter((o) => o.asset === 'rug')) for (const s of mine.filter((o) => (o.asset === 'baseRun' || o.asset === 'fridge') && o.bb.y1 > 600)) if (gapOf(r.bb, s.bb) < 100) pushC('rugrun', r, `its edge is ${Math.round(gapOf(r.bb, s.bb))} mm from the ${s.asset} ${s.id} (100 at least; a rug does not run under or touch a run, an island or a fridge): shorten the rug`);
+    for (const f of mine.filter((o) => o.asset === 'footstool')) { const ok = mine.some((s) => SEATS.test(s.asset) && gapOf(f.bb, s.bb) <= 300 && (f.cx - s.cx) * s.f[0] + (f.cz - s.cz) * s.f[1] > 0); if (!ok) pushC('footstool', f, `it stands more than 300 mm from the front of every seat (or behind one): put it in front of the chair or sofa it belongs to`); }
+    for (const ch of mine.filter((o) => o.asset === 'chair' && mine.some((t) => /^(table|roundTable|desk)$/.test(t.asset) && gapOf(o.bb, t.bb) <= 300))) {   // the room behind a chair at a table: 600 mm, 750 when a run or island is behind it
+      const fx = ch.f[0], fz = ch.f[1], rad2 = Math.max(...[[ch.bb.x0, ch.bb.z0], [ch.bb.x0, ch.bb.z1], [ch.bb.x1, ch.bb.z0], [ch.bb.x1, ch.bb.z1]].map(([x, z]) => (x - ch.cx) * -fx + (z - ch.cz) * -fz)), hw = 220;
+      const solids = mine.filter((s) => s !== ch && !s.wall && s.mount !== 'on' && /^(baseRun|fridge|wardrobe|sideboard|glazedCabinet|shelf|bed|sofa|console|chestOfDrawers|woodStove|desk|table|roundTable)$/.test(s.asset) && s.bb.y1 > 600);
+      let free = 750, hitBy = null; for (let d = 0; d <= 750 && !hitBy; d += 25) for (const t of [-hw, 0, hw]) { const px = ch.cx - fx * (rad2 + d) + fz * t, pz = ch.cz - fz * (rad2 + d) - fx * t, s = solids.find((q) => px >= q.bb.x0 && px <= q.bb.x1 && pz >= q.bb.z0 && pz <= q.bb.z1 && !(/^(table|roundTable|desk)$/.test(q.asset) && gapOf(ch.bb, q.bb) <= 300)); if (s) { free = d; hitBy = s; break; } }
+      const need = hitBy && /^(baseRun|fridge)$/.test(hitBy.asset) ? 750 : 600; if (hitBy && free < need) pushC('chairback', ch, `only ${free} mm of room behind it before ${hitBy.id} (${need} at least${need === 750 ? ': a walkway beside a run' : ''}): move the table or the ${hitBy.asset}, or the chair can not be pulled out`); }
     // stools at a run or island: counter height (seat 600 to 700) and one form
     { const st = mine.filter((o) => o.asset === 'stool' && runs.some((r) => gapOf(o.bb, r.bb) <= 400)); const forms = new Set(st.map((o) => o.sc?.params?.form ?? 0));
       for (const o of st) if (o.bb.y1 < 600 || o.bb.y1 > 720) pushC('stoolheight', o, `its seat is ${Math.round(o.bb.y1)} mm high at a counter (600 to 700): use the bar stool (form 0, h 650)`);
@@ -142,5 +162,11 @@ export function placementRules(L, S = {}) {
       if (!ok) pushC('seatface', sx, `it faces nothing within 2500 (a table, another seat, a window or the stove): turn it toward one`);
     }
   }
+  // round 4 G3: an opening keeps 300 mm from a wall corner (the two walls of one area meet there)
+  { const areaOfWall = (w) => String(w.id || '').replace(/-[^-]*$/, ''), same = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]) < 5;
+    for (const w of walls) { const mates = walls.filter((q) => q !== w && areaOfWall(q) === areaOfWall(w)), cornerAt = (pt) => mates.some((q) => same(q.from, pt) || same(q.to, pt));
+      for (const [s0, s1] of w.holes || []) { const kind = (w.openings || []).find((q) => Math.abs((w.len - q.at) - (s0 + s1) / 2) < 5 || Math.abs(q.at - (s0 + s1) / 2) < 5)?.kind || 'opening';
+        if (s0 < 300 && cornerAt(w.from)) out.push({ rule: 'cornerop', id: w.id, text: `${w.id}: the ${kind} stands ${Math.round(s0)} mm from the wall corner (300 at least): move it along the wall` });
+        if (w.len - s1 < 300 && cornerAt(w.to)) out.push({ rule: 'cornerop', id: w.id, text: `${w.id}: the ${kind} stands ${Math.round(w.len - s1)} mm from the wall corner (300 at least): move it along the wall` }); } } }
   return out;
 }

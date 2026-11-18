@@ -44,4 +44,37 @@ fixtures.push(
         build({ Home }) { const { H, a } = room(Home); H.roll(R({ accents: ['fruit bowl'], foreground: 'footstool', signs: ['sofa scratches'], pieces: ['curtain at a window'] })); a.skip('fruitBowl', 'the hob is the subject here'); a.skip('footstool', 'no room'); a.skip('scratches', 'sofa is new'); a.skip('curtain', 'the window is bare glass'); a.put('sofa', 'sofa', [1500, 600], 0, { group: 'seat', hero: true, params: { seats: 3, chaise: 'none' } }); return H; } },
     ];
   })(),
+  { name: 'swing-reaches-a-reading-chair-under-the-sill', from: 'round 4 tester: a pair window (sill 650) over a reading chair: its sweep reaches the chair (guard: the swing rule covers chairs under a sill)', kind: 'bug', expect: { rules: ['swing'], ids: ['t-rc'] },
+    build({ Home }) { const { H, a } = room(Home, { openings: [{ kind: 'window', x: 3000, width: 1100, height: 1500, sill: 650, style: 'pair' }] }); a.put('rc', 'readingChair', [3000, 480], 0, { group: 'g', hero: true }); a.put('fs', 'footstool', [3000, 1100], 0, { group: 'g' }); return H; } },
+);
+// G3 composition rules
+{
+  const isl = (a, x, z) => a.put('isl', 'baseRun', [x, z], 0, { group: 'island', params: { depth: 600, finishedBack: true, modules: [{ w: 900, kind: 'doors' }, { w: 900, kind: 'drawers', n: 3 }] } });
+  const three = (back) => { for (const [i, x] of [700, 1900, 3100].entries()) back.place('sb' + i, 'sideboard', x, { group: 'g' + i, params: { w: 1100 } }); };
+  fixtures.push(
+    { name: 'composition-bare-floor-over-40-percent', from: 'round 4 G3: a rect whose largest furniture-free patch is more than 40% of it', kind: 'bug', expect: { rules: ['emptyfloor'], ids: ['largest patch of floor'] },
+      build({ Home }) { const { H, back } = room(Home); three(back); return H; } },
+    { name: 'good-composition-furniture-spread-over-the-rect', from: 'round 4 G3: a small rect whose floor is used', kind: 'good', counts: ['emptyfloor', 'rectfit'],
+      build({ Home }) { const { H, a, back } = room(Home, { W: 2800, D: 3000 }); back.place('sb', 'sideboard', 1900, { group: 'g', hero: true, params: { w: 1400 } }); a.table('bt', { at: [900, 1900], w: 1400, d: 800, chairs: 2, group: 'g3' }); return H; } },
+    { name: 'composition-rect-much-larger-than-the-furniture', from: 'round 4 G3: compose asks for the smallest rect that holds the groups; here it reaches 2 m past the furniture', kind: 'bug', expect: { rules: ['rectfit'], ids: ['past the furniture'] },
+      build({ Home }) { const { H, back } = room(Home); three(back); return H; } },
+    { name: 'wall-art-hidden-behind-the-bed-top', from: 'round 4 G3: a picture hung 137 mm behind the headboard top, so the bed hides its lower edge', kind: 'bug', expect: { rules: ['artbehind'], ids: ['t-pic'] },
+      build({ Home }) { const { H, a, back } = room(Home); a.put('bed', 'bed', [3000, 1100], 0, { group: 'g', hero: true }); back.place('pic', 'picture', 3000, { group: 'g', y: 1150, params: { w: 700, h: 500 } }); return H; } },
+    { name: 'opening-against-a-wall-corner', from: 'round 4 G3: a window with 0 mm beside it in a corner', kind: 'bug', expect: { rules: ['cornerop'], ids: ['mm from the wall corner'] },
+      build({ Home }) { const { H, a } = room(Home, { openings: [{ kind: 'window', x: 600, width: 1200, height: 1200, sill: 900, sash: 'fixed' }] }); a.left(4000, []); a.put('sb', 'sideboard', [3000, 300], 0, { group: 'g', hero: true }); return H; } },
+    { name: 'chair-too-close-to-an-island-behind-it', from: 'round 4 G3: a chair 145 mm from an island, so it can not be pulled out', kind: 'bug', expect: { rules: ['chairback'], ids: ['chair'] },
+      build({ Home }) { const { H, a } = room(Home); a.table('bt', { at: [3000, 2300], w: 1600, d: 900, chairs: 2, group: 'g', hero: true }); isl(a, 3000, 3300); return H; } },
+    { name: 'rug-edge-meets-an-island', from: 'round 4 G3: a rug 64 mm from an island', kind: 'bug', expect: { rules: ['rugrun'], ids: ['t-rug'] },
+      build({ Home }) { const { H, a } = room(Home); isl(a, 3000, 1000); a.put('rug', 'rug', [3000, 1850], 0, { group: 'g', params: { w: 2400, d: 1500 } }); a.put('c1', 'chestOfDrawers', [5500, 300], 0, { group: 'g2' }); a.put('c2', 'chestOfDrawers', [700, 300], 0, { group: 'g3' }); return H; } },
+    { name: 'footstool-beyond-the-low-table', from: 'round 4 G3: a footstool beyond the coffee table, not in front of the chair', kind: 'bug', expect: { rules: ['footstool'], ids: ['t-fs'] },
+      build({ Home }) { const { H, a } = room(Home); a.put('sofa', 'sofa', [3000, 600], 0, { group: 'g', hero: true, params: { seats: 3, chaise: 'none' } }); a.coffeeTable('ct', 'sofa', { group: 'g' }); a.put('fs', 'footstool', [3000, 2900], 0, { group: 'g' }); return H; } },
+    { name: 'good-footstool-at-the-sofa-front', from: 'round 4 G3: a footstool in front of the sofa', kind: 'good', counts: ['footstool'],
+      build({ Home }) { const { H, a } = room(Home); a.put('sofa', 'sofa', [3000, 600], 0, { group: 'g', hero: true, params: { seats: 3, chaise: 'none' } }); a.put('fs', 'footstool', [3000, 1300], 0, { group: 'g' }); return H; } },
+  );
+}
+fixtures.push(
+  { name: 'open-shelf-beside-a-picture-at-shelf-height', from: 'round 4 G2b: the left-wall open shelf with jars stands next to the bench picture and crosses it in the home view; rule 4 read a name list that left openShelf out', kind: 'bug', expect: { rules: ['placement-4'], ids: ['mm from'] },
+    build({ Home }) { const { H, back } = room(Home); back.place('sh', 'openShelf', 2000, { group: 'g' }); back.place('pic', 'picture', 2760, { group: 'g', y: 1100, params: { w: 600, h: 500 } }); return H; } },
+  { name: 'good-open-shelf-and-picture-well-apart', from: 'round 4 G2b: the same two pieces 600 mm apart', kind: 'good', counts: ['placement-4'],
+    build({ Home }) { const { H, back } = room(Home); back.place('sh', 'openShelf', 1500, { group: 'g' }); back.place('pic', 'picture', 3400, { group: 'g', y: 1250, params: { w: 600, h: 500 } }); return H; } },
 );

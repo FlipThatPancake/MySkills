@@ -8,8 +8,8 @@ import { cameras } from './cameras.mjs';
 const out = process.argv[2] || 'example.json', C = cameras(out.replace(/\.json$/, '.cameras.json'));   // the fitted shots from the last fitshots run, in the area's own frame
 const H = new Home({ seed: 12, floor: 'boards' });
 H.roll(JSON.parse(fs.readFileSync(new URL('./example.roll.json', import.meta.url), 'utf8')));   // the home's accent comes from the roll
-const a = H.area('kitchen', 'Kitchen', { rect: [0, 0, 6600, 5200] });
-const back = a.back(6600, [{ kind: 'window', x: 4700, width: 1300, height: 1200, sill: 1000 }]);
+const a = H.area('kitchen', 'Kitchen', { rect: [0, 0, 5700, 5200] });
+const back = a.back(5700, [{ kind: 'window', x: 4700, width: 1300, height: 1200, sill: 1000 }]);
 const left = a.left(5200);
 // One run on the back wall: a sink, drawers, the hob and a cupboard. (A corner kitchen takes a second run: a.run(wall, id, at, modules, { joins, ownsTop: false }); its group is whole in the cook shot, so give the room the depth the shot needs.)
 const R = a.run(back, 'run', 0, [{ w: 900, kind: 'sink' }, { w: 600, kind: 'drawers', n: 3, ajar: 0.3 }, { w: 900, kind: 'hob' }, { w: 600, kind: 'doors' }], { group: 'cook', hero: true });
@@ -20,18 +20,19 @@ back.place('shelf', 'openShelf', 450, { group: 'cook' });
 a.put('runner', 'runner', [1900, 1250], 90, { group: 'cook', params: { w: 700, l: 2400, form: 'stripe', tone: 'accent' } });   // the roll's accent (rust) is on a runner in front of the cooking
 left.place('dresser', 'sideboard', 3300, { group: 'dresser' }); left.place('dpic', 'picture', 3300, { group: 'dresser', y: 1000, params: { w: 1000, h: 600 } }); a.onTop('dresser', [{ id: 'dplant', asset: 'plant' }, { id: 'djug', asset: 'jug' }], { group: 'dresser' });   // the roll's dresser group: a sideboard with a still life under a picture
 left.place('shelves', 'openShelf', 600, { group: 'shelves' }); a.put('kstool', 'stool', [300, 4650], 0, { group: 'shelves' });   // the roll's shelves group: open shelves with a stool below
-a.put('bench', 'bench', [330, 3750], 90, { group: 'bench' }); left.place('bpic', 'picture', 1450, { group: 'bench' });   // a bench on the left wall
+a.put('bsk', 'basket', [1000, 4500], 0, { group: 'shelves' });
+a.put('bench', 'bench', [330, 3750], 90, { group: 'bench' }); left.place('bpic', 'picture', 1680, { group: 'bench' });   // a bench on the left wall
 // A table set: a round table with two chairs and a rug, standing in open floor within reach of the cooking.
-const T = a.table('bt', { at: [4800, 2800], r: 520, chairs: 2, group: 'breakfast', cloth: 'accent' });   // the roll's accent (rust) is on the tablecloth (it names the runner; any textile of the area may carry it)
+const T = a.table('bt', { at: [3800, 3300], r: 520, chairs: 2, group: 'breakfast', cloth: 'accent' });   // the roll's accent (rust) is on the tablecloth (it names the runner; any textile of the area may carry it)
 T.on('mug', { y: 757, dx: -180 }); T.on('saltPepper', { y: 757, dx: 260 });   // the roll's table still life: a mug and salt and pepper
 // The roll's foreground piece, a step stool, stands at the front corner of the table group.
-a.put('stool', 'stepStool', [4150, 3350], 25, { group: 'breakfast' });
+a.put('stool', 'stepStool', [2385, 3900], 25, { group: 'breakfast' });
 a.skip('hanging', 'no hanging-plant asset yet: the plant stands on the sill and the worktop instead');
 a.skip('mokaPot', 'the hob carries a pan under the hood: a moka pot would stand in its place');
 a.skip('utensilCrock', 'the hob has no room beside it for a crock: pans hang on the rail instead');   // a thing the roll dealt and the scene leaves out says why
 // Shots: a.shot(name, from, look, fov, group). fitshots.mjs finds the cameras; its numbers go in here.
-a.shot('cook', ...C('kitchen', 'cook', [[3800, 1100, 6000], [2610, 1100, 345], 40]), 'cook');   // C(area, name, fallback): the fitted camera, or the fallback on the first run
-a.shot('table', ...C('kitchen', 'table', [[6350, 1700, 6150], [4116, 300, 3027], 34]), 'breakfast');
-a.shot('cook2', ...C('kitchen', 'cook2', [[500, 700, 5850], [1050, 900, 699], 40]), 'cook');
+a.shot('cook', ...C('kitchen', 'cook', [[1850, 1100, 6150], [2080, 1100, 774], 40]), 'cook');   // C(area, name, fallback): the fitted camera, or the fallback on the first run
+a.shot('table', ...C('kitchen', 'table', [[200, 2100, 6150], [3068, 300, 2803], 38]), 'breakfast');
+a.shot('cook2', ...C('kitchen', 'cook2', [[350, 850, 6000], [1036, 900, 684], 40]), 'cook');
 a.view({ target: [2800, 700, 2000], az: 14, el: 20 });
 H.write(out, fs);

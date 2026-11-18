@@ -150,7 +150,7 @@ const issues = await page.evaluate(() => {
   }
   const SMALLFG1 = ['pouf', 'basket', 'floorPlant', 'plant', 'stool', 'footstool', 'sideTable', 'cat', 'crate', 'stepStool', 'wateringCan', 'umbrellaStand', 'shoes', 'wasteBin', 'fileBox'];
   // 3. a table has something under its middle (a pendant or a rug), and stands against a wall or keeps 900 mm clear all round
-  for (const id of Object.keys(objs).filter((i) => sc(i).asset === 'table')) {
+  for (const id of Object.keys(objs).filter((i) => ['table', 'roundTable'].includes(sc(i).asset))) {
     const tb = boxes[id], c = tb.getCenter(new T.Vector3());
     const pend = Object.keys(objs).filter((o) => sc(o).asset === 'pendantLamp'), centred = pend.length ? pend.some((o) => Math.hypot(objs[o].position.x - c.x, objs[o].position.z - c.z) < 100) : Object.keys(objs).some((o) => sc(o).asset === 'rug' && Math.hypot(objs[o].position.x - c.x, objs[o].position.z - c.z) < 150);
     if (!centred) out.push({ rule: 'table', what: `${id} has no pendant centred on it (within 100 mm) or rug centred on it (within 150 mm)` });
@@ -191,7 +191,7 @@ const issues = await page.evaluate(() => {
   // 6. a small seat or table serves a piece: another floor piece within 600 mm (a stool alone in front of an arch is a prop on its own)
   { const SEAT = ['stool', 'pouf', 'footstool', 'sideTable', 'stepStool', 'floorPlant'], BIG = (i) => sc(i).mount === 'floor' && !['rug', 'plant', 'floorPlant', 'cat', 'basket', 'pouf', 'stool', 'trolley', 'footstool', 'curtain', 'sideTable'].includes(sc(i).asset);
     for (const id of Object.keys(objs).filter((i) => SEAT.includes(sc(i).asset))) { const others = Object.keys(objs).filter((o) => o !== id && (BIG(o) || (sc(id).asset === 'floorPlant' && sc(o).asset === 'rug'))); const framing = sc(id).asset === 'floorPlant' && home.walls.some((W) => W.built.some((b) => { if (b.op.kind === 'window') return false; const l = toLocal(W, boxes[id]), xc = W.len - b.op.at; return l.z0 < 400 && l.x1 > xc - b.op.width / 2 - 700 && l.x0 < xc + b.op.width / 2 + 700; }));   // a plant beside a door or arch frames it
-    if (!framing && !others.some((o) => gap2(boxes[id], boxes[o]) <= 600) ) out.push({ rule: 'lone', what: `${id} stands ${others.length ? Math.min(...others.map((o) => gap2(boxes[id], boxes[o]))).toFixed(0) : 'far'} mm from anything it serves (need 600 or less): put it beside a table, desk, bench, sofa or console, or remove it` }); } }
+    if (!framing && !others.some((o) => gap2(boxes[id], boxes[o]) <= 700) ) out.push({ rule: 'lone', what: `${id} stands ${others.length ? Math.min(...others.map((o) => gap2(boxes[id], boxes[o]))).toFixed(0) : 'far'} mm from anything it serves (need 700 or less): put it beside a table, desk, bench, sofa or console, or remove it` }); } }
   // 6b. a bar stool (form 0) serves a counter or island, and comes in a pair; anywhere else use a low stool (form 1 or 2) or nothing
   { const ids = Object.keys(objs), tall = ids.filter((i) => sc(i).asset === 'stool' && ((sc(i).params || {}).form ?? 0) === 0);
     for (const id of tall) { const mate = tall.some((o) => o !== id && gap2(boxes[id], boxes[o]) <= 700), counter = ids.some((o) => sc(o).asset === 'baseRun' && gap2(boxes[id], boxes[o]) <= 800);
