@@ -102,7 +102,7 @@ export function createAreaScene(canvas, S) {
 
   function makeTour(id) {
     const A = areas[id], cam = A.camera || {}, quick = Number(q.get('cuts')) || 0;
-    tour = createTour({ THREE, camera, controls, room: home.group, home: { pos: camera.position.clone(), target: controls.target.clone() }, cfg: { ...Object.fromEntries(['after', 'cutsAfter', 'cutEvery'].filter((k) => cam[k] != null).map((k) => [k, cam[k]])), shots: cam.shots, ...(quick ? { after: quick, cutsAfter: quick } : {}) } });
+    tour = createTour({ THREE, camera, controls, room: home.group, home: { pos: camera.position.clone(), target: controls.target.clone() }, cfg: { ...Object.fromEntries(['after', 'cutsAfter', 'cutEvery'].filter((k) => cam[k] != null).map((k) => [k, cam[k]])), shots: cam.shots, swayFit: (maxDeg) => api.swayFit(maxDeg), ...(quick ? { after: quick, cutsAfter: quick } : {}) } });
     api.tour = tour;
   }
   // at rest only the current area exists: other areas' walls (frames, seams, shadows) and objects are hidden outright, so no half-faded ghost of a neighbour shows in any view or tour shot; a glide shows everything
@@ -225,6 +225,20 @@ export function createAreaScene(canvas, S) {
   // for the checks (check-home ghosts): stop the live loop (one software-GL frame takes over half a second), settle the fades without drawing, then draw one frame on demand
   api.loop = (on) => renderer.setAnimationLoop(on ? loopFn : null);
   api.advance = (sec, live) => { const dt = live ? 0.05 : 0.1; for (let t = 0; t < sec - 1e-9; t += dt) { for (const g of Object.values(home.objects)) { g.userData.tick?.(dt); g.userData.update?.(dt); } if (live) api.motion.update(dt, api.area); moveFronts(dt); home.update(camera, tour.look || controls.target); } };   // live: the living things move too (watch.mjs)
+  api.swayFit = (maxDeg = 25) => {   // the idle sway turns the camera round the home view's target: objects of the area that are inside the frame now stay inside, by pulling the camera back (up to 35%) as it turns; where that is not enough the swing is cut short
+    const T = THREE, Y = new T.Vector3(0, 1, 0), id = api.area, tgt = controls.target, off0 = camera.position.clone().sub(tgt), pos = camera.position.clone(), quat = camera.quaternion.clone();
+    home.group.updateMatrixWorld(true);
+    const boxes = Object.values(home.objects).filter((g) => { const sc = g.userData.scene; return sc && sc.area === id && !['rug', 'scratches', 'socket', 'lightSwitch', 'scuff', 'leaf', 'heightChart'].includes(sc.asset); }).map((g) => new T.Box3().setFromObject(g));
+    const pt = new T.Vector3(), put = (deg, s) => { camera.position.copy(tgt).add(off0.clone().applyAxisAngle(Y, deg * Math.PI / 180).multiplyScalar(s)); camera.lookAt(tgt); camera.updateMatrixWorld(true); camera.matrixWorldInverse.copy(camera.matrixWorld).invert(); };
+    const out = (b) => { let o = 0; for (const x of [b.min.x, b.max.x]) for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) { pt.set(x, y, z).project(camera); o = Math.max(o, Math.abs(pt.x), Math.abs(pt.y)); } return o; };
+    put(0, 1); const keep = boxes.filter((b) => out(b) <= 1);   // the ones in the frame now (a dealt foreground piece already cut by the edge may stay cut)
+    const ok = (deg, s) => { put(deg, s); return keep.every((b) => out(b) <= 1); };
+    const table = {}; let max = maxDeg;
+    for (let d = 0; d <= maxDeg; d++) for (const sg of [1, -1]) { const deg = d * sg; let s = 1; while (s < 1.35 && !ok(deg, s)) s += 0.025; if (s >= 1.35 && !ok(deg, 1.35)) { max = Math.min(max, Math.max(0, d - 1)); } else table[deg] = s; }
+    camera.position.copy(pos); camera.quaternion.copy(quat); camera.updateMatrixWorld(true);
+    const scale = (deg) => { const lo = Math.floor(deg), hi = Math.ceil(deg), a = table[lo] ?? 1.35, b = table[hi] ?? 1.35; return a + (b - a) * (deg - lo); };
+    return { max, scale };
+  };
   api.draw = () => { home.update(camera, tour.look || controls.target); renderer.render(scene, camera); return renderer.domElement; };
   window.cozyScene = api;
   // the light is baked after the page is up (the passes are spread over frames) and fades in; until then, and if the bake is not possible, the old halos stand in
