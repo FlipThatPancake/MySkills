@@ -96,6 +96,7 @@ export const ASSETS = {
   tablecloth: A('centre', [2100, 1400, 300], 'on', 'w, d = the table top (r = a round table\'s radius instead); drop 260; tone accent|lo', { y: 'top', note: 'hangs from the table edge in folds; origin the middle of the top, so put it where the table is, y the tabletop height' }),
   tableRunner: A('centre', [2100, 380, 300], 'on', 'w, d = the table top; rw 380; drop 230', { y: 'top', note: 'a strip along the table, hanging over both ends' }),
   duvetCloth: A('centre', [2100, 2000, 400], 'on', 'w, head, foot (z of the mattress top); sagL, sagR, sagFoot', { y: 'top', note: 'unmade duvet; the bed takes duvet: \'unmade\' instead' }),
+  armThrow: A('centre', [760, 700, 420], 'on', 'aw 200 (the arm width), drop 240 (arm top to seat), hang 420, lay 380, d 760, tone accent|lo|mid', { y: 'top', note: 'a throw over a sofa or chair arm: hangs on the outer side, falls onto the seat on the inner side; origin the middle of the arm top, x pointing in; place with the seat, turned so +x points in (compose seatSoft does it)' }),
   foldedThrow: A('centre', [1400, 380, 80], 'on', 'w 1400, d 380, layers 3', { y: 'top', note: 'a folded blanket; place with a.bandOn' }),
   scuff: A('centre', [380, 200, 4], 'lines', 'w 380, seed', { y: 0, note: 'a scuffed patch of floor by a door' }),
   leaf: A('centre', [110, 50, 4], 'lines', 'l 110', { y: 0, note: 'a fallen leaf by a plant' }),

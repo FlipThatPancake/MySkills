@@ -100,7 +100,7 @@ export function glazedCabinet(kit, { w = 1000, h = 1800, d = 420, shelves = 3, d
 }
 
 export function benchCushion(kit, { w = 1100, d = 360, thick = 60, tone = 'mid', stripes = 'none', seed = 1 } = {}) {   // a flat seat pad with piping and two ties, for a bench; origin the middle of its foot on the seat
-  const g = kit.group(), pts = [], s = softBox(kit, w, d, thick, { r: 24, bulge: 8, piping: 'edge', tone, dent: 3 }); s.rotation.x = -Math.PI / 2; s.position.y = thick / 2; g.add(s);
+  const g = kit.group(), pts = [], s = softBox(kit, w, d, thick, { r: 30, bulge: 16, piping: 'edge', tone, dent: 9 }); s.rotation.x = -Math.PI / 2; s.position.y = thick / 2; g.add(s);
   if (stripes === 'stripes') for (let i = 1; i < 6; i++) pts.push([-w / 2 + w * i / 6, thick + 0.8, -d / 2 + 20], [-w / 2 + w * i / 6, thick + 0.8, d / 2 - 20]);
   else if (stripes === 'check') { for (let i = 1; i < 6; i++) pts.push([-w / 2 + w * i / 6, thick + 0.8, -d / 2 + 20], [-w / 2 + w * i / 6, thick + 0.8, d / 2 - 20]); for (let i = 1; i < 3; i++) pts.push([-w / 2 + 20, thick + 0.8, -d / 2 + d * i / 3], [w / 2 - 20, thick + 0.8, -d / 2 + d * i / 3]); }
   for (const sx of [-1, 1]) { pts.push([sx * w * 0.38, thick * 0.6, -d / 2 - 2], [sx * w * 0.38 + sx * 20, 6, -d / 2 - 30], [sx * w * 0.38, thick * 0.6, -d / 2 - 2], [sx * w * 0.38 - sx * 24, 10, -d / 2 - 36]); }

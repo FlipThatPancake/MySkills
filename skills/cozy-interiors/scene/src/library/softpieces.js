@@ -102,6 +102,28 @@ export function foldedThrow(kit, { w = 1400, d = 380, layers = 3, tone = 'lo', s
   return g;
 }
 
+// A throw over the arm of a sofa or chair: laid across the arm's top, hanging down its outer side, and falling onto the seat on the inner side with a soft tongue along the seat. Origin the middle of the arm's top at the surface (y 0 = the arm top), x pointing in toward the seat, z along the arm (the throw is `d` wide in z).
+// aw: the arm's width, drop: how far the seat lies below the arm top, hang: the outer hanging length, lay: the tongue along the seat. Folds ripple the hanging part, the hem is soft and slightly uneven.
+export function armThrow(kit, { aw = 200, drop = 240, hang = 420, lay = 380, d = 760, tone = 'lo', seed = 1 } = {}) {
+  const NX = 30, NY = 44, pts = [], ph = Math.sin(seed * 12.9898) * 3, sm = (t) => t * t * (3 - 2 * t);
+  const path = [[-aw / 2 - 8, -hang], [-aw / 2 - 8, 0], [-aw / 2 + 24, 7], [aw / 2 - 24, 7], [aw / 2 + 8, 0], [aw / 2 + 12, -drop * 0.55], [aw / 2 + 40, -drop + 14], [aw / 2 + 70, -drop + 8]];   // the section in x/y: out and down, over the top, in and down to the seat
+  const seg = []; let L = 0; for (let i = 1; i < path.length; i++) { const l = Math.hypot(path[i][0] - path[i - 1][0], path[i][1] - path[i - 1][1]); seg.push(l); L += l; }
+  L += lay;
+  for (let j = 0; j < NY; j++) {
+    let t = j / (NY - 1) * L, x, y, nx = 0, ny = 1;
+    let k = 0; for (; k < seg.length && t > seg[k]; k++) t -= seg[k];
+    if (k < seg.length) { const a = path[k], b = path[k + 1], f = t / seg[k]; x = a[0] + (b[0] - a[0]) * f; y = a[1] + (b[1] - a[1]) * f; const dx = b[0] - a[0], dy = b[1] - a[1], dl = Math.hypot(dx, dy); nx = -dy / dl; ny = dx / dl; }
+    else { const e = path[path.length - 1], u = Math.min(lay, t); x = e[0] + u; y = e[1]; nx = 0; ny = 1; }
+    const hangness = y < -20 ? Math.min(1, -y / 160) : 0, seatness = k >= seg.length - 1 ? sm(Math.min(1, (j / (NY - 1) * L - (L - lay - 40)) / 200)) : 0;
+    for (let i = 0; i < NX; i++) {
+      const u = i / (NX - 1) - 0.5, z = u * d, edge = 1 - Math.pow(Math.abs(u) * 2, 4) * 0.12, ripple = Math.sin(u * 7.5 + ph) * 26 * hangness + Math.sin(u * 17 + ph * 2) * 8 * hangness + Math.sin(u * 5 + j * 0.15) * 10 * seatness, hem = (j < 3 || j > NY - 4) ? Math.sin(u * 11 + ph) * 8 : 0;
+      pts.push(x + nx * ripple + (hangness ? 0 : 0) + hem * (j > NY - 4 ? 1 : 0), y + ny * ripple * 0.3 + (j < 3 ? hem * 0.8 : 0), z * edge);
+    }
+  }
+  const P = pts.slice(); for (let i = 1; i < P.length; i += 3) P[i] += 6;   // lift the whole cloth 6 mm so its underside clears the arm and the seat
+  const g = cloth(kit, { nx: NX, ny: NY, pts: P, thick: 8, tone, folds: false, relax: 1 }); return g;
+}
+
 // A cloth laid over a box top (bx: x range, bz: z range of the top) and hanging past its edges: the grid for `cloth`. cx / cz: the cloth's own x and z range (past the top = the drop); folds ripple the hanging parts, `ripple` the flat part.
 // Hanging parts fall straight down from the edge (y = y0 - distance past it), flare a little, and gather at the corners. All numbers in mm, y relative to the top.
 export function hangGrid({ bx, bz, cx, cz, nx = 56, ny = 40, y = 0, fold = 7, amp = 30, ripple = 0, phase = 0.6, flare = 0.07, seed = 1 }) {
@@ -157,19 +179,27 @@ export function tableRunner(kit, { w = 1600, d = 900, rw = 400, drop = 280, fold
 }
 // An unmade duvet over a mattress (x: -w/2..w/2, z from `head` to `foot`, the top at the surface): one side hangs low and the other less, the foot hangs, the top has soft lumps,
 // and the pillow-end corner on the getting-out (+x) side is turned back diagonally over the top, showing a triangle of sheet where it lay.
-export function duvetCloth(kit, { w = 1600, head = -700, foot = 900, sagL = 130, sagR = 400, sagFoot = 260, turn = 720, tone = 'lo', seed = 1 } = {}) {
+export function duvetCloth(kit, { w = 1600, head = -700, foot = 900, sagL = 130, sagR = 400, sagFoot = 260, turn = 720, tone = 'lo', seed = 1, made = false } = {}) {
   const hx = w / 2, grid = hangGrid({ bx: [-hx, hx], bz: [head, foot], cx: [-hx - sagL, hx + sagR], cz: [head, foot + sagFoot], y: 4, fold: 4, amp: 46, ripple: 8, seed, nx: Math.round((w + sagL + sagR) / 36), ny: Math.round((foot - head + sagFoot) / 36), flare: 0.1 }), P = grid.pts;
   const lumps = [[-hx * 0.35 + 90 * Math.sin(seed), head + 700, 190, 38], [hx * 0.25, head + 1150 + 60 * Math.cos(seed), 230, 30], [-hx * 0.1, foot - 380, 160, 20]];
   for (let i = 0; i < P.length; i += 3) {   // lumps, and the turned-back corner (flipped across its fold line and lifted onto the top)
     const x = P[i], z = P[i + 2]; if (Math.abs(x) <= hx && P[i + 1] > 0) for (const [lx, lz, r, h] of lumps) P[i + 1] += h * Math.exp(-((x - lx) ** 2 + (z - lz) ** 2) / (2 * r * r));
   }
+  for (let i = 0; i < P.length; i += 3) {   // the hanging part stays outside the mattress: the grid's waves swing in and out, so lean the whole fall outward by their depth
+    const r = 4 - P[i + 1]; if (r <= 0.5) continue; const lean = 30 * Math.min(1, r / 20);
+    if (P[i] > hx - 1) P[i] += lean; else if (P[i] < -hx + 1) P[i] -= lean;
+    if (P[i + 2] > foot - 1) P[i + 2] += lean; else if (P[i + 2] < head + 1) P[i + 2] -= lean;
+  }
   const sOf = (x, z) => (hx - x) + (z - head);
-  for (let i = 0; i < P.length; i += 3) { const x = P[i], z = P[i + 2]; if (x <= hx + 1 && z >= head - 1 && sOf(x, z) < turn - 8 && P[i + 1] > -1) P[i + 1] = 2; }   // the corner's own spot: bare sheet
+  if (!made) for (let i = 0; i < P.length; i += 3) { const x = P[i], z = P[i + 2]; if (x <= hx + 1 && z >= head - 1 && sOf(x, z) < turn - 8 && P[i + 1] > -1) P[i + 1] = 2; }   // the corner's own spot: bare sheet
   const g = cloth(kit, { ...grid, thick: 7, tone, folds: false }), T = kit.THREE;
+  if (made) {   // a made bed: a soft roll of the duvet folded back across the head
+    const roll = softBox(kit, w * 0.96, 250, 70, { r: 33, bulge: 8, sag: 0, tone }); roll.rotation.x = -Math.PI / 2; roll.position.set(0, 4 + 34, head + 170); g.add(roll); return g;
+  }
   // the flap: a triangle folded back over the top along the diagonal, its wrong side (linen) up, a soft roll along the fold
   const topY = 10 + 6, sh = new T.Shape([new T.Vector2(hx - turn + 12, head + 10), new T.Vector2(hx - 14, head + turn - 4), new T.Vector2(hx - turn + 12, head + turn - 14)]);
-  const fg = new T.ExtrudeGeometry(sh, { depth: 14, bevelEnabled: true, bevelThickness: 5, bevelSize: 6, bevelSegments: 3, curveSegments: 4 }); fg.rotateX(Math.PI / 2);
-  g.add(kit.solid(fg, 0, topY + 14, 0, { smooth: true, tone: 'lo', linen: true }));
-  g.add(rod(kit, [hx - turn + 10, topY + 12, head + 8], [hx - 10, topY + 12, head + turn - 6], 22, 22, tone));
+  const fg = new T.ExtrudeGeometry(sh, { depth: 18, bevelEnabled: true, bevelThickness: 16, bevelSize: 16, bevelSegments: 7, curveSegments: 4 }); fg.rotateX(Math.PI / 2);   // the turned-back corner: a thick, rounded fold in the duvet's own colour, not a board
+  g.add(kit.solid(fg, 0, topY + 34, 0, { smooth: true, tone }));
+  g.add(rod(kit, [hx - turn + 10, topY + 30, head + 8], [hx - 10, topY + 30, head + turn - 6], 40, 40, tone));
   return g;
 }
