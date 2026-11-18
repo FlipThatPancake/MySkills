@@ -11,16 +11,18 @@ export function canvasOf(w, h) {
 export const VIEW = { c: null, h: null, r0: 1e9, r1: 2e9 };
 const sm = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 // A transparent textured plane that follows the kit's opacity and the view fade and never writes depth. `vis` ({ value } 0..1) is a wall's own visibility, for things standing on that wall.
-export function sheet(kit, canvas, w, h, vis = null) {
+export function sheet(kit, canvas, w, h, vis = null, first = false) {
   const t = new kit.THREE.CanvasTexture(canvas); t.colorSpace = kit.THREE.SRGBColorSpace;
-  return sheetTex(kit, t, w, h, vis);
+  return sheetTex(kit, t, w, h, vis, null, first);
 }
 // the same plane from any texture (a baked render target, say)
-export function sheetTex(kit, t, w, h, vis = null, gain = null) {   // gain: { value } 0..1, a fade a caller drives
+export function sheetTex(kit, t, w, h, vis = null, gain = null, first = false) {   // gain: { value } 0..1, a fade a caller drives; first: a backdrop drawn before everything else (see below)
   const T = kit.THREE, mid = new T.Vector3();
-  const mat = new T.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
+  // first: the plane is drawn in the opaque pass before every other piece, writes no depth, and fades by custom blending (so opacity still works): whatever is drawn later, a sash or a bird outside a window, lies over it whatever its depth
+  const mat = first ? new T.MeshBasicMaterial({ map: t, transparent: false, blending: T.CustomBlending, blendSrc: T.SrcAlphaFactor, blendDst: T.OneMinusSrcAlphaFactor, blendSrcAlpha: T.OneFactor, blendDstAlpha: T.OneMinusSrcAlphaFactor, depthWrite: false, toneMapped: false })
+    : new T.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
   const m = new T.Mesh(new T.PlaneGeometry(w, h), mat);
-  m.renderOrder = 1;
+  m.renderOrder = first ? -10 : 1;
   m.onBeforeRender = () => {
     let f = 1;
     if (VIEW.c) { m.getWorldPosition(mid); mid.sub(VIEW.c); mid.set(Math.max(Math.abs(mid.x) - VIEW.h.x, 0), Math.max(Math.abs(mid.y) - VIEW.h.y, 0), Math.max(Math.abs(mid.z) - VIEW.h.z, 0)); f = 1 - sm(VIEW.r0, VIEW.r1, mid.length()); }

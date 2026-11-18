@@ -111,3 +111,36 @@ export function smallFern(kit, { seed = 6 } = {}) {   // a small fern on a workt
   for (let k = 0; k < 9; k++) frond(kit, g, R, [0, 76, 0], k * 2.4 + R() * 0.4, 130 + R() * 90, { el: 1.0 + R() * 0.5, droop: 1.3 + R() * 0.5, pairs: 11, pinna: 38, wid: 9, sweep: 0.7 });
   return kit.merge(g);
 }
+
+// ---- vase contents: cut stems with real leaves (the old discs and lollipops are gone). Origin: the middle of the vase's foot; the vase body is drawn here, stems rise from its mouth at `mouth`.
+const vaseBody = (kit, g, form) => {
+  if (form === 1) { g.add(kit.cyl(0, 0, 0, 80, 130, { rTop: 85, seg: 24 })); g.add(kit.cyl(0, 130, 0, 85, 80, { rTop: 42, seg: 24 })); return 210; }   // a round jug
+  if (form === 2) { g.add(kit.cyl(0, 0, 0, 70, 200, { rTop: 70, seg: 24 })); return 200; }   // a tall cylinder
+  g.add(kit.cyl(0, 0, 0, 55, 90, { rTop: 85, seg: 24 })); g.add(kit.cyl(0, 90, 0, 85, 70, { rTop: 60, seg: 24 })); return 160;   // a bowl-shaped vase
+};
+// a leafy stem: a curved cut stem with leaves along the upper part, sized to taper toward the tip; `pair` puts them in opposite pairs, else alternate; fork adds side shoots
+function leafyStem(kit, g, R, from, dir, len, { bend = 0.6, leaf, size = 30, from0 = 0.3, step = 1, pair = false, shoots = 0 } = {}) {
+  const n = 12, st = curvedStem(kit, g, from, dir, len, bend, n, 2.6);
+  const side = (a, k) => [Math.cos(a) * k, 0, -Math.sin(a) * k];
+  for (let i = Math.floor(n * from0); i <= n; i += step) {
+    const q = st.pts[i], p0 = st.pts[Math.max(0, i - 1)], tg = norm([q[0] - p0[0], q[1] - p0[1], q[2] - p0[2]]), t = i / n, sz = size * (1.15 - 0.6 * t) * (0.85 + 0.3 * R());
+    const a = i * 2.4 + R();
+    for (const s of pair ? [-1, 1] : [i % 2 ? 1 : -1]) place(kit, g, leaf(sz), q, norm([tg[0] * 0.8 + Math.sin(a) * s, tg[1] * 0.8 + 0.15, tg[2] * 0.8 + Math.cos(a) * s]), a, [0, 1, 0]);
+  }
+  place(kit, g, leaf(size * 0.6), st.end, norm(st.dir), 0, [0, 0, 1]);
+  for (let k = 0; k < shoots; k++) {   // short side shoots, themselves leafy
+    const i = 4 + 3 * k, q = st.pts[i], a = k * 3.1 + R(), d = norm([Math.sin(a) * 0.7 + st.dir[0] * 0.4, 0.8, Math.cos(a) * 0.7 + st.dir[2] * 0.4]), sh = curvedStem(kit, g, q, d, len * 0.38, bend, 6, 1.8);
+    for (let j = 2; j <= 6; j += 1) { const p = sh.pts[j], b = j * 2.1 + k; place(kit, g, leaf(size * (1 - 0.45 * j / 6)), p, norm([Math.sin(b), 0.5 + 0.3 * R(), Math.cos(b)]), b, [0, 1, 0]); }
+    place(kit, g, leaf(size * 0.5), sh.end, norm(sh.dir), 0, [0, 0, 1]);
+  }
+}
+export function vaseStems(kit, { form = 1, h = 280, stems = 5, seed = 3 } = {}) {   // 1 eucalyptus: arching stems of small round leaves in pairs | 2 leafy branches: forked branches of pointed leaves | 3 olive twigs: slim twigs dense with narrow leaves
+  const g = kit.group(), R = rnd(seed + form * 5), m = vaseBody(kit, g, form), n = Math.min(stems, 5);
+  for (let s = 0; s < n; s++) {
+    const a = s * 2.4 + R(), lean = 0.12 + 0.32 * R() + (s ? 0 : -0.1), dir = [Math.sin(a) * lean, 1, Math.cos(a) * lean], base = [Math.sin(a) * 18, m - 6, Math.cos(a) * 18];
+    if (form === 1) leafyStem(kit, g, R, base, dir, 300 + R() * 220, { bend: 0.9 + 0.5 * R(), leaf: (z) => blade(kit, z, z * 0.95, { profile: 'oval', fold: 0.18, bow: 0.1, curl: 0.04, veins: 0, N: 4, M: 3 }), size: 36, from0: 0.25, pair: true });
+    else if (form === 2) leafyStem(kit, g, R, base, dir, 300 + R() * 200, { bend: 0.5 + 0.4 * R(), leaf: (z) => blade(kit, z, z * 0.42, { profile: 'lance', fold: 0.16, bow: 0.12, curl: 0.05, veins: 3, N: 6, M: 4 }), size: 78, from0: 0.35, shoots: 2 });
+    else leafyStem(kit, g, R, base, dir, 320 + R() * 220, { bend: 0.7 + 0.4 * R(), leaf: (z) => blade(kit, z, z * 0.17, { profile: 'lance', fold: 0.1, bow: 0.08, curl: 0, veins: 0, N: 4, M: 2 }), size: 48, from0: 0.15, pair: true, shoots: 1 });
+  }
+  return kit.merge(g);
+}

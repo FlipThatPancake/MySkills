@@ -164,7 +164,7 @@ const issues = await page.evaluate(() => {
     for (const id of Object.keys(objs)) { if (sc(id).mount !== 'floor' || ['rug'].includes(sc(id).asset)) continue; if (hit3(toLocal(W, boxes[id]), zone, 20)) out.push({ rule: 'path', what: `${id} blocks the path in front of the ${b.op.kind} on ${W.id || W.i} at ${b.op.at}` }); }
   }
   // 4b. the front of a console, desk, sideboard or wardrobe keeps 600 mm clear (its own chair, rugs and curtains excepted)
-  for (const id of Object.keys(objs)) { if (!['console', 'desk', 'sideboard', 'wardrobe'].includes(sc(id).asset)) continue; for (const W of home.walls) { const l = toLocal(W, boxes[id]); if (l.z0 < -60 || l.z0 > 90 || l.x1 < 0 || l.x0 > W.len) continue; const zone = { x0: l.x0, x1: l.x1, z0: l.z1, z1: l.z1 + 600, y0: 0, y1: 1500 }; for (const o of Object.keys(objs)) { if (o === id || sc(o).mount !== 'floor' || ['rug', 'curtain', 'chair', 'deskChair'].includes(sc(o).asset)) continue; if (hit3(toLocal(W, boxes[o]), zone, 20)) out.push({ rule: 'path', what: `${o} stands within 600 mm in front of ${id}: keep the front of a ${sc(id).asset} clear (move the ${sc(o).asset} to a side or to another group)` }); } break; } }
+  for (const id of Object.keys(objs)) { if (!['console', 'desk', 'sideboard', 'wardrobe', 'chestOfDrawers', 'bedsideTable', 'glazedCabinet', 'bench', 'fridge', 'baseRun'].includes(sc(id).asset)) continue; /* round 4 U9: the use zone of every piece with a front that opens or a face in use */ for (const W of home.walls) { const l = toLocal(W, boxes[id]); if (l.z0 < -60 || l.z0 > 90 || l.x1 < 0 || l.x0 > W.len) continue; const zone = { x0: l.x0, x1: l.x1, z0: l.z1, z1: l.z1 + (sc(id).asset === 'wardrobe' ? 750 : 600), y0: 0, y1: 1500 }; for (const o of Object.keys(objs)) { if (o === id || sc(o).mount !== 'floor' || ['rug', 'runner', 'curtain', 'chair', 'deskChair', 'stool', 'footstool', 'cat', 'scuff', 'leaf', 'mat'].includes(sc(o).asset)) continue; if (hit3(toLocal(W, boxes[o]), zone, 20)) out.push({ rule: 'path', what: `${o} stands within 600 mm in front of ${id}: keep 600 mm of floor clear in front of a ${sc(id).asset} (750 for a wardrobe; only a rug or its own chair or stool may stand there; move the ${sc(o).asset} to a side or to another group)` }); } break; } }
   // 4c. a tea towel hangs where it is used: within 450 mm of a run's end, or on a wall unit
   for (const t of Object.keys(objs).filter((i) => sc(i).asset === 'teaTowel')) for (const W of home.walls) { const l = toLocal(W, boxes[t]); if (l.z0 < -60 || l.z0 > 120 || l.x1 < 0 || l.x0 > W.len) continue; const ends = Object.keys(objs).filter((i) => ['baseRun', 'wallRun', 'fridge', 'oven'].includes(sc(i).asset) && sc(i).mount !== 'on').map((i) => toLocal(W, boxes[i])).filter((r) => r.z0 < 100); const c = (l.x0 + l.x1) / 2; if (!ends.some((r) => Math.abs(c - r.x0) < 450 || Math.abs(c - r.x1) < 450 || (c > r.x0 - 150 && c < r.x1 + 150 && r.y1 > 1500))) out.push({ rule: 'towel', what: `${t} hangs on bare wall: put it at the end of a run, on a wall unit or beside the sink` }); break; }
   // 5. support: a thing that stands `on` something touches its top (or sits inside it, like a cushion on a seat); a thing on a wall touches that wall
@@ -400,6 +400,66 @@ for (const i of areaIssues) if (i.rule !== '_heroside') issues.push(i);
   }
   if (list.length) await page.evaluate(() => window.cozyScene.loop(true));
 }
+// an open sash shows in the home view: draw the area's home view with and without each open sash; the sash's own box on screen must change pixels (a sash that opens into the painted outside and is drawn under it shows as nothing)
+{
+  const list = QUICK ? [] : await page.evaluate(() => window.cozyScene.areaIds);
+  if (list.length) await page.evaluate(() => window.cozyScene.loop(false));
+  for (const id of list) {
+    const res = await page.evaluate((id) => {
+      const c = window.cozyScene, T = c.kit.THREE, { home } = c, out = []; c.setArea(id, true); c.advance(1.5);
+      const grab = () => { const cv = c.draw(), w = cv.width, h = cv.height, k = document.createElement('canvas'); k.width = w; k.height = h; k.getContext('2d').drawImage(cv, 0, 0); return k.getContext('2d').getImageData(0, 0, w, h).data; };
+      const wins = home.walls.filter((W) => (W.id || '').startsWith(id + '-')).flatMap((W) => W.built.filter((b) => b.op.kind === 'window' && b.openables.some((o) => (o.userData.open?.v || 0) > 0.05)).map((b) => ({ W, b })));
+      if (!wins.length) return out;
+      const A = grab(), W0 = c.renderer?.domElement?.width || 1200;
+      for (const { W, b } of wins) {
+        const leaves = b.openables.filter((o) => (o.userData.open?.v || 0) > 0.05); c.home.group.updateMatrixWorld(true);
+        const box = new T.Box3(); for (const o of leaves) box.union(new T.Box3().setFromObject(o));
+        let x0 = 9, x1 = -9, y0 = 9, y1 = -9; for (const x of [box.min.x, box.max.x]) for (const y of [box.min.y, box.max.y]) for (const z of [box.min.z, box.max.z]) { const p = new T.Vector3(x, y, z).project(c.camera); x0 = Math.min(x0, p.x); x1 = Math.max(x1, p.x); y0 = Math.min(y0, p.y); y1 = Math.max(y1, p.y); }
+        const wpx = c.camera.aspect * 750, area = Math.max(0, Math.min(x1, 1) - Math.max(x0, -1)) * wpx / 2 * Math.max(0, Math.min(y1, 1) - Math.max(y0, -1)) * 375;
+        const dif = (P, Q) => { let k = 0; for (let j = 0; j < P.length; j += 4) if (Math.abs(P[j] - Q[j]) + Math.abs(P[j + 1] - Q[j + 1]) + Math.abs(P[j + 2] - Q[j + 2]) > 24) k++; return k; };
+        for (const o of leaves) o.visible = false; const B = grab();
+        const back = []; home.group.traverse((m) => { if (m.isMesh && m.name === 'outside-backdrop' && m.visible) { m.visible = false; back.push(m); } });   // the painted outside, drawn first
+        const D = grab(); for (const o of leaves) o.visible = true; const C = grab(); for (const m of back) m.visible = true;
+        out.push({ id: W.id, area: Math.round(area), diff: dif(A, B), full: dif(C, D) });   // diff: what the sash changes with the outside shown; full: what it changes with the outside taken away
+      }
+      return out;
+    }, id);
+    for (const r of res) if (r.full >= 300 && r.diff < 0.6 * r.full) issues.push({ rule: 'sash', what: `${id} ${r.id}: the open sash changes ${r.full} px of the home view against a bare background and only ${r.diff} px against the outside picture: the picture hides part of it` });
+    if (res.length && process.argv.includes('--time')) console.error('[time]   sash', id, JSON.stringify(res));
+  }
+  if (list.length) await page.evaluate(() => window.cozyScene.loop(true));
+}
+// the top band: any piece that reaches the home's top melts out (no opaque pixel in its last 60 mm, no cap or edge line): each such piece alone, from the side, the slab of its box between top - 60 mm and the top must be the backdrop's tone
+{
+  const list = QUICK ? [] : await page.evaluate(() => window.cozyScene.areaIds);
+  if (list.length) await page.evaluate(() => window.cozyScene.loop(false));
+  for (const id of list) {
+    const res = await page.evaluate((id) => {
+      const c = window.cozyScene, T = c.kit.THREE, { home } = c, out = [], H = c.S?.home?.height || 2700; c.setArea(id, true); c.advance(1.5); home.group.updateMatrixWorld(true);
+      const mine = Object.entries(home.objects).filter(([, g]) => g.userData.scene?.area === id).map(([k, g]) => [k, g, new T.Box3().setFromObject(g)]).filter(([, , b]) => b.max.y >= H - 60 && b.min.y < H - 400);
+      if (!mine.length) return out;
+      const vis = Object.values(home.objects).map((g) => [g, g.visible]), walls = home.walls.map((w) => [w.node, w.node.visible]); const old = { p: c.camera.position.clone(), q: c.camera.quaternion.clone(), f: c.camera.fov };
+      for (const W of walls) W[0].visible = false;
+      for (const [k, g, b] of mine) {
+        for (const [o] of vis) o.visible = o === g; const ctr = b.getCenter(new T.Vector3());
+        c.controls.minDistance = 10; c.at([ctr.x, H - 300, ctr.z + 2600], [ctr.x, H - 150, ctr.z]); c.camera.fov = 40; c.camera.updateProjectionMatrix(); c.camera.updateMatrixWorld(true);
+        const cv = c.draw(), w = cv.width, h = cv.height, k2 = document.createElement('canvas'); k2.width = w; k2.height = h; const x = k2.getContext('2d'); x.drawImage(cv, 0, 0); const D = x.getImageData(0, 0, w, h).data;
+        let x0 = 9, x1 = -9, y0 = 9, y1 = -9; for (const X of [b.min.x, b.max.x]) for (const Y of [H - 60, H]) for (const Z of [b.min.z, b.max.z]) { const p = new T.Vector3(X, Y, Z).project(c.camera); x0 = Math.min(x0, p.x); x1 = Math.max(x1, p.x); y0 = Math.min(y0, p.y); y1 = Math.max(y1, p.y); }
+        const px0 = Math.max(0, Math.floor((x0 + 1) / 2 * w)), px1 = Math.min(w - 1, Math.ceil((x1 + 1) / 2 * w)), py0 = Math.max(0, Math.floor((1 - y1) / 2 * h)), py1 = Math.min(h - 1, Math.ceil((1 - y0) / 2 * h));
+        let bad = 0; for (let yy = py0; yy <= py1; yy++) for (let xx = px0; xx <= px1; xx++) { const j = (yy * w + xx) * 4; if (Math.abs(D[j] - 244) + Math.abs(D[j + 1] - 244) + Math.abs(D[j + 2] - 241) > 40) bad++; }
+        let cap = 0; { let a0 = 9, a1 = -9, b0 = 9, b1 = -9; for (const X of [b.min.x, b.max.x]) for (const Y of [H - 600, H]) for (const Z of [b.min.z, b.max.z]) { const p = new T.Vector3(X, Y, Z).project(c.camera); a0 = Math.min(a0, p.x); a1 = Math.max(a1, p.x); b0 = Math.min(b0, p.y); b1 = Math.max(b1, p.y); }
+          const qx0 = Math.max(0, Math.floor((a0 + 1) / 2 * w)), qx1 = Math.min(w - 1, Math.ceil((a1 + 1) / 2 * w)), qy0 = Math.max(0, Math.floor((1 - b1) / 2 * h)), qy1 = Math.min(h - 1, Math.ceil((1 - b0) / 2 * h));
+          for (let yy = qy0; yy <= qy1; yy++) { let run = 0, best = 0; for (let xx = qx0; xx <= qx1; xx++) { const j = (yy * w + xx) * 4; if (Math.abs(D[j] - 244) + Math.abs(D[j + 1] - 244) + Math.abs(D[j + 2] - 241) > 40) { run++; best = Math.max(best, run); } else run = 0; } if (best >= 14) cap++; } }   // a horizontal line in the last 600 mm: a cap or an edge where the part stops
+        out.push({ piece: k, bad, cap, rows: py1 - py0 + 1 });
+      }
+      for (const [o, v] of vis) o.visible = v; for (const [n, v] of walls) n.visible = v; c.camera.position.copy(old.p); c.camera.quaternion.copy(old.q); c.camera.fov = old.f; c.camera.updateProjectionMatrix(); c.setArea(id, true);
+      return out;
+    }, id);
+    for (const r of res) if (process.argv.includes('--time')) console.error('[time]   top band', id, JSON.stringify(r));
+    for (const r of res) if (r.bad > 6 || r.cap > 1) issues.push({ rule: 'top-fade', what: `${id} ${r.piece}: ${r.bad > 6 ? `${r.bad} opaque pixels in the last 60 mm below the home's top` : `a horizontal edge (${r.cap} pixel rows) in the last 600 mm`}: a part that reaches the top must melt out (fill and lines) with no cap or edge line (kit.setTopFade does this for every kit fill and line; build the part up to the top in one piece and do not end it early)` });
+  }
+  if (list.length) await page.evaluate(() => window.cozyScene.loop(true));
+}
 lap('ghost renders');
 // variety by parameter distance: two areas may share a base asset when its variants clearly differ (distance 2 or more: two style choices, or the same in sizes), see library/space.js
 {
@@ -426,6 +486,11 @@ lap('geom (rigid bodies)');
     else if (d > 500) issues.push({ rule: 'passage', what: `${w.id}: its ${o.kind} leads to ${o.to} but the nearest arch or door of ${o.to} is ${Math.round(d)} mm away (500 at most): the glide crosses a gap; place ${o.to} so the two openings face each other (H.connect('${A}', '${o.to}'))` }); } }
 {   // the roll kept in the scene (H.roll): every dealt still-life thing, group, plant place, passage and the accent is in the scene, or a.skip('<it>', 'why'); a.rolled(...) names more assets the same way
   const S = JSON.parse((await import('node:fs')).readFileSync(scene, 'utf8')), R0 = S.home.roll, rolled = S.home.rolled || {}, objs = S.home.objects, assetsOf = (A) => objs.filter((o) => o.id.startsWith(A + '-')), PLANT = ['plant', 'floorPlant', 'herbs', 'pot', 'plantStand'];
+  for (const ar of S.areas || []) if (/bedroom/.test(ar.id)) {   // round 4 U11: a bedroom window has a curtain or a blind, or a.skip('curtain', 'why')
+    const wins = S.home.walls.filter((w) => w.id.startsWith(ar.id + '-')).flatMap((w) => (w.openings || []).filter((o) => o.kind === 'window')), covered = assetsOf(ar.id).some((o) => /^(curtain|blind|rollerBlind|romanBlind)$/.test(o.asset)), skip = (rolled[ar.id]?.skipped || []).some((x) => /^(curtain|blind)$/.test(x.asset));
+    if (wins.length && !covered && !skip) issues.push({ rule: 'curtain', what: `${ar.id}: the bedroom window has no curtain or blind: add one (back.place('curtain', 'curtain', <window x>)), or a.skip('curtain', '<why>')` }); }
+  { const { openable } = await import('./src/motion/rules.js'), TM = JSON.parse((await import('node:fs')).readFileSync(new URL('./tables.json', import.meta.url), 'utf8')).motion.kinds;   // round 4 (the user, Nov 18): nothing driven by wind moves in an area with no open window; one mover is enough
+    for (const ar of S.areas || []) { const open = S.home.walls.filter((w) => w.id.startsWith(ar.id + '-')).some((w) => (w.openings || []).some(openable)); for (const m of ar.motion || []) if (!open && (TM[m.kind]?.needs || []).includes('plantNear')) issues.push({ rule: 'windmover', what: `${ar.id}: "${m.kind}" is driven by wind and the area has no window that opens: drop it (a cat or a paw may stay; a flier may come through an open door or passage)` }); } }
   const areaIds = [...new Set([...Object.keys(R0?.areas || {}), ...Object.keys(rolled)])];
   for (const A of areaIds) {
     const mine = assetsOf(A), sk = (rolled[A]?.skipped || []).map((x) => x.asset), skipped = (w) => sk.includes(w), has = (n) => mine.some((o) => o.asset === n), ra = R0?.areas[A];

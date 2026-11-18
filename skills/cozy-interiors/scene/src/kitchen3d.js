@@ -36,10 +36,10 @@ export function createKit() {
   const uniforms = { uOpacity: { value: 1 } };
   // View fade: everything (fills, lines, silhouettes) thins into the backdrop colour with distance from a centre, between radii r0 and r1 (set with setViewFade).
   // The default radii are huge, so a scene that never sets them is untouched. The uniform objects are shared by every material, clones included.
-  const viewFade = { uVC: { value: new THREE.Vector3() }, uVR: { value: new THREE.Vector2(1e9, 2e9) }, uVH: { value: new THREE.Vector3() } };   // uVH: half-size of a box round uVC that stays clear (zero: a sphere)
+  const viewFade = { uVC: { value: new THREE.Vector3() }, uVR: { value: new THREE.Vector2(1e9, 2e9) }, uVH: { value: new THREE.Vector3() }, uVT: { value: new THREE.Vector2(1e9, 2e9) } };   // uVT: the top fade: fills and lines melt into the backdrop between these two heights (setTopFade), so a chimney, flue or cord that crosses the home's top thins out with no cap or edge   // uVH: half-size of a box round uVC that stays clear (zero: a sphere)
   const BACK = [BACKDROP >> 16, (BACKDROP >> 8) & 255, BACKDROP & 255].map((c) => (c / 255).toFixed(4)).join(',');   // the fills' own (display) values, so a faded thing becomes exactly the page's tone, never a darker grey
-  const VF_PARS = 'uniform vec3 uVC; uniform vec2 uVR; uniform vec3 uVH;';
-  const VF_MIX = (col, w) => `${col} = mix(${col}, vec3(${BACK}), smoothstep(uVR.x, uVR.y, length(max(abs(${w} - uVC) - uVH, 0.0))));`;
+  const VF_PARS = 'uniform vec3 uVC; uniform vec2 uVR; uniform vec3 uVH; uniform vec2 uVT;';
+  const VF_MIX = (col, w) => `${col} = mix(${col}, vec3(${BACK}), max(smoothstep(uVR.x, uVR.y, length(max(abs(${w} - uVC) - uVH, 0.0))), smoothstep(uVT.x, uVT.y, ${w}.y)));`;
   // The fill. `fade` makes a copy for the wall and floor that thins out with distance from a
   // centre (set with setFade), so the far ends of those big planes never show.
   const makeFill = (fade, tint = [1, 1, 1]) => new THREE.ShaderMaterial({
@@ -142,6 +142,7 @@ export function createKit() {
       });
     },
     // Everything thins into the backdrop colour between radii r0 and r1 (world units) round `centre`; a scene calls it each frame to keep a soft-edged cutout round the orbit target.
+    setTopFade(y0, y1) { viewFade.uVT.value.set(y0, y1); },   // the home's top: everything melts into the backdrop colour between y0 and y1 (mm)
     setViewFade(centre, r0, r1, half = null) { viewFade.uVC.value.copy(centre); viewFade.uVR.value.set(r0, r1); viewFade.uVH.value.copy(half || new THREE.Vector3()); },
     // Wall and floor thin out between r0 and r1 (world units) beyond the box that is `half` wide around `centre`.
     setFade(centre, half, r0, r1) { fadeFill.uniforms.uC.value.copy(centre); fadeFill.uniforms.uH.value.copy(half); fadeFill.uniforms.uR.value.set(r0, r1); },

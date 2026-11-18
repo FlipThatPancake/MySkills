@@ -84,6 +84,7 @@ export function roll(seed, kinds = ['kitchen', 'dining', 'living']) {
     a.foreground = pick3(t.foreground);   // the near-camera piece comes from the area's own use
     a.signs = some(T.signs.filter((x) => x.in.includes(id) && !used.has(x.id)), 2 + Math.floor(rnd() * 2)); a.signs.forEach((x) => used.add(x.id)); a.signs = a.signs.map((x) => x.id);
     if (t.pieces) a.pieces = t.pieces;
+    if (/bedroom/.test(id) && a.openings.some((o) => o.kind === 'window') && !(a.pieces || []).includes('curtain at a window')) a.pieces = [...(a.pieces || []), 'curtain at a window'];   // round 4 U11: a bedroom window always gets a curtain (a blind when that asset lands)
     if (shape) { a.shape = shape; a.shapeNote = t.shapeNotes[shape]; }
     a.say = describe(id, a);
     out.areas[id] = a;
