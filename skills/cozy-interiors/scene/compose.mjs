@@ -16,7 +16,7 @@
 //   a.topOf(id): the height of the top of something placed (its dealt h included), for y of a thing that stands on it.
 //   Things on one top:  a.onTop('desk', [{ id, asset, params }, ...], { at: 'back' | 'centre' | 'front', margin: 50 })  spaces them along the top, every footprint inside its edge (refuses when they do not fit); use it instead of placing by fractions.
 //   Living things:  a.alive(roll.areas[id].motion)  (after the walls: the roll's 2 or 3 kinds; refuses one whose needs the walls do not meet, e.g. a flier with no open window).  See src/motion/index.js.
-//   Anywhere:  a.put(id, asset, [x, z], turn, { y, mount, group, hero, params, ... })  (the object's own origin at [x, z]; see assets.mjs).  a.view({ target, az, el }), a.shot(name, from, look, fov, group)
+//   Anywhere:  a.put(id, asset, [x, z], turn, { y, mount, group, hero, params, ... })  (the object's own origin at [x, z]; see assets.mjs).  a.view({ target, az, el }), a.shot(name, from, look, fov, group, core?)
 // Every object has a `group` (its run, table set, seating group or wall arrangement) and hero: true marks the area's main piece.
 import { ASSETS, SPACE } from './src/library/meta.js';
 import { dealParams } from './src/library/space.js';
@@ -226,18 +226,20 @@ class Area {
     const inset = 330 + ({ rolled: 100, flared: 60 }[tgt.params?.arms] || 0);   // a rolled or flared arm is wider: the end cushion stands inside it
     const cushion = this.thingTris('cushion', { w: 400, h: 320, thick: 130, lean: 17, tone }), cl = Math.min(...cushion.map((t) => Math.min(t[1], t[4], t[7])));
     const rim = []; { const seen = new Set(); for (const t of cushion) for (let k = 0; k < 9; k += 3) { if (t[k + 1] < cl + 140) continue; const key = `${Math.round(t[k] / 15)},${Math.round(t[k + 1] / 15)},${Math.round(t[k + 2] / 15)}`; if (!seen.has(key)) { seen.add(key); rim.push([t[k], t[k + 1], t[k + 2]]); } } }   // the cushion's upper vertices, thinned: the ones that can meet the backrest
-    const against = (px, pz, turn) => { const c = Math.cos(rad(turn)), sn = Math.sin(rad(turn)), y = geomRestOn(tris, cushion, [px, pz], turn); for (const v of rim) { const vy = v[1] + y, h = f(px + v[0] * c + v[2] * sn, pz - v[0] * sn + v[2] * c); if (h > vy - 1) return true; } return false; };   // an upper vertex that lies inside the back: the cushion touches the backrest
-    for (let i = 0; i < n; i++) { const lx = n === 1 ? cx + (tgt.asset === 'armchair' ? 0 : W / 2 - inset) : cx - (W / 2 - inset) + i * (W - 2 * inset) / (n - 1), turn = tn + (i % 2 ? -6 : 8), lean = 17 + 4 * (i % 2);
-      let lz = lb.max.z - 100, found = false; for (; lz >= lb.min.z; lz -= 10) { const [qx, qz] = toArea(lx, lz); if (against(qx, qz, turn)) { found = true; lz += 10; break; } }   // slide the cushion back from the front until its top meets the backrest, then step off 10 mm
+    const against = (px, pz, turn) => { const c = Math.cos(rad(turn)), sn = Math.sin(rad(turn)), y = geomRestOn(tris, cushion, [px, pz], turn); if (y < 150) return false; for (const v of rim) { const vy = v[1] + y, h = f(px + v[0] * c + v[2] * sn, pz - v[0] * sn + v[2] * c); if (h > vy - 1) return true; } return false; };   // an upper vertex that lies inside the back: the cushion touches the backrest
+    const chS = tgt.asset === 'sofa' ? ({ left: -1, right: 1 }[tgt.params?.chaise] || 0) : 0, cw = (W - 400) / seats, lo = cx - (W / 2 - inset) + (chS === -1 ? cw + 150 : 0), hi = cx + (W / 2 - inset) - (chS === 1 ? cw : 0);   // a chaise end has no back: the cushions stand on the seats beside it
+    for (let i = 0; i < n; i++) { const lx = n === 1 ? (tgt.asset === 'armchair' ? cx : hi) : lo + i * (hi - lo) / (n - 1), turn = tn + (i % 2 ? -6 : 8), lean = 17 + 4 * (i % 2);
+      let lz = chS ? -lb.min.z - 20 : lb.max.z - 100, found = false; for (; lz >= lb.min.z; lz -= 10) { const [qx, qz] = toArea(lx, lz); if (against(qx, qz, turn)) { found = true; lz += 10; break; } }   // slide the cushion back from the front until its top meets the backrest, then step off 10 mm (with a chaise it starts at the seats' front, not the chaise's)
       if (!found) { lz = zo; console.log(`seatSoft('${targetId}'): cushion${i + 1} finds no back to lean on; it rests on the seat`); }
       const [px, pz] = toArea(lx, lz), prm = vary(this.h, 'cushion', { w: 400, h: 320, thick: 130, lean, tone }, this.id), y = Math.round(geomRestOn(tris, this.thingTris('cushion', prm), [px, pz], turn));   // the dealt piping and pattern change the shape a little: rest the real one
       this.put(`${targetId}-cushion${i + 1}`, 'cushion', [px, pz], turn, { group: grp, y, mount: 'on', params: prm }); }
+    let bandAt = null; if (chS && thr) { thr = 'band'; bandAt = toArea(cx + chS * (W / 2 - 200 - cw / 2), (tgt.params?.d ?? 900) / 2 + 370); }   // the throw lies folded on the chaise: a drape would slide off its low seat
     if (thr === 'drape') {   // over the arm: hangs on the outer side, falls onto the seat on the inner side (a seat with no arm takes a small folded throw instead)
       const aw = tgt.asset === 'armchair' ? 170 : 200, [hx, hz] = toArea(cx - (W / 2 - aw / 2), zo + 200), [sx, sz] = toArea(cx - (W / 2 - aw - 260), zo + 200), hA = f(hx, hz), hS = f(sx, sz);
       if (hA - hS >= 80) { const prm = { aw, drop: Math.round(hA - hS), d: 560, lay: 140, tone: throwTone, seed: this.h.S.seed % 9 + 1 }; this.put(`${targetId}-throw`, 'armThrow', [hx, hz], tn, { group: grp, y: Math.round(hA), mount: 'on', params: prm }); }
       else { console.log(`seatSoft('${targetId}'): no arm to hang a throw on; folded on the seat instead`); thr = 'band'; }
     }
-    if (thr === 'band') { const [bx, bz] = toArea(cx + (W / 2 - 520), zo + 330); try { this.bandOn(`${targetId}-throw`, targetId, { w: 450, d: 300, at: [bx, bz], spin: tn, tone: throwTone, group: grp }); } catch (e) { console.log(`seatSoft('${targetId}'): no throw laid: ${e.message}`); } }
+    if (thr === 'band') { const [bx, bz] = bandAt || toArea(cx + (W / 2 - 520), zo + 330); try { this.bandOn(`${targetId}-throw`, targetId, { w: chS ? Math.min(450, cw - 100) : 450, d: 300, at: [bx, bz], spin: tn, tone: throwTone, group: grp }); } catch (e) { console.log(`seatSoft('${targetId}'): no throw laid: ${e.message}`); } }
   }
   // ---- a cabinet run with slots: R.on('hob', 'pan') puts a pan on the middle of the first hob module
   run(F, id, left, modules, o = {}) {
@@ -296,7 +298,7 @@ class Area {
   skip(asset, why) { if (!why) throw new Error(`skip('${asset}'): say why it is left out`); const r = ((this.h.S.home.rolled ||= {})[this.id] ||= { rolled: [], skipped: [] }); r.skipped.push({ asset, why }); }
   topOf(id) { const o = this.h.S.home.objects.find((q) => q.id === `${this.id}-${id}`); if (!o) throw new Error(`topOf('${id}'): place it first`); const { tris, all, T } = this.targetTris('topOf', id), c = all.getCenter(new T.Vector3()), y = heightField(tris)(c.x, c.z); return y > 0 ? Math.round(y) : o.at[1] + (o.params?.h ?? ASSETS[o.asset].size[2]); }   // the height of the top of a placed thing, measured on its real parts under its middle: stand something on it with y: a.topOf('side-table')
   view({ target, az = 20, el = 15, dist, fit = 'objects' }) { this.cam = { target: this.P3(target), az: az - this.psi, el, fit, ...(dist ? { dist } : {}) }; }
-  shot(name, from, look, fov = 30, subject) { this.shots.push({ name, from: this.P3(from), look: this.P3(look), fov, ...(subject ? { subject: `${this.id}:${subject}` } : {}) }); }
+  shot(name, from, look, fov = 30, subject, core) { this.shots.push({ name, from: this.P3(from), look: this.P3(look), fov, ...(subject ? { subject: `${this.id}:${subject}` } : {}), ...(core?.length ? { core } : {}) }); }   // core: the pieces of a group too wide for one camera that the shot frames (fitshots names them: C.core(area, name))
   // a shot that looks across a separator into the neighbouring area `to` of the same open-plan home: the glimpse rules let `to` show in it (the subject still stands in this area)
   across(name, from, look, fov, subject, to) { this.shot(name, from, look, fov, subject); this.shots[this.shots.length - 1].across = to; }
   // anything standing on a rug is lifted by its thickness (7 mm), so legs rest on the pile and not in it: done for every floor piece whose middle lies on a rug of this area

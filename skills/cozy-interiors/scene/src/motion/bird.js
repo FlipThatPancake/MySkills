@@ -58,6 +58,7 @@ export default {
     const P = { fold: 1, amp: 0, mid: 0.1, tail: 0, fan: 0, legs: 1, nose: 0, look: 0 };   // fold 1 wings shut .. 0 open; amp flap amplitude; legs 1 out
     let phase = rnd(0, 6), burst = rnd(0.6, 1.2), glideT = 0, clock = 0, lookTo = 0, lookT = rnd(0.5, 1.5), flickT = rnd(1, 3), flick = 0, hold = 0;
     const ease = (k, to, dt, rate = 8) => { P[k] += (to - P[k]) * Math.min(1, rate * dt); };
+    let lastSt = '';
     const flap = (dt, moving, st) => {
       clock += dt;
       let freq = 0, rate = 8, tgt;
@@ -69,7 +70,8 @@ export default {
       } else if (st === 'to-spot') { tgt = { fold: 0, amp: 1.1, mid: 0.5, tail: -0.5, fan: 1, legs: 1, nose: 0.5 }; freq = 9.5; rate = 10; }
       else if (st === 'takeoff') { tgt = { fold: 0, amp: 1.15, mid: 0.4, tail: -0.2, fan: 0.6, legs: 0.6, nose: 0.3 }; freq = 9; rate = 10; }
       else {
-        const tight = st === 'enter' || st === 'out' ? 0.3 : 1;   // through the window the wings are swept back and held in (the open gap is narrower than the span)
+        const tight = st === 'enter' || st === 'out' || st === 'align' ? 0.3 : 1;   // align: waiting in front of the opening; the wings are in before it crosses
+        if (st === 'enter' && lastSt !== 'enter') { P.fold = 0.85; P.amp = 0.3; P.mid = 0.1; P.tail = -0.2; P.fan = 0.2; P.legs = 0; P.nose = 0; }   // it appears outside the glass already swept back: a pair window's gap is narrower than its span   // through the window the wings are swept back and held in (the open gap is narrower than the span)
         if (tight < 1) { tgt = { fold: 0.85, amp: 0.3, mid: 0.1, tail: -0.2, fan: 0.2, legs: 0, nose: 0 }; freq = 6; rate = 10; }
         else if (glideT > 0) { glideT -= dt; tgt = { fold: 0, amp: 0.05, mid: 0.2, tail: -0.1, fan: 0.4, legs: 0, nose: 0 }; if (glideT <= 0) burst = rnd(0.7, 1.4); }
         else { burst -= dt; freq = 7 + 1.2 * Math.sin(clock * 0.8); tgt = { fold: 0, amp: 0.8, mid: 0.1, tail: -0.2, fan: 0.35, legs: 0, nose: 0 }; if (burst <= 0) glideT = rnd(0.18, 0.3); }
@@ -89,6 +91,7 @@ export default {
       neck.rotation.set(0, P.look, 0);
       rig.position.y = 5 * P.amp * -Math.sin(phase - 0.5) * open; rig.rotation.x = -P.nose + 0.05 * P.amp * Math.sin(phase - 0.5) * open;
       if (!moving || st === 'to-spot') g.rotation.x += ((st === 'to-spot' ? -0.15 : 0) - g.rotation.x) * Math.min(1, 8 * dt);   // level out for the landing and the perch
+      lastSt = st;
     };
 
     const wp = new T.Vector3();

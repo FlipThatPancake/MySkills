@@ -89,7 +89,7 @@ export function createFlight(ctx, g, cfg = {}) {
         const usable = via.usable(R);
         if (st === 'away') {   // hidden outside; comes in when the window is open wide enough
           shown = false; timer -= dt;
-          if (timer <= 0 && usable && canPass(450, vIn)) { claim(450, vIn); pos.copy(OUT); vel.set(0, 0, 0); tgt.copy(GATE); st = 'enter'; shown = true; visit = 0; leaveAfter = rnd(...t.leave); g.position.copy(pos); }
+          if (timer <= 0 && usable && canPass(450, vIn)) { claim(450, vIn); pos.copy(OUT); vel.set(0, 0, 0); tgt.copy(GATE); st = 'enter'; shown = true; visit = 0; leaveAfter = rnd(...t.leave); g.position.copy(pos); flap(0, true, st); }
           return;
         }
         visit += dt;

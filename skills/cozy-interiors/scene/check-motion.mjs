@@ -52,7 +52,7 @@ export async function motionIssues(page, sceneFile, { seconds = 240 } = {}) {
           if (s < -r || s > W.len + r || dn > r) continue;   // beside the wall or well inside the room
           const lat = via && W === via.W ? (c.x - via.centre[0]) * via.u[0] + (c.z - via.centre[1]) * via.u[1] : 1e9;
           const ok = via && W === via.W && Math.abs(lat) <= via.gap() / 2 - r + 1 && c.y >= via.sill + r - 1 && c.y <= via.sill + via.height - r + 1 && via.usable(r);
-          if (!ok && (dn < 20 || b.outside)) say(tag + W.id, `${tag}: crosses ${W.id} outside its open window at ${t.toFixed(1)} s (${c.toArray().map(Math.round)}, ${dn.toFixed(0)} mm from the wall)`);
+          if (!ok && (dn < 20 || b.outside)) say(tag + W.id, `${tag}: crosses ${W.id} outside its open window at ${t.toFixed(1)} s (${c.toArray().map(Math.round)}, ${dn.toFixed(0)} mm from the wall, lat ${lat.toFixed(0)}, gap ${via.gap().toFixed(0)}, r ${r})`);
           else if (ok) inGap = true;
         }
         const A = ctx.area.bounds;
