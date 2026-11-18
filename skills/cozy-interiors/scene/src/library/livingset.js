@@ -1,6 +1,6 @@
 // @js:library-livingset — the Living batch: more forms for the living room's repeating pieces, each a generator with a parameter space (meta.js SPACE).
 // Floor pieces: origin the middle of the footprint on the floor, front toward +z. galleryWall and scratches: origin bottom middle on the wall face (or any vertical face), standing out toward +z.
-// chair(kit, { shape: 'wing' | 'cane' | 'sling', w, d, tone }), chaise (a sofa's extra unit), coffeeShape(kit, shape, w, d, h), floorCushion, logBasket, woodStove, recordPlayer, magazineBox, plantStand, galleryWall, scratches.
+// chair(kit, { shape: 'wing' | 'lounge' | 'rocking' | 'beanbag' | 'sling', w, d, tone }), chaise (a sofa's extra unit), coffeeShape(kit, shape, w, d, h), floorCushion, logBasket, woodStove, recordPlayer, magazineBox, plantStand, galleryWall, scratches.
 import { softBox, pillowGeometry } from './soft.js';
 import { rod, legs as legParts } from './parts.js';
 import { pot } from './pieces.js';
@@ -17,37 +17,46 @@ export function chair(kit, { shape = 'wing', legs: legsOpt, w = 840, d = 860, to
     const legH = 150, y0 = legH + 130;
     g.add(legParts(kit, 'turned', [[-w / 2 + 70, -d / 2 + 70], [w / 2 - 70, -d / 2 + 70], [-w / 2 + 70, d / 2 - 70], [w / 2 - 70, d / 2 - 70]], legH + 6, { r: 30, tone }));
     g.add(kit.rbox(-w / 2, legH, d / 2, w, 130, d, 30, { tone }));
-    const back = softBox(kit, w - 150, 780, 190, { r: 80, bulge: 26, tone, piping: 'edge' }); back.position.set(0, y0 + 360, -d / 2 + 150); back.rotation.x = -8 * DEG; g.add(back);
+    const back = softBox(kit, w - 130, 780, 190, { r: 80, bulge: 26, tone, piping: 'edge' }); back.position.set(0, y0 + 360, -d / 2 + 150); back.rotation.x = -8 * DEG; g.add(back);
     for (const s of [-1, 1]) {
-      g.add(kit.rbox(s * (w / 2 - 75) - 75, y0 - 20, d / 2 - 30, 150, 400, d - 70, 36, { tone }));   // the arm
-      g.add(kit.cyl(s * (w / 2 - 75), y0 + 360, d / 2 - 30, 78, d - 90, { axis: 'z', seg: 20, tone, through: true }));   // its roll
-      const wing = softBox(kit, 150, 520, 230, { r: 60, bulge: 16, tone }); wing.position.set(s * (w / 2 - 80), y0 + 520, -d / 2 + 190); wing.rotation.y = -s * 14 * DEG; g.add(wing);
+      g.add(kit.rbox(s * (w / 2 - 55) - 55, y0 - 20, d / 2 - 30, 110, 400, d - 70, 32, { tone }));   // the arm
+      g.add(kit.cyl(s * (w / 2 - 55), y0 + 360, d / 2 - 30, 58, d - 90, { axis: 'z', seg: 20, tone, through: true }));   // its roll
+      const wing = softBox(kit, 120, 520, 210, { r: 50, bulge: 16, tone }); wing.position.set(s * (w / 2 - 62), y0 + 520, -d / 2 + 190); wing.rotation.y = -s * 14 * DEG; g.add(wing);
     }
-    const pad = softBox(kit, w - 330, d - 330, 140, { r: 52, bulge: 18, tone, dent: 8 }); pad.rotation.x = -Math.PI / 2; pad.position.set(0, y0 + 70, 20); g.add(pad);
-  } else if (shape === 'cane') {   // an open timber frame with a cane or slat back, optional arm rails, a loose seat cushion; backH, arms, back, legs, weave vary it
-    const lh = 260, sh = 410, rr = 23, X = w / 2 - 30, Z = d / 2 - 40, bh = Math.max(300, Math.min(520, (backH || 840) - sh - 80)), R = rnd(seed);
-    const legStyle = (legsOpt === 'tapered' || legsOpt === 'hairpin' || legsOpt === 'splay') ? 'splay' : 'straight', out = legStyle === 'splay' ? 36 : 0;
-    for (const sx of [-1, 1]) for (const sz of [-1, 1]) g.add(rod(kit, [sx * X, sh, sz * Z], [sx * (X + out), 0, sz * (Z + out * 0.8)], rr * 1.1, rr * 0.8, 'mid'));
-    const armRail = arms !== 'none';
+    const pad = softBox(kit, w - 250, d - 330, 140, { r: 52, bulge: 18, tone, dent: 8 }); pad.rotation.x = -Math.PI / 2; pad.position.set(0, y0 + 70, 20); g.add(pad);
+  } else if (shape === 'lounge') {   // a wooden-frame lounge chair (w 650-750 overall): two timber side frames with a flat arm board, a slatted or woven back, a loose seat cushion and back cushion
+    const sh = 400, rr = 22, X = w / 2 - 28, Z = d / 2 - 50, R = rnd(seed), bT = 820;
     for (const sx of [-1, 1]) {
-      if (armRail) { g.add(rod(kit, [sx * X, sh, Z], [sx * X, sh + 190, Z - 40], rr, rr, 'mid')); g.add(rod(kit, [sx * X, sh + 190, Z - 40], [sx * X, sh + 230, -Z + 20], 22, 22, 'mid')); g.add(rod(kit, [sx * X, sh + 230, -Z + 20], [sx * X, sh + 230 - 4, -Z - 20], 22, 22, 'mid')); }
-      g.add(rod(kit, [sx * X, sh, -Z], [sx * X, sh + bh + 70, -Z - 50], rr, rr, 'mid'));   // the back posts lean out
+      g.add(rod(kit, [sx * X, 0, Z], [sx * X, 560, Z - 10], rr * 1.1, rr, 'mid'));   // the front leg runs up into the arm
+      g.add(rod(kit, [sx * X, 0, -Z + 70], [sx * X, bT, -Z - 40], rr * 1.1, rr, 'mid'));   // the rear leg rakes up into the back post
+      g.add(kit.box(sx * X - 28, 560, Z + 30, 56, 24, 2 * Z + 10, { tone: 'mid' }));   // the flat arm board
+      g.add(rod(kit, [sx * X, sh - 40, Z - 6], [sx * X, sh - 40, -Z + 50], 18, 18, 'mid'));   // the side seat rail
+      g.add(rod(kit, [sx * X, 170, Z - 4], [sx * X, 170, -Z + 70], 16, 16, 'mid'));   // the low side stretcher
     }
-    g.add(rod(kit, [-X, sh, Z], [X, sh, Z], rr, rr, 'mid')); g.add(rod(kit, [-X, sh - 30, -Z], [X, sh - 30, -Z], rr, rr, 'mid'));
-    g.add(rod(kit, [-X, sh + bh + 70, -Z - 50], [X, sh + bh + 70, -Z - 50], 22, 22, 'mid'));   // the top rail
-    const cx0 = -X + 24, cx1 = X - 24, cy0 = sh + 90, cy1 = sh + bh + 40, zc = -Z - 26 - (cy0 - sh) / bh * 10;
-    g.add(rod(kit, [-X, cy0 - 20, zc + 8], [X, cy0 - 20, zc + 8], 16, 16, 'mid'));   // the lower rail the weave is strung on
-    const wavy = (x0, y0, x1, y1, k) => { const q = [], n = 14, ph = R() * 6; for (let i = 0; i < n; i++) { const t0 = i / n, t1 = (i + 1) / n, f = (t) => [x0 + (x1 - x0) * t + (Math.abs(x1 - x0) < 1 ? Math.sin(t * 9 + ph) * 5 : 0), y0 + (y1 - y0) * t + (Math.abs(y1 - y0) < 1 ? Math.sin(t * 9 + ph) * 5 : 0), zc + 3]; q.push(f(t0), f(t1)); } return q; };
-    if (weave === 'slats') {   // five curved slats
-      for (let i = 0; i < 5; i++) { const x = cx0 + (cx1 - cx0) * (i + 0.5) / 5, sw = (cx1 - cx0) / 5 - 30; g.add(kit.rbox(x - sw / 2, cy0, zc + 12, sw, cy1 - cy0, 16, 6, { tone })); }
-    } else {   // a pale panel with a sparse open weave, a few wavy lines each way
-      g.add(kit.box(cx0, cy0, zc + 4, cx1 - cx0, cy1 - cy0, 6));
-      const pts = []; for (let k = 1; k <= 4; k++) pts.push(...wavy(cx0 + 10, cy0 + (cy1 - cy0) * k / 5, cx1 - 10, cy0 + (cy1 - cy0) * k / 5, k));
-      for (let k = 1; k <= 3; k++) pts.push(...wavy(cx0 + (cx1 - cx0) * k / 4, cy0 + 8, cx0 + (cx1 - cx0) * k / 4, cy1 - 8, k));
-      g.add(kit.lines(pts, 'faint'));
+    g.add(rod(kit, [-X, sh - 40, Z - 6], [X, sh - 40, Z - 6], 18, 18, 'mid')); g.add(rod(kit, [-X, sh - 40, -Z + 50], [X, sh - 40, -Z + 50], 18, 18, 'mid'));
+    g.add(rod(kit, [-X, bT, -Z - 40], [X, bT, -Z - 40], 20, 20, 'mid'));   // the top rail
+    const cx0 = -X + 30, cx1 = X - 30;
+    if (weave === 'slats') { for (let i = 0; i < 4; i++) { const y = 540 + i * 80; g.add(kit.box(cx0, y, -Z - 8 - (y - 540) * 0.1 + 10, cx1 - cx0, 54, 14, { tone: 'mid' })); } }
+    else { g.add(kit.box(cx0, 520, -Z - 8, cx1 - cx0, 270, 6)); const pts = []; for (let k = 1; k < 6; k++) pts.push([cx0 + 6, 520 + 270 * k / 6, -Z - 1.5], [cx1 - 6, 520 + 270 * k / 6, -Z - 1.5]); for (let k = 1; k < 5; k++) pts.push([cx0 + (cx1 - cx0) * k / 5, 526, -Z - 1.5], [cx0 + (cx1 - cx0) * k / 5, 784, -Z - 1.5]); g.add(kit.lines(pts, 'faint')); }
+    const pad = softBox(kit, w - 150, d - 250, 110, { r: 42, bulge: 14, tone, dent: 6 }); pad.rotation.x = -Math.PI / 2; pad.position.set(0, sh + 55 - 10, 30); g.add(pad);
+    const bk = softBox(kit, w - 190, 380, 100, { r: 44, bulge: 18, tone, piping: 'edge' }); bk.position.set(0, sh + 270, -Z + 90); bk.rotation.x = -16 * DEG; g.add(kit.through ? kit.through(bk) : bk);
+  } else if (shape === 'rocking') {   // a wooden rocking chair (w 520-600): two curved runners, spindle back, low rounded arms
+    const sh = 440, X = w / 2 - 24, Rr = 1150, half = Math.min(400, d / 2 - 20), n = 12, run = (z) => 15 + (Rr - Math.sqrt(Rr * Rr - z * z));
+    for (const sx of [-1, 1]) {
+      for (let i = 0; i < n; i++) { const z0 = -half + 2 * half * i / n, z1 = -half + 2 * half * (i + 1) / n; g.add(rod(kit, [sx * X, run(z0), z0], [sx * X, run(z1), z1], 15, 15, 'mid')); }
+      g.add(rod(kit, [sx * X, run(190), 190], [sx * X, sh + 230, 190 - 20], 18, 15, 'mid'));   // the front leg stands on the runner and carries the arm
+      g.add(rod(kit, [sx * X, run(-190), -190], [sx * X, 980, -190 - 90], 19, 15, 'mid'));   // the rear leg runs up into the back post
+      g.add(rod(kit, [sx * X, sh + 230, 170], [sx * X, sh + 240, -190 - 40], 16, 16, 'mid'));   // the arm
+      g.add(rod(kit, [sx * X, sh - 20, 190], [sx * X, sh - 20, -190 - 10], 14, 14, 'mid'));   // the seat rail
     }
-    const pad = softBox(kit, w - 130, d - 130, 110, { r: 42, bulge: 14, tone, dent: 6 }); pad.rotation.x = -Math.PI / 2; pad.position.set(0, sh + 62, 0); g.add(pad);
-    if (back === 'loose') { const cu = softBox(kit, w - 260, 300, 110, { r: 50, bulge: 22, tone, piping: 'edge' }); cu.position.set(0, sh + 190, -Z + 50); cu.rotation.x = -12 * DEG; g.add(kit.through(cu)); }
+    g.add(rod(kit, [-X, sh - 20, 190], [X, sh - 20, 190], 14, 14, 'mid')); g.add(rod(kit, [-X, sh - 20, -200], [X, sh - 20, -200], 14, 14, 'mid'));
+    g.add(kit.rbox(-X + 8, sh - 10, 215, 2 * X - 16, 32, 430, 8, { tone: 'mid' }));   // the seat
+    g.add(rod(kit, [-X, 980, -280], [X, 980, -280], 18, 18, 'mid')); g.add(rod(kit, [-X, 760, -255], [X, 760, -255], 14, 14, 'mid'));
+    for (let i = 1; i < 6; i++) { const x = -X + 2 * X * i / 6; g.add(rod(kit, [x, sh + 30, -215], [x, 760, -255], 8, 8, 'mid')); g.add(rod(kit, [x, 760, -255], [x, 975, -280], 8, 8, 'mid')); }
+  } else if (shape === 'beanbag') {   // a bean bag: no frame, no legs; a slumped round form, flat on the floor, the top dipped where it is sat in
+    const r = w / 2, prof = [[0.01, 0], [0.62, 0], [0.86, 25], [0.99, 140], [0.96, 270], [0.78, 370], [0.66, 405], [0.5, 380], [0.3, 350], [0.01, 340]].map(([k, y]) => new kit.THREE.Vector2(k * r, y));
+    const bag = kit.solid(new kit.THREE.LatheGeometry(prof, 40), 0, 0, 0, { smooth: true, tone }); bag.scale.z = 0.92; g.add(bag);
+    const sm = []; for (let i = 0; i < 6; i++) { const a = i / 6 * 6.2832; sm.push([Math.cos(a) * r * 0.66, 400, Math.sin(a) * r * 0.66 * 0.92], [Math.cos(a) * r * 0.97, 150, Math.sin(a) * r * 0.97 * 0.92]); } g.add(kit.lines(sm, 'faint'));
   } else {   // a sling: a leather seat-and-back hung from a bent frame
     const sh = 360, X = w / 2 - 40, Z = d / 2 - 30;
     for (const sx of [-1, 1]) { const pts = [[sx * X, 8, Z], [sx * X, sh * 0.8, Z - 30], [sx * X, sh, -Z + 160], [sx * X, 700, -Z - 60]]; for (let i = 0; i < 3; i++) g.add(rod(kit, pts[i], pts[i + 1], 15, 15, 'mid')); g.add(rod(kit, [sx * X, 8, -Z + 120], [sx * X, 8, Z], 14, 14, 'mid')); }
@@ -55,6 +64,7 @@ export function chair(kit, { shape = 'wing', legs: legsOpt, w = 840, d = 860, to
     const back = softBox(kit, w - 110, 520, 70, { r: 30, bulge: 14, tone }); back.rotation.x = -28 * DEG; back.position.set(0, sh + 260, -Z + 90); g.add(back);
     g.add(kit.lines([[-w / 2 + 70, sh + 30, 300], [w / 2 - 70, sh + 30, 300]], 'lo'));
   }
+  if (shape === 'lounge' || shape === 'rocking' || shape === 'beanbag') { const q = kit.group(); g.position.y = -6; q.add(g); return kit.merge(q); }   // feet 6 mm below the origin, like the wing chair's legs: it stands on a rug placed at y 6
   return kit.merge(g);
 }
 
