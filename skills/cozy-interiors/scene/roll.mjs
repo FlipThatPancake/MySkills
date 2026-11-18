@@ -11,17 +11,19 @@ const T = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), 
 export const KINDS = Object.keys(T).filter((k) => T[k]?.hero);
 
 // the deal must not break the checks or contradict itself (rollstats.mjs counts every case): nothing twice in one area, one lamp, the cutting board once, a plant corner counts as the floor plant
-function consistent(a, id) {
+const ONCE = /^(vase|candlesticks)$/;
+function consistent(a, id, home) {   // home: the assets of this home already dealt once (a vase or a picture is dealt to one area only, so no two rooms repeat it)
   const t = T.stillLife[id], used = new Set(), asset = (x) => (x.match(/\(([A-Za-z]+)\)\s*$/) || [])[1];
   const lampGroup = (a.groups || []).find((g) => /\blamp\b/.test(g));
   if (lampGroup) a.light = /floor lamp/.test(lampGroup) ? 'floor lamp' : 'table lamp';   // a group that stands its own lamp is the area's light
   for (const [i, st] of (a.still || []).entries()) {
     const pool = (t.tops.find((q) => q.id === st.top) || { things: [] }).things;
-    const ok = (y, res) => !(asset(y) === 'readingLamp' && a.light) && !(asset(y) === 'cuttingBoard' && a.board) && !used.has(asset(y)) && !res.some((r) => asset(r) === asset(y)), res = [];
+    const ok = (y, res) => !(ONCE.test(asset(y) || '') && home.has(asset(y))) && !(asset(y) === 'readingLamp' && a.light) && !(asset(y) === 'cuttingBoard' && a.board) && !used.has(asset(y)) && !res.some((r) => asset(r) === asset(y)), res = [];
     for (const x of st.things) { if (ok(x, res)) res.push(x); else { const y = pool.find((q) => ok(q, res) && !st.things.some((r) => asset(r) === asset(q))); if (y) res.push(y); } }
     st.things = res;
-    for (const x of st.things) used.add(asset(x));
+    for (const x of st.things) { used.add(asset(x)); if (ONCE.test(asset(x) || '')) home.add(asset(x)); }
   }
+  { const SL = T.stillLife[id]; if (SL && a.wallArr && /\(picture\)/.test(a.wallArr)) { if (home.has('picture')) { const alt = SL.wall.filter((q) => !/\(picture\)/.test(q)); if (alt.length) a.wallArr = alt[(a.wallArr.length + id.length) % alt.length]; } if (/\(picture\)/.test(a.wallArr)) home.add('picture'); } }   // a wall arrangement with a picture is dealt to one area only
   { const L = T.groups?.list[id] || [], lampAt = (a.groups || []).map((g, k) => (/\blamp\b/.test(g) ? k : -1)).filter((k) => k >= 0);   // two groups that both stand a lamp: the later one is another group of the list
     for (const k of lampAt.slice(1)) { const at = a.groups[k].lastIndexOf(', on the '), place = at < 0 ? '' : a.groups[k].slice(at + 2), pick = L.find((q) => !/\blamp\b/.test(q) && !a.groups.some((g) => g.startsWith(q))); if (pick) a.groups[k] = place ? `${pick}, ${place}` : pick; } }
   if ((a.groups || []).some((g) => /floor plant/.test(g)) && !a.plantAt.includes('floor')) { a.plantAt = [...a.plantAt, 'floor']; a.plants = a.plantAt.length; }
@@ -49,6 +51,7 @@ export function roll(seed, kinds = ['kitchen', 'dining', 'living']) {
   const pick = (a) => a[Math.floor(rnd() * a.length)];
   const winStyle = (kind, special) => { let pool = T.windows.filter((x) => special || ['sash', 'picture', 'pair'].includes(x.style)); const fresh = pool.filter((x) => x.style === 'sash' || !usedWin.has(x.style)); if (fresh.length) pool = fresh; const l = pool.map((x) => ({ x, w: x.weight[kind] ?? x.weight.default })); let q = rnd5() * l.reduce((a, y) => a + y.w, 0); for (const y of l) { q -= y.w; if (q < 0) return y.x; } return l[0].x; };
   const some = (a, n) => { const c = a.slice(), out = []; while (out.length < n && c.length) out.push(c.splice(Math.floor(rnd() * c.length), 1)[0]); return out; };
+  const usedOnce = new Set();
   const out = { seed, floor: pick(T.floor), accent: null, use: 'plantAt: place each plant at those places (one floor plant at most). foreground: the near-camera piece of the shots. groups: build every listed group (a few pieces under one group name, at the place named) and make each the subject of one tour shot; the hero group counts as the first. accent: new Home({ accent: hex }); accentOn: put params { tone: \'accent\' } on that textile. Soft things: a.seatSoft(id, { tone }), a.table(id, { cloth: true }). still: put each thing on its top with a.onTop; wallArr: hang it on the longest bare wall stretch. side: the hero group sits on that side of the home view. See compose.mjs.', areas: {} }, used = new Set(), usedAcc = new Set(), ONE = ['basket', 'pouf', 'trolley'], usedBack = new Set(), usedWin = new Set(); let sideNow = rnd6() < 0.5 ? 'left' : 'right';   // signs dealt so far: none repeats in a home; a basket, pouf or trolley appears in one area of a home at most (check-home's variety rule)
   const acc = T.accentTones[(Math.imul(seed >>> 0, 2654435761) >>> 0) % T.accentTones.length]; out.accent = { name: acc.id, hex: acc.hex };   // one warm accent for the whole home (from the seed itself, so no other pick moves)
   const describe = (id, a) => {   // the choices of one area in plain words
@@ -73,7 +76,7 @@ export function roll(seed, kinds = ['kitchen', 'dining', 'living']) {
     a.side = sideNow; sideNow = sideNow === 'left' ? 'right' : 'left';   // the side of the home view the hero group sits on: it alternates from area to area, so a home is not all one-sided
     { const G = T.groups, L = G?.list[id]; if (L) { const pl = some7(G.places, 2), gr = some7(L, 2); a.groups = [`${a.hero} (the hero group, on the ${a.side} of the home view)`, ...gr.map((g, i) => `${g}, ${pl[i].say}`)]; } }   // at least three shootable groups, each a compact subject for one tour shot, on different walls so the shots can differ by 25 degrees (tables.json groups)
     a.light = light(id);   // the area's one light (a pendant over the table, island or chair in most kitchens, dining areas and reading corners)
-    consistent(a, id);
+    consistent(a, id, usedOnce);
     a.accentOn = pick3(t.accentOn);   // the textile in this area that carries the home's accent
     a.foreground = pick3(t.foreground);   // the near-camera piece comes from the area's own use
     a.signs = some(T.signs.filter((x) => x.in.includes(id) && !used.has(x.id)), 2 + Math.floor(rnd() * 2)); a.signs.forEach((x) => used.add(x.id)); a.signs = a.signs.map((x) => x.id);

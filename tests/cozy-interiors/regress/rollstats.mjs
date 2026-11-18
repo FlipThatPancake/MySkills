@@ -7,12 +7,14 @@ const asset = (x) => (x.match(/\(([A-Za-z]+)\)\s*$/) || [])[1], count = {}, firs
 const bad = (k, seed, kinds, id, extra = '') => { count[k] = (count[k] || 0) + 1; first[k] ||= `seed ${seed} ${kinds.join(',')} ${id} ${extra}`; };
 for (let seed = 1; seed <= N; seed++) for (const kinds of sets) {
   const R = roll(seed, kinds);
+  const homeOnce = {};
   for (const [id, a] of Object.entries(R.areas)) {
+    for (const w of [...(a.still || []).flatMap((st) => st.things.map(asset)).filter((w) => w !== 'picture'), /\(picture\)/.test(a.wallArr || '') ? 'picture' : null]) if (w && /^(vase|candlesticks|picture)$/.test(w)) { if (homeOnce[w] && homeOnce[w] !== id) bad('decor-repeat-in-home', seed, kinds, id, `${w} also in ${homeOnce[w]}`); homeOnce[w] = id; }
     const seen = new Set();
     for (const st of a.still || []) { if (st.things.length > 2) bad('top>2', seed, kinds, id, st.top); for (const x of st.things) { const n = asset(x); if (n && !ASSETS[n]) bad('missing-asset', seed, kinds, id, n); if (n && seen.has(n)) bad('same-thing-twice', seed, kinds, id, n); seen.add(n); } }
     const txt = JSON.stringify(a), lamps = (a.light && /pendant|floor lamp|table lamp|desk lamp/.test(a.light) ? 1 : 0) + (seen.has('readingLamp') ? 1 : 0) + ((a.groups || []).filter((g) => /\blamp\b/.test(g)).length);
     if (lamps > 1 && !(lamps === 2 && (a.groups || []).some((g) => /\blamp\b/.test(g)) && /lamp/.test(a.light) )) bad('two-lamps', seed, kinds, id, `${a.light} + ${[...seen].filter((q) => q === 'readingLamp')} + ${(a.groups || []).filter((g) => /\blamp\b/.test(g)).length} group(s)`);
-    if (id === 'kitchen' && /\((vase|picture|mirror)\)|vase of|picture over|mirror over/.test(JSON.stringify([a.still, a.wallArr, a.accents, a.more, a.foreground, a.groups]))) bad('kitchen-decor', seed, kinds, id, 'a vase, picture or mirror in a kitchen');   // the check 'variety' wants kitchen decor from kitchen use
+    if (id === 'kitchen' && /\(mirror\)|mirror over|leaning mirror/.test(JSON.stringify([a.still, a.wallArr, a.accents, a.more, a.foreground, a.groups]))) bad('kitchen-mirror', seed, kinds, id, 'a mirror in a kitchen');   // the check 'variety' keeps mirrors out of kitchens (a vase and a picture are fine there)
     if (a.board && seen.has('cuttingBoard')) bad('board-twice', seed, kinds, id);
     if ((a.groups || []).some((g) => /floor plant/.test(g)) && !a.plantAt.includes('floor')) bad('plant-corner-without-floor-place', seed, kinds, id);
     if (a.plants !== a.plantAt.length) bad('plants-count', seed, kinds, id);

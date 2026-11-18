@@ -1,6 +1,6 @@
 // A worked spec: one kitchen area with an L run, a table set and a seating group, clean through check-home and fitshots.
 //   node example.spec.mjs [out.json]  →  node check-home.mjs out.json --quick  →  node fitshots.mjs out.json  (fitshots writes out.cameras.json; run the spec again and the shots below take those numbers)
-// The roll: example.roll.json came from `node roll.mjs 12 kitchen`. H.roll keeps it, and check-home compares every dealt thing with the scene: present, or a.skip(thing, 'why').
+// The roll: example.roll.json came from `node roll.mjs 4 kitchen`. H.roll keeps it, and check-home compares every dealt thing with the scene: present, or a.skip(thing, 'why').
 // Every coordinate is millimetres in the area's frame: x along the back wall from its left end, z out into the room.
 import fs from 'node:fs';
 import { Home } from './compose.mjs';
@@ -22,15 +22,16 @@ B.on('door', 'kettle', { group: 'sink' });
 back.place('wc1', 'wallRun', 2900, { group: 'cook', params: { modules: [{ w: 500, kind: 'door' }] } });
 left.place('shelf', 'openShelf', 800, { group: 'sink' });
 // A table set: a round table with two chairs and a rug, standing in open floor within reach of the cooking.
-const T = a.table('bt', { at: [3200, 2600], r: 520, chairs: 2, group: 'breakfast', cloth: 'accent' });   // the roll's accent (rust) is on the tablecloth
-T.on('jug', { y: 757, dx: -180 }); T.on('herbs', { y: 757, dx: 260 });   // the roll's table still life: herbs and a jug
-// A seating group: an armchair, a side table and a floor lamp, in the free corner by the window.
+const T = a.table('bt', { at: [2900, 2600], r: 520, chairs: 2, group: 'breakfast', cloth: 'accent' });   // the roll's accent (rust) is on the tablecloth (it names the runner; any textile of the area may carry it)
+T.on('mug', { y: 757, dx: -180 }); T.on('saltPepper', { y: 757, dx: 260 });   // the roll's table still life: a mug and salt and pepper
+// The roll's foreground piece, a step stool, stands at the front corner of the table group.
+a.put('stool', 'stepStool', [2600, 3300], 25, { group: 'breakfast' });
+// A seating group: an armchair and a floor lamp, in the free corner by the window.
 a.put('chair', 'armchair', [5700, 2300], -35, { group: 'nook' });
-a.put('side', 'sideTable', [5700, 3150], 0, { group: 'nook' });
+a.put('lamp', 'floorLamp', [6150, 2850], 0, { group: 'nook' });
 a.skip('hanging', 'no hanging-plant asset yet: the plant stands on the sill and the worktop instead');
+a.skip('mokaPot', 'the hob carries a pan under the hood: a moka pot would stand in its place');
 a.skip('utensilCrock', 'the hob has no room beside it for a crock: pans hang on the rail instead');   // a thing the roll dealt and the scene leaves out says why
-a.skip('hero by the window', 'the breakfast table stands in the middle of the floor, near the cooking');
-a.put('side-jug', 'jug', [5700, 3150], 0, { group: 'nook', y: a.topOf('side'), mount: 'on' });   // a side table carries something (the check 'bare'): y from the real top
 // Shots: a.shot(name, from, look, fov, group). fitshots.mjs finds the cameras; its numbers go in here.
 a.shot('cook', ...C('kitchen', 'cook', [[2600, 1100, 4800], [1705, 1300, 393], 36]), 'cook');   // C(area, name, fallback): the fitted camera, or the fallback on the first run
 a.shot('table', ...C('kitchen', 'table', [[6200, 2100, 6900], [2737, 681, 2923], 36]), 'breakfast');

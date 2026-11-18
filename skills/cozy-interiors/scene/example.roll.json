@@ -1,6 +1,6 @@
 {
- "seed": 12,
- "floor": "tiles",
+ "seed": 4,
+ "floor": "plain",
  "accent": {
   "name": "rust",
   "hex": "#b5603f"
@@ -8,8 +8,8 @@
  "use": "plantAt: place each plant at those places (one floor plant at most). foreground: the near-camera piece of the shots. groups: build every listed group (a few pieces under one group name, at the place named) and make each the subject of one tour shot; the hero group counts as the first. accent: new Home({ accent: hex }); accentOn: put params { tone: 'accent' } on that textile. Soft things: a.seatSoft(id, { tone }), a.table(id, { cloth: true }). still: put each thing on its top with a.onTop; wallArr: hang it on the longest bare wall stretch. side: the hero group sits on that side of the home view. See compose.mjs. motion: a.alive(roll.areas[id].motion) in the spec; see src/motion/index.js.",
  "areas": {
   "kitchen": {
-   "backing": "corner-right",
-   "hero": "breakfast table by the window",
+   "backing": "one-wall",
+   "hero": "range hood over the hob",
    "openings": [
     {
      "kind": "window",
@@ -18,22 +18,22 @@
     }
    ],
    "accents": [
-    "stool",
+    "fruit bowl",
+    "wall shelf with jars",
     "herbs on the worktop",
-    "kettle on the worktop by the sink"
+    "stool"
    ],
    "plants": 3,
    "more": [
-    "spice rack on the wall by the hob (spiceRack)",
-    "pot rail with pans over or beside the hob (potRail)"
+    "utensil crock beside the hob (utensilCrock)"
    ],
    "plantAt": [
-    "sill",
+    "worktop",
     "hanging",
-    "worktop"
+    "sill"
    ],
    "passages": [],
-   "board": "hanging",
+   "board": "flat with a loaf",
    "above": "wall units over the run (wallRun)",
    "produce": null,
    "still": [
@@ -41,36 +41,36 @@
      "top": "worktop",
      "say": "the worktop beside the hob",
      "things": [
-      "fruit bowl (fruitBowl)",
-      "utensil crock beside the hob (utensilCrock)"
+      "utensil crock beside the hob (utensilCrock)",
+      "moka pot (mokaPot)"
      ]
     },
     {
      "top": "table",
      "say": "the breakfast table",
      "things": [
-      "herbs in a pot (herbs)",
-      "jug of water (jug)"
+      "mug (mug)",
+      "salt and pepper (saltPepper)"
      ]
     }
    ],
-   "wallArr": "pot rail with pans over or beside the hob (potRail)",
-   "side": "right",
+   "wallArr": "open shelf with plates and jars (openShelf)",
+   "side": "left",
    "groups": [
-    "breakfast table by the window (the hero group, on the right of the home view)",
-    "tall unit or fridge with a trolley beside it, on the back wall, left third",
-    "open shelves with jars and a plant, a stool below, on the back wall, right third"
+    "range hood over the hob (the hero group, on the left of the home view)",
+    "open shelves with jars and a plant, a stool below, on the window wall or the second wall",
+    "sideboard or dresser with a still life and a picture, on the back wall, left third"
    ],
    "light": "pendant",
-   "accentOn": "tablecloth",
+   "accentOn": "runner",
    "foreground": "step stool",
    "signs": [
-    "tablecloth",
-    "scuffed floor"
+    "table runner",
+    "tablecloth"
    ],
-   "shape": "straight",
-   "shapeNote": "one run on the backing wall, nothing else",
-   "say": "kitchen: breakfast table by the window; two backing walls at 90 degrees, the second wall on the right; window on the back wall; accents: stool, herbs on the worktop, kettle on the worktop by the sink, spice rack on the wall by the hob (spiceRack), pot rail with pans over or beside the hob (potRail); plants: a pot on a window sill; a hanging plant from a rail or hook; herbs or a pot on the worktop; still life: the worktop beside the hob holds fruit bowl (fruitBowl) and utensil crock beside the hob (utensilCrock); the breakfast table holds herbs in a pot (herbs) and jug of water (jug); wall arrangement: pot rail with pans over or beside the hob (potRail); hero group on the right of the home view; foreground piece: step stool; light: pendant; cutting board: hanging from a rail or hook by its hole; above the run: wall units over the run (wallRun); accent (rust) on the tablecloth; pieces: as the hero needs; signs of life: tablecloth, scuffed floor",
+   "shape": "galley",
+   "shapeNote": "two facing runs with a 1200 mm aisle: a run on the wall and a freestanding run opposite it with a finished back and closed ends (no stools)",
+   "say": "kitchen: range hood over the hob; one backing wall; window on the back wall; accents: fruit bowl, wall shelf with jars, herbs on the worktop, stool, utensil crock beside the hob (utensilCrock); plants: herbs or a pot on the worktop; a hanging plant from a rail or hook; a pot on a window sill; still life: the worktop beside the hob holds utensil crock beside the hob (utensilCrock) and moka pot (mokaPot); the breakfast table holds mug (mug) and salt and pepper (saltPepper); wall arrangement: open shelf with plates and jars (openShelf); hero group on the left of the home view; foreground piece: step stool; light: pendant; cutting board: flat on the worktop with a loaf, knife and a few vegetables on it; above the run: wall units over the run (wallRun); accent (rust) on the runner; pieces: as the hero needs; signs of life: table runner, tablecloth",
    "motion": []
   }
  }
