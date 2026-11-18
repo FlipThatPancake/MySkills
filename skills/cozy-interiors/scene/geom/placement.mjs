@@ -113,5 +113,29 @@ export function placementRules(L, S = {}) {
   }
   // window seat: its top within about 100 of the sill, so the wall above is not left bare
   for (const s of A(/^windowSeat$/)) { const w = wins.filter((w) => !w.door).map((w) => ({ w, d: Math.hypot(w.x - s.cx, w.z - s.cz) })).sort((a, b) => a.d - b.d)[0]; if (!w || w.d > 1500) continue; const gap = w.w.y0 - ((s.sc.params?.h ?? 440) + 70);   if (gap > 100) push('seat-sill', s, `its top is ${Math.round(gap)} below the window sill (100 at most): make the seat taller or the sill lower`); }
+
+  // round 3 E2, composition by numbers: floor cover, the fridge by the run's end, the hero by its window, a seat that faces something
+  const pushC = (rule, o, text) => out.push({ rule, id: o.id, text: `${o.id} (${o.asset}): ${text}` });
+  const toWorld = (ar, [lx, lz]) => { const t = rad(ar.psi || 0), c = Math.cos(t), sn = Math.sin(t); return [ar.O[0] + lx * c + lz * sn, ar.O[1] - lx * sn + lz * c]; };
+  for (const ar of S.areas || []) {
+    const b = ar.bounds, mine = O.filter((o) => o.area === ar.id); if (!b) continue; const few = mine.filter((o) => !o.wall).length < 3;
+    // floorcover: what stands on the floor (footprints and rugs) is at least about 25% of the area's rect
+    const flo = mine.filter((o) => !o.wall && o.mount !== 'on' && o.bb.y0 < 60 && !/^(scuff|leaf|curtain|cat|heightChart)$/.test(o.asset)); let cells = 0, hit = 0;
+    for (let x = b.x0 + 50; x < b.x1; x += 100) for (let z = b.z0 + 50; z < b.z1; z += 100) { cells++; const [wx, wz] = toWorld(ar, [x, z]); if (flo.some((o) => wx >= o.bb.x0 && wx <= o.bb.x1 && wz >= o.bb.z0 && wz <= o.bb.z1)) hit++; }
+    if (!few && cells && hit / cells < 0.25) out.push({ rule: 'floorcover', id: mine[0].id, text: `${ar.id}: furniture and rugs cover ${Math.round(100 * hit / cells)}% of the ${Math.round((b.x1 - b.x0))} x ${Math.round(b.z1 - b.z0)} floor (25% at least): bring the groups together, add a rug or a piece, or make the rect smaller` });
+    // fridge: within 1200 of an end of the run it belongs to
+    const runs = mine.filter((o) => o.asset === 'baseRun'), fr = mine.filter((o) => o.asset === 'fridge');
+    if (runs.length && fr.length) { const rx0 = Math.min(...runs.map((r) => r.bb.x0)), rx1 = Math.max(...runs.map((r) => r.bb.x1)), rz0 = Math.min(...runs.map((r) => r.bb.z0)), rz1 = Math.max(...runs.map((r) => r.bb.z1)), ax = rx1 - rx0 >= rz1 - rz0 ? 'x' : 'z', [r0, r1] = ax === 'x' ? [rx0, rx1] : [rz0, rz1];
+      for (const f of fr) { const f0 = f.bb[ax + '0'], f1 = f.bb[ax + '1'], d = Math.min(Math.abs(f0 - r0), Math.abs(f1 - r0), Math.abs(f0 - r1), Math.abs(f1 - r1)), inside = f0 > r0 && f1 < r1 ? d : f1 < r0 ? r0 - f1 : f0 > r1 ? f0 - r1 : 0; if (inside > 1200) pushC('fridge', f, `${Math.round(inside)} mm from the nearest end of the run (1200 at most): stand it at an end of the run, or the run's cooking and washing zones are cut off from it`); } }
+    // herowin: a hero the roll puts by a window stands within 1000 of that wall and overlaps the window's width
+    const ra = S.roll?.areas?.[ar.id];
+    if (ra?.heroWindow && !(S.rolled?.[ar.id]?.skipped || []).some((q) => q.asset === 'hero by the window')) for (const h of mine.filter((o) => o.sc?.hero && !o.wall && /^(table|roundTable|sofa|armchair|readingChair|daybed|windowSeat|bed|desk)$/.test(o.asset))) { const ok = wins.some((w) => !w.door && (w.wall.id || '').startsWith(ar.id + '-') && (() => { const lo = [h.bb.x0, h.bb.z0], hi = [h.bb.x1, h.bb.z1], sA = [lo, hi, [lo[0], hi[1]], [hi[0], lo[1]]].map(([x, z]) => (x - w.wall.from[0]) * w.wall.u[0] + (z - w.wall.from[1]) * w.wall.u[1]), dA = [lo, hi, [lo[0], hi[1]], [hi[0], lo[1]]].map(([x, z]) => Math.abs((x - w.wall.from[0]) * w.wall.n[0] + (z - w.wall.from[1]) * w.wall.n[1])); return Math.min(...dA) <= 1000 && Math.min(Math.max(...sA), w.s1) - Math.max(Math.min(...sA), w.s0) > 0; })()); if (!ok) pushC('herowin', h, `the roll puts the hero by the window: stand it within 1000 of that wall, in line with the window (a hero elsewhere needs a.skip('hero by the window', 'why'))`); }
+    // seatface: a sofa or chair faces a table, another seat, a window or the stove within 2500
+    for (const sx of mine.filter((o) => SEATS.test(o.asset) && !o.wall)) {
+      const targets = [...mine.filter((o) => o !== sx && /^(table|roundTable|coffeeTable|desk|woodStove|sofa|armchair|readingChair|daybed|bed|baseRun)$/.test(o.asset)).map((o) => ({ x: o.cx, z: o.cz, bb: o.bb })), ...wins.filter((w) => !w.door && (w.wall.id || '').startsWith(ar.id + '-')).map((w) => ({ x: w.x, z: w.z, bb: { x0: w.x, x1: w.x, z0: w.z, z1: w.z } }))];
+      const ok = targets.some((t) => { const g = gapOf(sx.bb, t.bb), dx = t.x - sx.cx, dz = t.z - sx.cz, dl = Math.hypot(dx, dz) || 1; return g <= 2500 && (dx * sx.f[0] + dz * sx.f[1]) / dl > Math.cos(rad(70)); });
+      if (!ok) pushC('seatface', sx, `it faces nothing within 2500 (a table, another seat, a window or the stove): turn it toward one`);
+    }
+  }
   return out;
 }

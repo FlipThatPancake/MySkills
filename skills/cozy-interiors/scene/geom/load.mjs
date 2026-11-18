@@ -32,5 +32,5 @@ export async function loadScene(scene, { src = SRC } = {}) {
   const env = []; H.group.traverse((o) => { if (inObj.has(o) || !o.userData.solid || !solid(o)) return; env.push(part(o)); });
   // each wall with its openings' holes as [s0, s1, y0, y1]: s runs from the wall's `from` end along it (home.js keeps them in the wall plane's own x, which runs back from `to`)
   const walls = (H.walls || []).map((w) => ({ id: w.id, from: w.from, to: w.to, len: w.len, holes: (w.holes || []).map((h) => { const xs = h.map((p) => w.len - p[0]), ys = h.map((p) => p[1]); return [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)]; }) }));
-  return { objects, env, walls, areas: S.areas || [], height: S.home.height || 2700, ms: { build: tBuild, classify: performance.now() - t1 } };
+  return { objects, env, walls, areas: S.areas || [], roll: S.home.roll, rolled: S.home.rolled || {}, height: S.home.height || 2700, ms: { build: tBuild, classify: performance.now() - t1 } };
 }

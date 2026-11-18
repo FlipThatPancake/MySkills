@@ -39,7 +39,7 @@ export class Home {
   // the whole roll: H.roll(rollJson) keeps what roll.mjs dealt (still-life assets, groups, plant places, passages, the accent), so the check 'rolled' can compare every dealt thing with the scene; the home's accent is the roll's unless the constructor got one. a.skip(what, 'why') leaves one out: an asset name, 'groups', 'passage', or a plant place (sill, shelf, worktop, hanging, floor)
   roll(json) {
     const R = typeof json === 'string' ? JSON.parse(json) : json, home = this.S.home, asset = (x) => (x.match(/\(([A-Za-z]+)\)\s*$/) || [])[1], areas = {};
-    for (const [id, a] of Object.entries(R.areas || {})) areas[id] = { still: (a.still || []).flatMap((st) => st.things.map(asset).filter(Boolean)), groups: (a.groups || []).length, plantAt: a.plantAt || [], passages: (a.passages || []).length };
+    for (const [id, a] of Object.entries(R.areas || {})) areas[id] = { still: (a.still || []).flatMap((st) => st.things.map(asset).filter(Boolean)), groups: (a.groups || []).length, plantAt: a.plantAt || [], passages: (a.passages || []).length, heroWindow: /\bwindow\b/.test(a.hero || '') };
     home.roll = { seed: R.seed, accent: R.accent?.hex, behind: R.openPlan?.behind || [], areas };
     if (!home.accent && R.accent?.hex) home.accent = R.accent.hex;
     return this;
@@ -47,7 +47,11 @@ export class Home {
   join(a, b, o) { return joinAreas(this, a, b, o); }   // open plan: b joins a on one floor (openplan.mjs): H.join(a, b, { layout: 'row' | 'corner', share: 0 to 1000 mm })
   floorZones(styles) { this.zoneStyles = styles; }   // open plan floor change: H.floorZones({ kitchen: 'tiles', dining: 'boards', living: 'boards' }) (openplan.mjs)
   sign(areaId, kind) { (this.signs ||= {})[areaId] = [...(this.signs[areaId] || []), kind]; }
-  write(file, fs) { this.S.areas = this.list.map((a) => a.out()); { const z = zoneList(this); if (z) this.S.home.floor.zones = z.map(({ area, ...q }) => q); } if (this.groups) this.S.groups = this.groups.map((g) => ({ id: g.id, areas: g.areas, seams: g.seams.map((q) => seamLine(this, q)) })); if (this.signs) for (const [a, k] of Object.entries(this.signs)) console.log(`signs ${a}: ${k.join(', ')}`); fs.writeFileSync(file, JSON.stringify(this.S, null, 1)); return this.S; }
+  write(file, fs) {
+    for (const a of this.list) { const own = this.S.home.objects.filter((o) => o.area === a.id || o.id.startsWith(a.id + '-')).filter((o) => (o.mount || ASSETS[o.asset]?.mount) === 'floor' && !/^(curtain|scuff|leaf|rug|heightChart|baseRun|wallRun)$/.test(o.asset)); if (!own.length) continue;
+      let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; for (const o of own) { let sz; try { sz = sizeOf(o.asset, o.params || {}); } catch { continue; } const t = rad((o.turn || 0) + a.psi), hx = Math.abs(Math.cos(t)) * sz.w / 2 + Math.abs(Math.sin(t)) * sz.d / 2, hz = Math.abs(Math.sin(t)) * sz.w / 2 + Math.abs(Math.cos(t)) * sz.d / 2; x0 = Math.min(x0, o.at[0] - hx); x1 = Math.max(x1, o.at[0] + hx); z0 = Math.min(z0, o.at[2] - hz); z1 = Math.max(z1, o.at[2] + hz); }
+      const b = a.worldBounds(); console.log(`area ${a.id}: the free-standing floor pieces (no runs) fit in ${Math.round(x1 - x0)} x ${Math.round(z1 - z0)} mm (about); the rect is ${Math.round(b.x1 - b.x0)} x ${Math.round(b.z1 - b.z0)} mm: a rect much larger than its groups reads as an empty room`); }   // the smallest rect that holds the placed groups, next to the declared one
+    this.S.areas = this.list.map((a) => a.out()); { const z = zoneList(this); if (z) this.S.home.floor.zones = z.map(({ area, ...q }) => q); } if (this.groups) this.S.groups = this.groups.map((g) => ({ id: g.id, areas: g.areas, seams: g.seams.map((q) => seamLine(this, q)) })); if (this.signs) for (const [a, k] of Object.entries(this.signs)) console.log(`signs ${a}: ${k.join(', ')}`); fs.writeFileSync(file, JSON.stringify(this.S, null, 1)); return this.S; }
 }
 const pickForm = (h, asset, params) => {   // the next form of an asset that has several (started from the seed); an explicit params.form stays
   if (!ASSETS[asset].variants || params?.form !== undefined) return params;
@@ -101,7 +105,8 @@ class Area {
         if (asset === 'windowSeat') { const W = openings.find((q) => q.kind === 'window' && Math.abs(q.x - xc) <= q.width / 2 + 300); if (W) { const h = o.params?.h ?? Math.min(480, Math.max(400, (W.sill ?? 1000) - 130)); o = { ...o, params: { ...o.params, h, pillowMax: (W.sill ?? 1000) - (h + 70) - 30 }, }; } }   // under a window the seat is as tall as the sill allows (its cushion top within 100 of the sill: a sill of 530-610 fits h 400-480; a higher sill leaves a gap the placement check names)
         o = { ...o, params: vary(p.h, asset, o.params, p.id) }; const { w, d, m } = sizeOf(asset, o.params), mount = o.mount || m.mount; if (o.y === undefined && m.y === 'top') throw new Error(`place('${oid}', '${asset}'): give y, the height of the surface it stands on in mm (for example y: 520 on a bedside table, 740 on a desk)`); const y = o.y ?? (typeof m.y === 'number' ? m.y : 0);
         const backOf = () => { const kit = (p.h.kit ||= createKit()), key = asset + JSON.stringify(o.params || {}), cache = (p.h.backCache ||= {}); if (cache[key] === undefined) { const g = REGISTRY[asset](kit, { ...(o.params || {}) }); g.updateMatrixWorld(true); cache[key] = Math.max(0, -new kit.THREE.Box3().setFromObject(g).min.z); } return cache[key]; };   // the model's own back, measured: a cornice or a rolled arm stands further out than the table size says
-        const off = o.off ?? (m.origin === 'centre' ? Math.max(d / 2, backOf()) : m.origin === 'front-left' ? (o.depth ?? d) : m.origin === 'front-centre' ? (o.depth ?? 600) : 0);
+        const sillWin = asset === 'curtain' && o.off === undefined ? openings.find((q) => q.kind === 'window' && (q.sill ?? 1000) >= 300 && Math.abs(q.x - xc) <= (q.width + w) / 2) : null;   // a curtain at a sill window hangs in front of the sill's lip (the sill reaches 110 mm into the room): the curtain model's back stands 60 mm out of its origin, so 60 mm off the wall puts it 10 mm past the lip
+        const off = o.off ?? (sillWin ? 60 : m.origin === 'centre' ? Math.max(d / 2, backOf()) : m.origin === 'front-left' ? (o.depth ?? d) : m.origin === 'front-centre' ? (o.depth ?? 600) : 0);
         const ox = m.origin === 'front-left' ? xc - w / 2 : xc;
         const res = F.put(oid, asset, ox, off, { ...o, y, mount });
         return res;
@@ -186,6 +191,22 @@ class Area {
     if (best.share < 0.85) { const R = Math.max(w, d), cand = []; for (let a = -R; a <= R; a += 40) for (let b = -R; b <= R; b += 40) cand.push([p0[0] + a, p0[1] + b, Math.hypot(a, b)]); cand.sort((u, v) => u[2] - v[2]); const hit = cand.find((q) => flat(q).share >= 0.85); if (!hit) throw new Error(`bandOn('${id}', '${targetId}'): no flat patch under a ${w} x ${d} throw carries 85% of it; make it smaller or lay it elsewhere`); p = [hit[0], hit[1]]; best = flat(p); console.log(`bandOn('${id}'): moved ${Math.round(Math.hypot(p[0] - p0[0], p[1] - p0[1]))} mm so ${Math.round(best.share * 100)}% of the throw rests on a flat patch of ${targetId}`); }
     this.put(id, 'foldedThrow', p, spin, { group, y: Math.round(best.top), mount: 'on', params: { w, d, layers, tone } });
   }
+  // a coffee table in front of a sofa: a.coffeeTable('ct', 'sofa', { w: 1100, d: 550, gap: 400, group, params }). It stands gap mm (400 to 450) from the seat front, in front of the seats and never in the chaise's way: its side keeps a 420 mm walkway from the chaise, and it narrows (to 700 at least) to do so
+  coffeeTable(id, sofaId, { w = 1100, d = 550, gap = 400, group, params = {} } = {}) {
+    const tgt = this.h.S.home.objects.find((q) => q.id === `${this.id}-${sofaId}`); if (!tgt) throw new Error(`coffeeTable('${id}'): place '${sofaId}' first`);
+    const T = (this.h.kit ||= createKit()).THREE, g0 = REGISTRY[tgt.asset](this.h.kit, { ...(tgt.params || {}) }); g0.updateMatrixWorld(true);
+    const lb = new T.Box3().setFromObject(g0), tn = (tgt.turn || 0) + this.psi, th = rad(tn), W = lb.max.x - lb.min.x, cx = (lb.min.x + lb.max.x) / 2, cz = (lb.min.z + lb.max.z) / 2;
+    const { tris, all } = this.targetTris('coffeeTable', sofaId), c = all.getCenter(new T.Vector3()), org = [c.x - (cx * Math.cos(th) + cz * Math.sin(th)), c.z - (-cx * Math.sin(th) + cz * Math.cos(th))], f = heightField(tris);
+    const toArea = (lx, lz) => [org[0] + lx * Math.cos(th) + lz * Math.sin(th), org[1] - lx * Math.sin(th) + lz * Math.cos(th)];
+    const cols = []; for (let lx = lb.min.x + 25; lx < lb.max.x; lx += 50) { let front = lb.min.z; for (let lz = lb.max.z; lz > lb.min.z; lz -= 25) { const [ax, az] = toArea(lx, lz); if (f(ax, az) > 150) { front = lz; break; } } cols.push([lx, front]); }
+    const fronts = cols.map((q) => q[1]).sort((a, b) => a - b), main = fronts[Math.floor(fronts.length / 2)], plain = cols.filter((q) => q[0] && q[1] <= main + 150), ch = cols.filter((q) => q[1] > main + 150);
+    let a0 = Math.min(...plain.map((q) => q[0])) - 25, a1 = Math.max(...plain.map((q) => q[0])) + 25, note = '';
+    if (ch.length) { const cl = ch.reduce((m, q) => m + q[0], 0) / ch.length > cx ? 'right' : 'left'; if (cl === 'right') a1 -= 0; const lo = Math.min(...ch.map((q) => q[0])) - 25, hi = Math.max(...ch.map((q) => q[0])) + 25; if (cl === 'right') a1 = Math.min(a1, lo - 420); else a0 = Math.max(a0, hi + 420); note = `; the chaise is on the ${cl}: it keeps 420 mm clear of it`; }
+    const avail = a1 - a0; if (avail < 700) throw new Error(`coffeeTable('${id}'): only ${Math.round(avail)} mm of seat front is left clear of the chaise (700 at least): use a smaller sofa or a side table`);
+    const ww = Math.min(w, Math.round(avail)), lx = (a0 + a1) / 2, [px, pz] = toArea(lx, main + gap + d / 2);
+    if (ww < w || note) console.log(`coffeeTable('${id}'): ${ww} x ${d} mm, ${gap} mm in front of the seats${note}`);
+    this.put(id, 'coffeeTable', [px, pz], tn, { group: group || tgt.group, params: { w: ww, d, ...params } });
+  }
   // the soft things of a seat in one call: a.seatSoft('sofa', { cushions: 2, throw: 'drape' | 'band' | false, tone: 'accent' | 'lo' | 'mid', group }). Cushions lean on the back, one per seat end (a sofa: seats - 1, at least 1; an armchair: 1); the throw drops onto the arm end ('drape', frozen cloth) or lies folded across the seat ('band').
   seatSoft(targetId, { cushions, throw: thr = 'drape', tone = 'lo', throwTone = tone, group } = {}) {
     const tgt = this.h.S.home.objects.find((q) => q.id === `${this.id}-${targetId}`); if (!tgt) throw new Error(`seatSoft('${targetId}'): place it first`);
@@ -261,7 +282,7 @@ class Area {
   // what the roll named: a.rolled('vase', 'candlesticks') lists the assets the roll dealt to this area; a.skip('vase', 'why') says one is left out (the check 'rolled' wants every rolled asset present or skipped)
   rolled(...assets) { const r = ((this.h.S.home.rolled ||= {})[this.id] ||= { rolled: [], skipped: [] }); r.rolled.push(...assets.flat()); }
   skip(asset, why) { if (!why) throw new Error(`skip('${asset}'): say why it is left out`); const r = ((this.h.S.home.rolled ||= {})[this.id] ||= { rolled: [], skipped: [] }); r.skipped.push({ asset, why }); }
-  topOf(id) { const o = this.h.S.home.objects.find((q) => q.id === `${this.id}-${id}`); if (!o) throw new Error(`topOf('${id}'): place it first`); return o.at[1] + (o.params?.h ?? ASSETS[o.asset].size[2]); }   // the height of the top of a placed thing: stand something on it with y: a.topOf('side-table')
+  topOf(id) { const o = this.h.S.home.objects.find((q) => q.id === `${this.id}-${id}`); if (!o) throw new Error(`topOf('${id}'): place it first`); const { tris, all, T } = this.targetTris('topOf', id), c = all.getCenter(new T.Vector3()), y = heightField(tris)(c.x, c.z); return y > 0 ? Math.round(y) : o.at[1] + (o.params?.h ?? ASSETS[o.asset].size[2]); }   // the height of the top of a placed thing, measured on its real parts under its middle: stand something on it with y: a.topOf('side-table')
   view({ target, az = 20, el = 15, dist, fit = 'objects' }) { this.cam = { target: this.P3(target), az: az - this.psi, el, fit, ...(dist ? { dist } : {}) }; }
   shot(name, from, look, fov = 30, subject) { this.shots.push({ name, from: this.P3(from), look: this.P3(look), fov, ...(subject ? { subject: `${this.id}:${subject}` } : {}) }); }
   // a shot that looks across a separator into the neighbouring area `to` of the same open-plan home: the glimpse rules let `to` show in it (the subject still stands in this area)

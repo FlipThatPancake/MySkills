@@ -175,7 +175,7 @@ const issues = await page.evaluate(() => {
       if (!ok) out.push({ rule: 'support', what: `${id} is marked onSill but does not rest on a window's sill (centre over the window, bottom at sill + 30 mm, its middle no further than 80 mm from the wall: the sill reaches 110 mm into the room, so a pot hangs off it past that)` });
     }
     if (m === 'wall') {
-      const near = home.walls.some((W) => { let lo = 1e9, hi = -1e9, s0 = 1e9, s1 = -1e9; for (const { x, z } of b.pts) { const dx = x - W.to[0], dz = z - W.to[1], d = dx * W.n[0] + dz * W.n[1], s = -(dx * W.d[0] + dz * W.d[1]); lo = Math.min(lo, d); hi = Math.max(hi, d); s0 = Math.min(s0, s); s1 = Math.max(s1, s); } return lo > -12 && lo < 90 && s1 > 0 && s0 < W.len; });
+      const near = home.walls.some((W) => { let lo = 1e9, hi = -1e9, s0 = 1e9, s1 = -1e9; for (const { x, z } of b.pts) { const dx = x - W.to[0], dz = z - W.to[1], d = dx * W.n[0] + dz * W.n[1], s = -(dx * W.d[0] + dz * W.d[1]); lo = Math.min(lo, d); hi = Math.max(hi, d); s0 = Math.min(s0, s); s1 = Math.max(s1, s); } return lo > -12 && lo < (sc(id).asset === 'curtain' ? 140 : 90) && s1 > 0 && s0 < W.len; });
       if (!near) out.push({ rule: 'support', what: `${id} hangs on no wall (its back is not against one)` });
     }
   }

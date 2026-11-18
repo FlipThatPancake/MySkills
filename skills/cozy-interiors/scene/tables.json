@@ -1158,7 +1158,7 @@
      "fruit bowl (fruitBowl)",
      "jug of water (jug)",
      "mug (mug)",
-     "vase of branches (vase)",
+     "herbs in a pot (herbs)",
      "bread basket (breadBasket)",
      "salt and pepper (saltPepper)"
     ]
@@ -1169,7 +1169,7 @@
    "pot rail with pans over or beside the hob (potRail)",
    "spice rack on the wall by the hob (spiceRack)",
    "wall clock with a tea towel (wallClock, teaTowel)",
-   "picture over the table (picture)"
+   "pinboard with a calendar over the table (pinboard)"
   ]
  },
  "dining": {
