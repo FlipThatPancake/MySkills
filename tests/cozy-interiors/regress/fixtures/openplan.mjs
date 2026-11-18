@@ -32,4 +32,10 @@ export const fixtures = [
     build({ Home }) { const H = home(Home), d = H.list[1]; d.put('shelfunit', 'shelf', [2700, 4200], 0, { group: 'shelfwall', params: { w: 900, h: 1800 } }); d.shot('table', [2700, 1100, 6300], [2700, 400, 2600], 34, 'table set'); return H; } },
   { name: 'good-chairs-of-different-forms-in-two-areas', from: 'round 3 tester: a ladder chair and an upholstered chair were reported as the same chair (distance 1.0, needs 2) and the author could not raise it: a different form is enough by itself', kind: 'good', counts: ['variety'],
     build({ Home }) { const H = home(Home, 'ladder'), k = H.list[0]; k.table('bf', { at: [2300, 2700], w: 1200, d: 800, chairs: 2, chairForm: 'upholstered', group: 'breakfast', hero: false }); return H; } },
+  { name: 'shot-subject-not-the-largest-in-frame', from: 'round 3 evaluator E4: a shot named the island as its subject but the cooking run fills more of the frame than the island', kind: 'bug', expect: { rules: ['shot'], ids: ['the largest share'] },
+    build({ Home }) { const H = home(Home); H.list[0].shot('island', [2400, 1100, 3900], [2200, 900, 0], 34, 'island'); return H; } },
+  { name: 'shot-camera-far-outside-the-area', from: 'round 3 evaluator E4: a camera 1.5 m in front of the area rect (the old allowance was 2.5 m)', kind: 'bug', expect: { rules: ['shot'], ids: ['grown by 1 m'] },
+    build({ Home }) { const H = home(Home); H.list[0].shot('run', [2400, 1100, 5600], [2400, 700, 600], 34, 'cooking'); return H; } },
+  { name: 'shot-two-shots-the-same-view', from: 'round 3 evaluator E4: two shots of one area from 300 mm apart in the same direction', kind: 'bug', expect: { rules: ['shot'], ids: ['too alike'] },
+    build({ Home }) { const H = home(Home), k = H.list[0]; k.shot('a', [2400, 1100, 3600], [2400, 700, 600], 34, 'cooking'); k.shot('b', [2700, 1100, 3600], [2600, 700, 600], 34, 'cooking'); return H; } },
 ];
