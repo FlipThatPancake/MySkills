@@ -6,6 +6,7 @@
 const rnd = (seed) => { let r = (seed || 1) * 9301 + 49297; return () => { r = (r * 9301 + 49297) % 233280; return r / 233280; }; };
 import { potTop } from './pots.js';
 import { bookRow } from './books.js';
+import { sleeper } from '../motion/catmodel.js';
 const lo = { tone: 'lo' };
 
 export function vase(kit, { h = 280, stems = 5, seed = 3 } = {}) {   // a bottle vase with branches: thin curved lines with a few leaves
@@ -53,18 +54,21 @@ export function roundTable(kit, { r = 650, h = 750 } = {}) {
   g.add(kit.cyl(0, 30, 0, 70, h - 66, { rTop: 56, seg: 24, ...lo })); g.add(kit.cyl(0, 0, 0, 280, 30, { rTop: 250, seg: 32 }));
   return kit.merge(g);
 }
-export function cat(kit, { scale = 1 } = {}) {   // a cat asleep in a ring with its head on its tail
-  const T = kit.THREE, g = kit.group(), V = (x, y, z) => new T.Vector3(x, y, z);
-  const sph = (rx, ry, rz, x, y, z, o = {}, rot) => { const ge = new T.SphereGeometry(1, 24, 16); ge.scale(rx, ry, rz); const m = kit.solid(ge, x, y, z, { smooth: true, ...o }); if (rot) m.rotation.set(...rot); return m; };
-  const ear = (x, y, z, tilt) => { const m = kit.cyl(x, y, z, 24, 55, { rTop: 0, seg: 4, ...lo }); m.rotation.z = tilt; return m; };
-  const tube = (pts, r) => { const t = kit.group(); t.add(kit.solid(new T.TubeGeometry(new T.CatmullRomCurve3(pts.map((p) => V(...p))), 20, r, 8), 0, 0, 0, { smooth: true, ...lo })); const e = pts[pts.length - 1]; t.add(sph(r, r, r, e[0], e[1], e[2], lo)); return t; };
-  {
-    const body = sph(210, 95, 170, 0, 95, 0); g.add(body);                                             // the curled body
-    g.add(sph(78, 66, 80, 90, 85, 170));                                                              // the head resting forward
-    g.add(ear(48, 140, 165, 0.3)); g.add(ear(128, 140, 165, -0.3));
-    g.add(tube([[-170, 30, 60], [-120, 30, 200], [40, 28, 250], [170, 28, 210], [230, 28, 110]], 26));   // the tail round the front
+export function cat(kit, { scale = 1 } = {}) {   // a cat asleep in a ring with its head on its paws: the same model as the living sleeping cat (motion/catmodel.js), held still
+  const T = kit.THREE, c = kit.merge(kit.group().add(sleeper(kit, { seed: 1 }).group)), FLAT = 24, V = new T.Vector3();
+  // bake every part's placement into its vertices, then flatten everything below FLAT mm up to FLAT and lower the cat by FLAT: it rests on a flat patch (the tilted head's chin would otherwise
+  // sink 40 mm into the floor, and a rounded belly gives nothing to stand on); the cat's middle sits on the origin
+  c.updateMatrixWorld(true); const inv = c.matrixWorld.clone().invert(), jobs = [], seen = new Set();
+  c.traverse((o) => { if (o.geometry && !seen.has(o.geometry)) { seen.add(o.geometry); jobs.push([o.geometry, inv.clone().multiply(o.matrixWorld)]); } });
+  for (const [geo, M] of jobs) {
+    const at = geo.attributes;
+    if (at.instanceStart) { const done = new Map(); for (const n of ['instanceStart', 'instanceEnd']) { const a = at[n], arr = a.data.array, st = a.data.stride, off = a.offset; if (!done.has(arr)) done.set(arr, new Set()); if (done.get(arr).has(off)) continue; done.get(arr).add(off); for (let i = off; i + 2 < arr.length; i += st) { V.set(arr[i], arr[i + 1], arr[i + 2]).applyMatrix4(M); arr[i] = V.x; arr[i + 1] = Math.max(FLAT, V.y); arr[i + 2] = V.z; } a.data.needsUpdate = true; } }
+    else { geo.applyMatrix4(M); const a = at.position; for (let i = 0; i < a.count; i++) if (a.getY(i) < FLAT) a.setY(i, FLAT); a.needsUpdate = true; }
+    geo.boundingBox = null; geo.boundingSphere = null;
   }
-  const m = kit.merge(g); if (scale !== 1) m.scale.setScalar(scale); return m;
+  c.traverse((o) => { if (o !== c) { o.position.set(0, 0, 0); o.quaternion.identity(); o.scale.set(1, 1, 1); } });
+  c.position.set(-25, -FLAT, -33); kit.through(c);   // a soft body: its head, paws and tail lie into one another by design
+  const m = kit.group(); m.add(c); if (scale !== 1) m.scale.setScalar(scale); return m;
 }
 // A leaf with a midrib: an ellipsoid of length len and width wid, folded along its midrib (a shallow V) and bowed along its length, with the midrib drawn. Origin at its base, pointing along +y.
 export function foldedLeaf(kit, len, wid, { fold = 0.22, bow = 0.18 } = {}) {
