@@ -24,8 +24,8 @@ export async function motionIssues(page, sceneFile, { seconds = 240 } = {}) {
       const tag = `${th.area}: ${th.kind}`;
       if (th.error) { say(tag + 'err', `${tag}: ${th.error}`); continue; }
       const needs = th.entry.needs || [], via = th.ctx?.via;
-      if (needs.includes('openWindow')) {
-        if (!th.entry.via || !via) say(tag + 'via', `${tag}: needs an open window but names none (a.alive picks one: the area has no window that opens)`);
+      if (needs.includes('openWindow') || needs.includes('openWay')) {
+        if (!th.entry.via || !via) say(tag + 'via', `${tag}: needs a way in but names none (a.alive picks one: the area has no window that opens, arch or open door)`);
         else if (via.open() <= 0 || !via.gap()) say(tag + 'shut', `${tag}: its window (${via.id}) is not rendered open`);
         else if (th.entry.via && motion.PLUGINS[th.kind]?.sampled && !via.usable(th.R || 42)) say(tag + 'gap', `${tag}: its window (${via.id}) opens only ${Math.round(via.gap())} mm at the middle: too narrow for a flier (open it wider)`);
       }
@@ -63,7 +63,7 @@ export async function motionIssues(page, sceneFile, { seconds = 240 } = {}) {
     for (const th of motion.things) if (th.sampled && !th.error && !bodiesSeen[`${th.area}: ${th.kind}`]) say(`${th.area}: ${th.kind}never`, `${th.area}: ${th.kind}: never came in during ${seconds} s (the way in may be blocked, or it waits for a window that is shut)`);
     // with the window shut a fresh thing never shows
     for (const th of motion.things) {
-      if (!th.sampled || th.error || !th.ctx.via) continue;
+      if (!th.sampled || th.error || !th.ctx.via || th.ctx.via.op.kind === 'arch' || th.ctx.via.op.kind === 'door' && !th.ctx.via.op.style) continue;   // a passage has no sash to shut
       const via = th.ctx.via, built = via.W.built[via.index], saved = built.openables.map((o) => o.userData.open?.v);
       built.openables.forEach((o) => { if (o.userData.open) o.userData.open.v = 0; });
       const fresh = motion.PLUGINS[th.kind].build(th.ctx); let shown = 0;

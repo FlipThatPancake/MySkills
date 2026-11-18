@@ -14,4 +14,6 @@ export const fixtures = [
     build({ Home }) { const { H, a, back } = room(Home, { openings: [{ kind: 'window', x: 1200, width: 1400, height: 1200, sill: 900 }] }); back.place('curtain', 'curtain', 4200, { group: 'g', params: { w: 900 } }); a.alive([{ kind: 'paw' }]); return H; } },
   { name: 'good-bird-through-a-pair-window', from: 'round 4 M4: a bird appeared outside a pair window with its wing tips 173 mm off the middle, outside the 287 mm gap between the open sashes (the pose was folded only after it appeared)', kind: 'good',
     build({ Home }) { const { H, a } = room(Home, { openings: [{ kind: 'window', style: 'pair', x: 3000, width: 1100, height: 1500, sill: 900, open: 45 }] }); a.alive([{ kind: 'bird' }]); return H; } },
+  { name: 'good-fliers-through-an-arch', from: 'round 4 M5 (the user): with no window that opens, a flier may come through an open door or passage', kind: 'good',
+    build({ Home }) { const { H, a } = room(Home, { openings: [{ kind: 'arch', x: 3000, width: 1100, height: 2250 }] }); a.alive([{ kind: 'bird' }, { kind: 'butterfly' }]); return H; } },
 ];

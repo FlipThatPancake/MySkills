@@ -44,6 +44,7 @@ export const ASSETS = {
   picture: A('wall-centre', [600, 52, 800], 'wall', 'w 600, h 800, seed', { y: 1100, note: 'on open wall its middle stands at 1500: y = 1500 - h / 2 (1100 for h 800); over furniture 150-250 above its top, about 0.5-0.8 of its width' }),
   mirror: A('wall-centre', [700, 56, 1000], 'wall', 'w 700, h 1000, shape arch|round|pill', { y: 800 }),
   wallShelf: A('wall-centre', [900, 230, 280], 'wall', 'w 900, seed', { y: 1300, note: 'books, a pot and a bowl on it' }),
+  blind: A('wall-centre', [1200, 80, 1500], 'wall', 'w 1200, h 1500 (the window it covers), form roller|roman, drawn 0.2-0.9 (the share of h lowered from the top), tone mid|lo', { y: 800, note: 'a window blind drawn part way; y is the window sill (the bottom of the covered height); stands in front of the window' }),
   curtain: A('wall-centre', [1500, 200, 2300], 'wall', 'w 1500, h 2300, panels 2', { y: 0 }),
   coatHooks: A('wall-centre', [900, 100, 120], 'wall', 'n 4, w 900', { y: 1500, note: 'a coat and a scarf hang below it' }),
   cushion: A('centre', [440, 120, 420], 'on', 'w 440, h 420, tone mid|lo, lean 0-25 (degrees tilted back; 15 to 25 against a headboard or a sofa back)', { y: 'the seat height' }),
@@ -114,7 +115,7 @@ export const ASSETS = {
   fileBox: A('centre', [300, 380, 290], 'floor', 'w 300, h 290, d 380', { note: 'office foreground' }),
   laptop: A('centre', [330, 300, 230], 'on', 'w 330, d 230', { y: 'top', note: 'open, on a desk or table; screen toward -z' }),
   pouf: A('centre', [560, 560, 380], 'floor', 'r 280, h 380'),
-  cat: A('centre', [260, 400, 440], 'floor', "scale 1 (0.65 fits a 380 mm bench)", { y: 0, note: 'floor or lift on a rug; mount on for a seat or bench' }),
+  cat: A('centre', [390, 340, 140], 'floor', "scale 1 (0.65 fits a 380 mm bench)", { y: 0, note: 'floor or lift on a rug; mount on for a seat or bench' }),
   bed: A('centre', [2040, 2230, 1300], 'floor', 'w 1600, l 2100, head 1000 (headboard height; keep 300 + head at least 150 mm below a window sill)', { note: 'head toward -z: back it onto a wall' }),
   bedsideTable: A('centre', [450, 380, 520], 'floor', 'w 450, d 380, h 520'),
   wardrobe: A('centre', [1200, 600, 2100], 'floor', 'w 1200, h 2100, d 600'),
@@ -141,6 +142,8 @@ for (const [k, n] of Object.entries({ floorPlant: 5, plant: 6, vase: 4, picture:
 
 // ---- parameter spaces: what a variant of a base asset may be. A range [lo, hi] is a size or proportion (mm unless noted); a list is a style choice. compose.mjs deals unset ones from the home's seed (each value used before the deck runs out
 // of new ones, so two instances differ); named presets are points in the space. A variant = asset + seed + overrides; assets.mjs prints this, the asset sheet shows 8 of them.
+// overall width and depth of each armchair shape, from references/objects/chairs/*/notes.md (mm): dealParams clamps w and d into them
+export const CHAIR_FIT = { wing: { w: [600, 690], d: [760, 860] }, lounge: { w: [650, 750], d: [760, 860] }, rocking: { w: [520, 600], d: [780, 860] }, beanbag: { w: [840, 980], d: [840, 980] }, sling: { w: [680, 780], d: [760, 860] } };
 const LEGS = ['block', 'tapered', 'turned', 'hairpin', 'sled', 'splay', 'ball'];
 export const SPACE = {
   chair: { form: ['ladder', 'spindle', 'bentwood', 'upholstered'] },
@@ -148,7 +151,8 @@ export const SPACE = {
   rug: { form: ['plain', 'striped', 'borderless'], border: [40, 120], fringe: ['none', 'ends'] },
   sideboard: { form: ['doors', 'drawers', 'mixed', 'open'], legs: ['tapered', 'plinth', 'hairpin'] },
   bench: { form: ['plank', 'slatted', 'upholstered', 'trestle'] },
-  armchair: { shape: ['upholstered', 'upholstered', 'wing', 'cane', 'sling'], weave: ['cane', 'cane', 'slats'], w: [760, 980], d: [780, 900], legs: LEGS.slice(0, 5), arms: ['track', 'rolled', 'flared', 'none'], legH: [80, 170], backH: [760, 920], back: ['loose', 'tight'], piping: ['none', 'edge'], tone: ['mid', 'lo'] },
+  blind: { form: ['roller', 'roman'], drawn: [0.25, 0.85], tone: ['mid', 'lo'] },
+  armchair: { shape: ['upholstered', 'upholstered', 'wing', 'lounge', 'sling', 'rocking', 'beanbag'], weave: ['cane', 'cane', 'slats'], w: [760, 980], d: [780, 900], legs: LEGS.slice(0, 5), arms: ['track', 'rolled', 'flared', 'none'], legH: [80, 170], backH: [760, 920], back: ['loose', 'tight'], piping: ['none', 'edge'], tone: ['mid', 'lo'] },
   sofa: { chaise: ['none', 'none', 'left', 'right'], d: [820, 960], seatN: [1, 2, 3], legs: LEGS.slice(0, 5), arms: ['track', 'rolled', 'flared', 'none'], legH: [80, 170], backH: [740, 880], back: ['loose', 'tight', 'fixed'], piping: ['none', 'edge'], tone: ['mid', 'lo'] },
   sideTable: { r: [190, 280], h: [440, 620], top: ['round', 'square', 'rounded'], legs: ['tapered', 'turned', 'hairpin', 'splay', 'ball', 'block'], shelf: ['low', 'none'], drawer: ['none', 'bar', 'knob', 'cup', 'cutout'], tone: ['mid', 'lo'] },
   shelf: { w: [600, 1000], h: [1200, 2100], d: [260, 380], shelves: [3, 6], base: ['plinth', 'legs', 'feet'], back: ['closed', 'open'], fill: ['books', 'boxes', 'mixed'], seed: [1, 90] },

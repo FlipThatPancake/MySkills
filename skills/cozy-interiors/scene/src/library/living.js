@@ -132,6 +132,26 @@ export function stool(kit, { h = 650 } = {}) {   // a bar stool: round seat, fou
   g.add(kit.cyl(0, top, 0, RS, 40, { seg: 36 }));
   return kit.merge(g);
 }
+// a window blind, drawn part way: origin the middle of the window's full width at the bottom of its full height, standing out from the wall (+z). form roller (a flat fabric on a tube, a hem bar, a pull cord)
+// or roman (a flat fabric with soft horizontal folds, a headrail); w, h: the window the blind covers; drawn: how much of h is lowered from the top (0.2 to 0.9).
+export function blind(kit, { w = 1200, h = 1500, form = 'roller', drawn = 0.5, tone = 'mid' } = {}) {
+  const T = kit.THREE, g = kit.group(), L = Math.round(h * drawn), top = h + 50, bw = w - 20;
+  if (form === 'roman') {
+    g.add(kit.box(-w / 2, top - 6, 50, w, 56, 50, lo));   // the headrail
+    const N = Math.max(2, Math.round(L / 170)), A = 24, TH = 10, pts = [];   // a side view, extruded across: the front surface zigzags softly down the drop
+    for (let k = 0; k <= N * 2; k++) pts.push([30 + (k % 2 ? A : 0), top - L * k / (N * 2)]);
+    const sh = new T.Shape([...pts, ...pts.map(([z, y]) => [z + TH, y]).reverse()].map(([z, y]) => new T.Vector2(z, y))), geo = new T.ExtrudeGeometry(sh, { depth: bw, bevelEnabled: false }); geo.rotateY(Math.PI / 2); geo.translate(-bw / 2, 0, 0);
+    g.add(kit.solid(geo, 0, 0, 0, { tone }));
+    g.add(kit.box(-bw / 2, top - L - 8, 54, bw, 16, 22, { tone: 'lo' }));   // the bottom batten
+  } else {
+    g.add(kit.cyl(-w / 2, top - 22, 60, 24, w, { axis: 'x', seg: 20, ...lo }));   // the roller tube
+    g.add(kit.box(-bw / 2, top - 44 - L, 40 + 10, bw, L, 5, { tone }));   // the fabric, hanging flat just in front of the tube
+    g.add(kit.rbox(-bw / 2, top - 44 - L - 14, 54, bw, 20, 16, 6, { tone: 'lo' }));   // the hem bar
+    g.add(kit.lines([[bw / 2 - 40, top - 44 - L - 4, 64], [bw / 2 - 40, top - 44 - L - 4 - 140, 64]], 'lo'));   // the pull cord
+  }
+  g.position.z = form === 'roman' ? 60 : 24;   // the blind's back stands 60 mm out of its origin, like the curtain's: placed with a window's sill it clears the sill's lip
+  return kit.merge(g);
+}
 export function curtain(kit, { w = 1500, h = 2300, panels = 2 } = {}) {
   const T = kit.THREE, g = kit.group(), pw = w * 0.22, N = 9, A = 34, TH = 14, ROD = h + 70;
   g.add(kit.cyl(-w / 2 - 70, ROD, 90, 12, w + 140, { axis: 'x', seg: 14, ...lo }));
