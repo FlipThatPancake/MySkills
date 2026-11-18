@@ -166,6 +166,7 @@ export function wallClock(kit, { r = 170, form = 'round', seed = 7, face = 'tick
 
 export function cookbookStand(kit, { w = 300, seed = 8, tilt: tl = 18, ledge = 'plain' } = {}) {   // a wooden stand: a tilted board, a front ledge, an open book held on it
   const g = kit.group(), R = rnd(seed), pts = [], h = 300, bd = 24;
+  g.add(kit.box(-w / 2, 0, 130, w, 14, 270, lo));   // a flat foot under the board, so the stand sits firm
   const board = kit.group(); board.add(kit.rbox(-w / 2, 0, bd, w, h, bd, 6)); board.position.set(0, 14, -40); board.rotation.x = -tl * DEG; g.add(board);
   if (ledge === 'rail') { g.add(rod(kit, [-w / 2, 40, 100], [w / 2, 40, 100], 9, 9, 'lo')); for (const sx of [-1, 1]) g.add(rod(kit, [sx * w / 2, 0, 100], [sx * w / 2, 40, 100], 8, 8, 'lo')); } else g.add(kit.box(-w / 2, 0, 90, w, 30, 40, lo));
   for (const s of [-1, 1]) g.add(rod(kit, [s * (w / 2 - 20), 20, -60], [s * (w / 2 - 20), 20, 80], 8, 8, 'lo'));

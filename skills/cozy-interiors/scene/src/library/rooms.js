@@ -4,16 +4,21 @@
 // daybed({ w = 1900, d = 850 }), readingChair() (an armchair with a high back), footstool({ w = 520 }), console({ w = 1100, d = 330, h = 800 }).
 import { armchair } from './living.js';
 import { duvetCloth } from './softpieces.js';
+import { pillowGeometry } from './soft.js';
 import { bedFrame } from './bedset.js';
 const lo = { tone: 'lo' };
 const bx = (kit) => (cx, y, cz, w, h, d, o) => kit.box(cx - w / 2, y, cz + d / 2, w, h, d, o), rb = (kit) => (cx, y, cz, w, h, d, r, o) => kit.rbox(cx - w / 2, y, cz + d / 2, w, h, d, r, o);
-export function bed(kit, { w = 1600, l = 2100, head = 1000, duvet = 'made', seed = 1, frame = 'box' } = {}) {   // head: the headboard's height above the base (the bed stands 300 + head mm tall)
+export function bed(kit, { w = 1600, l = 2100, head = 1000, duvet = 'made', seed = 1, frame = 'box', tone = 'lo' } = {}) {   // head: the headboard's height above the base (the bed stands 300 + head mm tall)
   const g = kit.group(), B = bx(kit), R = rb(kit);
   g.add(bedFrame(kit, frame, { w, l, head }));                                              // the base and headboard for the frame style (box, legs, upholstered, platform)
   g.add(R(0, 300, 40, w - 20, 210, l - 100, 40, { ...lo, through: true }));                                       // the mattress
-  if (duvet === 'unmade') { const d = duvetCloth(kit, { w: w - 20, head: -560, foot: 1040, sagL: 110 + 40 * ((seed * 7) % 5) / 4, sagR: 400, sagFoot: 250, seed }); d.position.set(0, 510, 0); g.add(d); }   // thrown over unevenly: one side sags low, the foot hangs
-  else g.add(R(0, 505, 260, w - 40, 90, l - 760, 36));                                       // the duvet, folded back at the top
-  for (const s of [-1, 1]) g.add(R(s * w * 0.24, 510, -l / 2 + 240, w * 0.4, 130, 330, 50, lo));   // two pillows
+  const e = 190 + 20 * ((seed * 7) % 3), dv = duvetCloth(kit, duvet === 'unmade'
+    ? { w: w - 20, head: -560, foot: 1040, sagL: 110 + 40 * ((seed * 7) % 5) / 4, sagR: 400, sagFoot: 250, seed, tone, turn: 720 }
+    : { w: w - 20, head: -560, foot: 1040, sagL: e, sagR: e, sagFoot: 230, seed, tone, made: true, turn: 0 });
+  dv.position.set(0, 534, 0); g.add(dv);   // the duvet: thrown over unevenly (unmade) or laid even with a roll folded back (made)
+  for (const s of [-1, 1]) {   // two plump pillows, tipped back against the headboard, each with a dent in the middle
+    const pg = pillowGeometry(kit.THREE, { w: w * 0.4, h: 330, thick: 150, edge: 46, dent: 22, n: 24 }), pl = kit.solid(pg, s * w * 0.24, 510 + 70, -l / 2 + 230, { smooth: true, tone: 'lo' }); pl.rotation.x = -Math.PI / 2 + 0.2; g.add(pl);
+  }
   return kit.merge(g);
 }
 export function bedsideTable(kit, { w = 450, d = 380, h = 520 } = {}) {

@@ -234,8 +234,12 @@ class Area {
       const [px, pz] = toArea(lx, lz), prm = vary(this.h, 'cushion', { w: 400, h: 320, thick: 130, lean, tone }, this.id), y = Math.round(geomRestOn(tris, this.thingTris('cushion', prm), [px, pz], turn));   // the dealt piping and pattern change the shape a little: rest the real one
       this.put(`${targetId}-cushion${i + 1}`, 'cushion', [px, pz], turn, { group: grp, y, mount: 'on', params: prm }); }
     let bandAt = null; if (chS && thr) { thr = 'band'; bandAt = toArea(cx + chS * (W / 2 - 200 - cw / 2), (tgt.params?.d ?? 900) / 2 + 370); }   // the throw lies folded on the chaise: a drape would slide off its low seat
-    if (thr === 'drape') { try { const [ax, az] = toArea(chS === -1 ? cx + (W / 2 - 420) : cx - (W / 2 - 420), zo + 330); this.drapeOver(`${targetId}-throw`, targetId, { w: 1000, d: 700, wave: 10, at: [ax, az], spin: tn + 20, tone: throwTone, group: grp }); } catch (e) { console.log(`seatSoft('${targetId}'): the throw would not drape (${e.message}); folded on the seat instead`); thr = 'band'; } }
-    if (thr === 'band') { const [bx, bz] = bandAt || toArea(cx + (W / 2 - 360), zo + 330); try { this.bandOn(`${targetId}-throw`, targetId, { w: chS ? Math.min(700, cw - 100) : 700, d: 380, at: [bx, bz], spin: tn, tone: throwTone, group: grp }); } catch (e) { console.log(`seatSoft('${targetId}'): no throw laid: ${e.message}`); } }
+    if (thr === 'drape') {   // over the arm: hangs on the outer side, falls onto the seat on the inner side (a seat with no arm takes a small folded throw instead)
+      const aw = tgt.asset === 'armchair' ? 170 : 200, [hx, hz] = toArea(cx - (W / 2 - aw / 2), zo + 200), [sx, sz] = toArea(cx - (W / 2 - aw - 260), zo + 200), hA = f(hx, hz), hS = f(sx, sz);
+      if (hA - hS >= 80) { const prm = { aw, drop: Math.round(hA - hS), d: 560, lay: 140, tone: throwTone, seed: this.h.S.seed % 9 + 1 }; this.put(`${targetId}-throw`, 'armThrow', [hx, hz], tn, { group: grp, y: Math.round(hA), mount: 'on', params: prm }); }
+      else { console.log(`seatSoft('${targetId}'): no arm to hang a throw on; folded on the seat instead`); thr = 'band'; }
+    }
+    if (thr === 'band') { const [bx, bz] = bandAt || toArea(cx + (W / 2 - 520), zo + 330); try { this.bandOn(`${targetId}-throw`, targetId, { w: chS ? Math.min(450, cw - 100) : 450, d: 300, at: [bx, bz], spin: tn, tone: throwTone, group: grp }); } catch (e) { console.log(`seatSoft('${targetId}'): no throw laid: ${e.message}`); } }
   }
   // ---- a cabinet run with slots: R.on('hob', 'pan') puts a pan on the middle of the first hob module
   run(F, id, left, modules, o = {}) {

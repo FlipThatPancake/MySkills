@@ -45,3 +45,15 @@ H.write(json, fs);
 const { checkParts } = await import('./geom/parts.mjs');
 const found = await checkParts(json);
 console.log(found.map((f) => `[parts] ${f.text}`).join('\n') || 'no part passes 20 mm into another'); console.log(`${found.length} asset variant(s) with parts through each other, of ${i} checked`);
+
+// Every small thing the roll can deal on a flat top stands still for a second of gravity (Rapier, geom/settle.mjs): a thing that tips, slides or turns is named. --no-settle skips it.
+if (!args.includes('--no-settle')) {
+  const small = list.filter((a) => { const z = ASSETS[a].size, m = ASSETS[a]; return m.mount === 'on' && m.y === 'top' && Math.max(z[0], z[1]) <= 650 && z[2] <= 600 && !/Cloth|Throw|Runner|Rug|runner|rug|cushion|Cushion|drape/.test(a); });
+  const H2 = new Home({ seed: 11, floor: 'plain' }), a2 = H2.area('t', 'T', { rect: [0, 0, 60000, 60000] }); let n = 0;
+  for (const a of small) for (let k = 0; k < K; k++) { const cx = 2000 + (n % 10) * 2200, cz = 2000 + Math.floor(n / 10) * 2200; n++;
+    try { a2.put(`top-${n}`, 'table', [cx, cz], 0, { group: 'g', params: { w: 1200, d: 800, h: 750, form: 'legs' } }); a2.put(`${a}-${k}`, a, [cx, cz], 0, { group: 'g', y: 750, mount: 'on', params: { seed: 11 + k * 17 } }); } catch (e) { console.log(`settle skipped ${a}-${k}: ${e.message}`); } }
+  const j2 = join(dir, 'settle.json'); H2.write(j2, fs);
+  const { checkScene } = await import('./geom/index.mjs'), res = await checkScene(j2, { settle: true, parts: false });
+  const moved = res.findings.filter((f) => f.rule === 'moves' && !/^top-/.test(f.id));
+  console.log(moved.map((f) => `[settle] ${f.text}`).join('\n') || 'every small thing stands still'); console.log(`${moved.length} of ${n} small thing variant(s) move on a flat top (${small.length} assets)`);
+}

@@ -78,7 +78,17 @@ export function picture(kit, { form = 0, w = 600, h = 800, seed = 2 } = {}) {
   const x0 = -w / 2 + F + 36, x1 = w / 2 - F - 36, y0 = F + 36, y1 = h - F - 36, z = D + 4.5, cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
   const ring = (x, y, r, n = 26) => { for (let i = 0; i < n; i++) { const a = i / n * 6.2832, b = (i + 1) / n * 6.2832; pts.push([x + r * Math.cos(a), y + r * Math.sin(a), z], [x + r * Math.cos(b), y + r * Math.sin(b), z]); } };
   if (form === 1) { const r = Math.min((x1 - x0) * 0.3, (y1 - y0) * 0.42); ring(cx - r * 0.5, cy + r * 0.1, r); ring(cx + r * 0.7, cy - r * 0.1, r * 0.7); pts.push([x0, y0 + (y1 - y0) * 0.12, z], [x1, y0 + (y1 - y0) * 0.12, z]); }   // two overlapping circles
-  else if (form === 2) { let px = cx, py = y0; for (let i = 1; i <= 10; i++) { const nx = cx + Math.sin(i * 0.7 + R()) * (x1 - x0) * 0.12, ny = y0 + (y1 - y0) * i / 10; pts.push([px, py, z], [nx, ny, z]); if (i > 2) { const sd = i % 2 ? 1 : -1; pts.push([nx, ny, z], [nx + sd * (x1 - x0) * 0.22, Math.min(y1, ny + (y1 - y0) * 0.06), z]); } px = nx; py = ny; } }   // a botanical stem
+  else if (form === 2) {   // a botanical branch: a ground line, a curving stem and pairs of leaf outlines, so it reads as a plant, not a crack
+    const leaf = (x, y, a, len, wd) => { const n = 10, side = (sg) => Array.from({ length: n + 1 }, (_, k) => { const t = k / n, u = Math.sin(Math.PI * Math.pow(t, 0.8)) * wd * sg; return [x + Math.cos(a) * len * t - Math.sin(a) * u, y + Math.sin(a) * len * t + Math.cos(a) * u, z]; }); for (const sg of [-1, 1]) { const q = side(sg); for (let k = 0; k < n; k++) pts.push(q[k], q[k + 1]); } };
+    pts.push([x0, y0, z], [x1, y0, z]);
+    let px = cx, py = y0; const wx = (x1 - x0), hy = (y1 - y0), L = Math.min(wx * 0.3, hy * 0.2);
+    for (let i = 1; i <= 8; i++) {
+      const nx = cx + Math.sin(i * 0.6 + R()) * wx * 0.08, ny = y0 + hy * i / 8; pts.push([px, py, z], [nx, ny, z]);
+      if (i > 1 && ny < y1 - L * 0.7) for (const sd of [-1, 1]) leaf(nx, ny, sd > 0 ? 0.55 + R() * 0.2 : Math.PI - 0.55 - R() * 0.2, L * (0.85 + 0.2 * R()), L * 0.14);
+      px = nx; py = ny;
+    }
+    leaf(px, py, Math.PI / 2, Math.min(L * 0.7, y1 - py), L * 0.1);
+  }
   else { for (let i = 0; i <= 3; i++) for (let k = 0; k <= 3; k++) if ((i + k) % 2 === 0) { const sx = (x1 - x0) / 4, sy = (y1 - y0) / 4; pts.push([x0 + i * sx, y0 + k * sy, z], [x0 + (i + 1) * sx * 0.9, y0 + k * sy, z], [x0 + (i + 1) * sx * 0.9, y0 + k * sy, z], [x0 + (i + 1) * sx * 0.9, y0 + (k + 1) * sy * 0.9, z], [x0 + (i + 1) * sx * 0.9, y0 + (k + 1) * sy * 0.9, z], [x0 + i * sx, y0 + (k + 1) * sy * 0.9, z], [x0 + i * sx, y0 + (k + 1) * sy * 0.9, z], [x0 + i * sx, y0 + k * sy, z]); } }   // a grid of squares
   g.add(kit.lines(pts, 'mid'));
   return kit.merge(g);

@@ -151,8 +151,8 @@ export function runner(kit, { w = 700, l = 2400, form = 'stripe', fringe = true,
   if (fringe && fringe !== 'no') { const fr = []; for (const s of [-1, 1]) for (let x = -hw + 14; x <= hw - 14; x += 18) { const dz = (R() - 0.5) * 8; fr.push([x, 4, s * (hl + 2)], [x + dz, 3, s * (hl + 34 + R() * 10)]); } g.add(kit.lines(fr, 'lo')); }
   if (fold && fold !== 'no') {   // the front-left corner turned back over the mat: a triangle lying on top of it
     const s = 190 + R() * 60, tri = new T.Shape(); tri.moveTo(0, 0); tri.lineTo(s, 0); tri.lineTo(0, s); tri.lineTo(0, 0);
-    const fl = new T.ExtrudeGeometry(tri, { depth: 5, bevelEnabled: true, bevelThickness: 1.5, bevelSize: 1.5, bevelSegments: 1 }); fl.rotateX(Math.PI / 2); fl.translate(0, th + 4, 0);
-    const f = kit.solid(fl, -hw + 8, 0, hl - s - 8 + 0.01, { tone: 'mid' }); f.position.set(-hw + 8, 0, hl - s - 8 + s * 0 + 0); g.add(f);
+    const fl = new T.ExtrudeGeometry(tri, { depth: 6, bevelEnabled: true, bevelThickness: 4, bevelSize: 4, bevelSegments: 4, curveSegments: 4 }); fl.rotateX(Math.PI / 2); fl.translate(0, th + 4, 0);
+    const f = kit.solid(fl, -hw + 8, 0, hl - s - 8 + 0.01, { smooth: true, ...(tone === 'accent' ? { tone: 'accent' } : lo) }); f.position.set(-hw + 8, 0, hl - s - 8 + s * 0 + 0); g.add(f);
   }
   return kit.merge(g);
 }
