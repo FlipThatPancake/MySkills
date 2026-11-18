@@ -153,3 +153,11 @@ fixtures.push(
     { name: 'good-cat-alone-where-no-window-opens', from: 'the user, Nov 18: one mover that needs no wind is enough', kind: 'good', counts: ['windmover'], build({ Home }) { return homeW(Home, 'fixed'); }, patch(S) { S.areas[0].motion = [{ kind: 'cat' }]; } },
   );
 }
+// U14: the accent textile shows in the home view
+{
+  const kitchen = (Home, runnerZ) => { const { H, a } = room(Home); a.put('isl', 'baseRun', [2000, 1900], 0, { group: 'island', params: { depth: 600, finishedBack: true, modules: [{ w: 900, kind: 'doors' }, { w: 900, kind: 'drawers', n: 3 }] } }); a.put('rn', 'runner', [2900, runnerZ], 0, { group: 'island', params: { w: 700, l: 2000, form: 'stripe', tone: 'accent' } }); return H; };
+  fixtures.push(
+    { name: 'accent-runner-hidden-behind-the-island', from: 'round 4 U14: the accent runner stood behind the island and barely showed in the home view', kind: 'bug', expect: { rules: ['accent'], ids: ['t-rn'] }, build({ Home }) { return kitchen(Home, 1500); } },
+    { name: 'good-accent-runner-in-the-open', from: 'round 4 U14: the runner in front of the island shows', kind: 'good', counts: ['accent'], build({ Home }) { return kitchen(Home, 3300); } },
+  );
+}
