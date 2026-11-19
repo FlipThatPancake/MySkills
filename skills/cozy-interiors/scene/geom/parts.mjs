@@ -6,7 +6,8 @@
 import { RAPIER, M, partDesc } from './shapes.mjs';
 import { loadScene } from './load.mjs';
 
-export const PARTS = { depth: 20, slack: 1 };
+// loose: a loose soft thing (a pillow) pressing deeper than loose into another part fails even when it ends inside it: a pillow 63 mm into a headboard is not joinery. Sewn soft parts (a sofa's arm into its base) stay joinery.
+export const PARTS = { depth: 20, slack: 1, loose: 15 };
 
 export async function checkParts(scene, { src, depth = PARTS.depth, all = false, declared: showDeclared = false } = {}) {
   const L = scene.objects ? scene : await loadScene(scene, { src }), W = new RAPIER.World({ x: 0, y: 0, z: 0 }), find = [];
@@ -16,13 +17,14 @@ export async function checkParts(scene, { src, depth = PARTS.depth, all = false,
     const low = Math.min(...o.parts.filter((q) => q.through !== 'held' && q.kind !== 'flat').map((q) => q.box.mn[1]));   // a declared pass-through may cross what holds it, never poke out below the asset's lowest solid part (a pen through the pot's floor)
     for (let i = 0; i < P.length; i++) for (let j = i + 1; j < P.length; j++) {
       const A = P[i], B = P[j], a = A.p.box, b = B.p.box;
-      if (a.mn[0] > b.mx[0] - depth || a.mx[0] < b.mn[0] + depth || a.mn[1] > b.mx[1] - depth || a.mx[1] < b.mn[1] + depth || a.mn[2] > b.mx[2] - depth || a.mx[2] < b.mn[2] + depth) continue;
+      const gate = Math.min(depth, PARTS.loose);
+      if (a.mn[0] > b.mx[0] - gate || a.mx[0] < b.mn[0] + gate || a.mn[1] > b.mx[1] - gate || a.mx[1] < b.mn[1] + gate || a.mn[2] > b.mx[2] - gate || a.mx[2] < b.mn[2] + gate) continue;
       let r = null; try { r = A.col.contactCollider(B.col, 0); } catch {} if (!r || r.distance >= 0) continue;
-      const d = -r.distance / M; if (d <= depth) continue;
+      const d = -r.distance / M, soft = (A.p.soft === 'loose' || B.p.soft === 'loose') && !A.p.content && !B.p.content; if (d <= (soft ? PARTS.loose : depth)) continue;   // a loose pillow: the smaller slack
       const n = r.normal1, proj = (t) => { let lo = Infinity, hi = -Infinity; for (let q = 0; q < t.length; q += 3) { const v = t[q] * n.x + t[q + 1] * n.y + t[q + 2] * n.z; if (v < lo) lo = v; if (v > hi) hi = v; } return [lo, hi]; };
       const [al, ah] = proj(A.p.tris), [bl, bh] = proj(B.p.tris), E = PARTS.slack, pierce = (al < bl - E && ah > bh + E) || (bl < al - E && bh > ah + E);
       const content = A.p.content || B.p.content, declared = A.p.through || B.p.through;
-      if (declared && !content && !showDeclared && ![A, B].some((x) => x.p.through === 'held' && x.p.box.mn[1] < low - 3)) continue; if (!pierce && !content) continue;
+      if (declared && !content && !showDeclared && ![A, B].some((x) => x.p.through === 'held' && x.p.box.mn[1] < low - 3)) continue; if (!pierce && !content && !soft) continue;
       const o0 = [Math.min(...o.parts.map((q) => q.box.mn[0])), Math.min(...o.parts.map((q) => q.box.mn[1])), Math.min(...o.parts.map((q) => q.box.mn[2]))]; every.push({ d: Math.round(d), parts: [A.k, B.k], types: [A.p.type, B.p.type], boxes: [A, B].map((x) => [...x.p.box.mn.map((v, i) => Math.round(v - o0[i])), ...x.p.box.mx.map((v, i) => Math.round(v - o0[i]))].join(',')), content });
       if (!worst || d > worst.depth) worst = { depth: Math.round(d), parts: [A.k, B.k], boxes: [A, B].map((x) => [...x.p.box.mn, ...x.p.box.mx].map(Math.round)), types: [A.p.type, B.p.type], content, pierce };
     }
