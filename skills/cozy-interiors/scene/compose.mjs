@@ -28,6 +28,7 @@ import { dealParams } from './src/library/space.js';
 import { dropCloth, heightField } from './src/cloth.js';
 import { createKit } from './src/kitchen3d.js';
 import { restOn as geomRestOn, fits as geomFits, topAt } from './geom/place.mjs';
+import { SOFT, OVERHANG_TOL, BAND } from './geom/kinds.mjs';
 import { REGISTRY } from './src/library/index.js';
 import { joinAreas, seamLine, zoneList } from './openplan.mjs';
 import { checkAlive, pickVia, MOTION } from './motion-roll.mjs';
@@ -158,8 +159,8 @@ class Area {
   }
   // the geometry core decides the height and the overhang: the thing's base must rest on real surface (at least 85% of it), else the call refuses
   settleOn(label, id, asset, tris, params, [px, pz], turn) {
-    const thing = this.thingTris(asset, params), y = geomRestOn(tris, thing, [px, pz], turn), share = geomFits(tris, thing, [px, pz], turn);
-    if (share < 0.85) throw new Error(`${label}('${id}'): only ${Math.round(share * 100)}% of the ${asset} base would lie over the surface (it needs 85%): move it inward (at or dx/dz), or use a smaller piece`);
+    const thing = this.thingTris(asset, params), y = geomRestOn(tris, thing, [px, pz], turn), share = geomFits(tris, thing, [px, pz], turn, { tol: SOFT.test(asset) ? BAND.soft : BAND.hard });
+    if (share < 1 - OVERHANG_TOL) throw new Error(`${label}('${id}'): only ${Math.round(share * 100)}% of the ${asset} base would lie over the surface (it needs ${Math.round(100 - 100 * OVERHANG_TOL)}%): move it inward (at or dx/dz), or use a smaller piece`);
     return Math.round(y);
   }
   targetTris(label, targetId) {   // the triangles of a placed thing in this area's frame, for resting things on it
@@ -215,7 +216,7 @@ class Area {
     const { tris, all, T } = this.targetTris('bandOn', targetId), f = heightField(tris), c = all.getCenter(new T.Vector3()), p0 = at || [c.x + dx, c.z + dz], sr = rad(spin), cs = Math.cos(sr), sn = Math.sin(sr);
     const flat = (q) => { const hs = []; for (let a = -w / 2; a <= w / 2; a += 40) for (let b = -d / 2; b <= d / 2; b += 40) hs.push(f(q[0] + a * cs + b * sn, q[1] - a * sn + b * cs)); const top = Math.max(...hs); return { top, share: top > 0 ? hs.filter((h) => h > top - 30).length / hs.length : 0 }; };   // the share of the throw's footprint that rests on the highest flat patch
     let p = p0, best = flat(p0);
-    if (best.share < 0.85) { const R = Math.max(w, d), cand = []; for (let a = -R; a <= R; a += 40) for (let b = -R; b <= R; b += 40) cand.push([p0[0] + a, p0[1] + b, Math.hypot(a, b)]); cand.sort((u, v) => u[2] - v[2]); const hit = cand.find((q) => flat(q).share >= 0.85); if (!hit) throw new Error(`bandOn('${id}', '${targetId}'): no flat patch under a ${w} x ${d} throw carries 85% of it; make it smaller or lay it elsewhere`); p = [hit[0], hit[1]]; best = flat(p); console.log(`bandOn('${id}'): moved ${Math.round(Math.hypot(p[0] - p0[0], p[1] - p0[1]))} mm so ${Math.round(best.share * 100)}% of the throw rests on a flat patch of ${targetId}`); }
+    if (best.share < 1 - OVERHANG_TOL) { const R = Math.max(w, d), cand = []; for (let a = -R; a <= R; a += 40) for (let b = -R; b <= R; b += 40) cand.push([p0[0] + a, p0[1] + b, Math.hypot(a, b)]); cand.sort((u, v) => u[2] - v[2]); const hit = cand.find((q) => flat(q).share >= 1 - OVERHANG_TOL); if (!hit) throw new Error(`bandOn('${id}', '${targetId}'): no flat patch under a ${w} x ${d} throw carries 85% of it; make it smaller or lay it elsewhere`); p = [hit[0], hit[1]]; best = flat(p); console.log(`bandOn('${id}'): moved ${Math.round(Math.hypot(p[0] - p0[0], p[1] - p0[1]))} mm so ${Math.round(best.share * 100)}% of the throw rests on a flat patch of ${targetId}`); }
     this.put(id, 'foldedThrow', p, spin, { group, y: Math.round(best.top), mount: 'on', params: { w, d, layers, tone } });
   }
   // a light hung over a placed thing, an island above all: a.over('island', 'pendantLamp', { dx, dz, group }) hangs the shade's rim 825 above the top (750 to 900 is the rule), over the middle of the piece

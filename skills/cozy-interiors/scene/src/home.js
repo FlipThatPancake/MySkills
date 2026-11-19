@@ -7,7 +7,7 @@
 //   An opening is { kind: 'window' | 'door' | 'arch', at (mm along the wall from `from`, to its middle), width, height, sill, hinge: 'l' | 'r', open (deg), to (area id: a click goes there), beyond: false (a real room lies beyond) }.
 //   Furniture faces the room as it stands: a wall's face is where an object's back sits.
 //   An object is { id, asset, at: [x, y, z], turn (deg about the vertical), mount: 'floor' | 'on' | 'wall' | 'ceiling' | 'lines', params, shadow: false, lift (mm: it stands on something this thick, like a rug) }; its contact shadow comes from the mount.
-import { halo } from './sheet.js';
+import { halo, stencilOut } from './sheet.js';
 import { floorLines } from './floor.js';
 import { opening } from './openings.js';
 
@@ -103,7 +103,7 @@ export function buildHome(kit, home, registry, areas = []) {
   const BEYOND = 1600, back = walls.filter((w) => w.walk.length).flatMap((w) => [w.from, w.to].map((q) => [q[0] - w.n[0] * BEYOND, q[1] - w.n[1] * BEYOND]));   // behind a wall with a way through, the floor runs on
   const xs = [...walls.flatMap((w) => [w.from[0], w.to[0]]), ...areas.flatMap((a) => [a.bounds.x0, a.bounds.x1]), ...back.map((q) => q[0])], zs = [...walls.flatMap((w) => [w.from[1], w.to[1]]), ...areas.flatMap((a) => [a.bounds.z0, a.bounds.z1]), ...back.map((q) => q[1])];
   const bb = { x0: Math.min(...xs), x1: Math.max(...xs), z0: Math.min(...zs), z1: Math.max(...zs) };
-  const floor = new T.Mesh(new T.PlaneGeometry(bb.x1 - bb.x0 + 2 * EDGE, bb.z1 - bb.z0 + 2 * EDGE), wallMat);
+  const floor = new T.Mesh(new T.PlaneGeometry(bb.x1 - bb.x0 + 2 * EDGE, bb.z1 - bb.z0 + 2 * EDGE), stencilOut(kit, wallMat));
   floor.rotation.x = -Math.PI / 2; floor.position.set((bb.x0 + bb.x1) / 2, -4, (bb.z0 + bb.z1) / 2);
   group.add(floor);
   const style = home.floor?.style || (home.tiles ? 'tiles' : 'plain'), M = 1500;

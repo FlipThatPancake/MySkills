@@ -1,8 +1,8 @@
 // the rules that need contacts: penetrates, floating, overhangs, sunk. One table of tolerances, one place.
-import { BUILT_IN, FLATMARK, PAN, RUG, SOFT, isFree, holdsRules, softKind } from './kinds.mjs';
+import { BUILT_IN, FLATMARK, PAN, RUG, SOFT, isFree, holdsRules, softKind, OVERHANG_TOL } from './kinds.mjs';
 import { pairs } from './world.mjs';
 
-export const TOL = { hard: 2, soft: 30, wall: 10, floatGap: 2, overhang: 0.15, sunk: { cloth: 8, seat: 30, rug: 5, hard: 2 } };
+export const TOL = { hard: 2, soft: 30, wall: 10, floatGap: 2, overhang: OVERHANG_TOL, sunk: { cloth: 8, seat: 30, rug: 5, hard: 2 } };
 
 const hull2 = (P) => { P = [...P].sort((a, b) => a[0] - b[0] || a[1] - b[1]); if (P.length < 3) return P; const cr = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]); const lo = [], up = []; for (const p of P) { while (lo.length >= 2 && cr(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); } for (const p of [...P].reverse()) { while (up.length >= 2 && cr(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); } return lo.slice(0, -1).concat(up.slice(0, -1)); };
 const parea = (P) => { let A = 0; for (let i = 0; i < P.length; i++) { const a = P[i], b = P[(i + 1) % P.length]; A += a[0] * b[1] - b[0] * a[1]; } return Math.abs(A) / 2; };

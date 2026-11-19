@@ -1,6 +1,6 @@
 // loadScene(scene.json path | parsed scene, { src }) → the home built in Node with the page's own buildHome (parts kept separate), as plain data:
 //   { objects: [{ id, asset, mount, onSill, lift, area, group, parts }], env: [parts], walls, height, ms }
-// A part is { tris (Float64Array, world mm, 3 numbers a vertex), verts (the geometry's own vertices, each once), kind: convex | concave | open | flat, content, through, box: { mn, mx }, vol, area, type }.
+// A part is { tris (Float64Array, world mm, 3 numbers a vertex), verts (the geometry's own vertices, each once), kind: convex | concave | open | flat, content, soft (true: sewn into the asset, a cushion, an upholstered part; 'loose': a pillow lying against it: soft.js tags the geometry), through, box: { mn, mx }, vol, area, type }.
 // buildHome, not buildScene: only buildHome passes the ceiling height to the hood and the stove, so it is what the page shows.
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -22,7 +22,7 @@ export async function loadScene(scene, { src = SRC } = {}) {
   const v = new T.Vector3();
   const grab = (o) => { const geo = o.geometry, p = geo.attributes.position, ix = geo.index, n = ix ? ix.count : p.count, t = new Float64Array(n * 3); for (let i = 0; i < n; i++) { v.fromBufferAttribute(p, ix ? ix.getX(i) : i).applyMatrix4(o.matrixWorld); t[i * 3] = v.x; t[i * 3 + 1] = v.y; t[i * 3 + 2] = v.z; } return t; };
   const verts = (o) => { const p = o.geometry.attributes.position, t = new Float64Array(p.count * 3); for (let i = 0; i < p.count; i++) { v.fromBufferAttribute(p, i).applyMatrix4(o.matrixWorld); t[i * 3] = v.x; t[i * 3 + 1] = v.y; t[i * 3 + 2] = v.z; } return t; };   // the geometry's own vertices (each once): cheaper to build hulls from than the triangle soup
-  const part = (o) => { const tris = grab(o), vs = verts(o), I = classify(tris, vs); return { tris, verts: vs, kind: I.kind, content: !!o.userData.content, through: o.userData.through === 'held' ? 'held' : !!o.userData.through, box: { mn: I.mn, mx: I.mx }, vol: I.vol, area: I.area, type: o.geometry.type, mat: o.material?.uuid }; };
+  const part = (o) => { const tris = grab(o), vs = verts(o), I = classify(tris, vs); return { tris, verts: vs, kind: I.kind, content: !!o.userData.content, soft: o.geometry.userData.soft || false, through: o.userData.through === 'held' ? 'held' : !!o.userData.through, box: { mn: I.mn, mx: I.mx }, vol: I.vol, area: I.area, type: o.geometry.type, mat: o.material?.uuid }; };
   const t1 = performance.now(), objects = [], inObj = new Set();
   for (const [id, g] of Object.entries(H.objects)) {
     const sc = g.userData.scene || {}, parts = [];

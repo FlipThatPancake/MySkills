@@ -16,8 +16,9 @@ export function bed(kit, { w = 1600, l = 2100, head = 1000, duvet = 'made', seed
     ? { w: w - 20, head: -560, foot: 1040, sagL: 110 + 40 * ((seed * 7) % 5) / 4, sagR: 400, sagFoot: 250, seed, tone, turn: 720 }
     : { w: w - 20, head: -560, foot: 1040, sagL: e, sagR: e, sagFoot: 230, seed, tone, made: true, turn: 0 });
   dv.position.set(0, 534, 0); g.add(dv);   // the duvet: thrown over unevenly (unmade) or laid even with a roll folded back (made)
+  const front = { upholstered: 140, legs: 50, platform: 60 }[frame] ?? 50;   // where the headboard's front face stands from the head end: the pillows lean against it, never into it
   for (const s of [-1, 1]) {   // two plump pillows, tipped back against the headboard, each with a dent in the middle
-    const pg = pillowGeometry(kit.THREE, { w: w * 0.4, h: 330, thick: 150, edge: 46, dent: 22, n: 24 }), pl = kit.solid(pg, s * w * 0.24, 510 + 70, -l / 2 + 230, { smooth: true, tone: 'lo' }); pl.rotation.x = -Math.PI / 2 + 0.2; g.add(pl);
+    const pg = pillowGeometry(kit.THREE, { w: w * 0.4, h: 330, thick: 150, edge: 46, dent: 22, n: 24 }), pl = kit.solid(pg, s * w * 0.24, 510 + 70, -l / 2 + Math.max(230, front + 160), { smooth: true, tone: 'lo' }); pl.rotation.x = -Math.PI / 2 + 0.2; g.add(pl);
   }
   return kit.merge(g);
 }

@@ -21,3 +21,7 @@ fixtures.push(
   bug('r6-shoes-away-from-door', 'item 4: shoes stand in the middle of the room, far from any door', ['shoes'], ['t-sh'], ({ Home }) => { const { H, a } = room(Home); a.put('sh', 'shoes', [3000, 2500], 0, { group: 'g' }); return H; }),
   { known: true, ...good('r6-shoes-by-the-door', 'item 4: shoes inside the outside door', ({ Home }) => { const { H, a } = room(Home, { openings: [{ kind: 'door', x: 3000, width: 900 }] }); a.put('sh', 'shoes', [4000, 250], 0, { group: 'g' }); return H; }) },   /* the shoes asset still reports loose pieces (assets thread) */
 );
+fixtures.push(
+  { name: 'r6-herbs-refused-on-a-shoe-rack', from: 'round 6 item 12: compose and the overhangs rule share one tolerance (OVERHANG_TOL) and one measure; a plant on a 290 mm shoe-rack top is refused at build time, where round 5 compose accepted 85% and the rule failed 86%', kind: 'bug', refuses: 'of the herbs base would lie over the surface', expect: { rules: ['refused'], ids: [] },
+    build({ Home }) { const { H, a, back } = room(Home); back.place('sr', 'shoeRack', 3000, { group: 'g' }); a.onTop('sr', [{ id: 'p', asset: 'herbs' }], { group: 'g' }); return H; } },
+);
