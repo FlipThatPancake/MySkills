@@ -5,7 +5,7 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { openable, flyable, clearWidth, hasOpenWindow, hasOpenWay, VISITOR_OPEN } from './src/motion/rules.js';
+import { openable, flyable, clearWidth, VENT_STYLES, hasOpenWindow, hasOpenWay, VISITOR_OPEN } from './src/motion/rules.js';
 const T = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'tables.json'), 'utf8')).motion;
 export const MOTION = T;
 export function dealMotion(out, seed, say) {
@@ -39,11 +39,10 @@ export function dealMotion(out, seed, say) {
     if (r.picked.length) break;
   } };
   for (const r of rows.filter((x) => !x.picked.length)) trySwap(r);
-  // 4. an area still without one (a fixed picture window or a closed door, and the home's cat elsewhere): its way in is made to open: a picture, bay or window-wall window becomes a plain sash window, else a plain door stands open 70 degrees
+  // 4. an area still without one (every big window has a vent leaf, so what is left is a fixed window or only a plain door, and the home's cat elsewhere): a plain door stands open 70 degrees (the spec must hang it so: alive() checks)
   for (const r of rows.filter((x) => !x.picked.length)) {
-    const w = r.a.openings.find((o) => o.kind === 'window' && o.style && o.sash !== 'fixed' && o.sash !== 'out'), d = r.a.openings.find((o) => o.kind === 'door' && !o.style);
-    if (w) { const phrase = { picture: 'picture window', bay: 'bay window', wall: 'window wall', pair: 'tall pair of casements' }[w.style]; delete w.style; if (phrase) r.a.say = r.a.say.replace(phrase, 'sash window'); }
-    else if (d) { d.open = 70; r.a.say = r.a.say.replace(/\bdoor on /, 'door standing open 70 degrees (open: 70) on '); }
+    const d = r.a.openings.find((o) => o.kind === 'door' && !o.style);
+    if (d) { d.open = 70; r.a.say = r.a.say.replace(/\bdoor on /, 'door standing open 70 degrees (open: 70) on '); }
     else continue;
     r.pool = poolOf(r.id, r.a); if (!draw(r)) trySwap(r); if (r.picked.length) r.a.say += '; its way in was made to open so something living can come in';
   }
@@ -76,6 +75,7 @@ export function pickVia(walls, flies) {   // `flies` may be a number: only openi
   const rank = (op) => (op.kind === 'window' ? 3 : openable(op) ? 2 : 1);   // a window, then a glass door, then a passage (an arch or an open door)
   for (const w of walls) (w.openings || []).forEach((op, i) => { if (flyable(op) && clearWidth(op) >= min && (!best || rank(op) > rank(best.op))) best = { w, op, i }; });
   if (!best) return null;
-  if (flies && openable(best.op) && (best.op.open ?? 0) < VISITOR_OPEN) best.op.open = VISITOR_OPEN;
+  const need = best.op.kind === 'window' && VENT_STYLES.includes(best.op.style) ? 50 : VISITOR_OPEN;   // a vent leaf stands 50 degrees open: its clear strip is then about 280 mm
+  if (flies && openable(best.op) && (best.op.open ?? 0) < need) best.op.open = need;
   return [best.w.id, best.i];
 }
