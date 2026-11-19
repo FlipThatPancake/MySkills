@@ -19,7 +19,9 @@ export const wallGeo = (wall, w, d) => ({ back: { len: w, at: (x) => [x, 0], inw
 export const toWorld = (pose, [x, z]) => { const c = Math.cos(pose.psi * D2R), s = Math.sin(pose.psi * D2R); return [pose.O[0] + x * c - z * s, pose.O[1] + x * s + z * c]; };
 export const dirWorld = (pose, [x, z]) => { const c = Math.cos(pose.psi * D2R), s = Math.sin(pose.psi * D2R); return [x * c - z * s, x * s + z * c]; };
 // the pose that stands an area back to back with a wall: its wall `via.wall` at via.x meets the world point pw, whose room (the other side) faces nIn
-export function matePose(rect, via, pw, nIn) {
+export const WALL_T = 200;   // each wall is a 200 mm slab behind its face (geom/env.mjs): two areas back to back share one slab, so their wall lines stand 200 mm apart
+export function matePose(rect, via, pw0, nIn) {
+  const pw = [pw0[0] - nIn[0] * WALL_T, pw0[1] - nIn[1] * WALL_T];   // the child's wall line is on the far side of the parent's slab
   const [rx0, rz0, rx1, rz1] = rect, g = wallGeo(via.wall, rx1 - rx0, rz1 - rz0); if (!g) throw new Error(`matePose: via.wall must be back, left or right (got ${via.wall})`);
   const a = g.at(via.x), q = [rx0 + a[0], rz0 + a[1]], ang = (v) => Math.atan2(v[1], v[0]) / D2R;
   const psi = normPsi(Math.round((ang([-nIn[0], -nIn[1]]) - ang(g.inward)) / 90) * 90), c = Math.cos(psi * D2R), s = Math.sin(psi * D2R);
@@ -34,7 +36,7 @@ const shuffled = (a, rnd) => { const c = a.slice(); for (let i = c.length - 1; i
 export function linkWalls(roll) {
   const b = T.backing.find((x) => x.id === roll.backing), name = { first: 'back', second: b.second }, out = {};
   for (const w of ['back', ...(b.walls === 2 && b.angle === 90 ? [b.second] : [])]) out[w] = { blocked: false, arch: null, door: false };
-  (roll.openings || []).forEach((o) => { const w = name[o.on]; if (!out[w]) return; if (o.kind === 'door') { if (o.style) out[w].blocked = true; else out[w].door = true; } else if (o.kind === 'window') out[w].windowed = true; });   // a plain dealt door is the link's door; a slider or french door is the outside
+  (roll.openings || []).forEach((o) => { const w = name[o.on]; if (!out[w]) return; if (o.kind === 'door') { if (o.style) out[w].blocked = true; else out[w].door = true; } else if (o.kind === 'window') { out[w].windowed = true; if (o.style === 'wall' || o.style === 'bay') { out[w].blocked = true; out[w].hard = true; } } });   // a window wall or a bay takes the whole wall (tables.json: no other opening beside it)   // a plain dealt door is the link's door; a slider or french door is the outside
   let k = 0; for (const o of roll.openings || []) { if (o.kind !== 'arch') continue; const w = name[o.on], st = (roll.passages || [])[k++]; if (out[w] && !out[w].blocked) { if (T.passages.find((p) => p.style === st)?.counter) out[w].blocked = true; else out[w].arch = st; } }   // a dealt arch on the wall is the link's opening
   return out;
 }
@@ -66,6 +68,8 @@ const HERO = [   // the hero group's own footprint (mm): on the back wall (w alo
 ];
 const KITCHEN_SHAPE = { straight: [0, 0], galley: [0, 1850], L: [0, 2000], U: [400, 2300], peninsula: [0, 1700], island: [0, 2800] };   // what a kitchen shape adds beyond the back run: [more width, more depth]
 const MINSIZE = { hallway: [3000, 2200] }, MINDEF = [3600, 3000];   // no cell is smaller than this, whatever the deal: a thin strip reads as a corridor, not as a room's picture
+const WINW = { sash: 1500, picture: 2100, pair: 1100 };   // the width the plan keeps for a dealt window by style (tables.json windows); a window wall or a bay takes its whole wall, and no way through shares that wall
+const WINEDGE = 1000, WINCLEAR = 1200;   // a window keeps 1000 mm from a corner (a way through beside the corner leaves the 1200 mm the openings rule asks for) and 1200 mm of clear wall to a way through or another window (check-home openings)
 const stripPhrase = (g) => g.replace(/ \(the hero group[^)]*\)/, '').replace(/, on the .*$/, '');
 export function roomNeeds(a, kind, links = 0) {
   const why = [], hero = HERO.find(([re]) => re.test(a.hero || ''))?.[1] || { w: 2200, d: 900 }, back = [], side = [], free = [];
@@ -79,7 +83,13 @@ export function roomNeeds(a, kind, links = 0) {
   let w = Math.max(run(back), freeW + 2 * 1100), d = Math.max(sideRun, backD + (free.length ? BACKCLEAR + freeD + FRONT : FRONT + 600));
   w += 0; d += 1100 * Math.max(0, links - 1);   // every further way through needs its own stretch of wall
   why.push(`back wall ${Math.round(run(back))} (${back.map((q) => `${q.name} ${q.w}`).join(' + ') || 'nothing'} + gaps), side wall ${Math.round(sideRun)} (${side.map((q) => `${q.name} ${q.w}`).join(' + ') || 'nothing'}), floor ${free.length ? `${BACKCLEAR} + ${freeD} + ${FRONT} for ${free.map((q) => q.name).join(', ')}` : 'the near strip only'}${links > 1 ? `, ${links - 1} more way(s) through` : ''}`);
-  const [mw, md] = MINSIZE[kind] || MINDEF; w = Math.max(w, mw); d = Math.max(d, md);
+  { const [mw, md] = MINSIZE[kind] || MINDEF; w = Math.max(w, mw); d = Math.max(d, md); }
+  // the ways through need wall beside the walls' own windows: each way goes to the wall that must grow least, one after the other
+  { const b = T.backing.find((x) => x.id === a.backing), name = { first: 'back', second: b.second }, lw = Object.entries(linkWalls(a)).filter(([, q]) => !q.blocked).map(([wall]) => wall), want = Math.max(links, 2), cnt = Object.fromEntries(lw.map((q) => [q, 0])), dim = { back: w, left: d, right: d };
+    const req = (wall, n) => { const ws = (a.openings || []).filter((o) => o.kind === 'window' && name[o.on] === wall).map((o) => (o.style === 'wall' || o.style === 'bay' ? 0 : WINW[o.style] || 1500)), sum = ws.reduce((t, v) => t + v, 0); return sum + (sum ? 2 * WINCLEAR : 0) + n * LINK_WIDTH.round + (n - 1) * SPACE + 2 * EDGE; };
+    const grow = (wall, n) => Math.max(0, req(wall, n) - dim[wall]);
+    if (lw.length) { for (let k = 0; k < want; k++) { const pick = lw.map((q) => ({ q, inc: grow(q, cnt[q] + 1) - (cnt[q] ? grow(q, cnt[q]) : 0) })).sort((p, q) => p.inc - q.inc)[0]; cnt[pick.q]++; }
+      for (const wall of lw) if (cnt[wall] && grow(wall, cnt[wall]) > 0) { const v = req(wall, cnt[wall]); if (wall === 'back') w = v; else d = v; why.push(`${wall} wall grown to ${v} for its window(s) and ${cnt[wall]} way(s) through`); } } }
   return { w: Math.round(w / 100) * 100, d: Math.round(d / 100) * 100, why: why.join('; ') };
 }
 
@@ -97,28 +107,41 @@ export function planHome(out, seed, kinds, opts = {}) {
     if (fix.length) { const e = new Error(`plan: ${fix.join(', ')} need a second wall`); e.needBacking = fix; throw e; }
     if (short.length) throw new Error(`plan: ${short.map((id) => `${id} touches ${deg[id]} areas but its free walls (no outside door) hold ${cap(id)} way(s) through`).join('; ')}: ask for fewer touches there`); }
   const degree = {}; for (const [a, b] of required) { degree[a] = (degree[a] || 0) + 1; degree[b] = (degree[b] || 0) + 1; }
+  for (const id of ids) if (KIND(id) === 'hallway') degree[id] = Math.max(degree[id] || 0, Math.min(3, ids.length - 1));   // the hallway is the hub of a home: it keeps wall for up to three ways
   const need = Object.fromEntries(ids.map((id) => [id, roomNeeds(roll[id], id.replace(/\d+$/, ''), degree[id] || 0)]));   // the smallest rect each area's deal fits in
   const best = { tries: 0 };
   const entryId = ids.find((id) => KIND(id) === 'hallway') || rootId, asked = (a, b) => required.some(([x, y]) => (x === a && y === b) || (x === b && y === a));
   const validWays = (links, attempt) => {
     if (opts.noLikes) return true;   // a regression fixture only: the likes table switched off, so a home that breaks it can be built and the checks shown to catch it
     if (privateGate(ids, links.map((l) => [l.a, l.b]), entryId).length) return false;   // a private room is the only way to a shared one
-    if (ids.length > 2 && attempt < 300) for (const l of links) if (dislikes(l.a, l.b) && !asked(l.a, l.b)) return false;   // bedroom-kitchen, office-kitchen: not unless asked (a home whose walls leave no other way lets it through after 300 tries)
+    if (ids.length > 2 && attempt < 100) for (const l of links) if (dislikes(l.a, l.b) && !asked(l.a, l.b)) return false;   // bedroom-kitchen, office-kitchen: not unless asked (a home whose walls leave no other way lets it through after 300 tries)
     return true;
   };
-  for (let attempt = 0; attempt < 2400; attempt++) {   // the first 600 tries at the sizes dealt; a crowded home then shrinks its cells a little (to 85%, then 70%) before it gives up
+  for (let attempt = 0; attempt < 2400; attempt++) {   // the first 600 tries at the sizes dealt; a crowded home then grows its cells (to 112%, then 125%: more wall for the ways through) before it gives up
     const res = tryPlan(attempt); best.tries = attempt + 1; if (res) return finish(res);
   }
-  if (!required.length && !opts.noRebacking && !opts.rebacked) { const e = new Error('plan: no floor plan; the single-wall areas take a corner'); e.needBacking = ids.filter((id) => !chain.includes(id) && T.backing.find((x) => x.id === roll[id].backing).walls === 1); if (e.needBacking.length) throw e; }
+  if (!required.length && !opts.noRebacking && !opts.rebacked) { const e = new Error('plan: no floor plan; the single-wall areas take a corner'); e.needBacking = ids.filter((id) => { const b = T.backing.find((x) => x.id === roll[id].backing); const stuck = chain.length && chain.every((c) => !Object.values(linkWalls(roll[c])).some((q) => !q.blocked)); return (!chain.includes(id) || stuck) && (b.walls === 1 || (b.walls === 2 && b.angle !== 90)); }); if (e.needBacking.length) throw e; }   // a one-wall or wide-angle area has one wall for ways through: it takes a square corner
   throw new Error(`plan: no floor plan found in ${best.tries} tries${required.length ? ` for the touches ${required.map((q) => q.join(':')).join(', ')}: ask for fewer touches or give an area a second wall` : ''}`);
 
   function tryPlan(attempt) {
     const rnd = mkRnd((seed ^ 0x51ed270b) + attempt * 7919), size = {}, kind = (id) => id.replace(/\d+$/, '');
-    for (const id of ids) { const cap = SIZES[kind(id)] || SIZES.living, nd = [need[id].w, need[id].d], shrink = attempt < 600 ? 1 : attempt < 1500 ? 0.85 : 0.7, f = (k) => Math.round(Math.max(Math.min(nd[k] * (1.05 + 0.25 * rnd()), cap[k] * 1.1), nd[k]) * shrink / 100) * 100; size[id] = [f(0), f(1)]; }   // from the deal: the need with 5 to 30% to spare, never above the table's largest (plus 10%) unless the deal needs more
-    const placed = {}, links = [], used = {}, order = [];   // used[id][wall] = [[lo, hi], ...] along the wall
-    const relax = attempt >= 900, wc = {}, walls = (id) => (wc[id] ||= relax ? Object.fromEntries(Object.entries(linkWalls(roll[id])).map(([w, q]) => [w, q.blocked ? { ...q, blocked: false, drop: true } : q])) : linkWalls(roll[id])),   // a crowded home that no cells can hold (every wall short or taken) takes the walls an outside door or hatch holds: that dealt opening is dropped, and the plan says so
+    for (const id of ids) { const cap = SIZES[kind(id)] || SIZES.living, nd = [need[id].w, need[id].d], shrink = attempt < 600 ? 1 : attempt < 1200 ? 1.12 : 1.25, f = (k) => Math.round(Math.max(Math.min(nd[k] * (1.05 + 0.25 * rnd()), cap[k] * 1.1), nd[k]) * shrink / 100) * 100; size[id] = [f(0), f(1)]; }   // from the deal: the need with 5 to 30% to spare, never above the table's largest (plus 10%) unless the deal needs more
+    const placed = {}, links = [], used = {}, order = [];
+    const winUsed = {}, winOf = {};   // the dealt windows, each stood on its wall first; the ways through keep clear of them (winUsed[id][wall] = [[lo, hi], ...])
+    for (const id of ids) {
+      const b = T.backing.find((x) => x.id === roll[id].backing), name = { first: 'back', second: b.second };
+      for (const o of roll[id].openings || []) {
+        if (o.kind !== 'window') continue; const w = name[o.on]; if (!w) continue;
+        const wl = wallGeo(w, ...size[id]).len, st = o.style || 'sash', W = st === 'wall' ? wl - 2 * WINEDGE : st === 'bay' ? 2400 : Math.min(WINW[st] || 1500, wl - 2 * WINEDGE);
+        const lo = WINEDGE + W / 2, hi = wl - WINEDGE - W / 2; if (hi < lo) { (winOf[id] ||= []).push({ wall: w, style: st, width: Math.round(W), x: null, why: 'the wall is too short for it' }); continue; }
+        let x = null; for (let k = 0; k < 12 && x === null; k++) { const c = st === 'wall' || st === 'bay' ? Math.round(wl / 2) : Math.round((lo + rnd() * (hi - lo)) / 50) * 50; if (!((winUsed[id]?.[w]) || []).some(([a, z]) => c + W / 2 + WINCLEAR > a && c - W / 2 - WINCLEAR < z)) x = c; }
+        if (x === null) { (winOf[id] ||= []).push({ wall: w, style: st, width: Math.round(W), x: null, why: 'no room on the wall beside the other window (a bay or a window wall takes its wall)' }); continue; }   // the roll dealt two windows one wall cannot hold: the plan says so and the spec places the second where it can
+        ((winUsed[id] ||= {})[w] ||= []).push([x - W / 2, x + W / 2]); (winOf[id] ||= []).push({ wall: w, style: st, width: Math.round(W), x });
+      }
+    }   // used[id][wall] = [[lo, hi], ...] along the wall
+    const relax = attempt >= 900, wc = {}, walls = (id) => (wc[id] ||= relax ? Object.fromEntries(Object.entries(linkWalls(roll[id])).map(([w, q]) => [w, q.blocked && !q.hard ? { ...q, blocked: false, drop: true } : q])) : linkWalls(roll[id])),   // a crowded home that no cells can hold (every wall short or taken) takes the walls an outside door or hatch holds: that dealt opening is dropped, and the plan says so
        wlen = (id, w) => wallGeo(w, ...size[id]).len;
-    const free = (id, w, x, wd) => { const len = wlen(id, w); if (x - wd / 2 < EDGE || x + wd / 2 > len - EDGE) return false; return !((used[id]?.[w]) || []).some(([lo, hi]) => x + wd / 2 + SPACE > lo && x - wd / 2 - SPACE < hi); };
+    const free = (id, w, x, wd) => { const len = wlen(id, w); if (x - wd / 2 < EDGE || x + wd / 2 > len - EDGE) return false; if (((winUsed[id]?.[w]) || []).some(([lo, hi]) => x + wd / 2 + WINCLEAR > lo && x - wd / 2 - WINCLEAR < hi)) return false; return !((used[id]?.[w]) || []).some(([lo, hi]) => x + wd / 2 + SPACE > lo && x - wd / 2 - SPACE < hi); };
     const take = (id, w, x, wd) => { ((used[id] ||= {})[w] ||= []).push([x - wd / 2, x + wd / 2]); };
     const putArea = (id, pose, rect = [0, 0, ...size[id]]) => { placed[id] = { id, pose, rect, foot: foot(pose, rect) }; order.push(id); };
     // the open room: its areas in one chain, as H.join lays them (compose.mjs / openplan.mjs)
@@ -132,12 +155,13 @@ export function planHome(out, seed, kinds, opts = {}) {
     const linkedPair = (a, b) => links.some((l) => (l.a === a && l.b === b) || (l.a === b && l.b === a));
     const forceKind = (qU, qV) => { const q = [qU, qV].find((x) => x.door) , a = [qU, qV].find((x) => x.arch); if (qU.door && qV.arch || qU.arch && qV.door) return { kind: 'arch', style: (qU.arch || qV.arch), merged: true }; return q ? { kind: 'door', style: null } : a ? { kind: 'arch', style: a.arch } : pickKind(null); };
     const pickKind = (arch) => { if (arch) return { kind: 'arch', style: arch }; if (rnd() < 0.4) return { kind: 'door', style: null }; const pool = T.passages.filter((p) => !p.counter), p = pool[Math.floor(rnd() * pool.length)]; return { kind: 'arch', style: p.style }; };
-    const clear = (id, pose, rect) => { const f = foot(pose, rect); return Object.values(placed).every((q) => { const o = overlap(f, q.foot); return !(o.x > GAP && o.z > GAP); }); };
-    const spot = (id, w, wd) => { const len = wlen(id, w); for (let k = 0; k < 14; k++) { const x = Math.round((EDGE + wd / 2 + rnd() * Math.max(0, len - 2 * EDGE - wd)) / 50) * 50; if (free(id, w, x, wd)) return x; } return null; };
+    const clear = (id, pose, rect) => { const f = foot(pose, rect); return Object.values(placed).every((q) => { const o = overlap(f, q.foot); return !(o.x > 20 - WALL_T && o.z > 20 - WALL_T); }); };   // two cells keep a wall slab (200 mm) between them, as a mated pair does
+    const spot = (id, w, wd) => { const len = wlen(id, w), at = []; for (let x = Math.ceil((EDGE + wd / 2) / 50) * 50; x <= len - EDGE - wd / 2; x += 50) if (free(id, w, x, wd)) at.push(x); return at.length ? at[Math.floor(rnd() * at.length)] : null; };   // every place on the wall where the way fits (clear of the windows and of other ways), one of them at random
     const attach = (u, v) => {   // v (not placed) takes a wall back to back with a wall of u
       for (let k = 0; k < 40; k++) {
         const wu = Object.entries(walls(u)).filter(([w, q]) => !q.blocked), wv = Object.entries(walls(v)).filter(([w, q]) => !q.blocked); if (!wu.length || !wv.length) return false;
         const pickU = wu.flatMap(([w, q]) => Array(q.windowed ? 1 : 4).fill([w, q])), [wU, qU] = pickU[Math.floor(rnd() * pickU.length)], pickV = wv.flatMap(([w, q]) => Array((w === 'back' ? 1 : 3) * (q.windowed ? 1 : 4)).fill([w, q])), [wV, qV] = pickV[Math.floor(rnd() * pickV.length)];
+        if (qU.windowed && qV.windowed && attempt < 100) continue;   // (a crowded home lets it through after 100 tries) two windows back to back would open into each other
         const kd = forceKind(qU, qV); if (!kd) continue; const wd = LINK_WIDTH[kd.style || 'door'], xu = spot(u, wU, wd), xv = spot(v, wV, wd); if (xu === null || xv === null) continue;
         const gU = wallGeo(wU, ...size[u]), pw = toWorld(placed[u].pose, [gU.at(xu)[0] + placed[u].rect[0] * 0, gU.at(xu)[1]]), nU = dirWorld(placed[u].pose, gU.inward);
         const pose = matePose([0, 0, ...size[v]], { wall: wV, x: xv }, pw, nU); if (!clear(v, pose, [0, 0, ...size[v]])) continue;
@@ -146,10 +170,10 @@ export function planHome(out, seed, kinds, opts = {}) {
       return false; };
     const touch = (u, v, dry = false) => {   // two areas already placed whose walls happen to stand back to back: a link between them
       const cand = [];
-      for (const [wU, qU] of Object.entries(walls(u))) for (const [wV, qV] of Object.entries(walls(v))) { if (qU.blocked || qV.blocked) continue;
+      for (const [wU, qU] of Object.entries(walls(u))) for (const [wV, qV] of Object.entries(walls(v))) { if (qU.blocked || qV.blocked || (qU.windowed && qV.windowed && attempt < 100)) continue;
         const gU = wallGeo(wU, ...size[u]), gV = wallGeo(wV, ...size[v]), U = placed[u], V = placed[v], a0 = toWorld(U.pose, gU.at(0)), a1 = toWorld(U.pose, gU.at(gU.len)), b0 = toWorld(V.pose, gV.at(0)), b1 = toWorld(V.pose, gV.at(gV.len)), nU = dirWorld(U.pose, gU.inward), nV = dirWorld(V.pose, gV.inward);
         if (Math.abs(nU[0] + nV[0]) > 0.01 || Math.abs(nU[1] + nV[1]) > 0.01) continue;   // facing apart
-        const t = [-nU[1], nU[0]], off = (p) => (p[0] - a0[0]) * nU[0] + (p[1] - a0[1]) * nU[1]; if (Math.abs(off(b0)) > GAP || Math.abs(off(b1)) > GAP) continue;   // one line
+        const t = [-nU[1], nU[0]], off = (p) => (p[0] - a0[0]) * nU[0] + (p[1] - a0[1]) * nU[1]; if (Math.abs(off(b0) + WALL_T) > GAP || Math.abs(off(b1) + WALL_T) > GAP) continue;   // one slab apart
         const along = (p) => (p[0] - a0[0]) * t[0] + (p[1] - a0[1]) * t[1], uLo = 0, uHi = Math.abs(along(a1)), [vLo, vHi] = [along(b0), along(b1)].sort((x, y) => x - y), lo = Math.max(uLo, vLo), hi = Math.min(uHi, vHi); if (hi - lo < TOUCH) continue;
         for (let k = 0; k < 8; k++) { const s = lo + EDGE + rnd() * (hi - lo - 2 * EDGE), p = [a0[0] + t[0] * s * Math.sign(along(a1) || 1), a0[1] + t[1] * s * Math.sign(along(a1) || 1)], xu = Math.round(Math.hypot(p[0] - a0[0], p[1] - a0[1]) / 50) * 50, xv = Math.round(Math.hypot(p[0] - b0[0], p[1] - b0[1]) / 50) * 50, kd = forceKind(qU, qV); if (!kd) continue; const wd = LINK_WIDTH[kd.style || 'door'];
           if (free(u, wU, xu, wd) && free(v, wV, xv, wd)) { cand.push({ wU, wV, xu, xv, kd, wd, cu: qU.door ? [wU, 'door'] : qU.arch ? [wU, 'arch'] : null, cv: qV.door ? [wV, 'door'] : qV.arch ? [wV, 'arch'] : null }); break; } } }
@@ -168,13 +192,13 @@ export function planHome(out, seed, kinds, opts = {}) {
     for (const [a, b] of pend) if (!linkedPair(a, b) && !touch(a, b)) return null;   // a touch asked for between two areas that already stand: their walls must meet
     let extra = 0; for (const [a, b] of shuffled(ids.flatMap((a, i) => ids.slice(i + 1).map((b) => [a, b])), rnd)) { if (extra >= (loopHome ? 2 : 1) || roomOf[a] === roomOf[b] || linkedPair(a, b) || (dislikes(a, b) && ids.length > 2)) continue; if (rnd() < (loopHome ? 0.9 : 0.3) && touch(a, b)) extra++; }   // walls that meet by chance may give a second way round
     if (!validWays(links, attempt)) return null;   // the likes table: nothing but the front door's shared rooms stand between it and the shared rooms, and no unwanted pair is joined
-    return { placed, links, order, size };
+    return { placed, links, order, size, winOf };
   }
 
-  function finish({ placed, links, order, size }) {
+  function finish({ placed, links, order, size, winOf }) {
     const rnd = mkRnd((seed ^ 0x2545f491) >>> 0), areas = {}, linkId = (l) => `${l.a}-${l.b}`;
     links.forEach((l) => { l.id = linkId(l); if (l.kind !== 'open') { l.aF = Math.round(l.aX / wallGeo(l.aWall, ...size[l.a]).len * 1e5) / 1e5; l.bF = Math.round(l.bX / wallGeo(l.bWall, ...size[l.b]).len * 1e5) / 1e5; } });
-    for (const id of order) areas[id] = { room: roomOf[id], fit: size[id], need: need[id], parent: null, via: null, entry: null };
+    for (const id of order) areas[id] = { room: roomOf[id], fit: size[id], need: need[id], windows: winOf[id] || [], parent: null, via: null, entry: null };
     for (const l of links) { if (!l.tree) continue; const c = areas[l.b]; c.parent = l.a; c.via = l.id; c.entry = l.kind === 'open' ? { kind: 'open', share: l.share } : { wall: l.bWall, x: l.bX, f: l.bF }; if (l.tree && l.kind !== 'open') c.mate = { from: l.a, wall: l.aWall, aF: l.aF, via: { wall: l.bWall, f: l.bF } }; }
     // each area looks away from where it is entered: the view azimuth (in the area's own frame; 0 is the front, positive toward its right) comes from the entry point
     const az = {}, clamp = (v, m) => Math.max(-m, Math.min(m, v));
@@ -211,6 +235,7 @@ export function mapText(placed, links, size) {
 function sayOf(plan, size) {
   const L = (l) => l.kind === 'open' ? `${l.a} and ${l.b} share one floor (open plan)` : `${l.a} | ${l.b}: ${l.kind === 'arch' ? (l.style || 'round') + ' arch' : 'door'}, ${l.aWall} wall of ${l.a} at ${l.aX} mm, ${l.bWall} wall of ${l.b} at ${l.bX} mm${l.merged ? ' (a dealt door on one side and a dealt arch on the other became this one way: build neither separately)' : ''}`;
   return `HOUSE PLAN (never shown whole: it only places the areas and decides where the camera comes in from)\n${plan.map}\nBuild the areas in this order: ${plan.order.join(', ')}. Each rect starts at [0, 0] and is the size of its cell, cut from what the roll dealt (the smallest rect the deal fits in, with 5 to 30% to spare): ${plan.order.map((id) => `${id} ${size[id][0]} x ${size[id][1]}`).join('; ')}.\nWhat each deal needs: ${plan.order.map((id) => `${id} ${plan.areas[id].need.w} x ${plan.areas[id].need.d} (${plan.areas[id].need.why})`).join('; ')}.\n` +
+    `Dealt windows (stand each at its x, measured like an opening's x, so no way through lands on it): ${plan.order.flatMap((id) => plan.areas[id].windows.map((q) => `${id} ${q.wall} wall: ${q.style} ${q.width} wide ${q.x === null ? `(no x: ${q.why})` : `at x ${q.x}`}`)).join('; ') || 'none'}.\n` +
     `Ways through (compose puts these openings in the walls itself; keep 1200 mm of clear wall beside each, and a smaller rect moves the opening along with the wall): ${plan.links.map(L).join('; ')}.\nView azimuth (a.view leaves az out and takes it from the plan): ${plan.order.map((id) => `${id} ${plan.areas[id].az}`).join(', ')}. Each area looks away from where it is entered.`;
 }
 
