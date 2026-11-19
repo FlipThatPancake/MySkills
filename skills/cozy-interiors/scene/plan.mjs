@@ -74,7 +74,7 @@ const WINEDGE = 1000, WINCLEAR = 1200;   // a window keeps 1000 mm from a corner
 const stripPhrase = (g) => g.replace(/ \(the hero group[^)]*\)/, '').replace(/, on the .*$/, '');
 function needLists(a, kind) {
   const hero = HERO.find(([re]) => re.test(a.hero || ''))?.[1] || { w: 2200, d: 900 }, back = [], side = [], free = [];
-  const add = (name, n, slot) => { const spot = n.free ? free : /^window/.test(slot || '') ? side : back; spot.push({ name, ...n }); };
+  const add = (name, n, slot) => { const spot = n.free ? free : /^second/.test(slot || '') || (/^window/.test(slot || '') && (a.openings || []).some((o) => o.kind === 'window' && o.on === 'second')) || (/^window/.test(slot || '') && !(a.openings || []).some((o) => o.kind === 'window')) ? side : back; spot.push({ name, ...n }); };
   const heroSlot = (a.groupSlots || [])[0] || 'back:left'; let hd = hero;
   if (kind === 'kitchen') { const [dw, dd] = KITCHEN_SHAPE[a.shape || 'straight'] || [0, 0]; hd = { ...hero, w: hero.w + dw, d: hero.d + dd, free: false }; }
   if (hd.free) free.push({ name: `hero (${a.hero})`, ...hd }); else add(`hero (${a.hero})`, hd, heroSlot);
