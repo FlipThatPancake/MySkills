@@ -19,10 +19,12 @@ export function glidePath(from, to, ways, opts = {}) {
   const p0 = camPos(from.target, from.dist, from.az, from.el), p1 = camPos(to.target, to.dist, to.az, to.el);
   // an open-plan seam is no opening in a wall: the camera passes over it. The camera walks through an opening only when its two ends lie on opposite sides of the wall (then the way is a way forward); otherwise it passes over the wall and only its aim goes through the opening
   const wayPt = (w) => [w.p[0], eye, w.p[1]], side = (w, q) => (q[0] - w.p[0]) * w.d[0] + (q[2] - w.p[1]) * w.d[1], walk = ways.filter((w, i) => w.kind !== 'open' && side(w, i ? wayPt(ways[i - 1]) : p0) < 0 && side(w, i + 1 < ways.length ? wayPt(ways[i + 1]) : p1) > 0);
-  const cam = [p0, ...walk.map(wayPt), p1];
+  // the move leaves along the start view's own line (backing out from its aim) and arrives along the destination's (from behind its camera), so it settles into the home view instead of dropping onto it
+  const behind = (st, p, f) => { const v = [p[0] - st.target[0], p[1] - st.target[1], p[2] - st.target[2]], L = Math.hypot(...v) || 1; return [p[0] + v[0] / L * f * st.dist, p[1] + v[1] / L * f * st.dist, p[2] + v[2] / L * f * st.dist]; };
+  const cam = [p0, behind(from, p0, 0.3), ...walk.map(wayPt), behind(to, p1, 0.3), p1];
   if (!walk.length && ways.length && ways.every((w) => w.kind === 'open')) {   // across an open room the camera takes a curved path: it backs out sideways from the straight line (away from where it looks) and comes round into the next view, so a small turn still reads as a walk, not a slide
     const c = [p1[0] - p0[0], p1[2] - p0[2]], L = Math.hypot(...c) || 1, n = [-c[1] / L, c[0] / L], look = [from.target[0] - p0[0] + to.target[0] - p1[0], from.target[2] - p0[2] + to.target[2] - p1[2]], sg = n[0] * look[0] + n[1] * look[1] > 0 ? -1 : 1;
-    cam.splice(1, 0, [(p0[0] + p1[0]) / 2 + n[0] * sg * 0.22 * L, (p0[1] + p1[1]) / 2, (p0[2] + p1[2]) / 2 + n[1] * sg * 0.22 * L]); }
+    cam.splice(2, 0, [(p0[0] + p1[0]) / 2 + n[0] * sg * 0.22 * L, (p0[1] + p1[1]) / 2, (p0[2] + p1[2]) / 2 + n[1] * sg * 0.22 * L]); }
   const  aim = [from.target, ...ways.map((w) => [w.p[0] + w.d[0] * 1800, 1000, w.p[1] + w.d[1] * 1800]), to.target];
   const smooth = (t) => { t = Math.min(1, Math.max(0, t)); return t * t * (3 - 2 * t); }, hi = (home) => home + 300;
   const pos = (u) => {   // the lift eases in over the first twentieth of the path and out over the last, so a wall right beside a home view is passed over
