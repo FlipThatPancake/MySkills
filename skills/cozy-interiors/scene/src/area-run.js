@@ -110,7 +110,7 @@ export function createAreaScene(canvas, S) {
   }
   // at rest only the current area exists: other areas' walls (frames, seams, shadows) and objects are hidden outright, so no half-faded ghost of a neighbour shows in any view or tour shot; a glide shows everything
   const shown = (id, area) => id === null || (area ? area === id || groupOf(area) === groupOf(id) : false);
-  const only = (id) => { for (const W of home.walls) W.node.visible = id === null || shown(id, order.find((a) => (W.id || '').startsWith(a + '-'))); for (const o of Object.values(home.objects)) o.visible = shown(id, o.userData.scene.area); };   // an area's whole open-plan group is drawn at rest
+  const only = (id) => { for (const W of home.walls) W.node.visible = id === null || shown(id, order.find((a) => (W.id || '').startsWith(a + '-'))); for (const o of Object.values(home.objects)) o.visible = shown(id, o.userData.scene.area); for (const b of home.blockers) b.fh = false; };   // an area's whole open-plan group is drawn at rest
   function arrive(id) {
     cur = id; api.area = id; only(id);
     const v = viewOf(areas[id]);
@@ -229,13 +229,13 @@ export function createAreaScene(canvas, S) {
     for (const g of Object.values(home.objects)) { g.userData.tick?.(dt); g.userData.update?.(dt); }
     api.motion.update(dt, api.area);
     moveFronts(dt);
-    home.update(camera, tour.look || controls.target);
+    home.update(camera, tour.look || controls.target, !glide);
     renderer.render(scene, camera);
   };
   renderer.setAnimationLoop(loopFn);
   // for the checks (check-home ghosts): stop the live loop (one software-GL frame takes over half a second), settle the fades without drawing, then draw one frame on demand
   api.loop = (on) => renderer.setAnimationLoop(on ? loopFn : null);
-  api.advance = (sec, live) => { const dt = live ? 0.05 : 0.1; for (let t = 0; t < sec - 1e-9; t += dt) { for (const g of Object.values(home.objects)) { g.userData.tick?.(dt); g.userData.update?.(dt); } if (live) api.motion.update(dt, api.area); moveFronts(dt); home.update(camera, tour.look || controls.target); } };   // live: the living things move too (watch.mjs)
+  api.advance = (sec, live) => { const dt = live ? 0.05 : 0.1; for (let t = 0; t < sec - 1e-9; t += dt) { for (const g of Object.values(home.objects)) { g.userData.tick?.(dt); g.userData.update?.(dt); } if (live) api.motion.update(dt, api.area); moveFronts(dt); home.update(camera, tour.look || controls.target, !glide); } };   // live: the living things move too (watch.mjs)
   api.swayFit = (maxDeg = 25) => {   // the idle sway turns the camera round the home view's target: objects of the area that are inside the frame now stay inside, by pulling the camera back (up to 35%) as it turns; where that is not enough the swing is cut short
     const T = THREE, Y = new T.Vector3(0, 1, 0), id = api.area, tgt = controls.target, off0 = camera.position.clone().sub(tgt), pos = camera.position.clone(), quat = camera.quaternion.clone();
     home.group.updateMatrixWorld(true);
@@ -250,7 +250,7 @@ export function createAreaScene(canvas, S) {
     const scale = (deg) => { const lo = Math.floor(deg), hi = Math.ceil(deg), a = table[lo] ?? 1.35, b = table[hi] ?? 1.35; return a + (b - a) * (deg - lo); };
     return { max, scale };
   };
-  api.draw = () => { home.update(camera, tour.look || controls.target); renderer.render(scene, camera); return renderer.domElement; };
+  api.draw = () => { home.update(camera, tour.look || controls.target, !glide); renderer.render(scene, camera); return renderer.domElement; };
   window.cozyScene = api;
   // the light is baked after the page is up (the passes are spread over frames) and fades in; until then, and if the bake is not possible, the old halos stand in
   window.cozyBaked = q.has('nobake') || q.has('check');

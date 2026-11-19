@@ -28,6 +28,10 @@ export function buildHome(kit, home, registry, areas = []) {
     objects[o.id] = g; objRoot.add(g);
   }
   objRoot.updateMatrixWorld(true);
+  // what stands between the camera and its target fades out (and returns once it no longer blocks): every object gets its own fade, except flat floor pieces; the area's own subject group (the hero's group) never fades in the home view
+  const heroGroups = {}; for (const o of home.objects || []) if (o.hero) (heroGroups[o.area] ||= new Set()).add(o.group);
+  const NOFADE = new Set(['rug', 'runner', 'doormat']), blockers = [];
+  for (const o of home.objects || []) { if (NOFADE.has(o.asset)) continue; const g = objects[o.id], fa = kit.fadable(); kit.useFade(g, fa); blockers.push({ id: o.id, g, fa, main: !!(o.hero || heroGroups[o.area]?.has(o.group)), goal: 1, cur: undefined, last: 1 }); }
   const openables = Object.values(objects).flatMap((g) => g.userData.openables || []);
   const boxes = {}, feet = {};
   for (const o of home.objects || []) {
@@ -144,11 +148,11 @@ export function buildHome(kit, home, registry, areas = []) {
 
   const w3 = 3 * Math.PI / 180; let lastT;
   return {
-    group, objects, openables, walls, bounds: bb,
+    group, objects, openables, walls, bounds: bb, blockers,
     // the footprint halos and wall-base shadows: kept as the fallback, hidden once the light is baked
     useBake(on = true) { shadows.visible = !on; for (const W of walls) W.shadows.visible = !on; },
     // Each frame: a wall's frames, window light, seams and shadows fade away once the camera is past that wall (over about 3 degrees).
-    update(camera, target) {
+    update(camera, target, rest = false) {
       floorDraw?.update(camera);
       const now = performance.now(), dt = Math.min(0.1, (now - (lastT ?? now)) / 1000), ease = 1 - Math.exp(-dt / 0.07); lastT = now;   // what blocks the view fades over about a tenth of a second, then comes back the same way
       const dist = camera.position.distanceTo(target), span = Math.min(200, Math.max(1, dist * Math.sin(w3)));   // never more than 200 mm: a wall the camera passes thins out over a short distance, not over metres
@@ -158,6 +162,21 @@ export function buildHome(kit, home, registry, areas = []) {
         if (s > 0 && blocksView(W, camera.position, target, home.height || 2700)) s = 0;   // a wall that stands between the camera and the view centre (not through one of its openings) fades too, so a glide through the house never looks at the back of a wall
         W.goal = s; let c = W.cur === undefined ? s : W.cur + (s - W.cur) * ease; if (Math.abs(c - s) < 0.02) c = s; W.cur = c;   // goal: where the fade is heading (the checks read it); cur: what is drawn now
         if (c !== W.last) { W.last = c; W.vis.value = c; W.fa.set(c); if (W.plane) { W.plane.visible = c > 0.001; W.plane.material.opacity = c; } }
+      }
+      // the objects on the line from the camera to its target
+      const P = camera.position, ax = target.x - P.x, ay = target.y - P.y, az = target.z - P.z, pad = 30, tb = new T.Box3();
+      for (const B of blockers) {
+        const b = boxes[B.id]; let hit = false;
+        if (!(rest && B.main) && !b.isEmpty()) {
+          tb.copy(b).expandByScalar(pad); let t0 = 0, t1 = 1;
+          for (const [o, d, lo, hi] of [[P.x, ax, tb.min.x, tb.max.x], [P.y, ay, tb.min.y, tb.max.y], [P.z, az, tb.min.z, tb.max.z]]) { if (Math.abs(d) < 1e-9) { if (o < lo || o > hi) { t0 = 2; break; } } else { let u = (lo - o) / d, v = (hi - o) / d; if (u > v) [u, v] = [v, u]; t0 = Math.max(t0, u); t1 = Math.min(t1, v); if (t0 > t1) break; } }
+          hit = t0 <= t1 && t0 <= 1 && !tb.clone().expandByScalar(70).containsPoint(target);   // not the thing the camera looks at
+        }
+        if (B.wall === undefined) { B.wall = null; if (!b.isEmpty() && b.min.y > 250) { let best = 160; for (const W of walls) { const x = (b.min.x + b.max.x) / 2, z = (b.min.z + b.max.z) / 2, side = (x - W.to[0]) * W.n[0] + (z - W.to[1]) * W.n[1], al = -((x - W.to[0]) * W.d[0] + (z - W.to[1]) * W.d[1]), half = Math.abs(W.n[0]) * (b.max.x - b.min.x) / 2 + Math.abs(W.n[1]) * (b.max.z - b.min.z) / 2, gap = Math.abs(side) - half; if (gap < best && al > -100 && al < W.len + 100) { best = gap; B.wall = W; } } } }   // a piece hung on a wall (off the floor, touching its plane) takes that wall's fade
+        if (home.blockerFade === false) hit = false;
+        B.goal = hit || (B.wall && B.wall.goal === 0) ? 0 : 1; let c = B.cur === undefined ? B.goal : B.cur + (B.goal - B.cur) * ease; if (Math.abs(c - B.goal) < 0.02) c = B.goal; B.cur = c;
+        if (c !== B.last) { B.last = c; B.fa.set(c); }
+        if (c <= 0.001 && B.g.visible) { B.g.visible = false; B.fh = true; } else if (c > 0.001 && B.fh) { B.g.visible = true; B.fh = false; }   // fully faded: not drawn at all (area-run's only() resets fh)
       }
     },
   };

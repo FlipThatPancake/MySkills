@@ -564,7 +564,7 @@ lap('window heads and roll');
   if (!QUICK) { const { visibleIssues } = await import('./check-visible.mjs'), { existsSync, readFileSync } = await import('node:fs'), cf = scene.replace(/\.json$/, '.cameras.json'); let C = {}; try { if (existsSync(cf)) C = JSON.parse(readFileSync(cf, 'utf8')); } catch {} delete C._core; const vi = await visibleIssues(page, C); for (const i of vi) issues.push(i); coverage.push(vi.coverage); }   // every object shows from the home view or a tour shot (check-visible.mjs)
   if (!QUICK) { const { pendantIssues } = await import('./check-pendants.mjs'); const pi2 = await pendantIssues(page); for (const i of pi2) issues.push(i); coverage.push(pi2.coverage); }   // every pendant's cord shows in the home view (check-pendants.mjs)
 lap('panes, visibility, cords');
-{ const { openPlanIssues, glideIssues } = await import('./check-openplan.mjs'); for (const i of await openPlanIssues(page, scene, { quick: QUICK })) issues.push(i); for (const i of await glideIssues(page, scene)) issues.push(i); }   // open-plan homes (scene.groups): layout, separators, glimpse, glide
+{ const { openPlanIssues, glideIssues, orbitIssues } = await import('./check-openplan.mjs'); for (const i of await openPlanIssues(page, scene, { quick: QUICK })) issues.push(i); for (const i of await glideIssues(page, scene)) issues.push(i); for (const i of await orbitIssues(page, scene)) issues.push(i); }   // open-plan homes (scene.groups): layout, separators, glimpse, glide
 lap('open plan');
 { const { motionIssues } = await import('./check-motion.mjs'); for (const i of await motionIssues(page, scene)) issues.push(i); }   // living things (src/motion): rolled kinds, open-window rule, nothing through furniture or walls in 240 s of simulated motion
 lap('motion');

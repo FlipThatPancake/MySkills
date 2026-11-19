@@ -200,7 +200,7 @@ export async function glideIssues(page, sceneFile) {
       let near = 1e9, nearId = '', fill = 0, fillId = ''; for (const f of fur) { const d = f.bx.distanceToPoint(c.camera.position); if (d < near) { near = d; nearId = f.id; } const xs = [], ys = []; let front = true; for (const x of [f.bx.min.x, f.bx.max.x]) for (const y of [f.bx.min.y, f.bx.max.y]) for (const z of [f.bx.min.z, f.bx.max.z]) { const v = new T.Vector3(x, y, z).project(c.camera); const w = new T.Vector3(x, y, z).applyMatrix4(c.camera.matrixWorldInverse).z; if (w >= 0) front = false; xs.push(v.x); ys.push(v.y); } if (!front) { if (d < 1000) { fill = Math.max(fill, 1); fillId = f.id; } continue; } const fr = Math.max(0, Math.min(1, Math.max(...xs)) - Math.max(-1, Math.min(...xs))) * Math.max(0, Math.min(1, Math.max(...ys)) - Math.max(-1, Math.min(...ys))) / 4; if (fr > fill) { fill = fr; fillId = f.id; } }
 let veil = 0, veilId = ''; { const top = c.home.height || 2700, cp = c.camera.position, rays = []; for (let i = 0; i < 16; i++) for (let jj = 0; jj < 10; jj++) rays.push(new T.Vector3((i + 0.5) / 8 - 1, (jj + 0.5) / 5 - 1, 0.5).unproject(c.camera).sub(cp).normalize());   // 160 rays through the frame
         for (const w of c.home.walls) { const v = (w.goal ?? w.vis.value); if (v < 0.05 || v > 0.95 || !w.node.visible) continue; const len = Math.hypot(w.to[0] - w.from[0], w.to[1] - w.from[1]), ux = (w.to[0] - w.from[0]) / len, uz = (w.to[1] - w.from[1]) / len, nx = uz, nz = -ux; let hit = 0; for (const r of rays) { const den = r.x * nx + r.z * nz; if (Math.abs(den) < 1e-9) continue; const t = ((w.from[0] - cp.x) * nx + (w.from[1] - cp.z) * nz) / den; if (t <= 0) continue; const x = cp.x + r.x * t, y = cp.y + r.y * t, z = cp.z + r.z * t, al = (x - w.from[0]) * ux + (z - w.from[1]) * uz; if (al >= 0 && al <= len && y >= 0 && y <= top) hit++; } if (hit / rays.length > veil) { veil = hit / rays.length; veilId = w.id + ' (fade ' + v.toFixed(2) + ', camera ' + Math.round((cp.x - w.to[0]) * nx + (cp.z - w.to[1]) * nz) + ' mm from its plane)'; } } }
-            r.push({ k, p: c.camera.position.toArray(), t: c.controls.target.toArray(), fade: c.home.walls.map((w) => (w.goal ?? w.vis.value)), near, nearId, fill, fillId, veil, veilId }); if (k === 1) break; } return r; }, [a, b]);
+            r.push({ k, p: c.camera.position.toArray(), t: c.controls.target.toArray(), fade: c.home.walls.map((w) => (w.goal ?? w.vis.value)), near, nearId, fill, fillId, veil, veilId, hung: c.home.blockers.filter((b) => b.wall && b.wall.goal === 0 && b.goal > 0.5).map((b) => b.id + ' on ' + b.wall.id) }); if (k === 1) break; } return r; }, [a, b]);
     const bad = [], tag = `${a} -> ${b}`; if (process.env.GDEBUG) console.log('GD', tag, JSON.stringify(s.slice(0, 3).map((q) => [q.k, q.p.map(Math.round), q.t.map(Math.round)])));
     for (const q of s.slice(1, -1)) {
       for (const W of walls) {
@@ -210,6 +210,7 @@ let veil = 0, veilId = ''; { const top = c.home.height || 2700, cp = c.camera.po
       }
       if (!bad.length && q.near < 600) bad.push(`the camera comes within ${Math.round(q.near)} mm of ${q.nearId} at k ${q.k} (keep 600 mm from furniture: the path walks the corridor between the entries, high over the rest)`);
       if (!bad.length && q.fill > 0.4) bad.push(`${q.fillId} fills ${Math.round(q.fill * 100)}% of the frame at k ${q.k} (the move flies over it: keep the camera further off or higher)`);
+      if (!bad.length && q.hung.length) bad.push(`${q.hung[0]} is drawn while its wall is faded out (a piece on a wall fades with its wall) at k ${q.k}`);
       if (!bad.length && q.veil > 1 / 3) bad.push(`${q.veilId} stands part-faded over ${Math.round(q.veil * 100)}% of the frame at k ${q.k} (a milky veil: a wall the camera is about to pass must fade out completely over a short distance)`);
       if (bad.length) break;
     }
@@ -222,6 +223,28 @@ let veil = 0, veilId = ''; { const top = c.home.height || 2700, cp = c.camera.po
     if (bad.length) out.push({ rule: 'glide', what: `${tag}: ${bad[0]}` });
     const head = (q) => Math.atan2(q.t[0] - q.p[0], q.t[2] - q.p[2]) * 180 / Math.PI, h0 = head(s[0]), turn = Math.max(...s.map((q) => Math.abs((((head(q) - h0) % 360) + 540) % 360 - 180))), A = s[0].p, B = s[s.length - 1].p, chord = Math.hypot(B[0] - A[0], B[2] - A[2]) || 1, dev = Math.max(...s.map((q) => Math.abs((q.p[0] - A[0]) * (B[2] - A[2]) - (q.p[2] - A[2]) * (B[0] - A[0])) / chord));
     if (turn < 20 && dev < 0.08 * chord) out.push({ rule: 'glide', what: `${tag}: a pure sideways slide (the view turns ${Math.round(turn)} degrees and the camera keeps to one line): the plan should turn the neighbours apart (different walls back them, or a different entry)` });
+  }
+  return out;
+}
+
+// ---- orbit: what stands between the camera and its target fades out (rule 'orbit'). In every area's home view the camera swings about 80 degrees either way at a few heights; a sample fails when an unfaded object (not the subject group, not the thing looked at) is hit by the ray from the camera to the view centre, or when a piece of the subject group fades at rest.
+export async function orbitIssues(page, sceneFile) {
+  const S = JSON.parse(readFileSync(sceneFile, 'utf8')), out = [];
+  for (const A of S.areas || []) {
+    const bad = await page.evaluate((id) => {
+      const c = window.cozyScene, T = c.kit.THREE; c.setArea(id, true); const tg = c.controls.target.clone(), off = c.camera.position.clone().sub(tg), dist = off.length(), az0 = Math.atan2(off.x, off.z) * 180 / Math.PI, el0 = Math.asin(off.y / dist) * 180 / Math.PI, res = [];
+      const B = c.home.blockers, ray = new T.Raycaster(), meshes = (g) => { const m = []; g.traverse((o) => { if (o.isMesh && !o.isLineSegments2 && o.material && !o.material.isMeshBasicMaterial && o.visible) m.push(o); }); return m; };
+      for (const d of [-80, -40, 0, 40, 80]) for (const el of [Math.max(8, el0 - 8), el0 + 14, el0 + 32]) {
+        c.look(dist, az0 + d, el, tg.toArray()); c.camera.updateMatrixWorld(true); c.home.update(c.camera, c.controls.target, true);
+        const P = c.camera.position, dir = tg.clone().sub(P), L = dir.length(); ray.set(P, dir.normalize());
+        for (const b of B) { if (b.main && b.goal < 1 && !(b.wall && b.wall.goal === 0)) { res.push(`a piece of the subject group (${b.id}) fades at az ${Math.round(az0 + d)}, el ${Math.round(el)}`); break; } }
+        if (res.length) break;
+        for (const b of B) { if (b.goal < 0.5 || b.main || !b.g.userData.scene || b.g.userData.scene.area !== id || new T.Box3().setFromObject(b.g).expandByScalar(100).containsPoint(tg)) continue; const hit = ray.intersectObjects(meshes(b.g), false)[0]; if (hit && hit.distance < L - 300) { res.push(`${b.id} stands unfaded between the camera and the view centre at az ${Math.round(az0 + d)}, el ${Math.round(el)} (it is ${Math.round(hit.distance)} mm out of ${Math.round(L)})`); break; } }
+        if (res.length) break;
+      }
+      c.setArea(id, true); return res;
+    }, A.id);
+    for (const w of bad) out.push({ rule: 'orbit', what: `${A.id}: ${w}` });
   }
   return out;
 }
