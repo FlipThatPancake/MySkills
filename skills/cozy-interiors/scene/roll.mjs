@@ -144,7 +144,7 @@ export function roll(seed, kinds = ['kitchen', 'dining', 'living'], opts = {}) {
   }
   if (out.openPlan) out.openPlan.behind = [];   // every area outside the open room is linked by the plan
   for (const id of kinds) { out.areas[id].say = describe(id, out.areas[id]); }
-  for (const id of kinds) out.areas[id].say += ` | plan: view az ${out.plan.areas[id].az}, cell up to ${out.plan.areas[id].fit.join(' x ')}`;
+  for (const id of kinds) out.areas[id].say += ` | plan: view az ${out.plan.areas[id].az}, cell ${out.plan.areas[id].fit.join(' x ')} (the deal needs ${out.plan.areas[id].need.w} x ${out.plan.areas[id].need.d})`;
   return out;
 }
 if (process.argv[1] && process.argv[1].endsWith('roll.mjs')) {

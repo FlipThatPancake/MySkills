@@ -562,7 +562,15 @@
     }
    },
    "plan": {
-    "links": []
+    "links": [],
+    "areas": {
+     "kitchen": {
+      "fit": [
+       6600,
+       5200
+      ]
+     }
+    }
    }
   },
   "rolled": {
