@@ -11,15 +11,17 @@ export const MOTION = T;
 export function dealMotion(out, seed, say) {
   let s = (seed ^ 0x1b873593) >>> 0;
   const rnd = () => { s = (s + 0x6d2b79f5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  const used = {}, cap = (kind, k) => (kind === 'cat' ? T.caps?.cat : k.flies ? T.caps?.flier : undefined) ?? 99;   // home caps (tables.json motion.caps): a home has one cat, and each flier kind shows in two areas at most
   for (const [id, a] of Object.entries(out.areas)) {
     const has = { openWindow: a.openings.some(openable), openWay: a.openings.some(flyable), plant: (a.plantAt || []).length > 0, plantNear: (a.plantAt || []).includes('sill'), noGlass: !a.openings.some((o) => o.style === 'wall' || o.style === 'slider' || o.style === 'french'), curtain: /curtain/.test(JSON.stringify(a)) && a.openings.some((o) => o.style !== 'wall' && o.style !== 'slider' && o.style !== 'french' && (o.kind === 'window' || o.sill > 0) && (o.width || 1000) >= 1340) }, widest = Math.max(0, ...a.openings.filter(flyable).map(clearWidth));
-    const pool = Object.entries(T.kinds).filter(([, k]) => k.in.includes(id) && k.needs.every((n) => has[n]) && (typeof k.flies !== 'number' || widest >= k.flies)).map(([kind, k]) => ({ kind, k }));
+    const pool = Object.entries(T.kinds).filter(([kind, k]) => k.in.includes(id) && k.needs.every((n) => has[n]) && (typeof k.flies !== 'number' || widest >= k.flies) && (used[kind] || 0) < cap(kind, k)).map(([kind, k]) => ({ kind, k }));
     const want = T.count[0] + Math.floor(rnd() * (T.count[1] - T.count[0] + 1)), picked = [];
     while (picked.length < want && pool.length) {
       let q = rnd() * pool.reduce((t, x) => t + x.k.weight, 0), i = 0;
       for (; i < pool.length - 1; i++) { q -= pool[i].k.weight; if (q < 0) break; }
       picked.push(pool.splice(i, 1)[0]);
     }
+    for (const { kind } of picked) used[kind] = (used[kind] || 0) + 1;
     a.motion = picked.map(({ kind, k }) => ({ kind, needs: k.needs, say: k.say }));
     if (picked.some((x) => x.kind === 'cat') && (a.accents || []).includes('cat')) { a.accents = a.accents.filter((x) => x !== 'cat'); a.say = a.say.replace(/accents: cat, /, 'accents: ').replace(/(accents: [^;]*?), cat(?=[,;])/, '$1'); }   // the sleeping cat replaces the static one: a home never shows two
     if (a.motion.length) a.say += `; living: ${a.motion.map((m) => m.say).join('; ')}`;
