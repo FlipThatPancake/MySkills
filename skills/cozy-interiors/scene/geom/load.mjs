@@ -17,7 +17,9 @@ export async function loadScene(scene, { src = SRC } = {}) {
   const S = typeof scene === 'string' ? JSON.parse(readFileSync(scene, 'utf8')) : scene;
   const { createKit } = await import(join(src, 'kitchen3d.js')), { buildHome } = await import(join(src, 'home.js')), { REGISTRY } = await import(join(src, 'library/index.js'));
   const kit = createKit(); kit.keepParts = true; kit.noLines = true; const T = kit.THREE;
-  const t0 = performance.now(), H = buildHome(kit, S.home, REGISTRY, S.areas || []); H.group.updateMatrixWorld(true); const tBuild = performance.now() - t0;
+  const t0 = performance.now(), { warn: w0, error: e0 } = console; console.warn = console.error = (...a) => { if (!/Computed radius is NaN/.test(String(a[0]))) w0(...a); };   // three dumps a NaN line buffer at length; check-home names the object instead (rule nan)
+  let H; try { H = buildHome(kit, S.home, REGISTRY, S.areas || []); } finally { console.warn = w0; console.error = e0; }
+   H.group.updateMatrixWorld(true); const tBuild = performance.now() - t0;
   const solid = (o) => o.isMesh && !o.isLineSegments2 && !o.userData.lines && !o.userData.kitLine && !o.material.isMeshBasicMaterial && !kit.hulls.includes(o.material) && o.material !== kit.depth;
   const v = new T.Vector3();
   const grab = (o) => { const geo = o.geometry, p = geo.attributes.position, ix = geo.index, n = ix ? ix.count : p.count, t = new Float64Array(n * 3); for (let i = 0; i < n; i++) { v.fromBufferAttribute(p, ix ? ix.getX(i) : i).applyMatrix4(o.matrixWorld); t[i * 3] = v.x; t[i * 3 + 1] = v.y; t[i * 3 + 2] = v.z; } return t; };

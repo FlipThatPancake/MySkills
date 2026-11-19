@@ -10,7 +10,7 @@ import { execSync } from 'node:child_process';
 import { existsSync, statSync } from 'node:fs';
 import { dirname, join, resolve, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
-const here = dirname(fileURLToPath(import.meta.url)), scene = process.argv.slice(2).find((a) => !a.startsWith('--')) ? resolve(process.argv.slice(2).find((a) => !a.startsWith('--'))) : (console.error('usage: node check-home.mjs <scene.json>   (the scene a spec wrote)'), process.exit(2));
+const here = dirname(fileURLToPath(import.meta.url)), scene = process.argv.slice(2).find((a, i, v) => !a.startsWith('--') && v[i - 1] !== '--until') ? resolve(process.argv.slice(2).find((a, i, v) => !a.startsWith('--') && v[i - 1] !== '--until')) : (console.error('usage: node check-home.mjs <scene.json>   (the scene a spec wrote)'), process.exit(2));
 const T0 = Date.now(); let TL = T0; const lap = (what) => { if (process.argv.includes('--time')) { console.error(`[time] ${what}: ${((Date.now() - TL) / 1000).toFixed(1)} s (total ${((Date.now() - T0) / 1000).toFixed(1)} s)`); TL = Date.now(); } };   // --time prints where the minutes go
 const QUICK = process.argv.includes('--quick'), REUSE = process.argv.includes('--reuse');   // --quick skips the ghost renders (the slow part: run it on the final pass only); --reuse keeps the built page when it is newer than the scene
 if (!(REUSE && existsSync(scene.replace(/\.json$/, '.html')) && statSync(scene.replace(/\.json$/, '.html')).mtimeMs > statSync(scene).mtimeMs)) execSync(`node ${join(here, 'build.mjs')} ${scene}`, { stdio: 'ignore' });
@@ -28,6 +28,7 @@ const issues = await page.evaluate(() => {
   const { home, kit } = window.cozyScene, T = kit.THREE, out = [], objs = home.objects;
   home.group.updateMatrixWorld(true);
   const sc = (id) => objs[id].userData.scene;
+  for (const id of Object.keys(objs)) { let bad = 0; objs[id].traverse((o) => { const g = o.geometry; if (!g || !g.attributes) return; for (const k of ['position', 'instanceStart']) { const a = g.attributes[k], d = a && (a.data ? a.data.array : a.array); if (d && d.some(Number.isNaN)) { bad++; break; } } }); if (bad) out.push({ rule: 'nan', what: `${id} (${objs[id].userData.scene.asset}): ${bad} line or mesh buffer(s) hold NaN positions (a zero-length rod or a square root of a negative number in the asset): fix the asset's numbers` }); }   // one short issue per object, not three's dump
   const box = (g) => {   // the solid parts only: painted sheets (light, shadow, sky) and lines are not things
     g.updateMatrixWorld(true); const b = new T.Box3(), bb = new T.Box3();
     g.traverse((o) => { if (!o.isMesh || o.isLineSegments2 || o.userData.lines || o.material.isMeshBasicMaterial || kit.hulls.includes(o.material) || o.material === kit.depth) return; o.geometry.computeBoundingBox(); b.union(bb.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld)); });
@@ -568,11 +569,15 @@ lap('panes, visibility, cords');
 lap('open plan');
 { const { motionIssues } = await import('./check-motion.mjs'); for (const i of await motionIssues(page, scene)) issues.push(i); }   // living things (src/motion): rolled kinds, open-window rule, nothing through furniture or walls in 240 s of simulated motion
 lap('motion');
+const assetOf = await page.evaluate(() => Object.fromEntries(Object.keys(window.cozyScene.objects).map((k) => [k, window.cozyScene.objects[k].userData.scene?.asset])));   // for the stage split of rules that mix large and small pieces (stages.mjs)
 await browser.close();
 for (const e of errors) console.log('PAGE ERROR', e);
 const notes = []; for (let k = issues.length - 1; k >= 0; k--) if (/^note-/.test(issues[k].rule)) notes.unshift(...issues.splice(k, 1));   // notes: taste, not failures (placement coverage): printed, never counted
+const { stageReport, makeCtx } = await import('./stages.mjs'), untilArg = (process.argv.find((a) => a.startsWith('--until=')) || '').slice(8) || (process.argv.includes('--until') ? process.argv[process.argv.indexOf('--until') + 1] : null);   // --until <stage>: only the stages up to that one (deal plan shell anchors dress life photographs walk, or 1-8)
+const staged = stageReport(issues, makeCtx(assetOf), untilArg && /^\d$/.test(untilArg) ? +untilArg : untilArg); coverage.push(staged.coverage);
+issues.splice(0, issues.length, ...staged.shown);   // the count below is what the chosen stages report
 for (const l of coverage) console.log(`coverage: ${l}`);   // what each sampling check looked at and what it left out
-for (const i of issues) console.log(`[${i.rule}] ${i.what}`);
+for (const l of staged.lines) console.log(l);   // the issues grouped by stage, earliest first, each ending with its stage and next move (stages.mjs)
 for (const i of notes) console.log(`[${i.rule}] ${i.what}`);
 { const S = JSON.parse((await import('node:fs')).readFileSync(scene, 'utf8')); if ((S.areas || []).some((a) => a.motion?.length)) console.log(`NEXT: the rules cannot see motion. Run  node ${join(here, 'watch.mjs')} ${scene}  and look at the strips (watch-<area>.png): do the living things read, stay in frame, and start where the home view shows them?`); }
 console.log(issues.length || errors.length ? `${basename(scene)}: ${issues.length} issue(s)` : `${basename(scene)}: No problems.`);
