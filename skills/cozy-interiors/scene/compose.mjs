@@ -19,6 +19,7 @@
 //   What roll.mjs deals, and how a spec uses it:  plantAt (distinct places: sill (wall.onSill), shelf, worktop, hanging, floor; one floor plant at most) -> place each plant there;  foreground (the near-camera piece, from the area's own use) -> put it by the shot's near edge;
 //   Soft things:  a.seatSoft('sofa', { tone: 'lo' | 'mid', throw: 'drape' | 'band' | false, group })  one leaning cushion per seat end and a throw dropped on the arm or folded across the seat (armchairs get one cushion);  a.table(id, { cloth: true }) puts a cloth shaped to the table.
 //   a.group(phrase, { wall, xc | at, seed, pieces: { slot: { asset, params, skip } }, hero }): builds a roll group phrase as one arrangement that passes the checks (groups.mjs lists the phrases and slots).
+//   a.slots(): prints the places a group can take: wall slots '<wall>:<third>' (back | left | right | window; left | middle | right as the camera sees them) with their bare stretches, and floor slots 'floor:<band>[:<third>]' (back | middle | front) clear of the entries' corridors. a.group(phrase, { slot: 'back:right' }) and wall.place(id, asset, 'right') take a name; a slot with no room refuses and names the free ones.
 //   a.dims(id): { w, d, h, asset, params, at } of a placed piece (at: world x, y, z).
 //   a.topOf(id): the height of the top of something placed (its dealt h included), for y of a thing that stands on it.
 //   Things on one top:  a.onTop('desk', [{ id, asset, params }, ...], { at: 'back' | 'centre' | 'front', margin: 50 })  spaces them along the top, every footprint inside its edge (refuses when they do not fit); use it instead of placing by fractions.
@@ -168,7 +169,7 @@ class Area {
     p.h.S.home.walls.push({ id: `${p.id}-${id}`, from, to, openings: openings.map(({ x: ox, ...o }) => ({ ...headLine(o, p.h.head), at: len - ox })) });
     let taken = [];
     const F = {
-      id, len, phi,
+      id, len, phi, openings, get taken() { return taken; },
       at: (ox, off = 0) => [x + Math.cos(rad(phi)) * ox - Math.sin(rad(phi)) * off, z + Math.sin(rad(phi)) * ox + Math.cos(rad(phi)) * off],   // the local point
       put(oid, asset, ox, off, { turn = 0, ...o } = {}) { return p.put(oid, asset, F.at(ox, off), -phi + turn, o); },   // turn is added to the facing out from the wall (it never reaches the object as its own `turn`)   // low level: the object's origin at ox along, off out
       onSill(oid, asset, xc, o = {}) {   // a pot or small thing on a window's sill: xc is its middle along the wall (it must lie within a window of this wall); stands at the sill's height + 30 mm
@@ -179,7 +180,8 @@ class Area {
         const prm = vary(p.h, asset, o.params, p.id), pd = Math.min(sizeOf(asset, prm).d, o.potD ?? 100);   // the pot, not the leaves: a plant's footprint counts its spread, the sill carries only the pot (potD, 100 mm unless said)
         return F.place(oid, asset, xc, { ...o, params: prm, y: (W.sill ?? 1000) + 30, mount: 'on', onSill: true, off: o.off ?? 110 - pd / 2 + 15 });   // the pot's front stands 15 mm past the sill's front lip so its leaves clear the sash (the sill reaches 110 mm into the room): centred on the free depth, not on the lip
       },
-      place(oid, asset, xc, o = {}) {   // by the asset's own origin and size: xc is its middle along the wall
+      place(oid, asset, xc, o = {}) {   // by the asset's own origin and size: xc is its middle along the wall, or a slot name from a.slots() ('right', 'middle', 'back:left')
+        if (typeof xc === 'string') xc = p.slotOnWall(F, xc, oid);
         if (asset === 'windowSeat') { const W = openings.find((q) => q.kind === 'window' && Math.abs(q.x - xc) <= q.width / 2 + 300); if (W) { const h = o.params?.h ?? Math.min(480, Math.max(400, (W.sill ?? 1000) - 130)); o = { ...o, params: { ...o.params, h, pillowMax: (W.sill ?? 1000) - (h + 70) - 30 }, }; } }   // under a window the seat is as tall as the sill allows (its cushion top within 100 of the sill: a sill of 530-610 fits h 400-480; a higher sill leaves a gap the placement check names)
         o = { ...o, params: vary(p.h, asset, o.params, p.id) }; const { w, d, h, m } = sizeOf(asset, o.params), mount = o.mount || m.mount; if (o.y === undefined && m.y === 'top') throw new Error(`place('${oid}', '${asset}'): give y, the height of the surface it stands on in mm (for example y: 520 on a bedside table, 740 on a desk)`); let y = o.y ?? (typeof m.y === 'number' ? m.y : 0); if (o.y === undefined && /^(picture|galleryWall|mirror)$/.test(asset)) { const top = Math.max(0, ...taken.filter((t) => t.y[0] < 60 && Math.min(t.x[1], xc + w / 2) - Math.max(t.x[0], xc - w / 2) > 50).map((t) => t.y[1])); y = top > 0 ? top + 150 : Math.round(1500 - (h ?? 800) / 2); }   /* round 4 U8: art with no y hangs 150 mm above the piece below it; on open wall its middle stands at 1500 (placement rule 2) */
         const backOf = () => { const kit = (p.h.kit ||= createKit()), key = asset + JSON.stringify(o.params || {}), cache = (p.h.backCache ||= {}); if (cache[key] === undefined) { const g = REGISTRY[asset](kit, { ...(o.params || {}) }); g.updateMatrixWorld(true); cache[key] = Math.max(0, -new kit.THREE.Box3().setFromObject(g).min.z); } return cache[key]; };   // the model's own back, measured: a cornice or a rolled arm stands further out than the table size says
@@ -196,6 +198,7 @@ class Area {
         return res;
       },
     };
+    (p.walls ||= {})[id] = F;
     return F;
   }
   put(id, asset, [x, z], turn = 0, { y = 0, mount, group, hero, params, ...rest } = {}) {
@@ -379,7 +382,49 @@ class Area {
   // what the roll named: a.rolled('vase', 'candlesticks') lists the assets the roll dealt to this area; a.skip('vase', 'why') says one is left out (the check 'rolled' wants every rolled asset present or skipped)
   rolled(...assets) { const r = ((this.h.S.home.rolled ||= {})[this.id] ||= { rolled: [], skipped: [] }); r.rolled.push(...assets.flat()); }
   skip(asset, why) { if (!why) throw new Error(`skip('${asset}'): say why it is left out`); const r = ((this.h.S.home.rolled ||= {})[this.id] ||= { rolled: [], skipped: [] }); r.skipped.push({ asset, why }); }
-  group(phrase, opts = {}) { return runGroup(this, phrase, opts); }   // one roll group phrase as a built arrangement, see groups.mjs
+  // ---- slots: the places a group can take, read off the shell (walls, openings) and the home view's frame. a.slots() prints them; a.group(phrase, { slot: 'back:right' }) and wall.place(id, asset, 'right') take a name.
+  //   wall slots  '<wall>:<third>' (wall: back | left | right | window; third: left | middle | right, along the wall's x as the camera sees it): the third of the wall's length, cut to its bare stretches (between corners, openings with their curtain / swing zones, and pieces already standing on it); free when 600 mm or more is bare
+  //   floor slots 'floor:<band>' or 'floor:<band>:<third>' (band: back | middle | front, 30 / 40 / 30 percent of the depth; third: left | middle | right): free when the corridors between the area's entries cover under 40 percent of the box; `at` is the box's middle kept 1400 mm off the back wall and 1000 mm off the front edge, 1100 mm off the sides, so a free-standing group's own clearance holds
+  slotTable() {
+    const T = { wall: {}, floor: {} }, THIRD = ['left', 'middle', 'right'], [x0, z0, x1, z1] = this.rect, zone = (o) => { const w = o.width || 800; return o.kind === 'window' ? w / 2 + 300 : o.kind === 'door' ? w / 2 + 450 : o.kind === 'arch' ? w / 2 + 150 : w / 2 + 100; };
+    for (const [wid, F] of Object.entries(this.walls || {})) {
+      const cut = [...F.openings.map((o) => ({ a: o.x - zone(o), b: o.x + zone(o), why: `${o.kind}${o.to ? ' to ' + o.to : ''} at ${Math.round(o.x)}` })), ...F.taken.filter((t) => t.y[0] < 300).map((t) => ({ a: t.x[0] - 50, b: t.x[1] + 50, why: `${t.id} on the floor` }))].sort((p, q) => p.a - q.a);
+      const bare = []; let at = 0; for (const c of cut) { if (c.a > at) bare.push([at, Math.min(c.a, F.len)]); at = Math.max(at, c.b); } if (at < F.len) bare.push([at, F.len]);
+      for (let i = 0; i < 3; i++) {
+        const lo = i * F.len / 3, hi = (i + 1) * F.len / 3, parts = bare.map(([a, b]) => [Math.max(a, lo), Math.min(b, hi)]).filter(([a, b]) => b - a > 1).sort((p, q) => (q[1] - q[0]) - (p[1] - p[0])), best = parts[0];
+        T.wall[`${wid}:${THIRD[i]}`] = { wall: F, range: [Math.round(lo), Math.round(hi)], bare: parts.map(([a, b]) => [Math.round(a), Math.round(b)]), best: best && best[1] - best[0] >= 600 ? [Math.round(best[0]), Math.round(best[1])] : null, xc: best && best[1] - best[0] >= 600 ? Math.round((best[0] + best[1]) / 20) * 10 : null, cut: cut.filter((c) => c.b > lo && c.a < hi).map((c) => c.why) };
+      }
+    }
+    const D = z1 - z0, W = x1 - x0, segs = [], ent = Object.values(this.walls || {}).flatMap((F) => F.openings.filter((o) => o.to && o.kind !== 'window').map((o) => F.at(o.x, 900)));
+    for (let i = 0; i < ent.length; i++) for (let j = i + 1; j < ent.length; j++) segs.push([ent[i], ent[j]]);
+    const near = (p) => segs.some(([a, b]) => { const dx = b[0] - a[0], dz = b[1] - a[1], t = Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dz) / (dx * dx + dz * dz || 1))); return Math.hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dz) < 450; });
+    for (const [bn, [d0, d1]] of Object.entries({ back: [0, 0.3], middle: [0.3, 0.7], front: [0.7, 1] })) for (const [tn, [w0, w1]] of Object.entries({ all: [0, 1], left: [0, 1 / 3], middle: [1 / 3, 2 / 3], right: [2 / 3, 1] })) {
+      const box = [Math.round(x0 + W * w0), Math.round(z0 + D * d0), Math.round(x0 + W * w1), Math.round(z0 + D * d1)]; let n = 0, k = 0;
+      for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) { k++; if (segs.length && near([box[0] + (i + 0.5) * (box[2] - box[0]) / 8, box[1] + (j + 0.5) * (box[3] - box[1]) / 8])) n++; }
+      T.floor[tn === 'all' ? `floor:${bn}` : `floor:${bn}:${tn}`] = { box, at: [Math.round(Math.max(Math.min((box[0] + box[2]) / 2, x1 - 1100), x0 + 1100) / 10) * 10, Math.round(Math.max(Math.min((box[1] + box[3]) / 2, z1 - 1000), z0 + 1400) / 10) * 10], corridor: Math.round(100 * n / k), free: n / k < 0.4 };
+    }
+    return T;
+  }
+  slots(quiet = false) {
+    const T = this.slotTable(), L = [`slots ${this.id} (left, middle, right as the camera sees them; mm in the area's own frame):`];
+    for (const [k, v] of Object.entries(T.wall)) L.push(`  ${k.padEnd(14)} x ${v.range[0]}-${v.range[1]}  ${v.best ? `free: bare ${v.bare.map((b) => b.join('-')).join(', ')} (middle at ${v.xc})` : 'not free: under 600 mm bare'}${v.cut.length ? `   [${v.cut.join('; ')}]` : ''}`);
+    for (const [k, v] of Object.entries(T.floor)) L.push(`  ${k.padEnd(20)} box ${v.box.join(', ')}  ${v.free ? 'free' : 'not free'}${v.corridor ? ` (corridor over ${v.corridor}%)` : ''}`);
+    if (!quiet) console.log(L.join('\n'));
+    return T;
+  }
+  resolveSlot(name, what = 'a group') {
+    const T = this.slotTable(); let key = name;
+    if (name.startsWith('window')) { const w = Object.values(this.walls || {}).find((F) => F.openings.some((o) => o.kind === 'window')) || Object.values(this.walls || {})[1]; key = `${w?.id}:${name.split(':')[1] || 'middle'}`; }
+    const v = T.wall[key] || T.floor[key]; if (!v) throw new Error(`slot '${name}' for ${what}: no such slot; the names are ${Object.keys(T.wall).concat(Object.keys(T.floor)).join(', ')} (a.slots() prints them)`);
+    if (v.wall) { if (!v.best) throw new Error(`slot '${name}' for ${what}: under 600 mm of the wall is bare there (${v.cut.join('; ') || 'a corner'}); free wall slots now: ${Object.entries(T.wall).filter(([, q]) => q.best).map(([k]) => k).join(', ') || 'none'}`); return { wall: v.wall, xc: v.xc }; }
+    if (!v.free) throw new Error(`slot '${name}' for ${what}: the corridor between the area's entries covers ${v.corridor}% of it; free floor slots now: ${Object.entries(T.floor).filter(([, q]) => q.free).map(([k]) => k).join(', ')}`);
+    return { at: v.at };
+  }
+  slotOnWall(F, name, what) {   // a slot name given to wall.place or as xc: the third (or 'back:right' with this wall's own name) as a number along the wall
+    const third = name.includes(':') ? name : `${F.id}:${name}`; if (!third.startsWith(F.id + ':')) throw new Error(`place('${what}'): slot '${name}' is on another wall than '${F.id}'`);
+    return this.resolveSlot(third, what).xc;
+  }
+  group(phrase, opts = {}) { if (opts.slot) { const { slot, ...rest } = opts, r = this.resolveSlot(slot, phrase); opts = r.wall ? { ...rest, wall: r.wall, xc: r.xc } : { ...rest, at: r.at }; } else if (typeof opts.xc === 'string' && opts.wall) opts = { ...opts, xc: this.slotOnWall(opts.wall, opts.xc, phrase) }; return runGroup(this, phrase, opts); }   // one roll group phrase as a built arrangement, see groups.mjs
   dims(id) { const o = this.h.S.home.objects.find((q) => q.id === `${this.id}-${id}`); if (!o) throw new Error(`dims('${id}'): place it first`); const { w, d, h } = sizeOf(o.asset, o.params || {}); return { w, d, h, asset: o.asset, params: o.params || {}, at: o.at }; }   // the placed piece's dealt size in mm (what a group recipe measures its picture or lamp against)
   topOf(id) { const o = this.h.S.home.objects.find((q) => q.id === `${this.id}-${id}`); if (!o) throw new Error(`topOf('${id}'): place it first`); const { tris, all, T } = this.targetTris('topOf', id), c = all.getCenter(new T.Vector3()), y = heightField(tris)(c.x, c.z); return y > 0 ? Math.round(y) : o.at[1] + (o.params?.h ?? ASSETS[o.asset].size[2]); }   // the height of the top of a placed thing, measured on its real parts under its middle: stand something on it with y: a.topOf('side-table')
   view({ target, az = this.h.plan?.areas?.[this.id]?.az ?? 20, el = 15, dist, fit = 'objects' }) { this.cam = { target: this.P3(target), az: az - this.psi, el, fit, ...(dist ? { dist } : {}) }; }
