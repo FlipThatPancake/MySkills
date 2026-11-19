@@ -7,6 +7,7 @@ import { fridge as fridge0 } from '../kitchen/fridge.js';
 import { stool as stool0 } from './living.js';
 import { basket as basket0 } from './decor.js';
 import { PAINTINGS } from './paintings.js';
+import { PAPER, adapt } from './paintTone.js';
 import { potTop } from './pots.js';
 import { fiddle, palm, monstera, snake, fern, pothos, basil, smallFern, vaseStems } from './plants.js';
 const rimTop = (kit, g, r, y) => { const t = potTop(kit, r); t.position.y = y; g.add(t); };
@@ -60,17 +61,8 @@ export function vase(kit, { form = 0, h = 280, stems = 5, seed = 3 } = {}) {   /
   return vaseStems(kit, { form, h, stems, seed });
 }
 
-// Forms 4+: a classic public-domain painting (paintings.js) on a paper mat inside the frame. colour keep (a little muted, to sit with the scene) | soft (mostly faded to the paper tone) | ink (greyscale, near the line style); the seed picks one when unset.
-const PAPER = [244, 243, 238], LOADED = new Map();
-function adapt(q, x, y, w, h, mode) {
-  const d = q.getImageData(x, y, w, h), a = d.data, k = { keep: 0.18, soft: 0.6, ink: 0.28 }[mode] ?? 0.18;
-  for (let i = 0; i < a.length; i += 4) {
-    let r = a[i], g = a[i + 1], b = a[i + 2]; const l = 0.3 * r + 0.59 * g + 0.11 * b;
-    if (mode === 'ink') r = g = b = l; else { const m = mode === 'soft' ? 0.45 : 0.82; r = l + (r - l) * m; g = l + (g - l) * m; b = l + (b - l) * m; }   // desaturate: soft by more
-    a[i] = r + (PAPER[0] - r) * k; a[i + 1] = g + (PAPER[1] - g) * k; a[i + 2] = b + (PAPER[2] - b) * k;
-  }
-  q.putImageData(d, x, y);
-}
+// Forms 4+: a classic public-domain painting (paintings.js) on a paper mat inside the frame. colour keep (a little muted, to sit with the scene) | soft (mostly faded to the paper tone) | ink (greyscale, near the line style); every mode first stretches the painting's own tones (paintTone.js); the seed picks one when unset.
+const LOADED = new Map();
 function paintedPicture(kit, { form, w, h, seed, colour }) {
   const T = kit.THREE, F = 28, D = 24, P = PAINTINGS[(form - 4) % PAINTINGS.length], mode = colour || ['keep', 'soft', 'ink'][seed % 3], iw = w - 2 * F, ih = h - 2 * F;
   const g = kit.group(); g.add(kit.rbox(-w / 2, 0, D, w, h, D, 4)); g.add(kit.box(-w / 2 + F, F, D + 4, iw, ih, 4, { tone: 'lo' }));
@@ -87,7 +79,7 @@ function paintedPicture(kit, { form, w, h, seed, colour }) {
   out.userData.painting = P.name;
   return out;
 }
-export function picture(kit, { form = 0, w = 600, h = 800, seed = 2, colour } = {}) {
+export function picture(kit, { form = 4, w = 600, h = 800, seed = 2, colour } = {}) {
   if (!form) return picture0(kit, { w, h, seed });
   if (form >= 4) return paintedPicture(kit, { form, w, h, seed, colour });
   const F = 28, D = 24, R = rnd(seed + form * 3), pts = [], g = kit.group();
