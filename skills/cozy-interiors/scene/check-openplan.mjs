@@ -62,8 +62,9 @@ export async function openPlanIssues(page, sceneFile, { quick = false } = {}) {
       for (const [ci, c] of Object.entries(B)) if (['chair', 'deskChair', 'armchair'].includes(c.asset) && rectGap(b, c) < 450 && !Object.values(B).some((t) => ['table', 'roundTable', 'desk'].includes(t.asset) && rectGap(t, c) < 600)) out.push({ rule: 'open-island-seat', what: `${ci} is a ${c.asset} at ${id}: seats at an island or peninsula are counter stools (stool, seat about 650 mm)` });
     }
   }
+  const zonesDiffer = (q) => { const Z = S.home.floor?.zones || [], mid = (b) => [(b.x0 + b.x1) / 2, (b.z0 + b.z1) / 2], at = (id) => { const c = mid(area[id].bounds); return Z.find((z) => c[0] >= z.rect[0] && c[0] <= z.rect[2] && c[1] >= z.rect[1] && c[1] <= z.rect[3]); }, a = at(q.a), b = at(q.b); return !!(a && b && a.style !== b.style); };   // an open room keeps one floor; where the kitchen part is tiles the change is checked like a dealt floorChange
   // ---- floor change: the zones of the two areas differ, and a furniture separator stands by the line
-  for (const G of S.groups) for (const q of G.seams) if (q.kinds?.includes('floorChange')) {
+  for (const G of S.groups) for (const q of G.seams) if (q.kinds?.includes('floorChange') || zonesDiffer(q)) {
     const Z = S.home.floor?.zones || [], mid = (b) => [(b.x0 + b.x1) / 2, (b.z0 + b.z1) / 2], at = (id) => { const c = mid(area[id].bounds); return Z.find((z) => c[0] >= z.rect[0] && c[0] <= z.rect[2] && c[1] >= z.rect[1] && c[1] <= z.rect[3]); }, za = at(q.a), zb = at(q.b);
     if (!za || !zb || za.style === zb.style) out.push({ rule: 'open-floor', what: `${q.a} | ${q.b}: floorChange dealt, but the two areas have the same floor style (H.floorZones({ ${q.a}: 'tiles', ${q.b}: 'boards' }))` });
     const fur = Object.values(B).some((b) => FURNITURE.includes(b.sep || '') && distSeg(b, q.p0, q.p1) <= 500);
@@ -183,4 +184,35 @@ function rectGap(a, b) { const dx = Math.max(a.min[0] - b.max[0], b.min[0] - a.m
 function cross(p, q, a, b) {   // segment p-q crosses segment a-b strictly inside both (a shared end does not count)
   const d = (u, v, w) => (v[0] - u[0]) * (w[1] - u[1]) - (v[1] - u[1]) * (w[0] - u[0]), d1 = d(a, b, p), d2 = d(a, b, q), d3 = d(p, q, a), d4 = d(p, q, b);
   return d1 * d2 < -1e-6 && d3 * d4 < -1e-6;
+}
+
+// ---- the glide through the house plan, for every move the arrow keys and the area buttons make (rule 'glide'): sampled at k = 0.1 to 0.9, the camera never stands inside a solid wall, the view centre is never behind a wall that is not fading, and the move turns the view and leaves the straight line (a pure sideways slide fails)
+const OPEN_TOP = { arch: 2250, door: 2100 };
+const segDist = (p, a, b) => { const l2 = (b[0] - a[0]) ** 2 + (b[1] - a[1]) ** 2, t = l2 ? Math.max(0, Math.min(1, ((p[0] - a[0]) * (b[0] - a[0]) + (p[1] - a[1]) * (b[1] - a[1])) / l2)) : 0; return Math.hypot(p[0] - a[0] - t * (b[0] - a[0]), p[1] - a[1] - t * (b[1] - a[1])); };
+export async function glideIssues(page, sceneFile) {
+  const S = JSON.parse(readFileSync(sceneFile, 'utf8')), out = [], P = S.home.plan; if (!P?.links?.length) return out;
+  const H = S.home.height || 2700, walls = S.home.walls.map((w) => { const len = Math.hypot(w.to[0] - w.from[0], w.to[1] - w.from[1]), u = [(w.to[0] - w.from[0]) / len, (w.to[1] - w.from[1]) / len]; return { id: w.id, from: w.from, to: w.to, len, u, n: [u[1], -u[0]], gaps: (w.openings || []).filter((o) => OPEN_TOP[o.kind]).map((o) => ({ lo: o.at - (o.width || 1000) / 2, hi: o.at + (o.width || 1000) / 2, top: OPEN_TOP[o.kind] })) }; });
+  const gapAt = (W, p, y) => { const at = (p[0] - W.from[0]) * W.u[0] + (p[1] - W.from[1]) * W.u[1]; return W.gaps.some((g) => at >= g.lo && at <= g.hi && y < g.top); };
+  const moves = []; const seen = new Set(); for (const l of P.links) { for (const [a, b] of [[l.a, l.b], [l.b, l.a]]) if (!seen.has(a + b)) { seen.add(a + b); moves.push([a, b]); } }
+  for (let i = 0; i + 1 < (P.walk || []).length; i++) { const k = P.walk[i] + P.walk[i + 1]; if (!seen.has(k)) { seen.add(k); moves.push([P.walk[i], P.walk[i + 1]]); } }
+  for (const [a, b] of moves) {
+    const s = await page.evaluate(([a, b]) => { const c = window.cozyScene; c.setArea(a, true); c.startGlide(b, true); const r = []; for (const k of [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]) { c.glideAt(k); c.home.update(c.camera, c.controls.target); const T = c.kit.THREE; c.camera.updateMatrixWorld(true); const fur = (c.__fur ||= Object.entries(c.home.objects).filter(([, o]) => o.userData.scene?.mount === 'floor' && !['rug', 'curtain'].includes(o.userData.scene.asset)).map(([id, o]) => { o.updateMatrixWorld(true); const bx = new T.Box3(), bb = new T.Box3(); o.traverse((m) => { if (!m.isMesh || m.isLineSegments2 || m.userData.lines || m.material.isMeshBasicMaterial) return; m.geometry.computeBoundingBox(); bx.union(bb.copy(m.geometry.boundingBox).applyMatrix4(m.matrixWorld)); }); return { id, bx }; }).filter((f) => !f.bx.isEmpty()));
+      let near = 1e9, nearId = '', fill = 0, fillId = ''; for (const f of fur) { const d = f.bx.distanceToPoint(c.camera.position); if (d < near) { near = d; nearId = f.id; } const xs = [], ys = []; let front = true; for (const x of [f.bx.min.x, f.bx.max.x]) for (const y of [f.bx.min.y, f.bx.max.y]) for (const z of [f.bx.min.z, f.bx.max.z]) { const v = new T.Vector3(x, y, z).project(c.camera); const w = new T.Vector3(x, y, z).applyMatrix4(c.camera.matrixWorldInverse).z; if (w >= 0) front = false; xs.push(v.x); ys.push(v.y); } if (!front) { if (d < 1000) { fill = Math.max(fill, 1); fillId = f.id; } continue; } const fr = Math.max(0, Math.min(1, Math.max(...xs)) - Math.max(-1, Math.min(...xs))) * Math.max(0, Math.min(1, Math.max(...ys)) - Math.max(-1, Math.min(...ys))) / 4; if (fr > fill) { fill = fr; fillId = f.id; } }
+      r.push({ k, p: c.camera.position.toArray(), t: c.controls.target.toArray(), fade: c.home.walls.map((w) => w.vis.value), near, nearId, fill, fillId }); if (k === 1) break; } return r; }, [a, b]);
+    const bad = [], tag = `${a} -> ${b}`;
+    for (const q of s.slice(1, -1)) {
+      for (const W of walls) {
+        if (q.p[1] < H && segDist([q.p[0], q.p[2]], W.from, W.to) < 60 && !gapAt(W, [q.p[0], q.p[2]], q.p[1])) { bad.push(`the camera stands inside ${W.id} at k ${q.k}`); break; }
+        const side = (p) => (p[0] - W.from[0]) * W.n[0] + (p[2] - W.from[1]) * W.n[1];   // the room is on the +n side; a wall fades once the camera is past it
+        if (side(q.p) > 150 && side(q.t) < -150) { const t = side(q.p) / (side(q.p) - side(q.t)), x = [q.p[0] + (q.t[0] - q.p[0]) * t, q.p[2] + (q.t[2] - q.p[2]) * t], y = q.p[1] + (q.t[1] - q.p[1]) * t, along = (x[0] - W.from[0]) * W.u[0] + (x[1] - W.from[1]) * W.u[1]; if (along > 0 && along < W.len && y < H && !gapAt(W, x, y) && q.fade[walls.indexOf(W)] > 0.5) { bad.push(`${W.id} stands between the camera and the view centre at k ${q.k} and is not fading`); break; } }
+      }
+      if (!bad.length && q.near < 600) bad.push(`the camera comes within ${Math.round(q.near)} mm of ${q.nearId} at k ${q.k} (keep 600 mm from furniture: the path walks the corridor between the entries, high over the rest)`);
+      if (!bad.length && q.fill > 0.4) bad.push(`${q.fillId} fills ${Math.round(q.fill * 100)}% of the frame at k ${q.k} (the move flies over it: keep the camera further off or higher)`);
+      if (bad.length) break;
+    }
+    if (bad.length) out.push({ rule: 'glide', what: `${tag}: ${bad[0]}` });
+    const head = (q) => Math.atan2(q.t[0] - q.p[0], q.t[2] - q.p[2]) * 180 / Math.PI, h0 = head(s[0]), turn = Math.max(...s.map((q) => Math.abs((((head(q) - h0) % 360) + 540) % 360 - 180))), A = s[0].p, B = s[s.length - 1].p, chord = Math.hypot(B[0] - A[0], B[2] - A[2]) || 1, dev = Math.max(...s.map((q) => Math.abs((q.p[0] - A[0]) * (B[2] - A[2]) - (q.p[2] - A[2]) * (B[0] - A[0])) / chord));
+    if (turn < 20 && dev < 0.08 * chord) out.push({ rule: 'glide', what: `${tag}: a pure sideways slide (the view turns ${Math.round(turn)} degrees and the camera keeps to one line): the plan should turn the neighbours apart (different walls back them, or a different entry)` });
+  }
+  return out;
 }

@@ -67,5 +67,53 @@
    "say": "kitchen: range hood over the hob; one backing wall; window on the back wall; accents: fruit bowl, wall shelf with jars, herbs on the worktop, utensil crock beside the hob (utensilCrock); plants: herbs or a pot on the worktop; a hanging plant from a rail or hook; a pot on a window sill; still life: the worktop beside the hob holds utensil crock beside the hob (utensilCrock) and moka pot (mokaPot); the breakfast table holds mug (mug) and salt and pepper (saltPepper); wall arrangement: open shelf with plates and jars (openShelf); hero group on the left of the home view; foreground piece: trolley; light: pendant; cutting board: flat on the worktop with a loaf, knife and a few vegetables on it; above the run: wall units over the run (wallRun); accent (rust) on the runner; pieces: as the hero needs; signs of life: table runner, tablecloth",
    "motion": []
   }
+ },
+ "plan": {
+  "root": "kitchen",
+  "order": [
+   "kitchen"
+  ],
+  "walk": [
+   "kitchen"
+  ],
+  "areas": {
+   "kitchen": {
+    "room": 0,
+    "fit": [
+     6600,
+     5200
+    ],
+    "parent": null,
+    "via": null,
+    "entry": null,
+    "az": -25
+   }
+  },
+  "links": [],
+  "rooms": [
+   [
+    "kitchen"
+   ]
+  ],
+  "tries": 1,
+  "map": "KKKKKKKKKKKKKKK.\nKKKKKKKKKKKKKKK.\nKKKKKKKKKKKKKKK.\nKKKKKKKKKKKKKKK.\nKKKKKKKKKKKKKKK.\nKKKKKKKKKKKKKKK.\n................\n(one letter per area, # = a way through; one column is 400 mm, one row 800 mm; the page never shows this)",
+  "say": "HOUSE PLAN (never shown whole: it only places the areas and decides where the camera comes in from)\nKKKKKKKKKKKKKKK.\nKKKKKKKKKKKKKKK.\nKKKKKKKKKKKKKKK.\nKKKKKKKKKKKKKKK.\nKKKKKKKKKKKKKKK.\nKKKKKKKKKKKKKKK.\n................\n(one letter per area, # = a way through; one column is 400 mm, one row 800 mm; the page never shows this)\nBuild the areas in this order: kitchen. Each rect starts at [0, 0] and is no larger than its cell: kitchen 6100 x 5000.\nWays through (compose puts these openings in the walls itself; keep 1200 mm of clear wall beside each, and a smaller rect moves the opening along with the wall): .\nView azimuth (a.view leaves az out and takes it from the plan): kitchen -25. Each area looks away from where it is entered.",
+  "world": {
+   "kitchen": {
+    "pose": {
+     "O": [
+      0,
+      0
+     ],
+     "psi": 0
+    },
+    "foot": {
+     "x0": 0,
+     "x1": 6100,
+     "z0": 0,
+     "z1": 5000
+    }
+   }
+  }
  }
 }

@@ -11,6 +11,7 @@ import { buildHome, FADE } from './home.js';
 import { bakeLight } from './lightbake.js';
 import { VIEW } from './sheet.js';
 import { createTour } from './tour.js';
+import { route, glidePath } from './glidepath.js';
 import { createMotion } from './motion/index.js';
 
 const rad = THREE.MathUtils.degToRad, deg = THREE.MathUtils.radToDeg, FOV = 30, GLIDE_S = 1.6, SPAN = 80;
@@ -36,6 +37,7 @@ export function createAreaScene(canvas, S) {
   const sph = (d, az, el) => new THREE.Vector3().setFromSphericalCoords(d, rad(90 - el), rad(az));
   const areas = Object.fromEntries(S.areas.map((a) => [a.id, a]));
   const order = S.areas.map((a) => a.id);
+  const links = S.home.plan?.links, walk = S.home.plan?.walk;   // the house plan: the glide walks its ways through
   let cur = null, tour = null, glide = null, lastInput = performance.now(), aspect = 1;
 
   // An area's numbers: the camera's home and the fade, all in world mm.
@@ -123,14 +125,18 @@ export function createAreaScene(canvas, S) {
     if (id === cur && !glide) return;
     const from = stance(), to = viewOf(areas[id]);
     let daz = ((to.az - from.az + 540) % 360) - 180;   // the short way round
-    glide = { id, from, to, daz, fade0: cur ? fadeOf(areas[cur]) : fadeOf(areas[id]), fade1: fadeOf(areas[id]), t0: performance.now(), hold, k: 0 };
+    const ways = cur && links ? route(links, cur, id) : [], path = ways.length || (cur && links && !together(cur, id)) ? glidePath(from, to, ways, { height: S.home.height || 2700 }) : null;
+    glide = { id, from, to, daz, path, fade0: cur ? fadeOf(areas[cur]) : fadeOf(areas[id]), fade1: fadeOf(areas[id]), t0: performance.now(), hold, k: 0 };
     controls.enabled = false; markLabels(id); if (!together(cur, id)) only(null);   // between areas of one group nothing switches on or off
   }
   function glideAt(k) {
     const g = glide, e = smooth(Math.min(1, Math.max(0, k))); g.k = k;
-    const tg = g.from.target.map((a, i) => a + (g.to.target[i] - a) * e);
-    controls.target.set(...tg);
-    camera.position.copy(controls.target).add(sph(g.from.dist + (g.to.dist - g.from.dist) * e, g.from.az + g.daz * e, g.from.el + (g.to.el - g.from.el) * e));
+    if (g.path) { controls.target.set(...g.path.tgt(e)); camera.position.set(...g.path.pos(e)); }   // walk the plan: position and aim follow the curve through the ways, so the view turns as it goes
+    else {
+      const tg = g.from.target.map((a, i) => a + (g.to.target[i] - a) * e);
+      controls.target.set(...tg);
+      camera.position.copy(controls.target).add(sph(g.from.dist + (g.to.dist - g.from.dist) * e, g.from.az + g.daz * e, g.from.el + (g.to.el - g.from.el) * e));
+    }
     camera.lookAt(controls.target);
     applyFade(g.fade0.map((a, i) => a + (g.fade1[i] - a) * e));
     if (k >= 1) { const id = g.id; glide = null; arrive(id); }
@@ -153,8 +159,8 @@ export function createAreaScene(canvas, S) {
   function markLabels(id = cur) { for (const [k, b] of Object.entries(btns)) { b.style.color = k === id ? '#222' : '#8a8a85'; b.style.background = k === id ? 'rgba(0,0,0,.06)' : 'none'; } }
   addEventListener('keydown', (e) => {
     if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
-    const i = order.indexOf(glide ? glide.id : cur), j = i + (e.key === 'ArrowRight' ? 1 : -1);
-    if (j >= 0 && j < order.length) setArea(order[j]);
+    const seq = walk?.length ? walk : order, i = seq.indexOf(glide ? glide.id : cur), j = i + (e.key === 'ArrowRight' ? 1 : -1);   // the arrow keys follow the plan's walk
+    if (j >= 0 && j < seq.length) setArea(seq[j]);
   });
   addEventListener('resize', resize);
   if (window.ResizeObserver) new ResizeObserver(resize).observe(canvas);

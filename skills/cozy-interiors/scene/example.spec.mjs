@@ -34,5 +34,5 @@ a.skip('utensilCrock', 'the hob has no room beside it for a crock: pans hang on 
 a.shot('cook', ...C('kitchen', 'cook', [[1100, 1100, 5700], [1247, 900, 301], 40]), 'cook');   // C(area, name, fallback): the fitted camera, or the fallback on the first run
 a.shot('table', ...C('kitchen', 'table', [[200, 2100, 5700], [3065, 300, 2498], 34]), 'breakfast');
 a.shot('cook2', ...C('kitchen', 'cook2', [[2600, 1000, 5850], [1280, 900, 469], 40]), 'cook');
-a.view({ target: [2800, 700, 2200], az: 0, el: 20 });
+a.view({ target: [2800, 700, 2200], el: 20 });   // az comes from the plan
 H.write(out, fs);

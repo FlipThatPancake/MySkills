@@ -2,7 +2,7 @@ import { room } from './common.mjs';
 // Round 4 false alarms (round-4/a): checks that compared pieces of one area with another area's walls or bounds.
 // Two areas side by side: a (x 0 to 5000) and b (placed at x 5000), b's left wall standing where a ends.
 const two = (Home, sash) => {
-  const H = new Home({ seed: 5, floor: 'plain' }), a = H.area('a', 'A', { rect: [0, 0, 5000, 4000] }), b = H.area('b', 'B', { O: [5000, 0], rect: [0, 0, 5000, 4000] });
+  const H = new Home({ seed: 5, floor: 'plain', detached: true }), a = H.area('a', 'A', { rect: [0, 0, 5000, 4000] }), b = H.area('b', 'B', { O: [5000, 0], rect: [0, 0, 5000, 4000] });
   const ab = a.back(5000); const bl = b.left(4000, [{ kind: 'window', x: 1500, width: 1200, height: 1200, sill: 900, ...(sash ? { sash } : {}) }]); b.back(5000);
   a.view({ target: [2500, 700, 2000], az: 20, el: 15 }); b.view({ target: [2500, 700, 2000], az: 20, el: 15 });
   return { H, a, b, bl, ab };
@@ -92,16 +92,16 @@ fixtures.push(
   const homeOf = (Home, connect) => {
     const H = new Home({ seed: 5, floor: 'plain' }), a = H.area('a', 'A', { rect: [0, 0, 5000, 4000] });
     a.back(5000); a.right(4000, [{ kind: 'arch', x: 2000, width: 1200, to: 'b', beyond: false, depth: 200 }]);
-    const b = H.area('b', 'B', { rect: [0, 0, 4000, 4000], ...(connect ? { passage: { from: 'a', wall: 'right', x: 2000, via: { wall: 'left', x: 1500 } } } : {}) });
+    const b = H.area('b', 'B', { rect: [0, 0, 4000, 4000], ...(connect ? { passage: { from: 'a', wall: 'right', x: 2000, via: { wall: 'left', x: 1500 } } } : { O: [8000, 0] }) });
     b.back(4000); b.left(4000, [{ kind: 'arch', x: 1500, width: 1200, to: 'a', beyond: false, depth: 200 }]);
     a.view({ target: [2500, 700, 2000], az: 20, el: 15 }); b.view({ target: [2000, 700, 2000], az: 20, el: 15 });
     a.put('sofa', 'sofa', [2500, 600], 0, { group: 'seat', hero: true }); b.put('sofa', 'sofa', [2800, 600], 0, { group: 'bed', hero: true });
     return H;
   };
   fixtures.push(
-    { name: 'passage-leads-across-a-gap', from: 'round 4 mistake 8: the arch of one area opens 3 m from the arch of the area it leads to, so the glide crosses nothing', kind: 'bug', expect: { rules: ['passage'], ids: ['leads to b'] },
+    { name: 'passage-leads-across-a-gap', from: 'round 4 mistake 8: the arch of one area opens 3 m from the arch of the area it leads to, so the glide crosses nothing', kind: 'bug', expect: { rules: ['plan'], ids: ['leads to b'] },
       build({ Home }) { return homeOf(Home, false); } },
-    { name: 'good-passage-with-both-ends-on-one-spot', from: 'round 4 G5: area b placed by its passage: the two arches stand on one spot', kind: 'good', counts: ['passage'],
+    { name: 'good-passage-with-both-ends-on-one-spot', from: 'round 4 G5: area b placed by its passage: the two arches stand on one spot', kind: 'good', counts: ['plan'],
       build({ Home }) { return homeOf(Home, true); } },
   );
 }

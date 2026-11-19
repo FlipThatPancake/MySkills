@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// node snap.mjs <scene.json> <out.png> [areaId|all] [width height] → builds the page and saves a screenshot of an area's home view (all: one image per area, out-<id>.png). Needs Playwright (global) and esbuild (global).
+// node snap.mjs <scene.json> <out.png> [areaId|all|glide:<from>:<to>] [width height] → (glide:a:b: four frames of the move from a to b at k = 0, 0.33, 0.66, 1, out-k0.png ...) builds the page and saves a screenshot of an area's home view (all: one image per area, out-<id>.png). Needs Playwright (global) and esbuild (global).
 import { createRequire } from 'node:module';
 import { execSync } from 'node:child_process';
 import { dirname, join, resolve } from 'node:path';
@@ -13,6 +13,7 @@ const page = await browser.newPage({ viewport: { width: W, height: H } });
 page.on('pageerror', (e) => console.log('PAGE ERROR', String(e)));
 await page.goto('file://' + scene.replace(/\.json$/, '.html'));
 await page.waitForFunction(() => window.cozyScene && window.cozyBaked, null, { timeout: 280000 });
+if (which.startsWith('glide:')) { const [, a, b] = which.split(':'); await page.evaluate(([a, b]) => { const c = window.cozyScene; c.setArea(a, true); c.startGlide(b, true); }, [a, b]); for (const k of [0, 0.33, 0.66, 1]) { await page.evaluate((k) => { const c = window.cozyScene; c.glideAt(k); c.home.update(c.camera, c.controls.target); }, k); await page.waitForTimeout(2000); await page.screenshot({ path: out.replace(/\.png$/, `-k${k}.png`) }); } await browser.close(); process.exit(0); }
 const ids = which === 'all' ? await page.evaluate(() => window.cozyScene.areaIds) : [which];
 for (const id of ids) {
   await page.evaluate((i) => { window.cozyScene.setArea(i, true); }, id);

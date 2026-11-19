@@ -14,20 +14,21 @@ export const HALF_WALL = 1000;
 export const GLIMPSE = 0.25;     // the neighbour takes at most this share of the frame's width
 
 // the deal: mutates `out` (roll's result); `describe(id, area)` rebuilds an area's `say`
-export function dealOpenPlan(out, seed, kinds, describe) {
+export function dealOpenPlan(out, seed, kinds, describe, forced = null) {   // forced: the areas the agent said share one room (in order); null leaves it to the dice
   let s = (seed ^ 0x27d4eb2f) >>> 0;   // a fifth stream deals open plan, so every older pick for a seed stays the same
   const rnd = () => { s = (s + 0x6d2b79f5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
   const pickW = (list, w = (x) => x.w) => { const tot = list.reduce((a, x) => a + w(x), 0); let q = rnd() * tot; for (const x of list) { q -= w(x); if (q < 0) return x; } return list[list.length - 1]; };
   const main = OP.joinable.filter((k) => kinds.includes(k)), nook = Object.keys(OP.nook).filter((k) => kinds.includes(k) && kinds.includes(OP.nook[k]));
-  const roll = rnd(); if (main.length + nook.length < 2 || roll >= OP.chance) return;   // (the stream is spent the same either way)
+  const roll = rnd(); if (forced === null ? (main.length + nook.length < 2 || roll >= OP.chance) : forced.length < 2) return;   // (the stream is spent the same either way)
   // which areas join, and in what order
   let chain;
   const whole = rnd() < OP.wholeChainChance;
-  if (main.length >= 3 && whole) { const ord = pickW(OP.orders.filter((o) => o.of.every((k) => main.includes(k)))); chain = ord.of.slice(); }
+  if (forced) chain = forced.slice();
+  else if (main.length >= 3 && whole) { const ord = pickW(OP.orders.filter((o) => o.of.every((k) => main.includes(k)))); chain = ord.of.slice(); }
   else if (main.length >= 2) { const pr = pickW(OP.pairs.filter((p) => p.of.every((k) => main.includes(k)))); chain = pr.of.slice(); }
   else chain = [main[0]];   // living alone with its nook
-  if (rnd() < 0.5) chain.reverse();
-  for (const n of nook) { const host = OP.nook[n]; if (chain.includes(host) && rnd() < OP.nookChance) chain.splice(chain.indexOf(host) + 1, 0, n); }
+  if (rnd() < 0.5 && !forced) chain.reverse();
+  if (!forced) for (const n of nook) { const host = OP.nook[n]; if (chain.includes(host) && rnd() < OP.nookChance) chain.splice(chain.indexOf(host) + 1, 0, n); }
   if (chain.length < 2) return;
   // layout
   const layout = pickWeights(OP.layouts, rnd), turn = layout === 'corner' ? Math.floor(rnd() * (chain.length - 1)) : null;
@@ -61,7 +62,8 @@ export function dealOpenPlan(out, seed, kinds, describe) {
   const behind = kinds.filter((k) => !chain.includes(k));
   const sayOf = (q) => `${q.a} | ${q.b}: ${q.separators.map((k) => OP.separators[k].say).join(' and ')}; the areas share ${q.overlap} mm`;
   const say = `OPEN PLAN, ${layout}${layout === 'corner' ? ` (the chain turns 90 degrees at the seam after ${chain[turn]})` : ' (one long back wall)'}: ${chain.join(' - ')}. ${seams.map(sayOf).join('. ')}.${behind.length ? ` Behind a passage: ${behind.join(', ')}.` : ''} No wall stands on a seam; a side wall only on an outer end.`;
-  out.openPlan = { layout, ...(turn === null ? {} : { turn }), chain, seams, behind, say };
+  const floor = chain.includes('kitchen') && out.floor === 'boards' && rnd() < OP.kitchenTiles ? Object.fromEntries(chain.map((id) => [id, id === 'kitchen' ? 'tiles' : 'boards'])) : null;   // one floor across an open room; the kitchen part may switch to tiles (the change is a straight line by a furniture separator)
+  out.openPlan = { layout, ...(turn === null ? {} : { turn }), chain, seams, behind, say, ...(floor ? { floor } : {}) };
   for (const id of chain) out.areas[id].say = describe(id, out.areas[id]) + ` | open plan: ${out.areas[id].open.ends.length ? 'at the ' + out.areas[id].open.ends.join(' and ') + ' of the chain' : 'in the middle of the chain'}`;
 }
 function pickWeights(obj, rnd) { const e = Object.entries(obj), tot = e.reduce((a, [, w]) => a + w, 0); let q = rnd() * tot; for (const [k, w] of e) { q -= w; if (q < 0) return k; } return e[e.length - 1][0]; }
@@ -82,6 +84,7 @@ export function joinAreas(H, a, b, { layout = 'row', share = 0, separators = [] 
     const d = a.rect[3] - share; a.cornerWall = a.right(d, [], 90);   // a.cornerWall: the wall helper, to place things on the stretch beside the corner   // the wall beside a: a's right wall, whose far end is where b's back wall begins
     b.psi = a.psi + 90; b.O = a.P([end, d]); b.rect = [0, b.rect[1], b.rect[2], b.rect[3]];
   } else throw new Error(`H.join: layout is 'row' or 'corner' (got "${layout}")`);
+  b.unplaced = false;
   const gid = a.planGroup || `g${(H.groups ||= []).length + 1}`, G = H.groups.find((g) => g.id === gid) || (H.groups.push({ id: gid, areas: [a.id], seams: [] }), H.groups[H.groups.length - 1]);
   a.planGroup = b.planGroup = gid; G.areas.push(b.id);
   G.seams.push({ a: a.id, b: b.id, layout, share, kinds: separators });   // the seam line is worked out at write time, from b's frame (seamLine)

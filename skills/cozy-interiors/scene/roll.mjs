@@ -7,6 +7,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { dealOpenPlan } from './openplan.mjs';
 import { dealMotion } from './motion-roll.mjs';
+import { planHome } from './plan.mjs';
 const T = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'tables.json'), 'utf8'));
 export const KINDS = Object.keys(T).filter((k) => T[k]?.hero);
 
@@ -63,7 +64,7 @@ function homeCaps(out, kinds, describe) {
   }
   for (const id of kinds) out.areas[id].say = describe(id, out.areas[id]);
 }
-export function roll(seed, kinds = ['kitchen', 'dining', 'living']) {
+export function roll(seed, kinds = ['kitchen', 'dining', 'living'], opts = {}) {   // opts: { rooms: [[ids sharing one open room]], touch: [[a, b]] } (the CLI: kitchen+dining+living hallway --touch=hallway:living)
   let s = seed >>> 0;
   const rnd = () => { s = (s + 0x6d2b79f5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
   let s2 = (seed ^ 0x9e3779b9) >>> 0;   // a second stream deals the `more` extras, so the older picks stay the same when a table gains phrases
@@ -123,15 +124,19 @@ export function roll(seed, kinds = ['kitchen', 'dining', 'living']) {
   }
   homeCaps(out, kinds, describe);   // round 6 item 12: what the checks allow across the whole home (variety: one area per basket, pouf, trolley, stool..., two of any small piece)
   dealMotion(out, seed);   // living things (motion-roll.mjs): 2 or 3 kinds per area, from tables.json motion; its own random stream, so no older pick moves
-  dealOpenPlan(out, seed, kinds, describe);   // open plan (openplan.mjs): about 2 homes in 5 with two joinable areas; its own random stream, so no older pick moves
-  for (const b of out.openPlan?.behind || []) { const a = out.areas[b]; if (a && !(a.passages || []).length) { a.openings = [...a.openings, { kind: 'arch', on: 'first' }]; a.passages = [T.passages[0].style]; a.say += `; arch ${a.passages[0]} on the ${a.side} wall (the passage this area is behind)`; } }   // an area behind a passage has the arch of its own (it is the way through)
-  { const pass = []; for (const b of out.openPlan?.behind || []) { const fromId = out.openPlan.chain[out.openPlan.chain.length - 1], f = out.areas[fromId], t = out.areas[b]; if (!f || !t) continue;   // round 4 G5: a passage has two ends: the last area of the chain gets the arch on its right wall, the area behind it the arch on its left wall
-      f.openings = [...f.openings, { kind: 'arch', on: 'right' }]; f.passages = [...(f.passages || []), t.passages[0]]; f.say += `; arch ${t.passages[0]} on the right wall (the passage to ${b})`; t.say += `; its arch is on the left wall, facing ${fromId}'s`;
-      pass.push({ from: fromId, to: b, fromWall: 'right', toWall: 'left' }); }
-    if (pass.length) out.openPlan.passages = pass; }   // compose: H.area(b, ..., { passage: { from, wall: 'right', x, via: { wall: 'left', x } } }), both arches with to:
+  const open = (opts.rooms || []).filter((r) => r.length > 1); if (open.length > 1) throw new Error('roll: one open room per home (kitchen+dining+living); the other areas are rooms of their own');
+  dealOpenPlan(out, seed, kinds, describe, opts.rooms ? (open[0] || []) : null);   // open plan (openplan.mjs): about 2 homes in 5 with two joinable areas, or the room the agent named; its own random stream, so no older pick moves
+  if (kinds.length > 1) for (const a of Object.values(out.areas)) a.passages = (a.passages || []).map((st) => (T.passages.find((q) => q.style === st)?.counter ? 'cased' : st));   // an arch is a way through in a home with a plan: a counter hatch is not walked through
+  for (let k = 0; ; k++) {   // the house plan (plan.mjs): rooms and what touches; an area with no free wall takes a corner backing
+    try { out.plan = planHome(out, seed, kinds, opts); break; }
+    catch (e) { if (!e.needBacking || k > 2) throw e; for (const id of e.needBacking) { const a = out.areas[id], b = pick3(T.backing.filter((x) => x.walls === 2 && x.angle === 90)); a.backing = b.id; a.openings = a.openings.map((o) => ({ ...o })); if (id === 'bedroom' && a.openings.some((o) => o.kind === 'window' && o.on === 'first')) a.hero = 'bed with its headboard on the second wall (the back wall holds the window)'; a.say = describe(id, a); } }
+  }
+  if (out.openPlan) out.openPlan.behind = [];   // every area outside the open room is linked by the plan
+  for (const id of kinds) { out.areas[id].say = describe(id, out.areas[id]); }
+  for (const id of kinds) out.areas[id].say += ` | plan: view az ${out.plan.areas[id].az}, cell up to ${out.plan.areas[id].fit.join(' x ')}`;
   return out;
 }
 if (process.argv[1] && process.argv[1].endsWith('roll.mjs')) {
-  const args = process.argv.slice(2), seed = /^\d+$/.test(args[0] || '') ? Number(args.shift()) : Math.floor(Math.random() * 1e6);
-  try { console.log(JSON.stringify(roll(seed, args.length ? args : undefined), null, 1)); } catch (e) { console.error(e.message); process.exit(1); }
+  const args = process.argv.slice(2), seed = /^\d+$/.test(args[0] || '') ? Number(args.shift()) : Math.floor(Math.random() * 1e6), touch = args.filter((x) => x.startsWith('--touch=')).flatMap((x) => x.slice(8).split(',').map((q) => q.split(':'))), words = args.filter((x) => !x.startsWith('--')), rooms = words.map((w) => w.split('+')), opts = words.some((w) => w.includes('+')) || args.includes('--rooms') ? { rooms, touch } : { touch };
+  try { console.log(JSON.stringify(roll(seed, words.length ? rooms.flat() : undefined, opts), null, 1)); } catch (e) { console.error(e.message); process.exit(1); }
 }
