@@ -78,8 +78,8 @@ export function floorLamp(kit, { h = 1650 } = {}) {
 export function picture(kit, { w = 600, h = 800, seed = 2 } = {}) {
   const g = kit.group(), R = rnd(seed), F = 28, D = 24, pts = [];
   g.add(kit.rbox(-w / 2, 0, D, w, h, D, 4));                                                             // the frame
-  g.add(kit.box(-w / 2 + F, F, D + 2, w - 2 * F, h - 2 * F, 2, lo));                                     // the mat
-  const x0 = -w / 2 + F + 36, x1 = w / 2 - F - 36, y0 = F + 36, y1 = h - F - 36, z = D + 4.5;
+  g.add(kit.box(-w / 2 + F, F, D + 4, w - 2 * F, h - 2 * F, 4, lo));                                     // the mat
+  const x0 = -w / 2 + F + 36, x1 = w / 2 - F - 36, y0 = F + 36, y1 = h - F - 36, z = D + 7;
   for (let k = 0; k < 3; k++) {                                                                          // soft hills and a sun, drawn as lines
     let px = x0, py = y0 + (y1 - y0) * (0.18 + 0.2 * k);
     for (let i = 1; i <= 12; i++) { const nx = x0 + (x1 - x0) * i / 12, ny = y0 + (y1 - y0) * (0.18 + 0.2 * k) + Math.sin(i * 0.8 + R() * 2 + k) * (y1 - y0) * 0.05; pts.push([px, py, z], [nx, ny, z]); px = nx; py = ny; }

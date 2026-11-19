@@ -23,6 +23,7 @@ await page.goto('file://' + scene.replace(/\.json$/, '.html') + '?check');
 await page.waitForFunction(() => window.cozyScene);
 lap('page load');
 const coverage = [];
+{ const { ASSETS } = await import('./src/library/meta.js'); await page.evaluate((P) => { window.__pieces = P; }, Object.fromEntries(Object.entries(ASSETS).filter(([, m]) => m.pieces).map(([k, m]) => [k, m.pieces]))); }   // assets that are several bodies by design (candlesticks: one per n)
 const issues = await page.evaluate(() => {
   const { home, kit } = window.cozyScene, T = kit.THREE, out = [], objs = home.objects;
   home.group.updateMatrixWorld(true);
@@ -86,7 +87,7 @@ const issues = await page.evaluate(() => {
       const parts = []; objs[id].updateMatrixWorld(true); objs[id].traverse((o) => { if (!o.isMesh || o.isLineSegments2 || o.material.isMeshBasicMaterial || kit.hulls.includes(o.material) || o.material === kit.depth) return; o.geometry.computeBoundingBox(); const b = o.geometry.boundingBox.clone().applyMatrix4(o.matrixWorld); if (b.max.x - b.min.x < 3 && b.max.y - b.min.y < 3) return; parts.push(b.expandByScalar(8)); });
       if (parts.length < 2) continue; const comp = parts.map((_, i) => i), find = (i) => comp[i] === i ? i : (comp[i] = find(comp[i]));
       for (let i = 0; i < parts.length; i++) for (let j = i + 1; j < parts.length; j++) if (parts[i].intersectsBox(parts[j])) comp[find(i)] = find(j);
-      const n = new Set(parts.map((_, i) => find(i))).size; if (n > 1) out.push({ rule: 'floating', what: `${a} (${id}) is ${n} loose pieces: a part touches nothing else of it (a plank above its legs, a handle off its body): fix the asset` }); } }
+      const n = new Set(parts.map((_, i) => find(i))).size, pc = window.__pieces?.[a], want = pc === undefined ? 1 : typeof pc === 'number' ? pc : (sc(id).params?.[pc] ?? 2); if (n > want) out.push({ rule: 'floating', what: `${a} (${id}) is ${n} loose pieces${want > 1 ? ` (${want} by design)` : ''}: a part touches nothing else of it (a plank above its legs, a handle off its body): fix the asset` }); } }
   for (const id of Object.keys(objs)) if (sc(id).asset === 'basket' && sc(id).params?.form === 2 && !/bed|bath/.test(sc(id).area || '')) out.push({ rule: 'accent', what: `${id}: a tall lidded hamper is laundry; in ${sc(id).area} use a magazine rack, log basket, book stack or a different basket form` });
   // 0b. a cushion on a bed or seat leans back (15 to 25 degrees) against the headboard or the back of the seat
   for (const id of Object.keys(objs)) if (sc(id).asset === 'cushion' && ((sc(id).params?.lean ?? 0) < 15 || sc(id).params.lean > 28)) out.push({ rule: 'cushion', what: `${id} stands upright or lies back too far: give it params.lean 15 to 25 so it rests back against the headboard or the seat back` });
@@ -537,7 +538,9 @@ lap('window heads and roll');
   if (!QUICK) { const { windowIssues } = await import('./check-windows.mjs'), { existsSync, readFileSync } = await import('node:fs'), cf = scene.replace(/\.json$/, '.cameras.json'); let C = {}; try { if (existsSync(cf)) C = JSON.parse(readFileSync(cf, 'utf8')); } catch {} delete C._core;
     const pi = await windowIssues(page, C, { angles: { 'left': { look: [-35, 15] }, 'high': { look: [0, 32] }, 'right': { look: [35, 15] } } }); for (const i of pi) issues.push(i); coverage.push(pi.coverage); }
 }
-lap('panes');
+  if (!QUICK) { const { visibleIssues } = await import('./check-visible.mjs'), { existsSync, readFileSync } = await import('node:fs'), cf = scene.replace(/\.json$/, '.cameras.json'); let C = {}; try { if (existsSync(cf)) C = JSON.parse(readFileSync(cf, 'utf8')); } catch {} delete C._core; const vi = await visibleIssues(page, C); for (const i of vi) issues.push(i); coverage.push(vi.coverage); }   // every object shows from the home view or a tour shot (check-visible.mjs)
+  if (!QUICK) { const { pendantIssues } = await import('./check-pendants.mjs'); const pi2 = await pendantIssues(page); for (const i of pi2) issues.push(i); coverage.push(pi2.coverage); }   // every pendant's cord shows in the home view (check-pendants.mjs)
+lap('panes, visibility, cords');
 { const { openPlanIssues } = await import('./check-openplan.mjs'); for (const i of await openPlanIssues(page, scene, { quick: QUICK })) issues.push(i); }   // open-plan homes (scene.groups): layout, separators, glimpse, glide
 lap('open plan');
 { const { motionIssues } = await import('./check-motion.mjs'); for (const i of await motionIssues(page, scene)) issues.push(i); }   // living things (src/motion): rolled kinds, open-window rule, nothing through furniture or walls in 240 s of simulated motion

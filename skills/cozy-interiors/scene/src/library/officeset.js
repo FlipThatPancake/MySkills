@@ -31,22 +31,47 @@ export function deskFrame(kit, { w = 1400, d = 700, h = 740, form = 'pedestal', 
   return kit.merge(g);
 }
 
-export function taskLamp(kit, { form = 'arm', shade = 'cone', a1 = 62, a2 = -28, seed = 1 } = {}) {   // an adjustable desk lamp: a round foot, two arms with a joint, a shade tilted down over the desk (the shade points toward +z)
-  const T = kit.THREE, g = kit.group(), R = rnd(seed); g.add(kit.cyl(0, 0, 0, 80, 18, { rTop: 74, seg: 28, ...lo }));
-  let tip;
-  if (form === 'gooseneck') {   // a thin curved tube rising and bending forward
-    const n = 14, pts = []; for (let i = 0; i <= n; i++) { const t = i / n; pts.push([0, 18 + 380 * Math.sin(t * 1.25), 40 * (1 - Math.cos(t * 1.7)) * 3.2 * t]); }
-    for (let i = 0; i < n; i++) g.add(rod(kit, pts[i], pts[i + 1], 6, 6, 'lo')); tip = pts[n];
-  } else {
-    const L1 = 300, L2 = 270, A = a1 * DEG, B = a2 * DEG, j = [0, 18 + Math.sin(A) * L1, -Math.cos(A) * L1 * 0.15 + 0];   // lower arm leans back a little, upper arm reaches forward
-    const p1 = [0, 18, 0], p2 = [0, 18 + Math.sin(A) * L1, -Math.cos(A) * L1 * 0.5], p3 = [0, p2[1] + Math.sin(B + 0.6) * L2 * 0.5, p2[2] + Math.cos(B) * L2];
-    g.add(rod(kit, p1, p2, 9, 8, 'lo')); g.add(rod(kit, p2, p3, 8, 7, 'lo')); g.add(kit.solid(new T.SphereGeometry(14, 12, 10), p2[0], p2[1], p2[2], { smooth: true, ...lo })); tip = p3;
-  }
-  const sh = kit.group(), sr = shade === 'dome' ? 85 : 70;
+// Named poses, never free angles: each reads as a real lamp. t1/t2: how far the lower and upper arm lean from vertical (the lower back, the upper forward); aim: how steeply the shade's opening points down; tip: where a gooseneck ends (y, z).
+const LAMP_POSES = { upright: { t1: 8, t2: 30, aim: 68, tip: [420, 110] }, lean: { t1: 28, t2: 72, aim: 56, tip: [380, 250] }, reach: { t1: 32, t2: 74, aim: 50, tip: [370, 330] } };
+export const TASKLAMP_POSES = Object.keys(LAMP_POSES);
+const tag = (o, name) => { o.userData.part = name; return o; };   // names a part so selftest can check the asset has the parts that make it recognisable
+// A tube along a curve with a radius that tapers: rings carried along the curve by parallel transport (each ring's frame turns the least it can from the one before), so it neither twists nor kinks.
+function sweptTube(kit, pts, r0, r1, seg = 10) {
+  const T = kit.THREE, P = pts.map((p) => new T.Vector3(...p)), pos = [], idx = [], n = P.length;
+  const tan = P.map((p, i) => P[Math.min(n - 1, i + 1)].clone().sub(P[Math.max(0, i - 1)]).normalize());
+  let nrm = new T.Vector3(1, 0, 0); const frames = [];
+  for (let i = 0; i < n; i++) { if (i) { const ax = tan[i - 1].clone().cross(tan[i]); if (ax.length() > 1e-6) nrm.applyAxisAngle(ax.normalize(), Math.acos(Math.max(-1, Math.min(1, tan[i - 1].dot(tan[i]))))); } nrm.sub(tan[i].clone().multiplyScalar(nrm.dot(tan[i]))).normalize(); frames.push([nrm.clone(), tan[i].clone().cross(nrm).normalize()]); }
+  for (let i = 0; i < n; i++) { const r = r0 + (r1 - r0) * i / (n - 1); for (let k = 0; k < seg; k++) { const a = k / seg * Math.PI * 2, v = frames[i][0].clone().multiplyScalar(Math.cos(a) * r).add(frames[i][1].clone().multiplyScalar(Math.sin(a) * r)).add(P[i]); pos.push(v.x, v.y, v.z); } }
+  for (let i = 0; i < n - 1; i++) for (let k = 0; k < seg; k++) { const a = i * seg + k, b = i * seg + (k + 1) % seg, c = a + seg, d = b + seg; idx.push(a, c, b, b, c, d); }
+  for (const [ring, flip] of [[0, true], [n - 1, false]]) { const ci = pos.length / 3; pos.push(P[ring].x, P[ring].y, P[ring].z); for (let k = 0; k < seg; k++) { const a = ring * seg + k, b = ring * seg + (k + 1) % seg; idx.push(...(flip ? [ci, b, a] : [ci, a, b])); } }
+  const geo = new T.BufferGeometry(); geo.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); geo.setIndex(idx); geo.computeVertexNormals();
+  return kit.solid(geo, 0, 0, 0, { smooth: true, ...lo });
+}
+export function taskLamp(kit, { form = 'arm', shade = 'cone', pose = 'lean', seed = 1 } = {}) {   // an adjustable desk lamp: a round foot, two arms of fixed length hinged on pivots (or a swept, tapering gooseneck), and a shade whose opening points down at the desk (+z is forward); pose upright | lean | reach
+  const T = kit.THREE, g = kit.group(), P = LAMP_POSES[pose] || LAMP_POSES.lean;
+  g.add(tag(kit.cyl(0, 0, 0, 80, 18, { rTop: 74, seg: 28, ...lo }), 'base'));
+  const phi = P.aim * DEG, d = [0, -Math.sin(phi), Math.cos(phi)];   // where the shade points: down and forward
+  const sh = kit.group(), sr = shade === 'dome' ? 85 : 70, hs = shade === 'dome' ? 70 : 110;   // the shade's narrow neck is at its local y = hs, the opening at y = 0
   if (shade === 'dome') sh.add(kit.solid(new T.LatheGeometry([[0.01, 70], [sr * 0.5, 66], [sr * 0.9, 40], [sr, 0], [sr * 0.9, 2], [sr * 0.5, 40], [0.01, 50]].map(([a, b]) => new T.Vector2(a, b)).reverse(), 28), 0, 0, 0, { smooth: true }));
-  else sh.add(kit.cyl(0, 0, 0, sr, 110, { rTop: 24, seg: 28 }));
-  sh.rotation.x = 1.9; sh.position.set(tip[0], tip[1] + 6, tip[2] + 24); g.add(sh);   // axis tilted down toward +z
-  return kit.merge(g);
+  else sh.add(kit.cyl(0, 0, 0, sr, hs, { rTop: 24, seg: 28 }));
+  sh.position.y = -(hs - 6) - 45;   // the neck stands 45 mm clear of the pivot (the arm's end), joined by a short stem: the arm then never runs through the shade
+  let pivot;
+  if (form === 'gooseneck') {   // one tapering tube, foot to head, ending along d so the head continues the curve
+    const p0 = [0, 18, 0], p3 = [0, P.tip[0], P.tip[1]], p2 = [0, p3[1] - d[1] * 120, p3[2] - d[2] * 120], p1 = [0, 18 + (p3[1] - 18) * 0.7 + 60, 0], n = 28, pts = [];
+    for (let i = 0; i <= n; i++) { const t = i / n, u = 1 - t, b = (k) => u * u * u * p0[k] + 3 * u * u * t * p1[k] + 3 * u * t * t * p2[k] + t * t * t * p3[k]; pts.push([0, b(1), b(2)]); }
+    g.add(tag(sweptTube(kit, pts, 8, 5.5), 'neck'));
+    pivot = kit.group(); pivot.position.set(...p3); g.add(pivot);
+  } else {   // two arms of fixed length on nested pivots: the base pivot leans the lower arm back, the joint pivot turns the upper arm forward, the head pivot aims the shade
+    const L1 = 240, L2 = 220, A = P.t1 * DEG, B = P.t2 * DEG, arms = kit.group();
+    const p1 = kit.group(); p1.position.set(0, 18, 0); p1.rotation.x = -A; arms.add(p1); p1.add(kit.cyl(0, 0, 0, 8, L1, { rTop: 8, seg: 16, ...lo }));
+    const p2 = kit.group(); p2.position.set(0, L1, 0); p2.rotation.x = A + B; p1.add(p2); p2.add(kit.solid(new T.SphereGeometry(14, 12, 10), 0, 0, 0, { smooth: true, ...lo })); p2.add(kit.cyl(0, 0, 0, 7, L2, { rTop: 7, seg: 16, ...lo }));
+    pivot = kit.group(); pivot.position.set(0, L2, 0); p2.add(pivot); g.add(tag(arms, 'arms'));
+  }
+  const u = [0, -d[1], -d[2]], abs = Math.atan2(u[2], u[1]);   // the neck's direction: opposite to the way the opening points
+  pivot.rotation.x = abs - (form === 'gooseneck' ? 0 : (P.t2 * DEG)); pivot.add(tag(sh, 'shade')); pivot.add(kit.cyl(0, -42, 0, 5, 44, { seg: 12, ...lo })); pivot.add(kit.solid(new T.SphereGeometry(9, 10, 8), 0, 0, 0, { smooth: true, ...lo }));   // the stem and a swivel ball
+  g.updateMatrixWorld(true); const at = new T.Vector3(); sh.getWorldPosition(at);
+  const out = kit.merge(g); out.userData.head = { at: [at.x, at.y, at.z], dir: d };   // selftest: the shade's opening and where it points
+  return out;
 }
 
 export function monitor(kit, { w = 560, stand = 'foot', kb = 'yes', seed = 1 } = {}) {   // a flat screen on a stand, dark glass, with an optional keyboard and mouse in front
@@ -81,7 +106,7 @@ export function notebook(kit, { form = 'closed', w = 150, pens = 1, seed = 1 } =
 
 export function pinboard(kit, { w = 900, h = 600, notes = 6, frame = 'wood', seed = 1 } = {}) {   // a cork board in a frame with paper notes held by pins, some overlapping, one with a string of lines
   const g = kit.group(), R = rnd(seed), T = kit.THREE, fw = frame === 'none' ? 0 : 26;
-  g.add(kit.rbox(-w / 2, 0, 28, w, h, 28, 5, { tone: 'lo' })); g.add(kit.rbox(-w / 2 + fw, fw, 30, w - 2 * fw, h - 2 * fw, 8, 3, { linen: true }));
+  if (fw) g.add(kit.rbox(-w / 2, 0, 28, w, h, 28, 5, { tone: 'lo' })); g.add(kit.rbox(-w / 2 + fw, fw, 33, w - 2 * fw, h - 2 * fw, fw ? 11 : 33, 3, { linen: true }));   // the cork stands 5 mm in front of the frame's face: nearer and the two faces flicker; no frame: the cork is the whole board
   const z = 30 + 1;
   for (let i = 0; i < notes; i++) {
     const nw = 90 + R() * 80, nh = 80 + R() * 90, cx = -w / 2 + fw + nw / 2 + 20 + R() * (w - 2 * fw - nw - 40), cy = fw + nh / 2 + 20 + R() * (h - 2 * fw - nh - 40), a = (R() - 0.5) * 0.3, n = kit.group();
@@ -93,10 +118,10 @@ export function pinboard(kit, { w = 900, h = 600, notes = 6, frame = 'wood', see
 }
 
 export function binders(kit, { n = 5, h = 300, form = 'row', tone = 'mid', seed = 1 } = {}) {   // lever-arch files standing in a row (spines to +z with a label and a finger hole), slim ring binders in a row, lying in a stack, or one binder lying open with its rings and ruled pages
-  const g = kit.group(), R = rnd(seed), B = bx(kit), Rb = rb(kit), pts = [], ac = tone === 'accent' ? { tone: 'accent' } : {}; let x = 0;   // tone accent: every other file takes the home's accent
+  const g = kit.group(), R = rnd(seed), B = bx(kit), Rb = rb(kit), pts = [], ac = {}; let x = 0;
   if (form === 'open') {
     const s = h / 300, L = 250 * s, H = 300 * s;
-    const cv = tone === 'accent' ? ac : lo; g.add(Rb(-L / 2 - 14, 0, 0, L, 7, H, 3, cv)); g.add(Rb(L / 2 + 14, 0, 0, L, 7, H, 3, cv)); g.add(Rb(0, 0, 0, 32, 9, H, 3, cv));
+    const cv = lo; g.add(Rb(-L / 2 - 14, 0, 0, L, 7, H, 3, cv)); g.add(Rb(L / 2 + 14, 0, 0, L, 7, H, 3, cv)); g.add(Rb(0, 0, 0, 32, 9, H, 3, cv));
     g.add(Rb(-L / 2 - 12, 7, 0, L - 14, 10 + R() * 4, H - 14, 2)); g.add(Rb(L / 2 + 14, 7, 0, L - 14, 28, H - 14, 2));
     for (const z of [-H * 0.32, 0, H * 0.32]) g.add(kit.solid(new kit.THREE.TorusGeometry(15, 2.6, 6, 14), 0, 40, z, { smooth: true, tone: 'lo' }));
     const ln = []; for (let k = 0; k < 14; k++) { const z = -H / 2 + 30 + k * (H - 60) / 13; ln.push([44, 35.6, z], [L - 8, 35.6, z]); } g.add(kit.lines(ln, 'faint'));
@@ -113,7 +138,7 @@ export function deskOrganiser(kit, { form = 'cups', n = 3, tall = 1, pens = 3, t
   if (form === 'tiered') { for (let i = 0; i < Math.max(2, Math.min(4, n)); i++) { const y = i * 70; g.add(Rb(0, y, 0, 330, 14, 250, 5, lo)); for (const s of [-1, 1]) g.add(Rb(s * 158, y, 0, 14, 80, 250, 4)); g.add(Rb(0, y + 14, -115, 330, 60, 14, 4)); if (i < 2) for (let k = 0; k < 1 + (i + Math.floor(R() * 2)); k++) g.add(Rb((R() - 0.5) * 20, y + 14 + k * 4, 6, 270, 4, 210, 1, { linen: true })); } return kit.merge(g); }
   const cnt = Math.max(2, Math.min(4, n)), base = [[44, 110], [38, 140], [50, 90], [40, 120]].slice(0, cnt);
   base.forEach(([r, h0], i) => { const h = h0 * tall, x = (i - (cnt - 1) / 2) * 112, tn = i % 2 ? lt : {};
-    if (form === 'pots') { g.add(Rb(x, 0, 0, r * 1.9, h, r * 1.9, 6, tn)); g.add(Rb(x, h - 3, 0, r * 1.5, 3, r * 1.5, 2, { linen: true })); } else { g.add(kit.cyl(x, 0, 0, r, h, { rTop: r * 1.05, seg: 24, ...(i % 2 ? lt : {}) })); g.add(kit.cyl(x, h - 3, 0, r * 0.82, 3, { seg: 20, linen: true })); }
+    if (form === 'pots') { g.add(Rb(x, 0, 0, r * 1.9, h, r * 1.9, 6, tn)); g.add(Rb(x, h - 1, 0, r * 1.5, 4, r * 1.5, 2, { linen: true })); } else { g.add(kit.cyl(x, 0, 0, r, h, { rTop: r * 1.05, seg: 24, ...(i % 2 ? lt : {}) })); g.add(kit.cyl(x, h - 1, 0, r * 0.82, 4, { seg: 20, linen: true })); }
     for (let k = 0; k < Math.max(1, Math.round(pens * (0.6 + 0.3 * (i % 2)))); k++) { const a = R() * 6.28, tl = 0.08 + R() * 0.2, L = 150 + R() * 40; const out = 50 + R() * 40, lat = (r - 10) * 0.3 + out * tl; g.add(rod(kit, [x + Math.cos(a) * 6, Math.max(6, h - 110), Math.sin(a) * 6], [x + Math.cos(a) * lat, h + out, Math.sin(a) * lat], 4.5, 4.5, 'lo', 'held')); } });
   g.add(Rb(0, 0, 90, cnt * 112 - 12, 10, 70, 3, lo));   // a little tray in front
   return kit.merge(g);

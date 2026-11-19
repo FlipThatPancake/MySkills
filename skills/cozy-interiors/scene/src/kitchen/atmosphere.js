@@ -166,7 +166,7 @@ export function pendantLamp(kit) {
   for (let i = 0; i <= 16; i++) { const a = i / 16 * Math.PI / 2; prof.push(new T.Vector2(Math.max(0.01, R * Math.cos(a) * (1 - 0.04 * Math.sin(a))), H * Math.sin(a))); }
   const shade = kit.solid(new T.LatheGeometry(prof, 40), X, RIM, Z, { smooth: true, tone: 'mid' });
   g.add(shade);
-  g.add(kit.solid(new T.CircleGeometry(R - 1, 40).rotateX(Math.PI / 2), X, RIM + 1, Z, { tone: 'lo' }));   // a pale diffuser closes the underside, so it reads light, not a grey hole
+  g.add(kit.solid(new T.CircleGeometry(R - 1, 40).rotateX(Math.PI / 2), X, RIM + 1, Z, { linen: true }));   // a pale warm diffuser closes the underside, so it reads light, not a grey hole
   const rim = [];
   for (let i = 0; i < 40; i++) { const a = i / 40 * Math.PI * 2, b = (i + 1) / 40 * Math.PI * 2; rim.push([X + Math.cos(a) * R, RIM + 0.5, Z + Math.sin(a) * R], [X + Math.cos(b) * R, RIM + 0.5, Z + Math.sin(b) * R]); }
   g.add(kit.lines(rim, 'mid'));
