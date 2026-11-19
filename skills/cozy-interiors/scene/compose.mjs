@@ -1,5 +1,5 @@
 // compose.mjs — helpers for laying a home out in each area's own frame, then writing scene.json. A spec is a small script: scenes/seed-<n>.spec.mjs writes scenes/seed-<n>.json (the helpers are below).
-// Everything is millimetres. An area has a local frame: x to the right, z toward the viewer, its backing wall along z = 0 (see the walls below). Areas are placed side by side with a 3000 mm gap, so no neighbour shows in an area's own view.
+// Everything is millimetres. An area has a local frame: x to the right, z toward the viewer, its backing wall along z = 0 (see the walls below). The areas stand in one house plan (plan.mjs; roll.mjs prints it): H.roll(roll) hands it over and H.area places each area from it (the root at the origin, an open-room area by H.join, any other back to back with the wall it is entered by, with the arch or door compose puts in both walls). An area with no place is refused; `a.view` takes its azimuth from the plan; GAP stays only for hand-placed fixtures.
 //   const H = new Home({ seed, floor: 'auto' (boards, sometimes tiles) | 'tiles' | 'boards' | 'plain' (rare));
 //   const a = H.area('kitchen', 'Kitchen', { rect: [0, 0, 6600, 4200] });      // rect: [x0, z0, x1, z1] of the floor the area owns (its bounds); psi turns the whole area 90, 180 or -90 degrees; O sets its place by hand
 //   Walls (the room is in front of each one). Openings are { kind: 'window' | 'door' | 'arch', x, width, height, sill, sash: 'fixed', hinge: 'l' | 'r', to: <area id>, ... }; x is the opening's middle, measured from the wall's LEFT end as you see it from the room:
@@ -31,6 +31,7 @@ import { restOn as geomRestOn, fits as geomFits, topAt } from './geom/place.mjs'
 import { SOFT, OVERHANG_TOL, BAND } from './geom/kinds.mjs';
 import { REGISTRY } from './src/library/index.js';
 import { joinAreas, seamLine, zoneList } from './openplan.mjs';
+import { matePose, wallGeo, LINK_WIDTH } from './plan.mjs';
 import { checkAlive, pickVia, MOTION } from './motion-roll.mjs';
 import { sliderClear, ventZone, VENT_STYLES } from './src/motion/rules.js';
 import { installDocument } from './geom/load.mjs';
@@ -39,17 +40,27 @@ const rad = (d) => d * Math.PI / 180, deg = (r) => r * 180 / Math.PI, r0 = (v) =
 export const GAP = 3000;
 const headLine = (o, head) => o.kind !== 'window' || o.feature || ['picture', 'pair', 'wall', 'bay'].includes(o.style) ? o : o.sill != null && o.height == null ? { ...o, height: head - o.sill } : o.height != null && o.sill == null ? { ...o, sill: head - o.height } : o;   // windows on one wall share a head height: a sill alone fixes the height, a height alone fixes the sill
 export class Home {
-  constructor({ seed, floor = 'auto', height = 2700, head = 2100 }) { this.head = head;   /* the head height of plain windows: a window given a sill or a height gets the other from it */ if (floor === 'auto') floor = seed % 5 === 3 ? 'tiles' : 'boards'; this.S = { units: 'mm', seed, home: { height, floor: { style: floor, seed }, tiles: { origin: [0, 0] }, walls: [], objects: [] }, areas: [] }; this.list = []; }
+  constructor({ seed, floor = 'auto', height = 2700, head = 2100, detached = false }) { this.detached = detached;   /* a regression fixture only: areas placed by hand with no way between them */ this.head = head;   /* the head height of plain windows: a window given a sill or a height gets the other from it */ if (floor === 'auto') floor = seed % 5 === 3 ? 'tiles' : 'boards'; this.linkX = {}; this.S = { units: 'mm', seed, home: { height, floor: { style: floor, seed }, tiles: { origin: [0, 0] }, walls: [], objects: [] }, areas: [] }; this.list = []; }
   // passage: { from: 'living', wall: 'right', x: 2100, via: { wall: 'left', x: 1500 } } places this area behind the arch the area `from` has on that wall (x along the wall, as in its openings), turned and moved so its own arch (on via.wall at via.x) stands on the same spot, the two rooms back to back: the glide then crosses a doorway, not a gap. Both areas give the arch to: <the other area>; check-home 'passage' compares the two ends.
   area(id, name, { O, psi = 0, rect, passage }) {
+    const pl = this.plan?.areas?.[id];
+    if (this.plan && !pl) throw new Error(`area('${id}') is not in the house plan (areas: ${Object.keys(this.plan.areas).join(', ')}): roll it together with the others (node roll.mjs <seed> ${[...Object.keys(this.plan.areas), id].join(' ')})`);
+    if (pl && !O && !passage) {   // the plan places the area: the root at the origin, an area joined to an open room by H.join, any other back to back with the wall it is entered by
+      if (!rect) throw new Error(`area('${id}'): give a rect (the plan's cell is ${pl.fit.join(' x ')} mm)`);
+      if (rect[0] !== 0 || rect[1] !== 0 || rect[2] > pl.fit[0] + 1 || rect[3] > pl.fit[1] + 1) throw new Error(`area('${id}'): the rect ${JSON.stringify(rect)} must start at [0, 0] and fit the plan's cell ${pl.fit.join(' x ')} mm (the plan stood the neighbours by it)`);
+      if (pl.mate) {
+        const l = this.plan.links.find((q) => q.id === pl.via), key = `${l.id}:${l.a}`, x = this.linkX[key];
+        if (x === undefined) throw new Error(`area('${id}'): its way in comes from '${pl.mate.from}', whose ${pl.mate.wall} wall is not built yet: build '${pl.mate.from}' first (the plan's order: ${this.plan.order.join(', ')})`);
+        const len = wallGeo(pl.mate.via.wall, rect[2], rect[3]).len, vx = Math.round(l.bF * len / 10) * 10; this.linkX[`${l.id}:${id}`] = vx;
+        passage = { from: pl.mate.from, wall: pl.mate.wall, x, via: { wall: pl.mate.via.wall, x: vx } };
+      } else if (!pl.parent) O = [0, 0];
+    }
     if (passage && !O) { const A = this.list.find((q) => q.id === passage.from), W = A && this.S.home.walls.find((w) => w.id === `${A.id}-${passage.wall}`); if (!W) throw new Error(`area('${id}'): passage.from '${passage.from}' has no ${passage.wall} wall yet (build that area's walls first)`);
       const len = Math.hypot(W.to[0] - W.from[0], W.to[1] - W.from[1]), ua = [(W.to[0] - W.from[0]) / len, (W.to[1] - W.from[1]) / len], pa = [W.from[0] + ua[0] * (len - passage.x), W.from[1] + ua[1] * (len - passage.x)], na = [ua[1], -ua[0]];   // a wall runs from its far end to the corner; the room stands on its right-hand side
-      const [rx0, rz0, rx1, rz1] = rect, via = passage.via || {}, loc = { back: { p: [rx0 + via.x, rz0], n: [0, 1] }, left: { p: [rx0, rz1 - via.x], n: [1, 0] }, right: { p: [rx1, rz0 + via.x], n: [-1, 0] } }[via.wall];
-      if (!loc) throw new Error(`area('${id}'): passage.via.wall must be back, left or right`);
-      const q = loc.p, ang = (v) => Math.atan2(v[1], v[0]) * 180 / Math.PI;
-      psi = Math.round((ang([-na[0], -na[1]]) - ang(loc.n)) / 90) * 90; const c = Math.cos(rad(psi)), sn = Math.sin(rad(psi)); O = [r0(pa[0] - (q[0] * c - q[1] * sn)), r0(pa[1] - (q[0] * sn + q[1] * c))]; }
+      const via = passage.via || {}; if (!['back', 'left', 'right'].includes(via.wall)) throw new Error(`area('${id}'): passage.via.wall must be back, left or right`);
+      const m = matePose(rect, via, pa, na); psi = m.psi; O = m.O; }
     const a = new Area(this, id, name, O || [0, 0], psi, rect);
-    if (!O) { const prev = this.list[this.list.length - 1], b = a.worldBounds(), x0 = prev ? Math.max(...this.list.map((q) => q.worldBounds().x1)) + GAP : 0; a.O = [r0(x0 - b.x0), r0(-b.z0)]; }
+    if (!O) { if (this.list.length) a.unplaced = true; const prev = this.list[this.list.length - 1], b = a.worldBounds(), x0 = prev ? Math.max(...this.list.map((q) => q.worldBounds().x1)) + GAP : 0; a.O = [r0(x0 - b.x0), r0(-b.z0)]; }
     this.list.push(a); return a;
   }
   // the whole roll: H.roll(rollJson) keeps what roll.mjs dealt (still-life assets, groups, plant places, passages), so the check 'rolled' can compare every dealt thing with the scene; a.skip(what, 'why') leaves one out: an asset name, 'groups', 'passage', or a plant place (sill, shelf, worktop, hanging, floor)
@@ -57,12 +68,49 @@ export class Home {
     const R = typeof json === 'string' ? JSON.parse(json) : json, home = this.S.home, asset = (x) => (x.match(/\(([A-Za-z]+)\)\s*$/) || [])[1], areas = {};
     for (const [id, a] of Object.entries(R.areas || {})) areas[id] = { doorOpen: Math.max(0, ...(a.openings || []).filter((o) => o.kind === 'door' && !o.style).map((o) => o.open || 0)), still: (a.still || []).flatMap((st) => st.things.map(asset).filter(Boolean)), groups: (a.groups || []).length, plantAt: a.plantAt || [], passages: (a.passages || []).length, heroWindow: /\bwindow\b/.test(a.hero || ''), hero: a.hero || '', side: a.side || null, accents: a.accents || [], foreground: a.foreground || null, signs: a.signs || [], pieces: a.pieces || [], named: [a.above, a.wallArr, a.produce, ...(a.more || [])].filter(Boolean), groupTexts: (a.groups || []).map((g) => g.replace(/ \(the hero group.*\)$/, '').replace(/, on the [^,]*(, [a-z ]*third)?$/, '')) };
     home.roll = { seed: R.seed, behind: R.openPlan?.behind || [], areas };
+    if (R.openPlan?.floor) this.floorZones(R.openPlan.floor);   // one floor across the open room; its kitchen part may be tiles
+    if (R.plan) { this.plan = R.plan; home.roll.plan = { links: R.plan.links.map((l) => ({ id: l.id, a: l.a, b: l.b, kind: l.kind, tree: l.tree })) }; }   // the house plan (plan.mjs): compose places each area from it
     return this;
   }
   join(a, b, o) { return joinAreas(this, a, b, o); }   // open plan: b joins a on one floor (openplan.mjs): H.join(a, b, { layout: 'row' | 'corner', share: 0 to 1000 mm })
   floorZones(styles) { this.zoneStyles = styles; }   // open plan floor change: H.floorZones({ kitchen: 'tiles', dining: 'boards', living: 'boards' }) (openplan.mjs)
   sign(areaId, kind) { (this.signs ||= {})[areaId] = [...(this.signs[areaId] || []), kind]; }
+  // what the page walks: every way through as a world point and the direction of travel, and the order the arrow keys follow
+  planOut() {
+    const links = [], wall = (id, w) => this.S.home.walls.find((q) => q.id === `${id}-${w}`);
+    for (const l of this.plan?.links || []) {
+      if (l.kind === 'open') { const G = (this.groups || []).find((g) => g.seams.some((q) => q.a === l.a && q.b === l.b)), sm = G?.seams.find((q) => q.a === l.a && q.b === l.b); if (!sm) continue; const sl = seamLine(this, sm); links.push({ a: l.a, b: l.b, kind: 'open', p: [r0((sl.p0[0] + sl.p1[0]) / 2), r0((sl.p0[1] + sl.p1[1]) / 2)], d: sl.normal.map((v) => r0(v)) }); continue; }
+      const W = wall(l.a, l.aWall), x = this.linkX[`${l.id}:${l.a}`]; if (!W || x === undefined || (this.skippedLinks || []).includes(l.id)) continue;
+      const len = Math.hypot(W.to[0] - W.from[0], W.to[1] - W.from[1]), ua = [(W.to[0] - W.from[0]) / len, (W.to[1] - W.from[1]) / len];
+      links.push({ a: l.a, b: l.b, kind: l.kind, p: [r0(W.from[0] + ua[0] * (len - x)), r0(W.from[1] + ua[1] * (len - x))], d: [r0(-ua[1]), r0(ua[0])] });   // a wall's room stands on its right-hand side [ua[1], -ua[0]], so travel out of it is the other way
+    }
+    return links.length || this.plan ? { root: this.plan?.root, walk: this.plan?.walk, links } : undefined;
+  }
+  // the openings the plan puts in an area's wall: each way through the plan dealt (arch or door) stands at the same spot on both sides; compose fixes the parent's end when its wall is built and takes the child's from the mate
+  planOpenings(a, wall, len, given, from, to) {
+    const out = [];
+    for (const l of this.plan?.links || []) { if (l.kind === 'open') continue;
+      const end = l.a === a.id && l.aWall === wall ? 'a' : l.b === a.id && l.bWall === wall ? 'b' : null; if (!end) continue;
+      const key = `${l.id}:${a.id}`, other = end === 'a' ? l.b : l.a; let x = this.linkX[key];
+      if (x === undefined) {
+        const partner = this.linkX[`${l.id}:${other}`], po = this.S.home.walls.find((w) => w.id === `${other}-${end === 'a' ? l.bWall : l.aWall}`);
+        if (partner !== undefined && po) {   // a loop: the other end stands; this one lines up with it
+          const pl = Math.hypot(po.to[0] - po.from[0], po.to[1] - po.from[1]), ua = [(po.to[0] - po.from[0]) / pl, (po.to[1] - po.from[1]) / pl], pt = [po.from[0] + ua[0] * (pl - partner), po.from[1] + ua[1] * (pl - partner)], me = Math.hypot(to[0] - from[0], to[1] - from[1]), um = [(to[0] - from[0]) / me, (to[1] - from[1]) / me], t = (pt[0] - from[0]) * um[0] + (pt[1] - from[1]) * um[1], off = Math.abs((pt[0] - from[0]) * -um[1] + (pt[1] - from[1]) * um[0]);
+          x = Math.round((me - t) / 10) * 10; if (off > 200 || x < l.width / 2 + 300 || x > me - l.width / 2 - 300) { console.log(`plan: the loop way ${l.a} | ${l.b} is left out: the two walls no longer meet (${Math.round(off)} mm apart); use the planned rect sizes to keep it`); (this.skippedLinks ||= []).push(l.id); continue; }
+        } else x = Math.round((end === 'a' ? l.aF : l.bF) * len / 10) * 10;
+        this.linkX[key] = x; }
+      const hit = given.find((g) => g.kind !== 'window' ? Math.abs(g.x - x) < ((g.width || 1000) + l.width) / 2 + 300 : Math.abs(g.x - x) < ((g.width || 1200) + l.width) / 2 + 300);
+      if (hit) throw new Error(`${a.id}-${wall}: the plan's ${l.kind} to ${other} stands at x ${x} (${l.width} wide); your ${hit.kind} at x ${hit.x} is too close: keep 300 mm clear beside it and move yours`);
+      out.push({ kind: l.kind, ...(l.kind === 'arch' && l.style ? { style: l.style } : {}), x, width: l.width, to: other });
+    }
+    return out;
+  }
   write(file, fs) {
+    for (const a of this.list) if (a.unplaced && !this.detached) throw new Error(`area '${a.id}' has no place: the plan puts it ${this.plan ? `(H.join it to its neighbour in the open room, or use the plan's order: ${this.plan.order.join(', ')})` : 'by H.roll(...) of a roll with a plan, or by passage / O / H.join'}`);
+    for (const l of this.plan?.links || []) if (l.kind !== 'open' && !(this.skippedLinks || []).includes(l.id)) for (const [id, w] of [[l.a, l.aWall], [l.b, l.bWall]]) if (this.linkX[`${l.id}:${id}`] === undefined) throw new Error(`the plan's way ${l.a} | ${l.b} needs the ${w} wall of '${id}': build it (a.${w}(...)) and give '${id}' its rect`);
+    { const fp = this.list.map((a) => { const [x0, z0, x1, z1] = a.rect, q = [[x0, z0], [x1, z1], [x0, z1], [x1, z0]].map((p) => a.P(p)); return { a, x0: Math.min(...q.map((p) => p[0])), x1: Math.max(...q.map((p) => p[0])), z0: Math.min(...q.map((p) => p[1])), z1: Math.max(...q.map((p) => p[1])) }; });
+      for (let i = 0; i < fp.length; i++) for (let j = i + 1; j < fp.length; j++) { const A = fp[i], B = fp[j]; if (A.a.group && A.a.group === B.a.group) continue; const ox = Math.min(A.x1, B.x1) - Math.max(A.x0, B.x0), oz = Math.min(A.z1, B.z1) - Math.max(A.z0, B.z0); if (ox > 100 && oz > 100) throw new Error(`areas '${A.a.id}' and '${B.a.id}' overlap by ${Math.round(ox)} x ${Math.round(oz)} mm and are not in one open room: shrink a rect (the plan keeps rooms apart; see the plan's cells)`); } }
+    this.S.home.plan = this.planOut(); if (this.detached) this.S.home.detached = true;
     for (const a of this.list) { const objs = this.S.home.objects.filter((o) => o.id.startsWith(a.id + '-')), runs = objs.filter((o) => o.asset === 'baseRun').map((r) => { const W = (r.params?.modules || []).reduce((q, m) => q + (m.w || 0), 0), D = r.params?.depth || 600, t = rad(r.turn || 0), P = (lx, lz) => [r.at[0] + lx * Math.cos(t) + lz * Math.sin(t), r.at[2] - lx * Math.sin(t) + lz * Math.cos(t)], c = [P(0, 0), P(W, 0), P(0, -D), P(W, -D)]; return { x0: Math.min(...c.map((q) => q[0])), x1: Math.max(...c.map((q) => q[0])), z0: Math.min(...c.map((q) => q[1])), z1: Math.max(...c.map((q) => q[1])) }; });
       const bar = objs.filter((o) => o.asset === 'stool' && runs.some((r) => Math.hypot(Math.max(r.x0 - o.at[0], o.at[0] - r.x1, 0), Math.max(r.z0 - o.at[2], o.at[2] - r.z1, 0)) <= 500)); if (bar.length) { for (const o of bar) { if ((o.params?.form ?? 0) !== 0 || (o.params?.h ?? 650) !== 650) console.log(`${o.id}: a stool at a run or island is a counter-height bar stool (form 0, seat 650): it was form ${o.params?.form ?? 0}, seat ${o.params?.h ?? 650}`); o.params = { ...(o.params || {}), form: 0, h: 650 }; } } }   // stools within 500 of a run or island (their middle, the check measures 400 from their edge): one form, counter height
     for (const a of this.list) { const own = this.S.home.objects.filter((o) => o.area === a.id || o.id.startsWith(a.id + '-')).filter((o) => (o.mount || ASSETS[o.asset]?.mount) === 'floor' && !/^(curtain|scuff|leaf|rug|heightChart|baseRun|wallRun)$/.test(o.asset)); if (!own.length) continue;
@@ -111,6 +159,7 @@ class Area {
   wall(id, [x, z], phi, len, openings = []) {
     const p = this, to = p.P([x, z]), ph = rad(phi + p.psi), r = [Math.cos(ph), Math.sin(ph)];
     const from = [r0(to[0] + r[0] * len), r0(to[1] + r[1] * len)];
+    openings = [...openings, ...p.h.planOpenings(p, id, len, openings, from, to)];
     p.h.S.home.walls.push({ id: `${p.id}-${id}`, from, to, openings: openings.map(({ x: ox, ...o }) => ({ ...headLine(o, p.h.head), at: len - ox })) });
     let taken = [];
     const F = {
@@ -326,7 +375,7 @@ class Area {
   rolled(...assets) { const r = ((this.h.S.home.rolled ||= {})[this.id] ||= { rolled: [], skipped: [] }); r.rolled.push(...assets.flat()); }
   skip(asset, why) { if (!why) throw new Error(`skip('${asset}'): say why it is left out`); const r = ((this.h.S.home.rolled ||= {})[this.id] ||= { rolled: [], skipped: [] }); r.skipped.push({ asset, why }); }
   topOf(id) { const o = this.h.S.home.objects.find((q) => q.id === `${this.id}-${id}`); if (!o) throw new Error(`topOf('${id}'): place it first`); const { tris, all, T } = this.targetTris('topOf', id), c = all.getCenter(new T.Vector3()), y = heightField(tris)(c.x, c.z); return y > 0 ? Math.round(y) : o.at[1] + (o.params?.h ?? ASSETS[o.asset].size[2]); }   // the height of the top of a placed thing, measured on its real parts under its middle: stand something on it with y: a.topOf('side-table')
-  view({ target, az = 20, el = 15, dist, fit = 'objects' }) { this.cam = { target: this.P3(target), az: az - this.psi, el, fit, ...(dist ? { dist } : {}) }; }
+  view({ target, az = this.h.plan?.areas?.[this.id]?.az ?? 20, el = 15, dist, fit = 'objects' }) { this.cam = { target: this.P3(target), az: az - this.psi, el, fit, ...(dist ? { dist } : {}) }; }
   shot(name, from, look, fov = 30, subject, core) { this.shots.push({ name, from: this.P3(from), look: this.P3(look), fov, ...(subject ? { subject: `${this.id}:${subject}` } : {}), ...(core?.length ? { core } : {}) }); }   // core: the pieces of a group too wide for one camera that the shot frames (fitshots names them: C.core(area, name))
   // a shot that looks across a separator into the neighbouring area `to` of the same open-plan home: the glimpse rules let `to` show in it (the subject still stands in this area)
   across(name, from, look, fov, subject, to) { this.shot(name, from, look, fov, subject); this.shots[this.shots.length - 1].across = to; }

@@ -62,8 +62,9 @@ export async function openPlanIssues(page, sceneFile, { quick = false } = {}) {
       for (const [ci, c] of Object.entries(B)) if (['chair', 'deskChair', 'armchair'].includes(c.asset) && rectGap(b, c) < 450 && !Object.values(B).some((t) => ['table', 'roundTable', 'desk'].includes(t.asset) && rectGap(t, c) < 600)) out.push({ rule: 'open-island-seat', what: `${ci} is a ${c.asset} at ${id}: seats at an island or peninsula are counter stools (stool, seat about 650 mm)` });
     }
   }
+  const zonesDiffer = (q) => { const Z = S.home.floor?.zones || [], mid = (b) => [(b.x0 + b.x1) / 2, (b.z0 + b.z1) / 2], at = (id) => { const c = mid(area[id].bounds); return Z.find((z) => c[0] >= z.rect[0] && c[0] <= z.rect[2] && c[1] >= z.rect[1] && c[1] <= z.rect[3]); }, a = at(q.a), b = at(q.b); return !!(a && b && a.style !== b.style); };   // an open room keeps one floor; where the kitchen part is tiles the change is checked like a dealt floorChange
   // ---- floor change: the zones of the two areas differ, and a furniture separator stands by the line
-  for (const G of S.groups) for (const q of G.seams) if (q.kinds?.includes('floorChange')) {
+  for (const G of S.groups) for (const q of G.seams) if (q.kinds?.includes('floorChange') || zonesDiffer(q)) {
     const Z = S.home.floor?.zones || [], mid = (b) => [(b.x0 + b.x1) / 2, (b.z0 + b.z1) / 2], at = (id) => { const c = mid(area[id].bounds); return Z.find((z) => c[0] >= z.rect[0] && c[0] <= z.rect[2] && c[1] >= z.rect[1] && c[1] <= z.rect[3]); }, za = at(q.a), zb = at(q.b);
     if (!za || !zb || za.style === zb.style) out.push({ rule: 'open-floor', what: `${q.a} | ${q.b}: floorChange dealt, but the two areas have the same floor style (H.floorZones({ ${q.a}: 'tiles', ${q.b}: 'boards' }))` });
     const fur = Object.values(B).some((b) => FURNITURE.includes(b.sep || '') && distSeg(b, q.p0, q.p1) <= 500);
