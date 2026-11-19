@@ -1,0 +1,698 @@
+{
+ "units": "mm",
+ "seed": 4,
+ "home": {
+  "height": 2700,
+  "floor": {
+   "style": "plain",
+   "seed": 4
+  },
+  "tiles": {
+   "origin": [
+    0,
+    0
+   ]
+  },
+  "walls": [
+   {
+    "id": "sheet-back",
+    "from": [
+     24000,
+     0
+    ],
+    "to": [
+     0,
+     0
+    ],
+    "openings": []
+   }
+  ],
+  "objects": [
+   {
+    "id": "sheet-pic4-keep",
+    "asset": "picture",
+    "at": [
+     1000,
+     900,
+     40
+    ],
+    "mount": "wall",
+    "params": {
+     "form": 4,
+     "w": 600,
+     "h": 800,
+     "colour": "keep"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-pic4-soft",
+    "asset": "picture",
+    "at": [
+     2500,
+     900,
+     40
+    ],
+    "mount": "wall",
+    "params": {
+     "form": 4,
+     "w": 600,
+     "h": 800,
+     "colour": "soft"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-pic4-ink",
+    "asset": "picture",
+    "at": [
+     4000,
+     900,
+     40
+    ],
+    "mount": "wall",
+    "params": {
+     "form": 4,
+     "w": 600,
+     "h": 800,
+     "colour": "ink"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-pic5-keep",
+    "asset": "picture",
+    "at": [
+     5500,
+     900,
+     40
+    ],
+    "mount": "wall",
+    "params": {
+     "form": 5,
+     "w": 600,
+     "h": 800,
+     "colour": "keep"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-pic5-soft",
+    "asset": "picture",
+    "at": [
+     7000,
+     900,
+     40
+    ],
+    "mount": "wall",
+    "params": {
+     "form": 5,
+     "w": 600,
+     "h": 800,
+     "colour": "soft"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-pic5-ink",
+    "asset": "picture",
+    "at": [
+     8500,
+     900,
+     40
+    ],
+    "mount": "wall",
+    "params": {
+     "form": 5,
+     "w": 600,
+     "h": 800,
+     "colour": "ink"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-pic6-keep",
+    "asset": "picture",
+    "at": [
+     10000,
+     900,
+     40
+    ],
+    "mount": "wall",
+    "params": {
+     "form": 6,
+     "w": 600,
+     "h": 800,
+     "colour": "keep"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-pic6-soft",
+    "asset": "picture",
+    "at": [
+     11500,
+     900,
+     40
+    ],
+    "mount": "wall",
+    "params": {
+     "form": 6,
+     "w": 600,
+     "h": 800,
+     "colour": "soft"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-pic6-ink",
+    "asset": "picture",
+    "at": [
+     13000,
+     900,
+     40
+    ],
+    "mount": "wall",
+    "params": {
+     "form": 6,
+     "w": 600,
+     "h": 800,
+     "colour": "ink"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-shoe-neat",
+    "asset": "shoes",
+    "at": [
+     1000,
+     0,
+     3000
+    ],
+    "mount": "floor",
+    "params": {
+     "arrange": "neat",
+     "kind": "sneaker",
+     "pairs": 2
+    },
+    "group": "sheet:row2",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-shoe-dropped",
+    "asset": "shoes",
+    "at": [
+     2500,
+     0,
+     3000
+    ],
+    "mount": "floor",
+    "params": {
+     "arrange": "dropped",
+     "kind": "boot",
+     "pairs": 1
+    },
+    "group": "sheet:row2",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-shoe-mixed",
+    "asset": "shoes",
+    "at": [
+     4000,
+     0,
+     3000
+    ],
+    "mount": "floor",
+    "params": {
+     "arrange": "mixed",
+     "kind": "sneaker",
+     "pairs": 2
+    },
+    "group": "sheet:row2",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-tt-1",
+    "asset": "table",
+    "at": [
+     1000,
+     0,
+     5500
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 1100,
+     "d": 700,
+     "h": 750,
+     "form": "legs"
+    },
+    "group": "sheet:row3",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-lamp-arm-upright",
+    "asset": "taskLamp",
+    "at": [
+     1000,
+     750,
+     5500
+    ],
+    "mount": "on",
+    "params": {
+     "form": "arm",
+     "pose": "upright",
+     "shade": "cone",
+     "seed": 51
+    },
+    "group": "sheet:row3",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-tt-2",
+    "asset": "table",
+    "at": [
+     2500,
+     0,
+     5500
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 1100,
+     "d": 700,
+     "h": 750,
+     "form": "legs"
+    },
+    "group": "sheet:row3",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-lamp-arm-lean",
+    "asset": "taskLamp",
+    "at": [
+     2500,
+     750,
+     5500
+    ],
+    "mount": "on",
+    "params": {
+     "form": "arm",
+     "pose": "lean",
+     "shade": "dome",
+     "seed": 51
+    },
+    "group": "sheet:row3",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-tt-3",
+    "asset": "table",
+    "at": [
+     4000,
+     0,
+     5500
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 1100,
+     "d": 700,
+     "h": 750,
+     "form": "legs"
+    },
+    "group": "sheet:row3",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-lamp-arm-reach",
+    "asset": "taskLamp",
+    "at": [
+     4000,
+     750,
+     5500
+    ],
+    "mount": "on",
+    "params": {
+     "form": "arm",
+     "pose": "reach",
+     "shade": "cone",
+     "seed": 51
+    },
+    "group": "sheet:row3",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-tt-4",
+    "asset": "table",
+    "at": [
+     5500,
+     0,
+     5500
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 1100,
+     "d": 700,
+     "h": 750,
+     "form": "legs"
+    },
+    "group": "sheet:row3",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-lamp-gooseneck-upright",
+    "asset": "taskLamp",
+    "at": [
+     5500,
+     750,
+     5500
+    ],
+    "mount": "on",
+    "params": {
+     "form": "gooseneck",
+     "pose": "upright",
+     "shade": "dome",
+     "seed": 51
+    },
+    "group": "sheet:row3",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-tt-5",
+    "asset": "table",
+    "at": [
+     7000,
+     0,
+     5500
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 1100,
+     "d": 700,
+     "h": 750,
+     "form": "legs"
+    },
+    "group": "sheet:row3",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-lamp-gooseneck-lean",
+    "asset": "taskLamp",
+    "at": [
+     7000,
+     750,
+     5500
+    ],
+    "mount": "on",
+    "params": {
+     "form": "gooseneck",
+     "pose": "lean",
+     "shade": "cone",
+     "seed": 51
+    },
+    "group": "sheet:row3",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-tt-6",
+    "asset": "table",
+    "at": [
+     8500,
+     0,
+     5500
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 1100,
+     "d": 700,
+     "h": 750,
+     "form": "legs"
+    },
+    "group": "sheet:row3",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-lamp-gooseneck-reach",
+    "asset": "taskLamp",
+    "at": [
+     8500,
+     750,
+     5500
+    ],
+    "mount": "on",
+    "params": {
+     "form": "gooseneck",
+     "pose": "reach",
+     "shade": "dome",
+     "seed": 51
+    },
+    "group": "sheet:row3",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-ch-0",
+    "asset": "console",
+    "at": [
+     11900,
+     0,
+     5500
+    ],
+    "mount": "floor",
+    "params": {},
+    "group": "sheet:row3",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-photo-0",
+    "asset": "photoFrame",
+    "at": [
+     11900,
+     800,
+     5500
+    ],
+    "mount": "on",
+    "params": {
+     "form": 0,
+     "w": 160,
+     "h": 220,
+     "tilt": 10,
+     "seed": 40
+    },
+    "group": "sheet:row3",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-ch-1",
+    "asset": "console",
+    "at": [
+     13400,
+     0,
+     5500
+    ],
+    "mount": "floor",
+    "params": {},
+    "group": "sheet:row3",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-photo-1",
+    "asset": "photoFrame",
+    "at": [
+     13400,
+     800,
+     5500
+    ],
+    "mount": "on",
+    "params": {
+     "form": 1,
+     "w": 200,
+     "h": 260,
+     "tilt": 12,
+     "seed": 7
+    },
+    "group": "sheet:row3",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-ch-2",
+    "asset": "console",
+    "at": [
+     14900,
+     0,
+     5500
+    ],
+    "mount": "floor",
+    "params": {},
+    "group": "sheet:row3",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-photo-2",
+    "asset": "photoFrame",
+    "at": [
+     14900,
+     800,
+     5500
+    ],
+    "mount": "on",
+    "params": {
+     "form": 2,
+     "w": 240,
+     "h": 180,
+     "tilt": 14,
+     "seed": 29
+    },
+    "group": "sheet:row3",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-hpend",
+    "asset": "pendantLamp",
+    "at": [
+     1000,
+     0,
+     7800
+    ],
+    "mount": "ceiling",
+    "params": {
+     "rim": 1650
+    },
+    "group": "sheet:row4",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-pf-dome",
+    "asset": "pendantForm",
+    "at": [
+     2500,
+     0,
+     7800
+    ],
+    "mount": "ceiling",
+    "params": {
+     "form": "dome",
+     "rim": 1650,
+     "r": 200,
+     "canopy": "disc"
+    },
+    "group": "sheet:row4",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-pf-globe",
+    "asset": "pendantForm",
+    "at": [
+     4000,
+     0,
+     7800
+    ],
+    "mount": "ceiling",
+    "params": {
+     "form": "globe",
+     "rim": 1650,
+     "r": 260,
+     "canopy": "bar"
+    },
+    "group": "sheet:row4",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-pf-cone",
+    "asset": "pendantForm",
+    "at": [
+     5500,
+     0,
+     7800
+    ],
+    "mount": "ceiling",
+    "params": {
+     "form": "cone",
+     "rim": 1650,
+     "r": 220,
+     "canopy": "bar"
+    },
+    "group": "sheet:row4",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-pf-rattan",
+    "asset": "pendantForm",
+    "at": [
+     7000,
+     0,
+     7800
+    ],
+    "mount": "ceiling",
+    "params": {
+     "form": "rattan",
+     "rim": 1650,
+     "r": 210,
+     "canopy": "disc"
+    },
+    "group": "sheet:row4",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-wseat",
+    "asset": "windowSeat",
+    "at": [
+     10000,
+     0,
+     7800
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 1100,
+     "d": 570,
+     "h": 415,
+     "form": "storage",
+     "cushion": "striped",
+     "pillows": 1,
+     "seed": 73
+    },
+    "group": "sheet:row4",
+    "area": "sheet"
+   }
+  ]
+ },
+ "areas": [
+  {
+   "id": "sheet",
+   "name": "Sheet",
+   "O": [
+    0,
+    0
+   ],
+   "psi": 0,
+   "bounds": {
+    "x0": 0,
+    "x1": 24000,
+    "z0": 0,
+    "z1": 9000,
+    "top": 2500
+   },
+   "camera": {
+    "home": {
+     "target": [
+      7000,
+      600,
+      4000
+     ],
+     "az": 0,
+     "el": 10,
+     "fit": "objects",
+     "dist": 14000
+    },
+    "shots": []
+   }
+  }
+ ]
+}

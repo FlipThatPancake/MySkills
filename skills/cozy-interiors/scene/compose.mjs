@@ -72,7 +72,7 @@ export class Home {
 }
 const pickForm = (h, asset, params) => {   // the next form of an asset that has several (started from the seed); an explicit params.form stays
   if (!ASSETS[asset].variants || params?.form !== undefined) return params;
-  const c = (h.counts ||= {}); return { ...(params || {}), form: (c[asset] = (c[asset] ?? h.S.seed % ASSETS[asset].variants) + 1) % ASSETS[asset].variants };
+  const c = (h.counts ||= {}), V = ASSETS[asset].variants; return { ...(params || {}), form: (ASSETS[asset].formFrom || 0) + (c[asset] = (c[asset] ?? h.S.seed % V) + 1) % V };   // formFrom: the first dealt form (a picture deals only the classic paintings, forms 4 and up)
 };
 const LIGHTS = /^(bedsideLamp|wallSconce|pendantLamp|tableLamp|taskLamp|readingLamp|floorLamp)$/;
 const vary = (h, asset, params, areaId = '') => {

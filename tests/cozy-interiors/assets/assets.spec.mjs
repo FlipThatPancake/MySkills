@@ -5,11 +5,11 @@ import { Home } from '../../../skills/cozy-interiors/scene/compose.mjs';
 import { PAINTINGS } from '../../../skills/cozy-interiors/scene/src/library/paintings.js';
 const H = new Home({ seed: 4, floor: 'plain' }), D = 1500;
 const a = H.area('sheet', 'Sheet', { O: [0, 0], rect: [0, 0, 14 * D, 9000] });
-a.wall('back', [0, 0], 0, 14 * D, []);
+a.wall('back', [0, 0], 0, 16 * D, []);
 const only = (process.env.ONLY || '').split(',').filter(Boolean), keep = (id) => !only.length || only.some((q) => id.startsWith(q)) || /^(tt|ch)-/.test(id);   // ONLY=pic4,shoe keeps just those rows (a smaller page bakes faster)
 const put = a.put.bind(a); a.put = (id, ...r) => (keep(id) ? put(id, ...r) : undefined);
 let i = 0;
-for (let f = 0; f < 4 + PAINTINGS.length; f++, i++) { a.put(`pic${f}`, 'picture', [1000 + i * D, 40], 0, { mount: 'wall', y: 900, group: 'row', params: { form: f, w: 600, h: 800 } }); }
+for (let f = 4; f < 4 + PAINTINGS.length; f++) for (const mode of ['keep', 'soft', 'ink']) { a.put(`pic${f}-${mode}`, 'picture', [1000 + (i++) * D, 40], 0, { mount: 'wall', y: 900, group: 'row', params: { form: f, w: 600, h: 800, colour: mode } }); }   // every painting x colour mode
 const shoes = ['neat', 'dropped', 'mixed'];
 shoes.forEach((s, k) => a.put(`shoe-${s}`, 'shoes', [1000 + k * D, 3000], 0, { mount: 'floor', group: 'row2', params: { arrange: s, kind: k === 1 ? 'boot' : 'sneaker' } }));
 let n = 0;

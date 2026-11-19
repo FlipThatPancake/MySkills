@@ -13,7 +13,7 @@ import { picture } from './src/library/variants.js';
   const rec = []; const node = () => new Proxy(function () {}, { get: (_, k) => (k === 'then' ? undefined : node()), apply: () => node() });
   const kit = new Proxy({}, { get: (_, k) => (k === 'lines' ? (pts) => { rec.push(...pts); return node(); } : k === 'merge' ? () => node() : k === 'THREE' ? node() : () => node()) });
   let bad = 0, n = 0;
-  for (const [w, h] of [[1100, 500], [1400, 450], [800, 600], [600, 800], [500, 500], [300, 400], [400, 1200]]) for (const form of Array.from({ length: ASSETS.picture.variants }, (_, k) => k)) for (const seed of [2, 9]) {
+  for (const [w, h] of [[1100, 500], [1400, 450], [800, 600], [600, 800], [500, 500], [300, 400], [400, 1200]]) for (const form of Array.from({ length: 4 + ASSETS.picture.variants }, (_, k) => k)) for (const seed of [2, 9]) {
     rec.length = 0; picture(kit, { form, w, h, seed }); n++;
     const out = rec.filter(([x, y]) => Math.abs(x) > w / 2 - 28 + 0.5 || y < 28 - 0.5 || y > h - 28 + 0.5);
     if (out.length) { bad++; console.log(`[art] picture form ${form} ${w}x${h} seed ${seed}: ${out.length} line point(s) outside the frame, first at x ${Math.round(out[0][0])} y ${Math.round(out[0][1])}`); }
@@ -105,4 +105,21 @@ const { TASKLAMP_POSES } = await import('./src/library/officeset.js');
     if (miss.length) bad.push(`taskLamp ${form}/${shade}/${pose}: missing ${miss.join(', ')}`);
   }
   console.log(bad.map((x) => `[parts-present] ${x}`).join('\n') || 'standing photos and task lamps have the parts that make them recognisable'); console.log(`${bad.length} missing-part problem(s)`);
+}
+
+// Every painting x colour mode stays readable at home-view size (150 px wide): the toned image (library/paintTone.js, run as is in a browser page) must not turn into a dark smudge or a pale blank: mean brightness 100-215 of 255, and the 5th-95th percentile spread at least 80. Needs Playwright; skipped without it.
+{
+  const { PAINTINGS } = await import('./src/library/paintings.js'), { createRequire } = await import('node:module'), { execSync } = await import('node:child_process'), bad = [], rows = [];
+  let chromium; try { ({ chromium } = createRequire(join(execSync('npm root -g', { encoding: 'utf8' }).trim(), 'x.js'))('playwright')); } catch { console.log('painting tone: skipped (no Playwright)'); }
+  if (chromium) {
+    const code = fs.readFileSync(join(here, 'src/library/paintTone.js'), 'utf8').replace(/^export /gm, ''), browser = await chromium.launch(), page = await browser.newPage();
+    await page.setContent('<canvas id=c></canvas>'); await page.addScriptTag({ content: code + `
+      window.measure = async (src, pw, ph, mode) => { const img = new Image(); img.src = src; await img.decode(); const W = 150, H = Math.round(W * ph / pw), c = document.getElementById('c'); c.width = W; c.height = H; const q = c.getContext('2d', { willReadFrequently: true }); q.fillStyle = 'rgb(244,243,238)'; q.fillRect(0, 0, W, H); q.drawImage(img, 0, 0, W, H); adapt(q, 0, 0, W, H, mode); return toneStats(q.getImageData(0, 0, W, H)); };` });
+    for (const P of PAINTINGS) for (const mode of ['keep', 'soft', 'ink']) {
+      const t = await page.evaluate(([src, w, h, m]) => window.measure(src, w, h, m), [P.src, P.w, P.h, mode]); rows.push(`${P.name.split(',')[1]?.trim() || P.name} ${mode}: mean ${Math.round(t.mean)}, p5 ${t.p5}, p95 ${t.p95}`);
+      if (t.mean < 100 || t.mean > 215 || t.p95 - t.p5 < 80) bad.push(`${P.name} in ${mode}: mean ${Math.round(t.mean)}, spread ${t.p95 - t.p5} (p5 ${t.p5}, p95 ${t.p95}): it reads as a ${t.mean < 100 ? 'dark smudge' : t.mean > 215 ? 'pale blank' : 'flat patch'}`);
+    }
+    await browser.close(); if (args.includes('--tones')) console.log(rows.join('\n'));
+    console.log(bad.map((x) => `[painting-tone] ${x}`).join('\n') || `every painting x mode reads at home-view size (${rows.length} checked)`); console.log(`${bad.length} painting tone problem(s)`);
+  }
 }
