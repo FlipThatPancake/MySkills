@@ -45,7 +45,7 @@ export function phraseAssets(t) {   // the assets a phrase names for certain (on
 }
 // the slot names of a group's place: <wall>:<third> (wall = back | left | right | window, third = left | middle | right); the hero group takes the back wall's third on its side of the home view
 export const SLOTS = { 'on the back wall, left third': 'back:left', 'on the back wall, right third': 'back:right', 'on the window wall or the second wall': 'window:middle', 'on the open floor': 'floor:middle' };
-export function groupSlot(g) { const h = g.match(/the hero group, on the (left|right) of the home view/); if (h) return `${groupNeeds(g.replace(/ \(the hero group.*\)$/, ''))?.window ? 'window' : 'back'}:${h[1]}`; const at = g.lastIndexOf(', on the '); return at < 0 ? null : SLOTS[g.slice(at + 2)] ?? null; }
+export function groupSlot(g) { const h = g.match(/the hero group, on the (left|right) of the home view/); if (h) return `${(() => { const n = groupNeeds(g.replace(/ \(the hero group.*\)$/, '')); return n?.window || n?.second; })() ? 'window' : 'back'}:${h[1]}`; const at = g.lastIndexOf(', on the '); return at < 0 ? null : SLOTS[g.slice(at + 2)] ?? null; }
 function homeCaps(out, kinds, describe) {
   const count = {}, areasOf = {};   // asset -> number of slots, asset -> areas that hold it
   const stampable = (as) => ONE_AREA.has(as) || (!STAMP_SKIP.test(as) && SMALL_ON.has(as));
@@ -130,11 +130,15 @@ export function roll(seed, kinds = ['kitchen', 'dining', 'living'], opts = {}) {
   for (const id of kinds) { const a = out.areas[id]; if (!a.groups) continue;
     // a group goes only to a slot that suits its needs (groups.mjs groupNeeds): a free-standing group to the floor, a window group to the window wall, a solid-wall group not to the window wall; two groups never share a slot
     const used = new Set([groupSlot(a.groups[0])]), at = (g) => g.lastIndexOf(', on the '), base = (g) => (at(g) < 0 ? g : g.slice(0, at(g))), say = (sl) => Object.entries(SLOTS).find(([, v]) => v === sl)[0];
-    const allowed = (g) => { const n = groupNeeds(base(g)) || {}; return Object.values(SLOTS).filter((v) => (n.free ? v.startsWith('floor:') : !v.startsWith('floor:')) && (!n.window || v === 'window:middle') && (n.wall !== 'solid' || v !== 'window:middle')); };
+    const allowed = (g) => { const n = groupNeeds(base(g)) || {}; return Object.values(SLOTS).filter((v) => (n.free ? v.startsWith('floor:') : !v.startsWith('floor:')) && (!(n.window || n.second) || v === 'window:middle') && (n.wall !== 'solid' || n.second || v !== 'window:middle')); };
     const order = a.groups.map((g, k) => k).slice(1).sort((x, y) => allowed(a.groups[x]).length - allowed(a.groups[y]).length);   // the most constrained group chooses first
     for (const k of order) { const g = a.groups[k], ok = allowed(g), cur = groupSlot(g); let sl = ok.includes(cur) && !used.has(cur) ? cur : ok.find((v) => !used.has(v)) || cur; if (sl && sl !== cur && at(g) >= 0) a.groups[k] = base(g) + ', ' + say(sl); else if (sl && at(g) < 0) a.groups[k] = base(g) + ', ' + say(sl); used.add(sl); }
     a.groupSlots = a.groups.map(groupSlot); }   // item C: the slot of each group in the words of a.slots() (wall:third, see SLOTS below); homeCaps swaps phrases, not places
-  dealMotion(out, seed);   // living things (motion-roll.mjs): 2 or 3 kinds per area, from tables.json motion; its own random stream, so no older pick moves
+  dealMotion(out, seed);
+  { const dropCat = (a) => { a.accents = (a.accents || []).filter((x) => !/^cat\b/.test(x)); a.say = a.say.replace(/accents: cat, /, 'accents: ').replace(/(accents: [^;]*?), cat(?=[,;])/, '$1'); };   // round 6 T9: a home has one cat; the motion roll's cat is the one (it keeps its own area), else the first area that dealt a cat accent
+    const motionCat = Object.keys(out.areas).find((id) => (out.areas[id].motion || []).some((m) => m.kind === 'cat')); let kept = motionCat != null;
+    for (const [id, a] of Object.entries(out.areas)) if ((a.accents || []).some((x) => /^cat\b/.test(x))) { if (kept && id !== motionCat) dropCat(a); else if (kept && id === motionCat) dropCat(a); else kept = true; } }
+   // living things (motion-roll.mjs): 2 or 3 kinds per area, from tables.json motion; its own random stream, so no older pick moves
   const open = (opts.rooms || []).filter((r) => r.length > 1); if (open.length > 1) throw new Error('roll: one open room per home (kitchen+dining+living); the other areas are rooms of their own');
   dealOpenPlan(out, seed, kinds, describe, opts.rooms ? (open[0] || []) : null);   // open plan (openplan.mjs): about 2 homes in 5 with two joinable areas, or the room the agent named; its own random stream, so no older pick moves
   if (kinds.length > 1) for (const a of Object.values(out.areas)) a.passages = (a.passages || []).map((st) => (T.passages.find((q) => q.style === st)?.counter ? 'cased' : st));   // an arch is a way through in a home with a plan: a counter hatch is not walked through
