@@ -52,6 +52,7 @@ export async function buildSeed(seed, dir, { Home, roll, KINDS, group }) {
         const ra = R.areas[id], a = made[id], objs = H.S.home.objects.filter((o) => o.id.startsWith(id + '-')), asOf = (o) => o.asset ?? o.scene?.asset, local = (o) => o.id.slice(id.length + 1);
         for (const st of ra.still || []) { const want = TOPASSET[st.top], top = objs.find((o) => want?.includes(asOf(o))); if (!top) { fails.push({ stage: 5, rule: 'still', what: `${id}: no ${st.top} placed for the dealt still life (${st.things.join('; ').slice(0, 80)})` }); continue; }
           try { const r = quiet(() => a.still(local(top), st.things)); if (r.left?.length) fails.push({ stage: 5, rule: 'still', what: `${id}: ${st.top}: ${r.left.join('; ').slice(0, 140)}` }); } catch (e) { fails.push({ stage: 5, rule: 'still', what: `${id}: ${st.top}: ${String(e.message).split('\n')[0].slice(0, 140)}` }); } }
+        { const c = a.c, sn = a.s, [o0, o1] = a.O, mine = objs.filter((o) => o.mount === 'floor' || o.group); if (mine.length) { let sx = 0, sz = 0; for (const o of mine) { const dx = o.at[0] - o0, dz = o.at[2] - o1; sx += dx * c + dz * sn; sz += -dx * sn + dz * c; } quiet(() => a.view({ target: [Math.round(sx / mine.length), 700, Math.round(sz / mine.length)], el: 18 })); } }   // the home view as an agent sets it: the plan's az, the target at the middle of what stands in the area
         if (ra.wallArr) { try { const w0 = R.plan.areas[id].fit[0], r = quiet(() => a.wallArr(ra.wallArr, { wall: made[id + ':back'], xc: Math.round(w0 / 2), group: objs.find((o) => o.group)?.group.split(':')[1] })); if (r.left?.length) fails.push({ stage: 5, rule: 'wallArr', what: `${id}: ${r.left.join('; ').slice(0, 140)}` }); } catch (e) { fails.push({ stage: 5, rule: 'wallArr', what: `${id}: ${String(e.message).split('\n')[0].slice(0, 140)}` }); } }
       }
       quiet(() => H.write(json, fs)); out.json = json; out.fails.push(...fails); return out;
@@ -77,6 +78,7 @@ export async function rollStages(argv) {
     const all = [...r.fails, ...iss.map((i) => ({ stage: i.stage, rule: i.rule, what: i.what }))];
     if (!all.some((f) => f.stage <= 4 || f.stage === 9)) green++;
     if (!all.length) continue;
+    for (const f of all) { if (f.rule === 'penetrates') { const m = f.what.match(/^(\S+) \((\w+)\) is \d+ mm inside (a wall or opening|(\S+) \((\w+)\))/); if (m) bump(`penetrates by pair | ${m[3] === 'a wall or opening' ? 'recipe against wall or opening' : 'recipe against recipe'}: ${m[2]}${m[5] ? ' into ' + m[5] : ''}`, r.seed); } }
     for (const f of all) bump(`stage ${f.stage} | ${f.rule} | ${OWNER(f.stage, f.rule, f.what)}`, r.seed);
     lines.push(`seed ${r.seed} (${r.kinds.join(' ')}): ${all.length} problem(s): ${all.slice(0, 3).map((f) => `[${f.rule}] ${f.what.slice(0, 110)}`).join(' / ')}`);
   }
