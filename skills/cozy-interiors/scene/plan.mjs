@@ -74,7 +74,7 @@ const WINVIEW = 1400;   // what stands within this far outside a window shows th
 const WINEDGE = 1000, WINCLEAR = 1200;   // a window keeps 1000 mm from a corner (a way through beside the corner leaves the 1200 mm the openings rule asks for) and 1200 mm of clear wall to a way through or another window (check-home openings)
 const stripPhrase = (g) => g.replace(/ \(the hero group[^)]*\)/, '').replace(/, on the .*$/, '');
 function needLists(a, kind) {
-  const hero = HERO.find(([re]) => re.test(a.hero || ''))?.[1] || { w: 2200, d: 900 }, back = [], side = [], free = [];
+  const hero0 = HERO.find(([re]) => re.test(a.hero || ''))?.[1] || { w: 2200, d: 900 }, rn = groupNeeds(a.hero || ''), hero = rn && !hero0.free && !rn.free ? { ...hero0, w: Math.max(hero0.w, rn.w || 0), d: Math.max(hero0.d, rn.d || 0) } : hero0, back = [], side = [], free = [];   // the table is a floor; a hero phrase whose recipe asks for more (groups.mjs needs) takes that
   const add = (name, n, slot) => { const spot = n.free || /^floor/.test(slot || '') ? free : /^second/.test(slot || '') || (/^window/.test(slot || '') && (a.openings || []).some((o) => o.kind === 'window' && o.on === 'second')) || (/^window/.test(slot || '') && !(a.openings || []).some((o) => o.kind === 'window')) ? side : back; spot.push({ name, ...n }); };
   const heroSlot = (a.groupSlots || [])[0] || 'back:left'; let hd = hero;
   if (kind === 'kitchen') { const [dw, dd] = KITCHEN_SHAPE[a.shape || 'straight'] || [0, 0]; hd = { ...hero, w: hero.w + dw, d: hero.d + dd, free: false }; }
