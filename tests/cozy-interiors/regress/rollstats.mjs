@@ -2,6 +2,7 @@
 // Cases: a still life with more than two things on one top; the same thing on two tops of one area; two lamps in one area; a named asset the library lacks; the cutting board dealt twice; a plant corner without a floor plant place; an area behind a passage that has no arch or door of its own.
 if (process.argv.includes('--build')) { await import('./groupbuild.mjs'); await new Promise(() => {}); }   // stage 1 proof by building: pass rate per group phrase (groupbuild.mjs)
 import { roll, phraseAssets, ONE_AREA, STAMP_SKIP, SMALL_ON } from '../../../skills/cozy-interiors/scene/roll.mjs';
+import { groupNeeds } from '../../../skills/cozy-interiors/scene/groups.mjs';
 import fs from 'node:fs';
 import { ASSETS } from '../../../skills/cozy-interiors/scene/src/library/meta.js';
 const NAMES = JSON.parse(fs.readFileSync(new URL('../../../skills/cozy-interiors/scene/tables.json', import.meta.url), 'utf8')).names, UNNAMED = /^(drawer ajar|pillow creased|cloth dropped|unmade bed|tablecloth|runner|cloth|cushion|teaTowel|duvetCloth|floorCushion|foldedThrow|benchCushion|tableRunner|hungBag|binders|hungHat|boots)$/;   // a sign that is a state of another piece (a drawer ajar) has no asset to look for
@@ -18,6 +19,10 @@ for (let seed = 1; seed <= N; seed++) for (const kinds of sets) {
   for (const [id, a] of Object.entries(R.areas)) {
     for (const w of [...(a.still || []).flatMap((st) => st.things.map(asset)).filter((w) => w !== 'picture'), /\(picture\)/.test(a.wallArr || '') ? 'picture' : null]) if (w && /^(vase|candlesticks|picture)$/.test(w)) { if (homeOnce[w] && homeOnce[w] !== id) bad('decor-repeat-in-home', seed, kinds, id, `${w} also in ${homeOnce[w]}`); homeOnce[w] = id; }
     if (a.groups && (!a.groupSlots || a.groupSlots.length !== a.groups.length || a.groupSlots.some((q) => !q) || new Set(a.groupSlots).size !== a.groupSlots.length)) bad('group-slot', seed, kinds, id, `groupSlots ${JSON.stringify(a.groupSlots)}: each group needs its own slot name (item C)`);
+    for (const [gi, g] of (a.groups || []).entries()) { const n = groupNeeds(g.replace(/ \(the hero group.*\)$/, '').replace(/, on the .*$/, '')), sl = (a.groupSlots || [])[gi]; if (!n || !sl) continue;   // item 1-2 (lead): a group goes to a slot that suits its needs
+      if (!!n.free !== sl.startsWith('floor:')) bad('group-slot-needs', seed, kinds, id, `"${g}" ${n.free ? 'stands free but is dealt' : 'stands at a wall but is dealt'} ${sl}`);
+      if (n.window && !sl.startsWith('window:')) bad('group-slot-needs', seed, kinds, id, `"${g}" needs a window but is dealt ${sl}`);
+      if (n.wall === 'solid' && sl.startsWith('window:')) bad('group-slot-needs', seed, kinds, id, `"${g}" needs a solid wall but is dealt ${sl}`); }
     const seen = new Set();
     for (const st of a.still || []) { if (st.things.length > 2) bad('top>2', seed, kinds, id, st.top); for (const x of st.things) { const n = asset(x); if (n && !ASSETS[n]) bad('missing-asset', seed, kinds, id, n); if (n && seen.has(n)) bad('same-thing-twice', seed, kinds, id, n); seen.add(n); } }
     const txt = JSON.stringify(a), lamps = (a.light && /pendant|floor lamp|table lamp|desk lamp/.test(a.light) ? 1 : 0) + (seen.has('readingLamp') ? 1 : 0) + ((a.groups || []).filter((g) => /\blamp\b/.test(g)).length);

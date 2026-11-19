@@ -8,8 +8,9 @@ import { fileURLToPath } from 'node:url';
 import { dealOpenPlan } from './openplan.mjs';
 import { dealMotion } from './motion-roll.mjs';
 import { planHome } from './plan.mjs';
+import { groupNeeds } from './groups.mjs';
 const T = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'tables.json'), 'utf8'));
-export const KINDS = Object.keys(T).filter((k) => T[k]?.hero);
+export const KINDS = Object.keys(T).filter((k) => T[k]?.hero && T[k]?.openings);   // an area kind has a hero and openings ('names' has a hero table but is no area)
 
 // the deal must not break the checks or contradict itself (rollstats.mjs counts every case): nothing twice in one area, one lamp, the cutting board once, a plant corner counts as the floor plant
 const ONCE = /^(vase|candlesticks)$/;
@@ -43,8 +44,8 @@ export function phraseAssets(t) {   // the assets a phrase names for certain (on
   return m ? m.split('+').filter((p) => !p.includes('|')) : [];
 }
 // the slot names of a group's place: <wall>:<third> (wall = back | left | right | window, third = left | middle | right); the hero group takes the back wall's third on its side of the home view
-export const SLOTS = { 'on the back wall, left third': 'back:left', 'on the back wall, right third': 'back:right', 'on the window wall or the second wall': 'window:middle' };
-export function groupSlot(g) { const h = g.match(/the hero group, on the (left|right) of the home view/); if (h) return `back:${h[1]}`; const at = g.lastIndexOf(', on the '); return at < 0 ? null : SLOTS[g.slice(at + 2)] ?? null; }
+export const SLOTS = { 'on the back wall, left third': 'back:left', 'on the back wall, right third': 'back:right', 'on the window wall or the second wall': 'window:middle', 'on the open floor': 'floor:middle' };
+export function groupSlot(g) { const h = g.match(/the hero group, on the (left|right) of the home view/); if (h) return `${groupNeeds(g.replace(/ \(the hero group.*\)$/, ''))?.window ? 'window' : 'back'}:${h[1]}`; const at = g.lastIndexOf(', on the '); return at < 0 ? null : SLOTS[g.slice(at + 2)] ?? null; }
 function homeCaps(out, kinds, describe) {
   const count = {}, areasOf = {};   // asset -> number of slots, asset -> areas that hold it
   const stampable = (as) => ONE_AREA.has(as) || (!STAMP_SKIP.test(as) && SMALL_ON.has(as));
@@ -127,8 +128,11 @@ export function roll(seed, kinds = ['kitchen', 'dining', 'living'], opts = {}) {
   }
   homeCaps(out, kinds, describe);   // round 6 item 12: what the checks allow across the whole home (variety: one area per basket, pouf, trolley, stool..., two of any small piece)
   for (const id of kinds) { const a = out.areas[id]; if (!a.groups) continue;
-    const used = new Set([groupSlot(a.groups[0])]);   // two groups never share a slot: a later one takes the place no group has (the deal's draws stay as they are)
-    for (let k = 1; k < a.groups.length; k++) { let sl = groupSlot(a.groups[k]); if (sl && used.has(sl)) { const free = Object.entries(SLOTS).find(([, v]) => !used.has(v)); if (free) { const at = a.groups[k].lastIndexOf(', on the '); a.groups[k] = a.groups[k].slice(0, at) + ', ' + free[0]; sl = free[1]; } } used.add(sl); }
+    // a group goes only to a slot that suits its needs (groups.mjs groupNeeds): a free-standing group to the floor, a window group to the window wall, a solid-wall group not to the window wall; two groups never share a slot
+    const used = new Set([groupSlot(a.groups[0])]), at = (g) => g.lastIndexOf(', on the '), base = (g) => (at(g) < 0 ? g : g.slice(0, at(g))), say = (sl) => Object.entries(SLOTS).find(([, v]) => v === sl)[0];
+    const allowed = (g) => { const n = groupNeeds(base(g)) || {}; return Object.values(SLOTS).filter((v) => (n.free ? v.startsWith('floor:') : !v.startsWith('floor:')) && (!n.window || v === 'window:middle') && (n.wall !== 'solid' || v !== 'window:middle')); };
+    const order = a.groups.map((g, k) => k).slice(1).sort((x, y) => allowed(a.groups[x]).length - allowed(a.groups[y]).length);   // the most constrained group chooses first
+    for (const k of order) { const g = a.groups[k], ok = allowed(g), cur = groupSlot(g); let sl = ok.includes(cur) && !used.has(cur) ? cur : ok.find((v) => !used.has(v)) || cur; if (sl && sl !== cur && at(g) >= 0) a.groups[k] = base(g) + ', ' + say(sl); else if (sl && at(g) < 0) a.groups[k] = base(g) + ', ' + say(sl); used.add(sl); }
     a.groupSlots = a.groups.map(groupSlot); }   // item C: the slot of each group in the words of a.slots() (wall:third, see SLOTS below); homeCaps swaps phrases, not places
   dealMotion(out, seed);   // living things (motion-roll.mjs): 2 or 3 kinds per area, from tables.json motion; its own random stream, so no older pick moves
   const open = (opts.rooms || []).filter((r) => r.length > 1); if (open.length > 1) throw new Error('roll: one open room per home (kitchen+dining+living); the other areas are rooms of their own');
