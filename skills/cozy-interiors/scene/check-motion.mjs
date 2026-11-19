@@ -15,6 +15,9 @@ export async function motionIssues(page, sceneFile, { seconds = 240 } = {}) {
     if (m.length > 3) out.push({ rule: 'motion', what: `${A.id}: ${m.length} living things (3 at most)` });
     if (new Set(kinds).size !== kinds.length) out.push({ rule: 'motion', what: `${A.id}: the same kind twice (${kinds.join(', ')}): one of each kind` });
   }
+  const homeCount = {}; for (const A of S.areas) for (const e of A.motion || []) homeCount[e.kind] = (homeCount[e.kind] || 0) + 1;   // home caps (tables.json motion.caps): one cat, two of a flier kind
+  const caps = JSON.parse(readFileSync(new URL('./tables.json', import.meta.url), 'utf8')).motion;
+  for (const [kind, n] of Object.entries(homeCount)) { const cap = kind === 'cat' ? caps.caps?.cat : caps.kinds[kind]?.flies ? caps.caps?.flier : undefined; if (cap && n > cap) out.push({ rule: 'motion', what: `the home has ${n} × ${kind} (${cap} at most: a home has one cat, and a flier kind shows in two areas at most)` }); }
   if (!S.areas.some((A) => A.motion?.length)) return out;
   const res = await page.evaluate(async (seconds) => {
     const { motion, kit } = window.cozyScene, T = kit.THREE, issues = [], once = new Set();

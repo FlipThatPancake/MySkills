@@ -1274,6 +1274,10 @@
    2,
    3
   ],
+  "caps": {
+   "cat": 1,
+   "flier": 2
+  },
   "kinds": {
    "wind": {
     "say": "a leafy plant by the open window stirs in the breeze",

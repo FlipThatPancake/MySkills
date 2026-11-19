@@ -55,7 +55,7 @@ export function keyBowl(kit, { r = 95, form = 'bowl', keys = 3, fob = 'tag', see
   const g = kit.group(), R = rnd(seed), T = kit.THREE; let floor = 10;
   if (form === 'bowl') { { const P = [[r * 0.38, 0], [r * 0.6, 6], [r * 0.95, r * 0.34], [r, r * 0.5]]; g.add(vessel(kit, P, { contents: 'none', seg: 36 })); g.add(inner(kit, P)); } g.add(kit.cyl(0, 10, 0, r * 0.55, 4, { seg: 30, linen: true })); floor = 16; }
   else if (form === 'dish') { { const P = [[r * 0.7, 0], [r * 0.85, 4], [r, 22], [r * 1.02, 30]]; g.add(vessel(kit, P, { contents: 'none', seg: 36 })); g.add(inner(kit, P)); } g.add(kit.cyl(0, 4, 0, r * 0.75, 4, { seg: 30, linen: true })); floor = 10; }
-  else { g.add(kit.rbox(-r * 1.1, 0, r * 0.75, r * 2.2, 26, r * 1.5, 12)); g.add(kit.rbox(-r * 1.1 + 12, 20, r * 0.75 - 12, r * 2.2 - 24, 7, r * 1.5 - 24, 8, { linen: true })); floor = 27; }
+  else { g.add(kit.rbox(-r * 1.1, 0, r * 0.75, r * 2.2, 26, r * 1.5, 12)); g.add(kit.rbox(-r * 1.1 + 12, 20, r * 0.75 - 12, r * 2.2 - 24, 9, r * 1.5 - 24, 8, { linen: true })); floor = 29; }
   const n = Math.max(1, Math.min(5, keys));
   for (let i = 0; i < n; i++) { const a = R() * 6.28, d = form === 'tray' ? 0 : r * (0.12 + 0.2 * R()); g.add(key(kit, Math.cos(a) * d - 8, floor + i * 3.4, Math.sin(a) * d * 0.6, a + i * 1.7, R)); }
   if (fob === 'tag') { const t = kit.rbox(-20 + R() * 30, floor + n * 3.4, 12 + R() * 14, 38, 3.4, 22, 6, lo); t.rotation.y = R() * 3; g.add(t); }
@@ -142,7 +142,7 @@ export function runner(kit, { w = 700, l = 2400, form = 'stripe', fringe = true,
   const sh = new T.Shape(); const e = (k, a) => Math.sin(k * 0.5 + a) * 3.5 + Math.sin(k * 1.7 + a * 2) * 1.5;
   sh.moveTo(-hw, -hl); sh.lineTo(hw, -hl); for (let k = 1; k <= n; k++) sh.lineTo(hw + e(k, 0.4), -hl + l * k / n); sh.lineTo(-hw, hl); for (let k = n - 1; k >= 0; k--) sh.lineTo(-hw + e(k, 2.1), -hl + l * k / n);
   const geo = new T.ExtrudeGeometry(sh, { depth: th - 4, bevelEnabled: true, bevelThickness: 2, bevelSize: 2, bevelSegments: 2, curveSegments: 4 }); geo.rotateX(Math.PI / 2); geo.translate(0, th - 2, 0);
-  const mat = kit.solid(geo, 0, 0, 0, { smooth: false, ...(tone === 'accent' ? { tone: 'accent' } : lo) }); g.add(mat);
+  const mat = kit.solid(geo, 0, 0, 0, { smooth: false, ...lo }); g.add(mat);
   const inset = (i) => [[-hw + i, y, -hl + 60], [hw - i, y, -hl + 60], [hw - i, y, -hl + 60], [hw - i, y, hl - 60], [hw - i, y, hl - 60], [-hw + i, y, hl - 60], [-hw + i, y, hl - 60], [-hw + i, y, -hl + 60]];
   if (form === 'stripe') { pts.push(...inset(46), ...inset(74)); pts.push([0, y, -hl + 60], [0, y, hl - 60]); }
   else if (form === 'bands') { const bands = Math.max(2, Math.min(4, Math.round(l / 800))); for (let i = 1; i < bands; i++) { const z = -hl + l * i / bands + (R() - 0.5) * 60; pts.push([-hw + 30, y, z], [hw - 30, y, z], [-hw + 30, y, z + 34], [hw - 30, y, z + 34]); } pts.push(...inset(40)); }
@@ -152,7 +152,7 @@ export function runner(kit, { w = 700, l = 2400, form = 'stripe', fringe = true,
   if (fold && fold !== 'no') {   // the front-left corner turned back over the mat: a triangle lying on top of it
     const s = 190 + R() * 60, tri = new T.Shape(); tri.moveTo(0, 0); tri.lineTo(s, 0); tri.lineTo(0, s); tri.lineTo(0, 0);
     const fl = new T.ExtrudeGeometry(tri, { depth: 6, bevelEnabled: true, bevelThickness: 4, bevelSize: 4, bevelSegments: 4, curveSegments: 4 }); fl.rotateX(Math.PI / 2); fl.translate(0, th + 4, 0);
-    const f = kit.solid(fl, -hw + 8, 0, hl - s - 8 + 0.01, { smooth: true, ...(tone === 'accent' ? { tone: 'accent' } : lo) }); f.position.set(-hw + 8, 0, hl - s - 8 + s * 0 + 0); g.add(f);
+    const f = kit.solid(fl, -hw + 8, 0, hl - s - 8 + 0.01, { smooth: true, ...lo }); f.position.set(-hw + 8, 0, hl - s - 8 + s * 0 + 0); g.add(f);
   }
   return kit.merge(g);
 }

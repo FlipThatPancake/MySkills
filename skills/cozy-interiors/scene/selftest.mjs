@@ -38,7 +38,7 @@ const H = new Home({ seed: 11, floor: 'plain' }), area = H.area('t', 'T', { rect
 let i = 0; const where = {};
 for (const a of list) for (let k = 0; k < K; k++) {
   const id = `${a}-${k}`, col = i % 12, row = Math.floor(i / 12); i++;
-  try { area.put(id, a, [2000 + col * 3000, 2000 + row * 3000], 0, { group: 'g', y: ASSETS[a].y === 'top' ? 800 : 0, mount: ASSETS[a].mount === 'on' ? 'floor' : ASSETS[a].mount === 'wall' || ASSETS[a].mount === 'ceiling' || ASSETS[a].mount === 'lines' ? 'floor' : undefined }); } catch (e) { console.log(`skipped ${id}: ${e.message.slice(0, 80)}`); }
+  try { area.put(id, a, [2000 + col * 3000, 2000 + row * 3000], 0, { group: 'g', y: ASSETS[a].y === 'top' ? 800 : a === 'picture' ? 900 : 0, mount: a === 'picture' ? 'wall' : ASSETS[a].mount === 'on' ? 'floor' : ASSETS[a].mount === 'wall' || ASSETS[a].mount === 'ceiling' || ASSETS[a].mount === 'lines' ? 'floor' : undefined }); } catch (e) { console.log(`skipped ${id}: ${e.message.slice(0, 80)}`); }
 }
 const dir = fs.mkdtempSync(join(os.tmpdir(), 'selftest-')), json = join(dir, 'sheet.json');
 H.write(json, fs);
@@ -46,6 +46,10 @@ const { checkParts } = await import('./geom/parts.mjs');
 console.log(`coverage: parts test: ${K} variants of each of ${list.length} of ${Object.keys(ASSETS).length} assets (left out: baseRun, wallRun, pendantLamp${named.length ? '; only the named assets' : ''}); params beyond those variants are not sampled`);
 const found = await checkParts(json);
 console.log(found.map((f) => `[parts] ${f.text}`).join('\n') || 'no part passes 20 mm into another'); console.log(`${found.length} asset variant(s) with parts through each other, of ${i} checked`);
+// z-fight: two faces of different parts that face the same way within 2 mm of one plane flicker (geom/zfight.mjs). Every asset variant is checked, not only pictures.
+{ const { checkZfight } = await import('./geom/zfight.mjs'), zf = await checkZfight(json); console.log(zf.map((f) => `[zfight] ${f.text}`).join('\n') || 'no two faces of one asset share a plane'); console.log(`${zf.length} asset variant(s) with faces that z-fight, of ${i} checked`); }
+// report only: assets that read as one flat slab in front view (2 depth planes or fewer, at least 250 x 250 mm): geom/slabs.mjs. Not a failure; a list to look at.
+{ const { slabReport } = await import('./geom/slabs.mjs'), rows = await slabReport(json), by = new Map(); for (const r of rows.filter((q) => q.slab)) (by.get(r.asset) || by.set(r.asset, []).get(r.asset)).push(r); console.log([...by].map(([a, l]) => `[slab] ${a}: ${l[0].planes} depth plane(s) in front view, ${l[0].w} x ${l[0].h} mm`).join('\n') || 'no asset reads as a flat slab'); console.log(`${by.size} asset(s) read as flat slabs (report only)`); }
 
 // Every small thing the roll can deal on a flat top stands still for a second of gravity (Rapier, geom/settle.mjs): a thing that tips, slides or turns is named. --no-settle skips it.
 if (!args.includes('--no-settle')) {
@@ -70,4 +74,35 @@ if (!args.includes('--no-settle')) {
   }
   for (const form of ['ladder', 'spindle', 'bentwood', 'upholstered']) { const [w] = width(REGISTRY.chair(kk, { form })); if (w > 560) bad.push(`dining chair ${form}: overall ${Math.round(w)} mm wide, notes say about 420-460 seat, 560 at most`); }
   console.log(bad.map((x) => `[chair-width] ${x}`).join('\n') || 'every chair kind keeps its real width'); console.log(`${bad.length} chair width problem(s)`);
+}
+
+const { TASKLAMP_POSES } = await import('./src/library/officeset.js');
+// Jointed lamps offer named poses only (never free angles), and in every pose the shade's opening points down at the desk: the light from its rim hits the surface 20-700 mm in front of the foot, and the shade hangs at least 150 mm above it.
+{
+  const kk = createKit(), bad = []; let n = 0;
+  for (const form of ['arm', 'gooseneck']) for (const shade of ['cone', 'dome']) for (const pose of TASKLAMP_POSES) {
+    n++; const o = REGISTRY.taskLamp(kk, { form, shade, pose }), h = o.userData.head; if (!h) { bad.push(`taskLamp ${form}/${shade}/${pose}: no head data`); continue; }
+    const t = h.at[1] / -h.dir[1], hit = h.at[2] + h.dir[2] * t;
+    if (h.dir[1] > -0.5 || h.at[1] < 150 || hit < 20 || hit > 700) bad.push(`taskLamp ${form}/${shade}/${pose}: the shade opening at height ${Math.round(h.at[1])} points ${Math.round(Math.asin(-h.dir[1]) * 57.3)}° down and lights the desk ${Math.round(hit)} mm in front of the foot`);
+  }
+  console.log(bad.map((x) => `[pose] ${x}`).join('\n') || 'every task lamp pose points its shade down at the desk'); console.log(`${bad.length} lamp pose problem(s) of ${n} poses`);
+}
+
+// The parts that make an asset recognisable exist as real geometry (tagged userData.part, built with every part kept apart): a standing photo has its frame, its print, a stand-leg and leans back 10-15 degrees, the leg's foot as low as the frame's lowest edge; a task lamp has a base, arms or a neck, and a shade.
+{
+  const kk = createKit(); kk.keepParts = true; const T = kk.THREE, bad = [];
+  const tris = (o) => { let n = 0; o.traverse((m) => { if (m.isMesh && m.geometry?.attributes?.position) n += (m.geometry.index ? m.geometry.index.count : m.geometry.attributes.position.count) / 3; }); return n; };
+  const find = (root, name) => { const out = []; root.traverse((o) => { if (o.userData?.part === name) out.push(o); }); return out; };
+  const low = (o) => { o.updateMatrixWorld(true); return new T.Box3().setFromObject(o).min.y; };
+  for (const form of [0, 1, 2]) for (const tilt of [10, 12, 14]) {
+    const o = REGISTRY.photoFrame(kk, { form, tilt, w: 180, h: 230 }), miss = ['frame', 'print', 'leg'].filter((n) => !find(o, n).some((m) => tris(m) >= 12)), fr = find(o, 'tilted')[0], lean = fr ? Math.abs(fr.rotation.x) * 57.2958 : 0, leg = find(o, 'leg')[0];
+    if (miss.length) bad.push(`photoFrame form ${form}: missing ${miss.join(', ')}`);
+    if (fr && (lean < 10 - 0.1 || lean > 15 + 0.1)) bad.push(`photoFrame form ${form} tilt ${tilt}: leans ${lean.toFixed(1)}°, 10-15 expected`);
+    if (leg && Math.abs(low(leg) - low(find(o, 'frame')[0])) > 4) bad.push(`photoFrame form ${form}: the leg's foot is ${Math.round(low(leg) - low(find(o, 'frame')[0]))} mm off the frame's lowest edge: it would not stand`);
+  }
+  for (const form of ['arm', 'gooseneck']) for (const shade of ['cone', 'dome']) for (const pose of TASKLAMP_POSES) {
+    const o = REGISTRY.taskLamp(kk, { form, shade, pose }), need = ['base', 'shade', form === 'arm' ? 'arms' : 'neck'], miss = need.filter((n) => !find(o, n).some((m) => tris(m) >= 12));
+    if (miss.length) bad.push(`taskLamp ${form}/${shade}/${pose}: missing ${miss.join(', ')}`);
+  }
+  console.log(bad.map((x) => `[parts-present] ${x}`).join('\n') || 'standing photos and task lamps have the parts that make them recognisable'); console.log(`${bad.length} missing-part problem(s)`);
 }

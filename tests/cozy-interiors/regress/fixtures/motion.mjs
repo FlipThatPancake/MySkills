@@ -30,4 +30,6 @@ export const fixtures = [
     build({ Home }) { const { H, a } = room(Home, { openings: [{ kind: 'door', x: 3000, width: 1000, height: 2100, open: 80 }] }); a.alive([{ kind: 'butterfly' }]); return H; } },
   { name: 'open-door-leaf-blocks-the-flier', from: 'round 6 (lead): a 700 mm door open 60 degrees leaves its leaf standing across the way in; the flier has no clear air in front of it', kind: 'bug', expect: { rules: ['motion'], ids: [] },
     build({ Home }) { const { H, a } = room(Home, { openings: [{ kind: 'door', x: 3000, width: 700, height: 2100, open: 60 }] }); a.alive([{ kind: 'butterfly' }]); return H; } },
+  { name: 'two-cats-in-one-home', from: 'round 6 E19: the roll dealt a sleeping cat to all four areas; a home has one cat', kind: 'bug', expect: { rules: ['motion'], ids: [] },
+    build({ Home }) { const { H, a } = room(Home); a.alive([{ kind: 'cat' }]); const b = H.area('u', 'U', { rect: [7000, 0, 13000, 4000] }); b.back(6000, []); b.view({ target: [10000, 700, 2000], az: 20, el: 15 }); b.alive([{ kind: 'cat' }]); return H; } },
 ];

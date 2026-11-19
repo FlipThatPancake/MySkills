@@ -35,8 +35,10 @@ const runAsset = async (x) => {
 const run = (x) => new Promise((res) => {
   const json = join(tmp, x.name + '.json');
   if (x.asset) return res(runAsset(x));
+  if (x.replay) fs.copyFileSync(join(dir, x.replay), json);   // kind 'replay': a saved round home (a scene json); no build step
+
   if (x.refuses) { const log = console.log; console.log = () => {}; let msg = ''; try { x.build({ Home }); } catch (e) { msg = e.message; } finally { console.log = log; } return res({ x, findings: msg.includes(x.refuses) ? [{ rule: 'refused', text: msg }] : [], error: '' }); }   // fixture.refuses: the build must throw with this text (compose refuses it)
-  try { const log = console.log; console.log = () => {}; let H; try { H = x.build({ Home }); H.write(json, fs); } finally { console.log = log; } if (x.patch) { const S = JSON.parse(fs.readFileSync(json, 'utf8')); x.patch(S); fs.writeFileSync(json, JSON.stringify(S)); } } catch (e) { return res({ x, error: 'build: ' + e.message, findings: [] }); }
+  if (!x.replay) try { const log = console.log; console.log = () => {}; let H; try { H = x.build({ Home }); H.write(json, fs); } finally { console.log = log; } if (x.patch) { const S = JSON.parse(fs.readFileSync(json, 'utf8')); x.patch(S); fs.writeFileSync(json, JSON.stringify(S)); } } catch (e) { return res({ x, error: 'build: ' + e.message, findings: [] }); }
   let out = ''; const p = spawn('node', [join(here, 'check-home.mjs'), json, '--quick']); p.stdout.on('data', (d) => (out += d)); p.stderr.on('data', (d) => (out += d));
   p.on('close', () => { const findings = out.split('\n').map((l) => l.match(/^\[([\w-]+)\] (.*)$/)).filter(Boolean).map((m) => ({ rule: m[1], text: m[2] })), err = out.split('\n').filter((l) => /^PAGE ERROR|Error:/.test(l)).join(' | '); res({ x, findings, error: err || (/No problems|issue\(s\)/.test(out) ? '' : 'check-home printed no verdict: ' + out.slice(-200)) }); });
 });
@@ -49,6 +51,7 @@ for (const { x, findings, error } of results) {
   let status, shown;
   if (error) { status = 'ERROR'; shown = [{ rule: 'error', text: error }]; bad++; }
   else if (x.kind === 'good') { shown = findings.filter((f) => physical(f, x)); status = shown.length ? (x.known ? 'XFAIL-ALARM' : 'BAD-ALARM') : x.known ? 'XPASS' : 'OK'; if (status === 'BAD-ALARM') bad++; }
+  else if (x.pairs) { const miss = x.pairs.filter(([r, id]) => !findings.some((f) => f.rule === r && f.text.includes(id))); shown = miss.length ? miss.map(([r, id]) => ({ rule: 'missing', text: `${r} on ${id}` })) : findings.filter((f) => x.pairs.some(([r, id]) => f.rule === r && f.text.includes(id))); status = miss.length ? (x.known ? 'XFAIL' : 'MISSED') : (x.known ? 'XPASS' : 'CAUGHT'); if (status === 'MISSED') bad++; }   // a home replay: every (rule, object id) pair the fix list expects must fire on the saved home
   else { shown = findings.filter((f) => hit(x, f)); const caught = shown.length > 0;
     status = x.kind === 'pending' ? (caught ? 'NOW-CAUGHT' : 'PENDING') : caught ? (x.known ? 'XPASS' : 'CAUGHT') : x.known ? 'XFAIL' : 'MISSED'; if (status === 'MISSED') bad++;
     if (!caught) shown = findings.filter((f) => physical(f, x)); }
