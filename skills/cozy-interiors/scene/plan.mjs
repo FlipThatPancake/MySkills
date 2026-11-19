@@ -112,10 +112,10 @@ export function planHome(out, seed, kinds, opts = {}) {
   const validWays = (links, attempt) => {
     if (opts.noLikes) return true;   // a regression fixture only: the likes table switched off, so a home that breaks it can be built and the checks shown to catch it
     if (privateGate(ids, links.map((l) => [l.a, l.b]), entryId).length) return false;   // a private room is the only way to a shared one
-    if (ids.length > 2 && attempt < 300) for (const l of links) if (dislikes(l.a, l.b) && !asked(l.a, l.b)) return false;   // bedroom-kitchen, office-kitchen: not unless asked (a home whose walls leave no other way lets it through after 300 tries)
+    if (ids.length > 2 && attempt < 100) for (const l of links) if (dislikes(l.a, l.b) && !asked(l.a, l.b)) return false;   // bedroom-kitchen, office-kitchen: not unless asked (a home whose walls leave no other way lets it through after 300 tries)
     return true;
   };
-  for (let attempt = 0; attempt < 2400; attempt++) {   // the first 600 tries at the sizes dealt; a crowded home then shrinks its cells a little (to 85%, then 70%) before it gives up
+  for (let attempt = 0; attempt < 2400; attempt++) {   // the first 600 tries at the sizes dealt; a crowded home then grows its cells (to 112%, then 125%: more wall for the ways through) before it gives up
     const res = tryPlan(attempt); best.tries = attempt + 1; if (res) return finish(res);
   }
   if (!required.length && !opts.noRebacking && !opts.rebacked) { const e = new Error('plan: no floor plan; the single-wall areas take a corner'); e.needBacking = ids.filter((id) => { const b = T.backing.find((x) => x.id === roll[id].backing); const stuck = chain.length && chain.every((c) => !Object.values(linkWalls(roll[c])).some((q) => !q.blocked)); return (!chain.includes(id) || stuck) && (b.walls === 1 || (b.walls === 2 && b.angle !== 90)); }); if (e.needBacking.length) throw e; }   // a one-wall or wide-angle area has one wall for ways through: it takes a square corner
@@ -123,7 +123,7 @@ export function planHome(out, seed, kinds, opts = {}) {
 
   function tryPlan(attempt) {
     const rnd = mkRnd((seed ^ 0x51ed270b) + attempt * 7919), size = {}, kind = (id) => id.replace(/\d+$/, '');
-    for (const id of ids) { const cap = SIZES[kind(id)] || SIZES.living, nd = [need[id].w, need[id].d], shrink = attempt < 600 ? 1 : attempt < 1500 ? 0.85 : 0.7, f = (k) => Math.round(Math.max(Math.min(nd[k] * (1.05 + 0.25 * rnd()), cap[k] * 1.1), nd[k]) * shrink / 100) * 100; size[id] = [f(0), f(1)]; }   // from the deal: the need with 5 to 30% to spare, never above the table's largest (plus 10%) unless the deal needs more
+    for (const id of ids) { const cap = SIZES[kind(id)] || SIZES.living, nd = [need[id].w, need[id].d], shrink = attempt < 600 ? 1 : attempt < 1200 ? 1.12 : 1.25, f = (k) => Math.round(Math.max(Math.min(nd[k] * (1.05 + 0.25 * rnd()), cap[k] * 1.1), nd[k]) * shrink / 100) * 100; size[id] = [f(0), f(1)]; }   // from the deal: the need with 5 to 30% to spare, never above the table's largest (plus 10%) unless the deal needs more
     const placed = {}, links = [], used = {}, order = [];
     const winUsed = {}, winOf = {};   // the dealt windows, each stood on its wall first; the ways through keep clear of them (winUsed[id][wall] = [[lo, hi], ...])
     for (const id of ids) {
@@ -159,6 +159,7 @@ export function planHome(out, seed, kinds, opts = {}) {
       for (let k = 0; k < 40; k++) {
         const wu = Object.entries(walls(u)).filter(([w, q]) => !q.blocked), wv = Object.entries(walls(v)).filter(([w, q]) => !q.blocked); if (!wu.length || !wv.length) return false;
         const pickU = wu.flatMap(([w, q]) => Array(q.windowed ? 1 : 4).fill([w, q])), [wU, qU] = pickU[Math.floor(rnd() * pickU.length)], pickV = wv.flatMap(([w, q]) => Array((w === 'back' ? 1 : 3) * (q.windowed ? 1 : 4)).fill([w, q])), [wV, qV] = pickV[Math.floor(rnd() * pickV.length)];
+        if (qU.windowed && qV.windowed && attempt < 100) continue;   // (a crowded home lets it through after 100 tries) two windows back to back would open into each other
         const kd = forceKind(qU, qV); if (!kd) continue; const wd = LINK_WIDTH[kd.style || 'door'], xu = spot(u, wU, wd), xv = spot(v, wV, wd); if (xu === null || xv === null) continue;
         const gU = wallGeo(wU, ...size[u]), pw = toWorld(placed[u].pose, [gU.at(xu)[0] + placed[u].rect[0] * 0, gU.at(xu)[1]]), nU = dirWorld(placed[u].pose, gU.inward);
         const pose = matePose([0, 0, ...size[v]], { wall: wV, x: xv }, pw, nU); if (!clear(v, pose, [0, 0, ...size[v]])) continue;
@@ -167,7 +168,7 @@ export function planHome(out, seed, kinds, opts = {}) {
       return false; };
     const touch = (u, v, dry = false) => {   // two areas already placed whose walls happen to stand back to back: a link between them
       const cand = [];
-      for (const [wU, qU] of Object.entries(walls(u))) for (const [wV, qV] of Object.entries(walls(v))) { if (qU.blocked || qV.blocked) continue;
+      for (const [wU, qU] of Object.entries(walls(u))) for (const [wV, qV] of Object.entries(walls(v))) { if (qU.blocked || qV.blocked || (qU.windowed && qV.windowed && attempt < 100)) continue;
         const gU = wallGeo(wU, ...size[u]), gV = wallGeo(wV, ...size[v]), U = placed[u], V = placed[v], a0 = toWorld(U.pose, gU.at(0)), a1 = toWorld(U.pose, gU.at(gU.len)), b0 = toWorld(V.pose, gV.at(0)), b1 = toWorld(V.pose, gV.at(gV.len)), nU = dirWorld(U.pose, gU.inward), nV = dirWorld(V.pose, gV.inward);
         if (Math.abs(nU[0] + nV[0]) > 0.01 || Math.abs(nU[1] + nV[1]) > 0.01) continue;   // facing apart
         const t = [-nU[1], nU[0]], off = (p) => (p[0] - a0[0]) * nU[0] + (p[1] - a0[1]) * nU[1]; if (Math.abs(off(b0)) > GAP || Math.abs(off(b1)) > GAP) continue;   // one line

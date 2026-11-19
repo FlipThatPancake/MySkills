@@ -5,7 +5,7 @@ const homeOf = (Home, seed, rooms, touch, shrink = 1, noLikes = false, windows =
   for (const id of R.plan.order) {
     const pa = R.plan.areas[id], [w, d] = pa.fit.map((v) => Math.round(v * shrink)), a = H.area(id, id, { rect: [0, 0, w, d] });
     if (pa.entry?.kind === 'open') { const i = R.openPlan.chain.indexOf(id); H.join(made[pa.parent], a, { layout: R.openPlan.layout === 'corner' && i - 1 === R.openPlan.turn ? 'corner' : 'row', share: R.openPlan.seams[i - 1].overlap }); }
-    const wins = (wall) => windows === 'plan' ? pa.windows.filter((q) => q.wall === wall && q.x !== null).map((q) => ({ kind: 'window', x: q.x, width: q.width, height: 1200, sill: 900 })) : windows === 'on-link' && !wall.done ? R.plan.links.filter((l) => l.kind !== 'open' && ((l.a === id && l.aWall === wall) || (l.b === id && l.bWall === wall))).slice(0, 1).map((l) => ({ kind: 'window', x: l.a === id ? l.aX : l.bX, width: 1500, height: 1200, sill: 900 })) : [];
+    const wins = (wall) => windows === 'plan' ? pa.windows.filter((q) => q.wall === wall && q.x !== null).map((q) => ({ kind: 'window', x: q.x, width: q.width, height: 1200, sill: 900, style: 'picture' })) : windows === 'on-link' && !wall.done ? R.plan.links.filter((l) => l.kind !== 'open' && ((l.a === id && l.aWall === wall) || (l.b === id && l.bWall === wall))).slice(0, 1).map((l) => ({ kind: 'window', x: l.a === id ? l.aX : l.bX, width: 1500, height: 1200, sill: 900 })) : [];
     a.back(w, wins('back')); a.left(d, wins('left')); a.right(d, wins('right')); a.view({ target: [w / 2, 700, d / 2], el: 18 }); made[id] = a;
   }
   return H;
@@ -20,7 +20,7 @@ export const fixtures = [
   { name: 'window-stood-on-the-way-through-is-refused', from: 'round 6 tools thread: the dealt window and the plan\'s way through landed on one short wall; here a window is stood where the way through is, and the build refuses it (the plan now keeps the dealt windows clear and prints each one\'s x)', kind: 'bug', refuses: 'too close', expect: { rules: ['refused'], ids: [] },
     build({ Home }) { return homeOf(Home, 5, [['hallway'], ['living'], ['bedroom']], [['hallway', 'living'], ['hallway', 'bedroom']], 1, false, 'on-link'); } },
   { name: 'good-windows-at-the-plans-x-beside-the-ways-through', from: 'round 6 tools thread: every dealt window stands at the x the plan gave it, with the ways through clear beside it; the home builds and stays green', kind: 'good', counts: ['plan'],
-    build({ Home }) { return homeOf(Home, 5, [['hallway'], ['living'], ['bedroom']], [['hallway', 'living'], ['hallway', 'bedroom']], 1, false, 'plan'); } },
+    build({ Home }) { return homeOf(Home, 10, [['hallway'], ['living'], ['bedroom']], [['hallway', 'living'], ['hallway', 'bedroom']], 1, false, 'plan'); } },
   { name: 'good-plan-four-areas', from: 'round 6 house plan: living, dining, hallway and bedroom stand in one floor plan with ways through; every area reachable, none overlapping', kind: 'good', counts: ['plan'],
     build({ Home }) { return homeOf(Home, 1, [['living'], ['dining'], ['hallway'], ['bedroom']], [['hallway', 'living'], ['hallway', 'bedroom']]); } },
 ];
