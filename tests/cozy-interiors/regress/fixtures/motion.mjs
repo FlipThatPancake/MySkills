@@ -26,4 +26,8 @@ export const fixtures = [
     build({ Home }) { const { a, back } = room(Home, { openings: [{ kind: 'window', x: 3000, width: 1400, height: 1200, sill: 900 }] }); back.place('c', 'curtain', 3000, { group: 'g', params: { w: 700 } }); a.alive([{ kind: 'butterfly' }]); } },
   { name: 'good-curtain-beside-the-way-in', from: 'round 5 item 14: a full-width curtain keeps the middle of its window clear', kind: 'good',
     build({ Home }) { const { H, a, back } = room(Home, { openings: [{ kind: 'window', x: 3000, width: 1400, height: 1200, sill: 900 }] }); back.place('c', 'curtain', 3000, { group: 'g', params: { w: 1500 } }); a.alive([{ kind: 'butterfly' }]); return H; } },
+  { name: 'good-butterfly-through-an-open-door', from: 'round 6 (lead): a plain door open 80 degrees is a way in; its open leaf is an obstacle (slices along its length) and the flier keeps off it', kind: 'good',
+    build({ Home }) { const { H, a } = room(Home, { openings: [{ kind: 'door', x: 3000, width: 1000, height: 2100, open: 80 }] }); a.alive([{ kind: 'butterfly' }]); return H; } },
+  { name: 'open-door-leaf-blocks-the-flier', from: 'round 6 (lead): a 700 mm door open 60 degrees leaves its leaf standing across the way in; the flier has no clear air in front of it', kind: 'bug', expect: { rules: ['motion'], ids: [] },
+    build({ Home }) { const { H, a } = room(Home, { openings: [{ kind: 'door', x: 3000, width: 700, height: 2100, open: 60 }] }); a.alive([{ kind: 'butterfly' }]); return H; } },
 ];

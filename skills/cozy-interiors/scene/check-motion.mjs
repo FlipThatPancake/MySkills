@@ -44,6 +44,7 @@ export async function motionIssues(page, sceneFile, { seconds = 240 } = {}) {
         for (const cam of cams[th.area] || []) if (c.distanceTo(cam) < 900) say(tag + 'cam', `${tag}: comes within ${Math.round(c.distanceTo(cam))} mm of a camera at ${t.toFixed(1)} s (900 mm at least: a flier that close fills the frame, clipped)`);
         for (const o of ctx.objects) {
           if (b.perch === o.id) continue;
+          if (o.asset === 'doorLeaf') window.__leafGap = Math.min(window.__leafGap ?? 1e9, o.box.distanceToPoint(c) - r);   // closest a body comes to an open door leaf (mm), for the report
           if (o.box.distanceToPoint(c) < r - 6 && o.box.max.y > 100) say(tag + o.id, `${tag}: passes through ${o.id} at ${t.toFixed(1)} s (${c.toArray().map(Math.round)})`);
         }
         let inGap = false;
@@ -84,6 +85,7 @@ if (process.argv[1] && process.argv[1].endsWith('check-motion.mjs')) {
   page.on('pageerror', (e) => console.log('PAGE ERROR', String(e)));
   await page.goto('file://' + html + '?check'); await page.waitForFunction(() => window.cozyScene, null, { timeout: 280000 });
   const issues = await motionIssues(page, scene);
+  const lg = await page.evaluate(() => window.__leafGap); if (lg !== undefined && lg !== null) console.log(`closest gap to an open door leaf: ${Math.round(lg)} mm`);
   for (const i of issues) console.log(`[${i.rule}] ${i.what}`);
   console.log(issues.length ? `${issues.length} issue(s)` : 'No motion problems.');
   await browser.close();
