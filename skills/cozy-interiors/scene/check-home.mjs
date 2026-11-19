@@ -525,7 +525,7 @@ lap('window heads and roll');
     for (const [A, shots] of Object.entries(C)) { if (A === '_core') continue; const have = (S.areas.find((a) => a.id === A)?.camera?.shots || []).map((x) => x.name); for (const n of Object.keys(shots)) if (!have.includes(n)) issues.push({ rule: 'camera', what: `${basename(cf)} holds a camera for ${A} "${n}" and no a.shot of that name uses it: add the shot, or delete the entry (fitshots drops it on its next run)` }); }
   } catch (e) { issues.push({ rule: 'camera', what: `${basename(cf)} could not be read: ${String(e.message).slice(0, 120)}` }); } }
 }
-const coverage = [];   // one line per render check, printed before the summary: what was and was not looked at
+/* coverage (declared at the top) also takes one line per render check: what was and was not looked at */
 {   // the outside picture shows in every window and glass door (check-windows.mjs): from the home view, the tour shot cameras and three more angles; the stencil clip keeps the paper floor and fades off it
   if (!QUICK) { const { windowIssues } = await import('./check-windows.mjs'), { existsSync, readFileSync } = await import('node:fs'), cf = scene.replace(/\.json$/, '.cameras.json'); let C = {}; try { if (existsSync(cf)) C = JSON.parse(readFileSync(cf, 'utf8')); } catch {} delete C._core;
     const pi = await windowIssues(page, C, { angles: { 'left': { look: [-35, 15] }, 'high': { look: [0, 32] }, 'right': { look: [35, 15] } } }); for (const i of pi) issues.push(i); coverage.push(pi.coverage); }
@@ -537,7 +537,6 @@ lap('open plan');
 lap('motion');
 await browser.close();
 for (const e of errors) console.log('PAGE ERROR', e);
-for (const c of coverage) console.log(`[coverage] ${c}`);
 const notes = []; for (let k = issues.length - 1; k >= 0; k--) if (/^note-/.test(issues[k].rule)) notes.unshift(...issues.splice(k, 1));   // notes: taste, not failures (placement coverage): printed, never counted
 for (const l of coverage) console.log(`coverage: ${l}`);   // what each sampling check looked at and what it left out
 for (const i of issues) console.log(`[${i.rule}] ${i.what}`);
