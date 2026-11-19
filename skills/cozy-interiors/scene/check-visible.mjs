@@ -3,6 +3,7 @@
 // An object under 20% visible fails unless a tour shot shows it at 20% or more. Left out: rugs and runners (flat), objects under 40 px alone (too small to judge), a table under its own cloth.
 //   hook: `await visibleIssues(page, camerasByArea)` -> issues [{ rule: 'visible', what }] with .coverage; node check-visible.mjs <scene.json> [--all] prints every object's numbers.
 import { createRequire } from 'node:module';
+import { globalPkg, buildPage } from './needs.mjs';
 import { execSync } from 'node:child_process';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -67,8 +68,8 @@ export async function visibleIssues(page, camerasByArea = {}, opt = {}) {
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const here = dirname(fileURLToPath(import.meta.url)), scene = process.argv.slice(2).find((a) => !a.startsWith('--'));
   if (!scene) { console.log('usage: node check-visible.mjs <scene.json> [--all]'); process.exit(1); }
-  const sceneAbs = resolve(scene); execSync(`node ${join(here, 'build.mjs')} ${sceneAbs}`, { stdio: 'ignore' });
-  const { chromium } = createRequire(join(execSync('npm root -g', { encoding: 'utf8' }).trim(), 'x.js'))('playwright');
+  const sceneAbs = resolve(scene); buildPage(here, sceneAbs);
+  const { chromium } = globalPkg('playwright');
   const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
   const page = await browser.newPage({ viewport: { width: 1200, height: 750 } });
   page.on('pageerror', (e) => console.log('PAGE ERROR', String(e)));

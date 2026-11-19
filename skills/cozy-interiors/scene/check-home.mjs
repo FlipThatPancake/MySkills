@@ -6,16 +6,18 @@
 // and the home view at 1200 x 750 (every object inside the frame with a 6% margin, nothing of a neighbour in front, no lamp over an opening or another lamp, seating: sofa backs onto a wall, chairs face the table, no seat shows its back, the coffee table visible).
 // Needs Playwright (global) and esbuild (global).
 import { createRequire } from 'node:module';
+import { globalPkg } from './needs.mjs';
 import { execSync } from 'node:child_process';
 import { existsSync, statSync } from 'node:fs';
 import { dirname, join, resolve, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 const here = dirname(fileURLToPath(import.meta.url)), scene = process.argv.slice(2).find((a, i, v) => !a.startsWith('--') && v[i - 1] !== '--until') ? resolve(process.argv.slice(2).find((a, i, v) => !a.startsWith('--') && v[i - 1] !== '--until')) : (console.error('usage: node check-home.mjs <scene.json>   (the scene a spec wrote)'), process.exit(2));
 const T0 = Date.now(); let TL = T0; const lap = (what) => { if (process.argv.includes('--time')) { console.error(`[time] ${what}: ${((Date.now() - TL) / 1000).toFixed(1)} s (total ${((Date.now() - T0) / 1000).toFixed(1)} s)`); TL = Date.now(); } };   // --time prints where the minutes go
+{ const spec = scene.replace(/\.json$/, '.spec.mjs'); if (existsSync(spec) && existsSync(scene) && statSync(spec).mtimeMs > statSync(scene).mtimeMs + 5000 && !process.argv.includes('--stale-ok')) { console.error(`${basename(scene)} is older than ${basename(spec)}: the spec has not written it since its last edit (it failed, or was not run). Run  node ${basename(spec)}  and fix what it reports, then check again (--stale-ok to check the old json anyway).`); process.exit(1); } }   // T12: a stale json from before a failed spec run would be checked as if it were the new home
 const QUICK = process.argv.includes('--quick'), REUSE = process.argv.includes('--reuse');   // --quick skips the ghost renders (the slow part: run it on the final pass only); --reuse keeps the built page when it is newer than the scene
-if (!(REUSE && existsSync(scene.replace(/\.json$/, '.html')) && statSync(scene.replace(/\.json$/, '.html')).mtimeMs > statSync(scene).mtimeMs)) execSync(`node ${join(here, 'build.mjs')} ${scene}`, { stdio: 'ignore' });
+if (!(REUSE && existsSync(scene.replace(/\.json$/, '.html')) && statSync(scene.replace(/\.json$/, '.html')).mtimeMs > statSync(scene).mtimeMs)) try { execSync(`node ${join(here, 'build.mjs')} ${scene}`, { stdio: ['ignore', 'ignore', 'pipe'] }); } catch (e) { console.error(String(e.stderr || e.message).trim().split('\n').slice(0, 6).join('\n')); process.exit(1); }
 lap('build');
-const { chromium } = createRequire(join(execSync('npm root -g', { encoding: 'utf8' }).trim(), 'x.js'))('playwright');
+const { chromium } = globalPkg('playwright');
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 1200, height: 750 } }); const errors = [];
 page.on('pageerror', (e) => errors.push(String(e)));

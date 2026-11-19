@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { globalPkg } from './needs.mjs';
 // node selftest.mjs [asset ...] [--variants=3] → lays out every asset (or the named ones) in a few dealt variants on a bare floor and asks the geometry core (geom/parts.mjs, Node only, no page) which assets have a part passing right through another (20 mm)
 // (a magazine through the sling of its rack, a book through a shelf board). Each finding names the asset and the parts; fix the asset, never one home.
 import fs from 'node:fs';
@@ -110,7 +111,7 @@ const { TASKLAMP_POSES } = await import('./src/library/officeset.js');
 // Every painting x colour mode stays readable at home-view size (150 px wide): the toned image (library/paintTone.js, run as is in a browser page) must not turn into a dark smudge or a pale blank: mean brightness 100-215 of 255, and the 5th-95th percentile spread at least 80. Needs Playwright; skipped without it.
 {
   const EDGES = Number(process.env.EDGES || 0.08), STEPS = Number(process.env.STEPS || 4), { PAINTINGS } = await import('./src/library/paintings.js'), { createRequire } = await import('node:module'), { execSync } = await import('node:child_process'), bad = [], rows = [];
-  let chromium; try { ({ chromium } = createRequire(join(execSync('npm root -g', { encoding: 'utf8' }).trim(), 'x.js'))('playwright')); } catch { console.log('painting tone: skipped (no Playwright)'); }
+  let chromium; try { ({ chromium } = globalPkg('playwright', true)); } catch { console.log('painting tone: skipped (no Playwright)'); }
   if (chromium) {
     const code = fs.readFileSync(join(here, 'src/library/paintTone.js'), 'utf8').replace(/^export /gm, ''), browser = await chromium.launch(), page = await browser.newPage();
     await page.setContent('<canvas id=c></canvas>'); await page.addScriptTag({ content: code + `
