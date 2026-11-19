@@ -234,7 +234,7 @@ export function plantStand(kit, { h = 560, r = 190, tiers = 1, seed = 5, plant =
   for (let k = 0; k < 3; k++) { const a = k * 2.0944 + 0.3; g.add(rod(kit, [Math.cos(a) * r * 0.7, h - 20, Math.sin(a) * r * 0.7], [Math.cos(a) * r * 0.95, 0, Math.sin(a) * r * 0.95], 14, 11, 'mid')); }
   g.add(kit.cyl(0, h - 20, 0, r, 26, { seg: 40 }));
   g.add(kit.lines(ring(r - 24, h + 6.5, 36), 'lo'));
-  if (tiers > 1) { g.add(kit.cyl(0, h * 0.42, 0, r * 0.9, 20, { seg: 36, tone: 'lo' })); }
+  if (tiers > 1) { g.add(kit.cyl(0, h * 0.42, 0, r * 0.9, 20, { seg: 36, tone: 'lo', through: true })); }   // the legs pass through the lower tier: joinery
   const p = pot(kit, { r: r * 0.58, tall: 1.1, profile: 'tapered', plant, seed }); p.position.y = h + 6; g.add(p);
   return kit.merge(g);
 }
