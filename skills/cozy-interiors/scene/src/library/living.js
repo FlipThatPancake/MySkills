@@ -115,7 +115,7 @@ export function sideboard(kit, { w = 1600, h = 800, d = 420, doors = 3, form = '
 }
 export function bench(kit, { w = 1200, d = 380, h = 450, form = 'plank' } = {}) {   // form plank (a thick top on four legs and stretchers) | slatted (a top of slats with gaps) | upholstered (a padded seat on short legs) | trestle (a top on two slab ends)
   const { bx, rb } = boxes(kit), g = kit.group(), TT = 40;
-  if (form === 'slatted') { const n = 5, sw = (d - 4 * 14) / n; for (let k = 0; k < n; k++) g.add(rb(0, h - TT, -d / 2 + sw / 2 + k * (sw + 14), w, TT, sw, 4)); for (const sx of [-1, 1]) g.add(bx(sx * (w / 2 - 90), 0, 0, 40, h - TT, d - 40)); g.add(bx(0, 130, 0, w - 180, 28, 36, lo)); return kit.merge(g); }
+  if (form === 'slatted') { const n = 5, sw = (d - 4 * 10) / n; for (let k = 0; k < n; k++) g.add(rb(0, h - TT, -d / 2 + sw / 2 + k * (sw + 10), w, TT, sw, 4)); for (const sx of [-1, 1]) g.add(bx(sx * (w / 2 - 90), 0, 0, 40, h - TT, d - 40)); g.add(bx(0, 130, 0, w - 180, 28, 36, lo)); return kit.merge(g); }
   if (form === 'trestle') { g.add(rb(0, h - TT, 0, w, TT, d, 8)); for (const sx of [-1, 1]) g.add(rb(sx * (w / 2 - 110), 0, 0, 50, h - TT, d - 40, 4)); g.add(bx(0, h - TT - 90, 0, w - 220, 60, 30, lo)); return kit.merge(g); }
   if (form === 'upholstered') { for (const sx of [-1, 1]) for (const sz of [-1, 1]) g.add(kit.cyl(sx * (w / 2 - 70), 0, sz * (d / 2 - 50), 16, h - 110, { rTop: 24, seg: 12, ...lo })); g.add(rb(0, h - 110, 0, w, 110, d, 30)); g.add(kit.lines([[-w / 2 + 50, h - 40, d / 2 + 1], [w / 2 - 50, h - 40, d / 2 + 1]], 'lo')); return kit.merge(g); }
   g.add(rb(0, h - TT, 0, w, TT, d, 8));

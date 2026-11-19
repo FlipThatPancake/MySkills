@@ -74,7 +74,7 @@ export function chair(kit, { shape = 'wing', legs: legsOpt, w = 840, d = 860, to
     const back = softBox(kit, w - 110, 520, 70, { r: 30, bulge: 14, tone }); back.rotation.x = -28 * DEG; back.position.set(0, sh + 260, -Z + 90); g.add(back);
     g.add(kit.lines([[-w / 2 + 70, sh + 30, 300], [w / 2 - 70, sh + 30, 300]], 'lo'));
   }
-  if (shape === 'lounge' || shape === 'rocking' || shape === 'beanbag') { const q = kit.group(); g.position.y = -6; q.add(g); return kit.merge(q); }   // feet 6 mm below the origin, like the wing chair's legs: it stands on a rug placed at y 6
+  if (shape === 'lounge' || shape === 'rocking' || shape === 'beanbag' || shape === 'sling') { const q = kit.group(), b = new kit.THREE.Box3().setFromObject(g); g.position.y -= b.min.y; q.add(g); return kit.merge(q); }   // lift the shape so its lowest point is the origin (the floor): lounge stood 9 mm, sling, rocking and beanbag 6 mm below it
   return kit.merge(g);
 }
 
