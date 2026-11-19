@@ -75,7 +75,7 @@ export class Home {
     for (const [id, a] of Object.entries(R.areas || {})) areas[id] = { doorOpen: Math.max(0, ...(a.openings || []).filter((o) => o.kind === 'door' && !o.style).map((o) => o.open || 0)), still: (a.still || []).flatMap((st) => st.things.map(asset).filter(Boolean)), groups: (a.groups || []).length, plantAt: a.plantAt || [], passages: (a.passages || []).length, heroWindow: /\bwindow\b/.test(a.hero || ''), hero: a.hero || '', side: a.side || null, accents: a.accents || [], foreground: a.foreground || null, signs: a.signs || [], pieces: a.pieces || [], named: [a.above, a.wallArr, a.produce, ...(a.more || [])].filter(Boolean), groupTexts: (a.groups || []).map((g) => g.replace(/ \(the hero group.*\)$/, '').replace(/, on the [^,]*(, [a-z ]*third)?$/, '')) };
     home.roll = { seed: R.seed, behind: R.openPlan?.behind || [], areas };
     if (R.openPlan?.floor) this.floorZones(R.openPlan.floor);   // one floor across the open room; its kitchen part may be tiles
-    if (R.plan) { this.plan = R.plan; home.roll.plan = { links: R.plan.links.map((l) => ({ id: l.id, a: l.a, b: l.b, kind: l.kind, tree: l.tree })) }; }   // the house plan (plan.mjs): compose places each area from it
+    if (R.plan) { this.plan = R.plan; home.roll.plan = { links: R.plan.links.map((l) => ({ id: l.id, a: l.a, b: l.b, kind: l.kind, tree: l.tree })), areas: Object.fromEntries(Object.entries(R.plan.areas || {}).map(([id, a]) => [id, { fit: a.fit, need: a.need }])) }; }   // the house plan (plan.mjs): compose places each area from it
     return this;
   }
   join(a, b, o) { return joinAreas(this, a, b, o); }   // open plan: b joins a on one floor (openplan.mjs): H.join(a, b, { layout: 'row' | 'corner', share: 0 to 1000 mm })

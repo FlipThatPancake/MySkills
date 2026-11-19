@@ -3,10 +3,12 @@
 // and which areas touch. It places the areas by mating walls: the wall an area is entered by stands back to back with a wall of an area already placed, with an arch or door where the two meet.
 // Each area's view azimuth comes from where it is entered, so the camera turns by whatever the plan's shape gives, large or small, and never slides along a row.
 //   roll.plan = { say, map, order, root, walk, areas: { id: { room, fit: [w, d], parent, via, az, entry, mate } }, links: [{ id, a, b, kind: 'arch' | 'door' | 'open', style, width, aWall, aX, bWall, bX, tree }] }
+//   areas[id].need = { w, d, why }: the smallest rect the area's deal fits in (roomNeeds below); `fit` is the cell the plan cut, 5 to 30% above it.
 //   aX / bX: where the opening's middle stands along each wall (mm at the planned size, measured like an opening's x); `mate` is the passage argument for compose; `fit` the largest rect the area may have.
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { groupNeeds } from './groups.mjs';
 const T = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'tables.json'), 'utf8'));
 const D2R = Math.PI / 180, r0 = (v) => Math.round(v * 10) / 10;
 export const SIZES = { kitchen: [6600, 5200], dining: [7200, 4800], living: [8400, 5000], bedroom: [5600, 4600], hallway: [6200, 3000], 'reading-corner': [4000, 3600], 'home-office': [4800, 3800] };   // the largest rect each kind of area may have (mm); the plan deals a cell up to 15% smaller
@@ -37,6 +39,37 @@ export function linkWalls(roll) {
   return out;
 }
 
+// ---- room size from the deal: the smallest rect that holds what the roll dealt to an area (its hero, its groups, the way in), so the plan cuts each cell from the deal and not from a table of sizes
+// back wall = the hero and the groups dealt to 'back:left' / 'back:right', side wall = the groups dealt to 'window:middle'; free-standing pieces (tables, an island) need floor: their depth, clearance behind and a strip in front.
+const GAPW = 300, MARGIN = 250, FRONT = 700, BACKCLEAR = 900;   // between two pieces on a wall, from a corner, the near strip kept clear, between a wall and a free-standing table
+const HERO = [   // the hero group's own footprint (mm): on the back wall (w along it, d out from it), or free-standing on the floor (free: true)
+  [/bed with its headboard on the second wall/, { w: 2400, d: 3000 }], [/bed/, { w: 3000, d: 2400 }],
+  [/long table/, { w: 3200, d: 2000, free: true }], [/round table/, { w: 2800, d: 2800, free: true }], [/breakfast table/, { w: 1800, d: 1600, free: true }], [/sideboard with a big mirror/, { w: 2000, d: 500 }],
+  [/sofa with an armchair/, { w: 4200, d: 2400 }], [/sofa/, { w: 3200, d: 2400 }], [/shelf wall/, { w: 3000, d: 1200 }], [/two armchairs/, { w: 2600, d: 1200 }],
+  [/reading chair/, { w: 1800, d: 1200 }], [/daybed/, { w: 2400, d: 1000 }], [/window seat/, { w: 2000, d: 700 }],
+  [/coat hooks over a bench/, { w: 1600, d: 600 }], [/console/, { w: 1200, d: 450 }], [/shoe rack/, { w: 1000, d: 450 }], [/coat stand and a runner/, { w: 1300, d: 1900 }],
+  [/writing desk/, { w: 1500, d: 900 }], [/desk/, { w: 1800, d: 900 }],
+  [/range hood|pantry|open shelves|window over the sink/, { w: 3600, d: 700 }],
+];
+const KITCHEN_SHAPE = { straight: [0, 0], galley: [0, 1850], L: [0, 2000], U: [400, 2300], peninsula: [0, 1700], island: [0, 2800] };   // what a kitchen shape adds beyond the back run: [more width, more depth]
+const MINSIZE = { hallway: [3000, 2200] }, MINDEF = [3600, 3000];   // no cell is smaller than this, whatever the deal: a thin strip reads as a corridor, not as a room's picture
+const stripPhrase = (g) => g.replace(/ \(the hero group[^)]*\)/, '').replace(/, on the .*$/, '');
+export function roomNeeds(a, kind, links = 0) {
+  const why = [], hero = HERO.find(([re]) => re.test(a.hero || ''))?.[1] || { w: 2200, d: 900 }, back = [], side = [], free = [];
+  const add = (name, n, slot) => { const spot = n.free ? free : /^window/.test(slot || '') ? side : back; spot.push({ name, ...n }); };
+  const heroSlot = (a.groupSlots || [])[0] || 'back:left'; let hd = hero;
+  if (kind === 'kitchen') { const [dw, dd] = KITCHEN_SHAPE[a.shape || 'straight'] || [0, 0]; hd = { ...hero, w: hero.w + dw, d: hero.d + dd, free: false }; }
+  if (hd.free) free.push({ name: `hero (${a.hero})`, ...hd }); else add(`hero (${a.hero})`, hd, heroSlot);
+  (a.groups || []).forEach((g, i) => { if (i === 0) return; const n = groupNeeds(stripPhrase(g)) || { w: 1200, d: 500 }; add(stripPhrase(g).split(/[,:]/)[0], n, (a.groupSlots || [])[i]); });
+  const run = (L) => L.reduce((t, q) => t + q.w, 0) + Math.max(0, L.length - 1) * GAPW + 2 * MARGIN;
+  const backD = Math.max(0, ...back.map((q) => q.d)), sideRun = side.length ? run(side) + backD * 0.5 : 0, freeD = Math.max(0, ...free.map((q) => q.d)), freeW = Math.max(0, ...free.map((q) => q.w));
+  let w = Math.max(run(back), freeW + 2 * 1100), d = Math.max(sideRun, backD + (free.length ? BACKCLEAR + freeD + FRONT : FRONT + 600));
+  w += 0; d += 1100 * Math.max(0, links - 1);   // every further way through needs its own stretch of wall
+  why.push(`back wall ${Math.round(run(back))} (${back.map((q) => `${q.name} ${q.w}`).join(' + ') || 'nothing'} + gaps), side wall ${Math.round(sideRun)} (${side.map((q) => `${q.name} ${q.w}`).join(' + ') || 'nothing'}), floor ${free.length ? `${BACKCLEAR} + ${freeD} + ${FRONT} for ${free.map((q) => q.name).join(', ')}` : 'the near strip only'}${links > 1 ? `, ${links - 1} more way(s) through` : ''}`);
+  const [mw, md] = MINSIZE[kind] || MINDEF; w = Math.max(w, mw); d = Math.max(d, md);
+  return { w: Math.round(w / 100) * 100, d: Math.round(d / 100) * 100, why: why.join('; ') };
+}
+
 export function planHome(out, seed, kinds, opts = {}) {
   const roll = out.areas, ids = kinds.slice(), OP = out.openPlan, chain = OP?.chain || [];
   const rooms = []; { const seen = new Set(); if (chain.length) { rooms.push(chain.slice()); chain.forEach((c) => seen.add(c)); } for (const id of ids) if (!seen.has(id)) rooms.push([id]); }
@@ -50,6 +83,8 @@ export function planHome(out, seed, kinds, opts = {}) {
     const short = Object.keys(deg).filter((id) => !chain.includes(id) && cap(id) < deg[id]), fix = short.filter((id) => T.backing.find((x) => x.id === roll[id].backing).walls === 1 && !opts.noRebacking);
     if (fix.length) { const e = new Error(`plan: ${fix.join(', ')} need a second wall`); e.needBacking = fix; throw e; }
     if (short.length) throw new Error(`plan: ${short.map((id) => `${id} touches ${deg[id]} areas but its free walls (no outside door) hold ${cap(id)} way(s) through`).join('; ')}: ask for fewer touches there`); }
+  const degree = {}; for (const [a, b] of required) { degree[a] = (degree[a] || 0) + 1; degree[b] = (degree[b] || 0) + 1; }
+  const need = Object.fromEntries(ids.map((id) => [id, roomNeeds(roll[id], id.replace(/\d+$/, ''), degree[id] || 0)]));   // the smallest rect each area's deal fits in
   const best = { tries: 0 };
   for (let attempt = 0; attempt < 2400; attempt++) {   // the first 600 tries at the sizes dealt; a crowded home then shrinks its cells a little (to 85%, then 70%) before it gives up
     const res = tryPlan(attempt); best.tries = attempt + 1; if (res) return finish(res);
@@ -59,7 +94,7 @@ export function planHome(out, seed, kinds, opts = {}) {
 
   function tryPlan(attempt) {
     const rnd = mkRnd((seed ^ 0x51ed270b) + attempt * 7919), size = {}, kind = (id) => id.replace(/\d+$/, '');
-    for (const id of ids) { const base = SIZES[kind(id)] || SIZES.living, shrink = attempt < 600 ? 1 : attempt < 1500 ? 0.85 : 0.7, f = (k) => Math.round(base[k] * shrink * (0.85 + 0.15 * rnd()) / 100) * 100; size[id] = [f(0), f(1)]; }
+    for (const id of ids) { const cap = SIZES[kind(id)] || SIZES.living, nd = [need[id].w, need[id].d], shrink = attempt < 600 ? 1 : attempt < 1500 ? 0.85 : 0.7, f = (k) => Math.round(Math.max(Math.min(nd[k] * (1.05 + 0.25 * rnd()), cap[k] * 1.1), nd[k]) * shrink / 100) * 100; size[id] = [f(0), f(1)]; }   // from the deal: the need with 5 to 30% to spare, never above the table's largest (plus 10%) unless the deal needs more
     const placed = {}, links = [], used = {}, order = [];   // used[id][wall] = [[lo, hi], ...] along the wall
     const relax = attempt >= 900, wc = {}, walls = (id) => (wc[id] ||= relax ? Object.fromEntries(Object.entries(linkWalls(roll[id])).map(([w, q]) => [w, q.blocked ? { ...q, blocked: false, drop: true } : q])) : linkWalls(roll[id])),   // a crowded home that no cells can hold (every wall short or taken) takes the walls an outside door or hatch holds: that dealt opening is dropped, and the plan says so
        wlen = (id, w) => wallGeo(w, ...size[id]).len;
@@ -117,7 +152,7 @@ export function planHome(out, seed, kinds, opts = {}) {
   function finish({ placed, links, order, size }) {
     const rnd = mkRnd((seed ^ 0x2545f491) >>> 0), areas = {}, linkId = (l) => `${l.a}-${l.b}`;
     links.forEach((l) => { l.id = linkId(l); if (l.kind !== 'open') { l.aF = Math.round(l.aX / wallGeo(l.aWall, ...size[l.a]).len * 1e5) / 1e5; l.bF = Math.round(l.bX / wallGeo(l.bWall, ...size[l.b]).len * 1e5) / 1e5; } });
-    for (const id of order) areas[id] = { room: roomOf[id], fit: size[id], parent: null, via: null, entry: null };
+    for (const id of order) areas[id] = { room: roomOf[id], fit: size[id], need: need[id], parent: null, via: null, entry: null };
     for (const l of links) { if (!l.tree) continue; const c = areas[l.b]; c.parent = l.a; c.via = l.id; c.entry = l.kind === 'open' ? { kind: 'open', share: l.share } : { wall: l.bWall, x: l.bX, f: l.bF }; if (l.tree && l.kind !== 'open') c.mate = { from: l.a, wall: l.aWall, aF: l.aF, via: { wall: l.bWall, f: l.bF } }; }
     // each area looks away from where it is entered: the view azimuth (in the area's own frame; 0 is the front, positive toward its right) comes from the entry point
     const az = {}, clamp = (v, m) => Math.max(-m, Math.min(m, v));
@@ -153,12 +188,14 @@ export function mapText(placed, links, size) {
 }
 function sayOf(plan, size) {
   const L = (l) => l.kind === 'open' ? `${l.a} and ${l.b} share one floor (open plan)` : `${l.a} | ${l.b}: ${l.kind === 'arch' ? (l.style || 'round') + ' arch' : 'door'}, ${l.aWall} wall of ${l.a} at ${l.aX} mm, ${l.bWall} wall of ${l.b} at ${l.bX} mm${l.merged ? ' (a dealt door on one side and a dealt arch on the other became this one way: build neither separately)' : ''}`;
-  return `HOUSE PLAN (never shown whole: it only places the areas and decides where the camera comes in from)\n${plan.map}\nBuild the areas in this order: ${plan.order.join(', ')}. Each rect starts at [0, 0] and is no larger than its cell: ${plan.order.map((id) => `${id} ${size[id][0]} x ${size[id][1]}`).join('; ')}.\n` +
+  return `HOUSE PLAN (never shown whole: it only places the areas and decides where the camera comes in from)\n${plan.map}\nBuild the areas in this order: ${plan.order.join(', ')}. Each rect starts at [0, 0] and is the size of its cell, cut from what the roll dealt (the smallest rect the deal fits in, with 5 to 30% to spare): ${plan.order.map((id) => `${id} ${size[id][0]} x ${size[id][1]}`).join('; ')}.\nWhat each deal needs: ${plan.order.map((id) => `${id} ${plan.areas[id].need.w} x ${plan.areas[id].need.d} (${plan.areas[id].need.why})`).join('; ')}.\n` +
     `Ways through (compose puts these openings in the walls itself; keep 1200 mm of clear wall beside each, and a smaller rect moves the opening along with the wall): ${plan.links.map(L).join('; ')}.\nView azimuth (a.view leaves az out and takes it from the plan): ${plan.order.map((id) => `${id} ${plan.areas[id].az}`).join(', ')}. Each area looks away from where it is entered.`;
 }
 
 // ---- the CLI: node plan.mjs <seed> kitchen+dining+living hallway bedroom --touch=hallway:living,hallway:bedroom  (the same as roll.mjs, printing the plan only)
 if (process.argv[1] && /(^|\/)plan\.mjs$/.test(process.argv[1])) {
-  const { roll } = await import('./roll.mjs'), args = process.argv.slice(2), seed = /^\d+$/.test(args[0] || '') ? Number(args.shift()) : Math.floor(Math.random() * 1e6);
-  try { const r = roll(seed, args); console.log(r.plan.say); } catch (e) { console.error(e.message); process.exit(1); }
+  import('./roll.mjs').then(({ roll }) => {   // not awaited: roll.mjs imports this file, so waiting for it here would never finish
+    const args = process.argv.slice(2), seed = /^\d+$/.test(args[0] || '') ? Number(args.shift()) : Math.floor(Math.random() * 1e6);
+    try { const r = roll(seed, args); console.log(r.plan.say); } catch (e) { console.error(e.message); process.exit(1); }
+  });
 }
