@@ -135,7 +135,6 @@
    "wall clock (wallClock)",
    "cookbook on a stand (cookbookStand)",
    "watering can (wateringCan)",
-   "step stool by the larder (stepStool)",
    "crate of fruit (crate)"
   ],
   "shapeNotes": {
@@ -148,8 +147,7 @@
   },
   "foreground": [
    "basket of vegetables",
-   "trolley",
-   "step stool"
+   "trolley"
   ],
   "above": [
    "wall units over the run (wallRun)",

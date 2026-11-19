@@ -1,5 +1,5 @@
 // Round 6 (checks and roll): one red and one green fixture for every new or changed check.
-import { room } from './common.mjs';
+import { room, run } from './common.mjs';
 const bug = (name, from, rules, ids, build) => ({ name, from: `round 6: ${from}`, kind: 'bug', expect: { rules, ids }, build });
 const good = (name, from, build, counts) => ({ name, from: `round 6: ${from}`, kind: 'good', ...(counts ? { counts } : {}), build });
 const win = [{ kind: 'window', x: 3000, width: 1400, height: 1200, sill: 900 }];
@@ -16,6 +16,8 @@ export const fixtures = [
   good('r6-shelf-clear-of-window', 'item 7: a wall piece 400 mm from the frame', ({ Home }) => { const { H, back } = room(Home, { openings: win }); back.place('sh', 'wallShelf', 5000, { group: 'g', y: 1500 }); return H; }),
   bug('r6-bar-stool-with-back-turned', 'item 5: a stool with a back at a table, turned away from it', ['seat'], ['t-st'], ({ Home }) => { const { H, a } = room(Home); a.table('dt', { at: [3000, 2000], w: 1600, d: 900, chairs: 2 }); a.put('st', 'stool', [3000, 2800], 0, { group: 'g', params: { form: 2 } }); return H; }),
   bug('r6-throw-on-floor', 'item 2: a folded throw lies on the floor', ['throw'], ['t-th'], ({ Home }) => { const { H, a } = room(Home); a.put('th', 'foldedThrow', [3000, 2000], 0, { group: 'g' }); return H; }),
+  bug('r6-kettle-on-table', 'lead: a kettle stands on a dining table, not a worktop', ['kettle'], ['t-kettle'], ({ Home }) => { const { H, a } = room(Home); const T = a.table('dt', { at: [3000, 2000], w: 1600, d: 900, chairs: 2 }); T.on('kettle', { dx: 0 }); return H; }),
+  good('r6-kettle-on-worktop', 'lead: a kettle on a worktop module beside the sink', ({ Home }) => { const { H, a, back } = room(Home), R = run(a, back, [['doors', 600], ['drawers', 900], ['doors', 600]]); R.F.place('kettle', 'kettle', R.mod('drawers').xc, { group: 'run', y: 900, off: 330 }); return H; }),
 ];
 fixtures.push(
   bug('r6-shoes-away-from-door', 'item 4: shoes stand in the middle of the room, far from any door', ['shoes'], ['t-sh'], ({ Home }) => { const { H, a } = room(Home); a.put('sh', 'shoes', [3000, 2500], 0, { group: 'g' }); return H; }),
