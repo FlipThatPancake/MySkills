@@ -89,7 +89,7 @@ export function wallLoad(a, kind, wall, n = 0) {
   const cuts = (a.openings || []).filter((o) => name[o.on] === wall).reduce((t, o) => t + (o.kind === 'window' && o.style !== 'wall' && o.style !== 'bay' ? (WINW[o.style] || 1500) + 600 : o.kind === 'door' && o.style ? 1800 + 900 : 0), 0);
   return GAPW_RUN(list) + cuts + n * (LINK_WIDTH.round + 900);
 }
-export function roomNeeds(a, kind, links = 0) {
+export function roomNeeds(a, kind, links = 0, fixed = null) {
   const why = [], { back, side, free } = needLists(a, kind);
   const run = (L) => L.reduce((t, q) => t + q.w, 0) + Math.max(0, L.length - 1) * GAPW + 2 * MARGIN;
   const backD = Math.max(0, ...back.map((q) => q.d)), sideRun = side.length ? run(side) + backD * 0.5 : 0, freeD = Math.max(0, ...free.map((q) => q.d)), freeW = Math.max(0, ...free.map((q) => q.w));
@@ -102,13 +102,20 @@ export function roomNeeds(a, kind, links = 0) {
     const cap = SIZES[kind] || SIZES.living, capOf = (wall) => (wall === 'back' ? cap[0] : cap[1]) * 3;   // a deal that wants more wall than the kind's largest cell (+15%) is left to the roll: the groups that do not fit are left out
     const req = (wall, n) => Math.max(Math.min(wallLoad(a, kind, wall, n), capOf(wall)), 2 * EDGE + n * LINK_WIDTH.round + (n - 1) * SPACE);
     const grow = (wall, n) => Math.max(0, req(wall, n) - dim[wall]);
-    if (lw.length) { for (let k = 0; k < want; k++) { const pick = lw.map((q) => ({ q, inc: grow(q, cnt[q] + 1) - (cnt[q] ? grow(q, cnt[q]) : 0) })).sort((p, q) => p.inc - q.inc)[0]; cnt[pick.q]++; }
+    if (lw.length) { if (fixed) for (const q of lw) cnt[q] = fixed[q] || 0; else for (let k = 0; k < want; k++) { const pick = lw.map((q) => ({ q, inc: grow(q, cnt[q] + 1) - (cnt[q] ? grow(q, cnt[q]) : 0) })).sort((p, q) => p.inc - q.inc)[0]; cnt[pick.q]++; }
       for (const wall of lw) if (cnt[wall] && grow(wall, cnt[wall]) > 0) { const v = req(wall, cnt[wall]); if (wall === 'back') w = v; else d = v; why.push(`${wall} wall grown to ${v} for its window(s) and ${cnt[wall]} way(s) through`); } } }
   { const b = T.backing.find((x) => x.id === a.backing), cap = SIZES[kind] || SIZES.living, lb = Math.min(wallLoad(a, kind, 'back', 0), cap[0] * 3), ls = b.walls === 2 ? Math.min(wallLoad(a, kind, b.second, 0), cap[1] * 3) : 0; if (lb > w) { w = lb; why.push(`back wall grown to ${Math.round(lb)} for its groups and openings`); } if (ls > d) { d = ls; why.push(`${b.second} wall grown to ${Math.round(ls)} for its groups and openings`); } }
   return { w: Math.round(w / 100) * 100, d: Math.round(d / 100) * 100, why: why.join('; ') };
 }
 
 export function planHome(out, seed, kinds, opts = {}) {
+  if (!opts.ways && !opts.onePass) {   // cells cut from the deal (rectfit, floorcover): a first plan shows how many ways through each wall really holds, and the cells are cut again for exactly those, not for the two or three ways every area is assumed to need
+    let first = null; try { first = planHome(structuredClone(out), seed, kinds, { ...opts, onePass: true }); } catch (e) { if (e.needBacking) throw e; throw e; }
+    const ways = {}; for (const l of first.links) if (l.kind !== 'open') { ((ways[l.a] ||= {})[l.aWall] = (ways[l.a][l.aWall] || 0) + 1); ((ways[l.b] ||= {})[l.bWall] = (ways[l.b][l.bWall] || 0) + 1); }
+    for (const id of kinds) ways[id] ||= {};
+    try { return planHome(out, seed, kinds, { ...opts, ways, onePass: true }); } catch (e) { if (e.needBacking) throw e; }   // the first plan's own cells when the exact ones find no plan
+    return planHome(out, seed, kinds, { ...opts, onePass: true });
+  }
   const roll = out.areas, ids = kinds.slice(), OP = out.openPlan, chain = OP?.chain || [];
   const rooms = []; { const seen = new Set(); if (chain.length) { rooms.push(chain.slice()); chain.forEach((c) => seen.add(c)); } for (const id of ids) if (!seen.has(id)) rooms.push([id]); }
   const roomOf = Object.fromEntries(rooms.flatMap((r, i) => r.map((id) => [id, i])));
@@ -123,7 +130,7 @@ export function planHome(out, seed, kinds, opts = {}) {
     if (short.length) throw new Error(`plan: ${short.map((id) => `${id} touches ${deg[id]} areas but its free walls (no outside door) hold ${cap(id)} way(s) through`).join('; ')}: ask for fewer touches there`); }
   const degree = {}; for (const [a, b] of required) { degree[a] = (degree[a] || 0) + 1; degree[b] = (degree[b] || 0) + 1; }
   for (const id of ids) if (KIND(id) === 'hallway') degree[id] = Math.max(degree[id] || 0, Math.min(3, ids.length - 1));   // the hallway is the hub of a home: it keeps wall for up to three ways
-  const need = Object.fromEntries(ids.map((id) => [id, roomNeeds(roll[id], id.replace(/\d+$/, ''), degree[id] || 0)]));   // the smallest rect each area's deal fits in
+  const need = Object.fromEntries(ids.map((id) => [id, roomNeeds(roll[id], id.replace(/\d+$/, ''), degree[id] || 0, opts.ways?.[id] || null)]));   // the smallest rect each area's deal fits in
   const best = { tries: 0 };
   const b0c = {}, base0 = (id, w) => (b0c[id + w] ??= wallLoad(roll[id], KIND(id), w, 0));
   const entryId = ids.find((id) => KIND(id) === 'hallway') || rootId, asked = (a, b) => required.some(([x, y]) => (x === a && y === b) || (x === b && y === a));
@@ -141,7 +148,7 @@ export function planHome(out, seed, kinds, opts = {}) {
 
   function tryPlan(attempt) {
     const rnd = mkRnd((seed ^ 0x51ed270b) + attempt * 7919), size = {}, kind = (id) => id.replace(/\d+$/, '');
-    for (const id of ids) { const cap = SIZES[kind(id)] || SIZES.living, nd = [need[id].w, need[id].d], shrink = attempt < 600 ? 1 : attempt < 1200 ? 1.12 : 1.25, f = (k) => Math.round(Math.max(Math.min(nd[k] * (1.05 + 0.25 * rnd()), cap[k] * 1.1), nd[k]) * shrink / 100) * 100; size[id] = [f(0), f(1)]; }   // from the deal: the need with 5 to 30% to spare, never above the table's largest (plus 10%) unless the deal needs more
+    for (const id of ids) { const cap = SIZES[kind(id)] || SIZES.living, nd = [need[id].w, need[id].d], shrink = attempt < 600 ? 1 : attempt < 1200 ? 1.12 : 1.25, f = (k) => Math.round((nd[k] + 400 * rnd()) * shrink / 100) * 100; size[id] = [f(0), f(1)]; }   // from the deal: the need with 5 to 30% to spare, never above the table's largest (plus 10%) unless the deal needs more
     const placed = {}, links = [], used = {}, order = [];
     const hero = {};   // every dealt group on a wall (hero-slot-without-stretch, group-slot-without-stretch): after every window and way through, its wall keeps one bare stretch as wide as its recipe inside its third (slotmath.thirdSlot, the measure a.slots() and the roll use), the groups before it taking theirs; a crowded home gives up after 120 tries
     if (attempt < 120) for (const id of ids) { const a = roll[id], b = T.backing.find((x) => x.id === a.backing), list = []; for (const [k, g] of (a.groups || []).entries()) { const m = ((a.groupSlots || [])[k] || '').match(/^(back|second|window):(left|middle|right)$/), n = groupNeeds(stripPhrase(g)); if ((k > 0 && attempt >= 40) || !m || !n || (m[1] !== 'back' && b.walls !== 2)) continue; list.push({ slot: m[1], second: b.second, i: THIRD.indexOf(m[2]), W: Math.max(600, n.w || 600), inWin: !!n.window }); } if (list.length) hero[id] = list; }
@@ -183,7 +190,7 @@ export function planHome(out, seed, kinds, opts = {}) {
     const behind = (owner, pose, f) => (winOf[owner] || []).some((q) => {   // a dealt window shows what stands right behind it: no other area within WINVIEW of its outside (the sash would show the neighbour)
       if (q.x === null) return false; const g = wallGeo(q.wall, ...size[owner]), c = toWorld(pose, g.at(q.x)), n = dirWorld(pose, g.inward).map((v) => -v), t = [-n[1], n[0]], hw = q.width / 2 + 100, P = [[c[0] - t[0] * hw, c[1] - t[1] * hw], [c[0] + t[0] * hw, c[1] + t[1] * hw]].flatMap((p) => [p, [p[0] + n[0] * WINVIEW, p[1] + n[1] * WINVIEW]]), xs = P.map((p) => p[0]), zs = P.map((p) => p[1]), o = overlap(f, { x0: Math.min(...xs), x1: Math.max(...xs), z0: Math.min(...zs), z1: Math.max(...zs) }); return o.x > 100 && o.z > 100; });
     const clear = (id, pose, rect) => { const f = foot(pose, rect); return Object.values(placed).every((q) => { const o = overlap(f, q.foot); return !(o.x > 20 - WALL_T && o.z > 20 - WALL_T) && (attempt >= 900 || (!behind(q.id, q.pose, f) && !behind(id, pose, q.foot))); }); };   // two cells keep a wall slab (200 mm) between them, as a mated pair does; a crowded home (900 tries) may show a neighbour through a window   // two cells keep a wall slab (200 mm) between them, as a mated pair does
-    const spot = (id, w, wd) => { const len = wlen(id, w), at = []; for (let x = Math.ceil((EDGE + wd / 2) / 50) * 50; x <= len - EDGE - wd / 2; x += 50) if (free(id, w, x, wd)) at.push(x); return at.length ? at[Math.floor(rnd() * at.length)] : null; };   // every place on the wall where the way fits (clear of the windows and of other ways), one of them at random
+    const spot = (id, w, wd) => { const len = wlen(id, w), at = []; for (let x = Math.ceil((EDGE + wd / 2) / 50) * 50; x <= len - EDGE - wd / 2; x += 50) if (free(id, w, x, wd)) at.push(x); return at.length ? at[Math.floor(rnd() * at.length)] : null; };
     const spots = (id, w, wd) => { const len = wlen(id, w), at = []; for (let x = Math.ceil((EDGE + wd / 2) / 50) * 50; x <= len - EDGE - wd / 2; x += 50) if (free(id, w, x, wd)) at.push(x); return at; };
     const attach = (u, v) => {   // v (not placed) takes a wall back to back with a wall of u
       for (let k = 0; k < 40; k++) {
