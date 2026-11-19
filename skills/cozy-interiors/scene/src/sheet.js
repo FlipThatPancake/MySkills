@@ -30,6 +30,23 @@ export function sheetTex(kit, t, w, h, vis = null, gain = null, first = false) {
   };
   return m;
 }
+// The outside picture of a window is clipped to its opening with the stencil buffer, so nothing drawn after it (the paper floor that runs on beyond the wall, a fade fill) can paint over it, and a sash or a bird outside still lies over it.
+// openingMask(kit, pts) -> a mesh (the opening's outline [z, y] at the wall face, in the opening's frame) to add next to the picture; stencilClip(sky) restricts the picture to it; STENCIL_OUT(material) keeps a material off the masked pixels.
+export const MASK_REF = 7;
+export function openingMask(kit, pts) {
+  const T = kit.THREE, shape = new T.Shape(pts.map(([z, y]) => new T.Vector2(-z, y)));
+  const m = new T.Mesh(new T.ShapeGeometry(shape), new T.MeshBasicMaterial({ colorWrite: false, depthWrite: false, depthTest: false, side: T.DoubleSide, stencilWrite: true, stencilRef: MASK_REF, stencilFunc: T.AlwaysStencilFunc, stencilZPass: T.ReplaceStencilOp }));
+  m.rotation.y = Math.PI / 2; m.renderOrder = -11; m.name = 'opening-mask'; m.userData.kitLine = true; m.frustumCulled = false;
+  return m;
+}
+export function stencilClip(kit, sky) {
+  const T = kit.THREE; Object.assign(sky.material, { stencilWrite: true, stencilRef: MASK_REF, stencilFunc: T.EqualStencilFunc, stencilFail: T.KeepStencilOp, stencilZFail: T.KeepStencilOp, stencilZPass: T.KeepStencilOp });
+  return sky;
+}
+export function stencilOut(kit, material) {   // the paper that runs on behind the walls: not where an opening's picture lies
+  const T = kit.THREE; Object.assign(material, { stencilWrite: true, stencilRef: MASK_REF, stencilFunc: T.NotEqualStencilFunc, stencilFail: T.KeepStencilOp, stencilZFail: T.KeepStencilOp, stencilZPass: T.KeepStencilOp });
+  return material;
+}
 // A blurred halo round a footprint (a0..a1 by b0..b1): on a floor-like surface at height `at` ('floor': a = x, b = z), on the back wall at depth `at` ('back': a = x, b = y)
 // or on a side wall at x = `at` ('side': a = z, b = y).
 export function halo(kit, orient, a0, a1, b0, b1, at, alpha = 0.26, vis = null) {

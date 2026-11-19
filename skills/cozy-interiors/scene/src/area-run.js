@@ -18,7 +18,7 @@ const smooth = (k) => k * k * (3 - 2 * k);
 
 export function createAreaScene(canvas, S) {
   const q = new URLSearchParams(location.search);
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, stencil: true });
   renderer.setClearColor(0xf4f4f1);
   renderer.toneMapping = THREE.NeutralToneMapping;
   const scene = new THREE.Scene(), kit = createKit();
