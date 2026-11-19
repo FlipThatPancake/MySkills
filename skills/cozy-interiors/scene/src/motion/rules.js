@@ -1,6 +1,13 @@
 // @js:motion-rules — what "an open window" means, in one place for the roll, the spec helper, the page and the checks (plain data in, no THREE).
 // An opening can let a living thing through when it is a window or a glass door that opens (not a fixed light, a picture window, a window wall or a bay) and is not set shut (op.open 0).
 export const VENT_STYLES = ['picture', 'wall', 'bay'];   // big fixed-light windows: each carries one casement vent in its last light (openings.js), so they open too
+// where a big window's vent leaf stands, as [z0, z1] along the wall from the opening's middle (openings.js builds it the same way; z grows toward the area's LOW x, so area x = x of the opening - z): the end light, 'r' (default) or 'l'
+export function ventZone(op) {
+  const w = op.width || 2100, left = op.vent === 'l';
+  if (op.style === 'bay') { const wc = w * 0.45, FW = 40, vw = Math.min(800, wc - 2 * FW - 40); return left ? [-wc / 2 + FW, -wc / 2 + FW + vw] : [wc / 2 - FW - vw, wc / 2 - FW]; }
+  const wl = op.style === 'wall', FW = wl ? 34 : 38, bars = op.bars ?? (wl ? Math.max(2, Math.round(w / 1000)) : w > 2000 ? 2 : 1), iz0 = -w / 2 + 6 + FW, iz1 = w / 2 - 6 - FW, MUL = 36, col = (iz1 - iz0 + MUL) / bars - MUL, vw = col <= 960 ? col : 900;
+  return left ? [iz0, iz0 + vw] : [iz1 - vw, iz1];
+}
 export const openable = (op) => (op.open ?? 1) > 0 && (op.kind === 'window' ? op.sash !== 'fixed' && (!op.style || op.style === 'sash' || op.style === 'pair' || VENT_STYLES.includes(op.style)) : op.kind === 'door' && !op.to && (op.style === 'french' || op.style === 'slider'));
 // does any of these walls ({ openings }) hold an opening that is rendered open?
 export const hasOpenWindow = (walls) => walls.some((w) => (w.openings || []).some(openable));
