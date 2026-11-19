@@ -110,9 +110,12 @@ RECIPES.push(
     make(c) { const id = c.place('shelf', 'shelf', 'shelf', c.xc); if (!id) return; const d = c.dims(id); c.place('plant', 'plant', c.pick(['floorPlant', 'basket']), c.xc + (c.chance(0.5) ? -1 : 1) * (d.w / 2 + 420)); } },
   { id: 'trolley', hero: 'trolley', phrases: ['bar cart or trolley with bottles and glasses', 'tall unit or fridge with a trolley beside it'],
     slots: { tall: 'the fridge or tall unit', trolley: 'the trolley', top: 'what stands on it' },
-    make(c) { const ph = c.phrase; let xc = c.xc;
-      if (/tall unit/.test(ph)) { const f = c.place('tall', 'tall', 'fridge', c.xc, { params: { form: 1 } }); if (!f) return; xc = c.xc + (c.chance(0.5) ? -1 : 1) * (c.dims(f).w / 2 + 450); }
-      const t = c.place('trolley', 'trolley', 'trolley', xc); if (t) c.on('top', t, /bar cart/.test(ph) ? [{ asset: 'jug' }, { asset: 'mug' }] : [{ asset: 'fruitBowl' }, { asset: 'jug' }]); } },
+    make(c) { const ph = c.phrase; let xc = c.xc, f = null;
+      if (/tall unit/.test(ph)) { f = c.place('tall', 'tall', 'fridge', c.xc, { params: { form: 1 } }); if (!f) return; xc = c.xc + (c.chance(0.5) ? -1 : 1) * (c.dims(f).w / 2 + 325 + 150); }   // fridge half + trolley half (650 wide) + a 150 mm gap
+      const t = c.place('trolley', 'trolley', 'trolley', xc);
+      if (t && f) { const gap = Math.abs(xc - c.xc) - (c.dims(f).w + c.dims(t).w) / 2;   // both xc are middles along the wall (a fridge's `at` is its left corner, so compare the xc, not `at`)
+        if (gap < 100) throw new Error(`a.group: the trolley stands ${Math.round(gap)} mm from the fridge (it needs 100 mm of air)`); }
+      if (t) c.on('top', t, /bar cart/.test(ph) ? [{ asset: 'jug' }, { asset: 'mug' }] : [{ asset: 'fruitBowl' }, { asset: 'jug' }]); } },
   { id: 'openshelf', hero: 'shelf', phrases: ['open shelves with jars and a plant'],
     slots: { shelf: 'the open shelf', plant: 'the floor plant under or beside it' },
     make(c) { c.place('shelf', 'shelf', ['openShelf', 'wallShelf'], c.xc, { y: c.rnd(1350, 1550, 10) }); c.place('plant', 'plant', 'floorPlant', c.xc + (c.chance(0.5) ? -1 : 1) * 900); } },
