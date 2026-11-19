@@ -3,7 +3,7 @@
 const home = (Home, chairForm, winX = 3500) => {
   const H = new Home({ seed: 87, floor: 'tiles' }), k = H.area('kitchen', 'Kitchen', { rect: [0, 0, 4800, 4000] });
   const kb = k.back(4800, [{ kind: 'window', x: 1450, width: 1000, height: 1100, sill: 1000, sash: 'fixed' }]);
-  k.run(kb, 'run', 800, [{ w: 800, kind: 'sink' }, { w: 600, kind: 'drawers', n: 3 }, { w: 900, kind: 'hob' }], { group: 'cooking', hero: true });
+  k.run(kb, 'run', 1200, [{ w: 800, kind: 'sink' }, { w: 500, kind: 'drawers', n: 3 }, { w: 600, kind: 'hob' }], { group: 'cooking', hero: true });
   kb.place('fridge', 'fridge', 340, { group: 'cooking', params: { form: 1 } });
   k.put('island', 'baseRun', [4100, 1200], -90, { group: 'island', sep: 'island', params: { depth: 600, finishedBack: true, modules: [{ w: 600, kind: 'doors' }, { w: 600, kind: 'drawers', n: 3 }, { w: 800, kind: 'doors' }] } });
   k.put('stool1', 'stool', [5030, 1900], 0, { group: 'island', params: { form: 1 } }); k.put('stool2', 'stool', [5030, 2600], 0, { group: 'island', params: { form: 2 } });

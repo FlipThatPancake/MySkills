@@ -17,6 +17,7 @@ for (let seed = 1; seed <= N; seed++) for (const kinds of sets) {
   const homeOnce = {};
   for (const [id, a] of Object.entries(R.areas)) {
     for (const w of [...(a.still || []).flatMap((st) => st.things.map(asset)).filter((w) => w !== 'picture'), /\(picture\)/.test(a.wallArr || '') ? 'picture' : null]) if (w && /^(vase|candlesticks|picture)$/.test(w)) { if (homeOnce[w] && homeOnce[w] !== id) bad('decor-repeat-in-home', seed, kinds, id, `${w} also in ${homeOnce[w]}`); homeOnce[w] = id; }
+    if (a.groups && (!a.groupSlots || a.groupSlots.length !== a.groups.length || a.groupSlots.some((q) => !q) || new Set(a.groupSlots).size !== a.groupSlots.length)) bad('group-slot', seed, kinds, id, `groupSlots ${JSON.stringify(a.groupSlots)}: each group needs its own slot name (item C)`);
     const seen = new Set();
     for (const st of a.still || []) { if (st.things.length > 2) bad('top>2', seed, kinds, id, st.top); for (const x of st.things) { const n = asset(x); if (n && !ASSETS[n]) bad('missing-asset', seed, kinds, id, n); if (n && seen.has(n)) bad('same-thing-twice', seed, kinds, id, n); seen.add(n); } }
     const txt = JSON.stringify(a), lamps = (a.light && /pendant|floor lamp|table lamp|desk lamp/.test(a.light) ? 1 : 0) + (seen.has('readingLamp') ? 1 : 0) + ((a.groups || []).filter((g) => /\blamp\b/.test(g)).length);

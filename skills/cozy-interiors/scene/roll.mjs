@@ -42,6 +42,9 @@ export function phraseAssets(t) {   // the assets a phrase names for certain (on
   const m = T.names.things[t] ?? T.names.groups[t] ?? T.names.hero[t];
   return m ? m.split('+').filter((p) => !p.includes('|')) : [];
 }
+// the slot names of a group's place: <wall>:<third> (wall = back | left | right | window, third = left | middle | right); the hero group takes the back wall's third on its side of the home view
+export const SLOTS = { 'on the back wall, left third': 'back:left', 'on the back wall, right third': 'back:right', 'on the window wall or the second wall': 'window:middle' };
+export function groupSlot(g) { const h = g.match(/the hero group, on the (left|right) of the home view/); if (h) return `back:${h[1]}`; const at = g.lastIndexOf(', on the '); return at < 0 ? null : SLOTS[g.slice(at + 2)] ?? null; }
 function homeCaps(out, kinds, describe) {
   const count = {}, areasOf = {};   // asset -> number of slots, asset -> areas that hold it
   const stampable = (as) => ONE_AREA.has(as) || (!STAMP_SKIP.test(as) && SMALL_ON.has(as));
@@ -123,6 +126,10 @@ export function roll(seed, kinds = ['kitchen', 'dining', 'living'], opts = {}) {
     out.areas[id] = a;
   }
   homeCaps(out, kinds, describe);   // round 6 item 12: what the checks allow across the whole home (variety: one area per basket, pouf, trolley, stool..., two of any small piece)
+  for (const id of kinds) { const a = out.areas[id]; if (!a.groups) continue;
+    const used = new Set([groupSlot(a.groups[0])]);   // two groups never share a slot: a later one takes the place no group has (the deal's draws stay as they are)
+    for (let k = 1; k < a.groups.length; k++) { let sl = groupSlot(a.groups[k]); if (sl && used.has(sl)) { const free = Object.entries(SLOTS).find(([, v]) => !used.has(v)); if (free) { const at = a.groups[k].lastIndexOf(', on the '); a.groups[k] = a.groups[k].slice(0, at) + ', ' + free[0]; sl = free[1]; } } used.add(sl); }
+    a.groupSlots = a.groups.map(groupSlot); }   // item C: the slot of each group in the words of a.slots() (wall:third, see SLOTS below); homeCaps swaps phrases, not places
   dealMotion(out, seed);   // living things (motion-roll.mjs): 2 or 3 kinds per area, from tables.json motion; its own random stream, so no older pick moves
   const open = (opts.rooms || []).filter((r) => r.length > 1); if (open.length > 1) throw new Error('roll: one open room per home (kitchen+dining+living); the other areas are rooms of their own');
   dealOpenPlan(out, seed, kinds, describe, opts.rooms ? (open[0] || []) : null);   // open plan (openplan.mjs): about 2 homes in 5 with two joinable areas, or the room the agent named; its own random stream, so no older pick moves
