@@ -1114,7 +1114,7 @@
      "book stack (bookStack)",
      "bowl (fruitBowl)",
      "candlesticks (candlesticks)",
-     "framed photo (picture)"
+     "framed photo (photoFrame)"
     ]
    }
   ],
@@ -1178,7 +1178,7 @@
     "things": [
      "tray with a jewellery dish (letterTray)",
      "vase (vase)",
-     "framed photo (picture)",
+     "framed photo (photoFrame)",
      "book stack (bookStack)",
      "lamp (readingLamp)"
     ]
@@ -1209,7 +1209,7 @@
     "things": [
      "small plant (herbs)",
      "candle (candlesticks)",
-     "framed photo (picture)",
+     "framed photo (photoFrame)",
      "book stack (bookStack)"
     ]
    }
@@ -1231,7 +1231,7 @@
      "letter tray (letterTray)",
      "lamp (readingLamp)",
      "vase (vase)",
-     "framed photo (picture)"
+     "framed photo (photoFrame)"
     ]
    }
   ],
