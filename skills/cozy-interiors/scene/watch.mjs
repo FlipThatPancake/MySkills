@@ -2,6 +2,7 @@
 // node watch.mjs <scene.json> [--area=a,b] [--seconds=24] [--frames=8] [--out=dir] → looks at the living things (src/motion: cat, paw, butterfly, bird, bee, wind) in motion: per area one strip PNG (watch-<area>.png): the home view at evenly spaced moments (top row), and a close-up of each mover that is in the air or on the floor then (second row; grey when none shows).
 // The page's live loop is stopped and time advanced by hand (0.05 s steps), so the strip is the same every run and takes about 1 s a frame in software GL. Prints what each strip shows and where it is.
 import { createRequire } from 'node:module';
+import { globalPkg, buildPage } from './needs.mjs';
 import { execSync } from 'node:child_process';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -10,8 +11,8 @@ const here = dirname(fileURLToPath(import.meta.url)), arg = (k, d) => (process.a
 const scene = process.argv.slice(2).find((a) => !a.startsWith('--'));
 if (!scene) { console.log('usage: node watch.mjs <scene.json> [--area=a,b] [--seconds=24] [--frames=8] [--out=dir]'); process.exit(1); }
 const sceneAbs = resolve(scene), SEC = Number(arg('seconds', 24)), N = Number(arg('frames', 8)), outDir = resolve(arg('out', dirname(sceneAbs))), only = arg('area', '').split(',').filter(Boolean);
-execSync(`node ${join(here, 'build.mjs')} ${sceneAbs}`, { stdio: 'ignore' });
-const { chromium } = createRequire(join(execSync('npm root -g', { encoding: 'utf8' }).trim(), 'x.js'))('playwright');
+buildPage(here, sceneAbs);
+const { chromium } = globalPkg('playwright');
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 1200, height: 750 } });
 page.on('pageerror', (e) => console.log('PAGE ERROR', String(e)));

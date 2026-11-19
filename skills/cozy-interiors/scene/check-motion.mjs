@@ -5,6 +5,7 @@
 // (a body marked `ground: true`, a cat or a paw near the floor, may be below 300 mm) through `via` while it is open wide enough (its whole reach inside the gap, between sill and head), and two fliers pass one opening at least 4 s apart; and with the window shut a fresh thing never shows at all.
 import { readFileSync, existsSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import { globalPkg } from './needs.mjs';
 import { execSync } from 'node:child_process';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -82,7 +83,7 @@ export async function motionIssues(page, sceneFile, { seconds = 240 } = {}) {
 if (process.argv[1] && process.argv[1].endsWith('check-motion.mjs')) {
   const here = dirname(fileURLToPath(import.meta.url)), scene = resolve(process.argv[2] || ''), html = scene.replace(/\.json$/, '.html');
   if (!process.argv[2] || !existsSync(html)) { console.error('usage: node check-motion.mjs <scene.json>  (build the page first: node build.mjs <scene.json>)'); process.exit(1); }
-  const { chromium } = createRequire(join(execSync('npm root -g', { encoding: 'utf8' }).trim(), 'x.js'))('playwright');
+  const { chromium } = globalPkg('playwright');
   const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
   const page = await browser.newPage({ viewport: { width: 1200, height: 750 } });
   page.on('pageerror', (e) => console.log('PAGE ERROR', String(e)));

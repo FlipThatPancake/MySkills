@@ -3,6 +3,7 @@
 // The pendant is drawn alone at the home view's size; along the projected line of its cord (from 250 mm above the shade's top to 2500 mm, the height the cord melts out), the frame with the pendant is compared with the frame without it across a 9 px band, and the mean change (ink: the cord's width in pixels times its contrast) must be 0.5 or more. Round 5's hairline cords measured 0.2, a 20 mm cord 0.8. A cord shorter than 24 px (1200 px wide frame) on screen is left out.
 //   hook: `await pendantIssues(page)` -> issues [{ rule: 'cord', what }] with .coverage; node check-pendants.mjs <scene.json> prints each pendant.
 import { createRequire } from 'node:module';
+import { globalPkg, buildPage } from './needs.mjs';
 import { execSync } from 'node:child_process';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -47,8 +48,8 @@ export async function pendantIssues(page, opt = {}) {   // opt.at: [[x, y, z], [
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const here = dirname(fileURLToPath(import.meta.url)), scene = process.argv.slice(2).find((a) => !a.startsWith('--'));
   if (!scene) { console.log('usage: node check-pendants.mjs <scene.json>'); process.exit(1); }
-  const sceneAbs = resolve(scene); execSync(`node ${join(here, 'build.mjs')} ${sceneAbs}`, { stdio: 'ignore' });
-  const { chromium } = createRequire(join(execSync('npm root -g', { encoding: 'utf8' }).trim(), 'x.js'))('playwright');
+  const sceneAbs = resolve(scene); buildPage(here, sceneAbs);
+  const { chromium } = globalPkg('playwright');
   const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
   const page = await browser.newPage({ viewport: { width: 1200, height: 750 } });
   await page.goto('file://' + sceneAbs.replace(/\.json$/, '.html'));
