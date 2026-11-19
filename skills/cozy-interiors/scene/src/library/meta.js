@@ -51,7 +51,7 @@ export const ASSETS = {
   cushion: A('centre', [440, 120, 420], 'on', 'w 440, h 420, tone mid|lo, lean 0-25 (degrees tilted back; 15 to 25 against a headboard or a sofa back)', { y: 'the seat height' }),
   vase: A('centre', [160, 160, 700], 'on', 'h 280, stems 5, seed', { y: 'top' }),
   cloth: A('centre', [800, 800, 300], 'floor', 'grid from compose drapeOver()', { y: 0, note: 'a cloth dropped on furniture at spec time (a.drapeOver)' }),
-  candlesticks: A('centre', [300, 90, 520], 'on', 'n 2-4, h 260, form turned|tapered|stem|column|chamber, seed', { y: 'top' }),
+  candlesticks: A('centre', [300, 90, 520], 'on', 'n 2-4, h 260, form turned|tapered|stem|column|chamber, seed', { y: 'top', pieces: 'n' }),   // pieces: how many separate bodies the asset is by design (a number, or the name of the param that says): the floating check expects exactly that many
   jug: A('centre', [260, 160, 220], 'on', 'r 70, h 220, form belly|straight|tapered', { y: 'top', note: 'a pitcher with water' }),
   breadBasket: A('centre', [320, 320, 140], 'on', 'r 150, bread loaf|rolls|baguette, seed', { y: 'top' }),
   placeSetting: A('centre', [700, 420, 180], 'on', 'r 140, glass, napkin', { y: 'top', note: 'a plate, fork, knife, glass and napkin; place one per seat, 2 per side on a long table' }),

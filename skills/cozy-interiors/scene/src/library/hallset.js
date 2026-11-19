@@ -169,8 +169,9 @@ export function letterTray(kit, { form = 'tray', n = 5, w: wIn, seed = 1 } = {})
   if (form === 'tray') {
     const w = wIn || 330, d = Math.round((wIn || 330) * 0.73), hh = 40;
     g.add(Rb(0, 0, 0, w, 14, d, 6)); g.add(B(0, 14, d / 2 - 7, w, hh - 14, 14)); g.add(B(0, 14, -d / 2 + 7, w, hh - 14, 14)); for (const s of [-1, 1]) g.add(B(s * (w / 2 - 7), 14, 0, 14, hh - 14, d - 28));
-    for (let i = 0; i < n; i++) g.add(envelope(kit, (R() - 0.5) * 40, 14 + i * 3.2, (R() - 0.5) * 30, (R() - 0.5) * 0.5, 0, { stamp: i % 2 === 0 }));
-    g.add(envelope(kit, 70, 14 + n * 3.2, 10, 0.5, 0, { w: 150, h: 220, stamp: false }));
+    const ew = Math.min(150, w - 90), eh = Math.min(220, d - 56);   // papers lie inside the walls (the tray's inner floor is w - 28 by d - 28): kept small and nearly straight, tagged as separate bodies so the parts check sees them
+    for (let i = 0; i < n; i++) g.add(kit.content(envelope(kit, (R() - 0.5) * 24, 14 + i * 3.2, (R() - 0.5) * 16, (R() - 0.5) * 0.2, 0, { stamp: i % 2 === 0 })));
+    g.add(kit.content(envelope(kit, 40, 14 + n * 3.2, 6, 0.2, 0, { w: ew, h: eh, stamp: false })));
   } else {   // caddy: a block with slots; letters stand in them, leaning back
     const w = wIn || 300, d = 150, hh = 190, slots = 3;
     g.add(Rb(0, 0, 0, w, 40, d, 8)); for (const s of [-1, 1]) g.add(Rb(s * (w / 2 - 10), 40, 0, 20, hh - 40, d, 5, lo));
