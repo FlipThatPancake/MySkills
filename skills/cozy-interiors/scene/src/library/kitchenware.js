@@ -67,7 +67,7 @@ export function trolley(kit, { w = 650, d = 400, h = 820 } = {}) {   // a kitche
   g.add(kit.cyl(-w / 2 + 25, h - 120, d / 2 - 10, 7, w - 50, { axis: 'x', seg: 12 }));
   return kit.merge(g);
 }
-export function teaTowel(kit, { w = 480, cw = 0, hang = 400, tone = 'lo', stripes = 'band', seed = 2 } = {}) {   // a rail on the wall with a tea towel folded over it: a front panel and a shorter back panel joined at a soft fold over the rail. The rail is at the bottom of the piece, the cloth hangs below it. tone accent|lo, stripes none|band|check
+export function teaTowel(kit, { w = 480, cw = 0, hang = 400, tone = 'lo', stripes = 'band', seed = 2 } = {}) {   // a rail on the wall with a tea towel folded over it: a front panel and a shorter back panel joined at a soft fold over the rail. The rail is at the bottom of the piece, the cloth hangs below it. stripes none|band|check
   const g = kit.group(), cWid = cw || w * 0.46, ph = seed * 1.7;
   for (const sx of [-1, 1]) g.add(kit.cyl(sx * (w / 2 - 20), 0, 60, 10, 60, { axis: 'z', seg: 12, ...lo }));
   g.add(kit.cyl(-w / 2, 0, 60, 10, w, { axis: 'x', seg: 14 }));
@@ -77,6 +77,6 @@ export function teaTowel(kit, { w = 480, cw = 0, hang = 400, tone = 'lo', stripe
   const pts = [];
   if (stripes === 'band') for (const y of [-hang * 0.62, -hang * 0.66, -hang * 0.9, -hang * 0.94]) pts.push([-cWid / 2 * 1.02, y, 94], [cWid / 2 * 1.02, y, 94]);
   else if (stripes === 'check') { for (let k = -2; k <= 2; k++) pts.push([k * cWid * 0.18, -hang * 0.1, 95], [k * cWid * 0.18, -hang * 0.96, 95]); for (let y = -hang * 0.2; y > -hang * 0.95; y -= hang * 0.18) pts.push([-cWid / 2 * 0.95, y, 95], [cWid / 2 * 0.95, y, 95]); }
-  if (pts.length) g.add(kit.lines(pts, tone === 'accent' ? 'accent' : 'mid'));
+  if (pts.length) g.add(kit.lines(pts, 'mid'));
   return kit.merge(g);
 }

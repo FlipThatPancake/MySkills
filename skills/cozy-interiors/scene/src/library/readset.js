@@ -16,7 +16,7 @@ function book(kit, x, y, z, w, h, d, ang, tone) {
   g.position.set(x, y, z); g.rotation.y = ang; return g;
 }
 
-export function windowSeat(kit, { w = 1500, d = 520, h = 440, form = 'storage', cushion = 'plain', pillows = 2, throwOn = 'yes', pillowMax = 400, throwTone = 'accent', seed = 1 } = {}) {   // a built-in seat under a window: a box with drawers, a frame with open cubbies, or a slatted bench on legs; a long cushion, pillows leaning on the wall, a folded throw. Back at -z.
+export function windowSeat(kit, { w = 1500, d = 520, h = 440, form = 'storage', cushion = 'plain', pillows = 2, pillowMax = 400, seed = 1 } = {}) {   // a built-in seat under a window: a box with drawers, a frame with open cubbies, or a slatted bench on legs; a long cushion, pillows leaning on the wall. Back at -z.
   const g = kit.group(), R = rnd(seed), B = bx(kit), Rb = rb(kit), pts = [], z = d / 2 + 0.6, cuH = 70;
   if (form === 'storage') {
     g.add(Rb(0, 70, 0, w, h - 70 - 20, d, 5)); g.add(B(0, 0, 14, w - 40, 70, d - 40, lo)); g.add(Rb(0, h - 20, 10, w + 20, 20, d + 20, 4));
@@ -34,19 +34,12 @@ export function windowSeat(kit, { w = 1500, d = 520, h = 440, form = 'storage', 
   if (cushion === 'striped') { const ln = []; for (let x = -cw2 / 2 + 60; x < cw2 / 2 - 40; x += 90) ln.push([x, cy + cuH * 0.6, 14 + cd / 2 + 8], [x, cy + cuH * 0.1, 14 + cd / 2 + 8]); g.add(kit.lines(ln, 'mid')); }
   const ph = Math.min(340, Math.max(280, pillowMax + 270)), ends = pillows >= 2 ? [-1, 1] : pillows === 1 ? [R() < 0.5 ? -1 : 1] : [];   // end cushions: small, upright against the side cheek or the reveal, sized to the gap under the sill (a low sill gets the smaller ones, never none)
   ends.forEach((s, i) => { const p = softBox(kit, 100, ph - i * 20, ph + 10 - i * 20, { r: 40, bulge: 18, dent: 8, piping: 'edge', tone: i % 2 ? 'lo' : 'mid' }); p.position.set(s * (cw2 / 2 - 62), cy + cuH + (ph - i * 20) / 2 - 8, -d / 2 + 125 + (ph + 10) / 2); p.rotation.z = -s * (0.2 + R() * 0.06); p.rotation.x = (R() - 0.5) * 0.12; g.add(p); });
-  if (throwOn === 'yes') {   // a folded throw across the cushion beside an end cushion, one corner falling over the front edge; the home's accent when the roll gives it
-    const s = ends.length === 2 ? (R() < 0.5 ? -1 : 1) : ends.length ? -ends[0] : 1, tx = s * (cw2 / 2 - 62 - 50 - 200), zf = 14 + cd / 2, tn = { tone: throwTone };
-    const t = kit.group(); [[400, 34, cd - 70, 0], [360, 30, cd - 110, 12]].forEach(([tw, th, td, dx], i) => { const l = softBox(kit, tw, th, td, { r: 15, bulge: 6, ...tn }); l.position.set(dx, i ? 34 + 15 - 4 : 17, -8); t.add(l); });
-    const br = softBox(kit, 290, 30, 130, { r: 12, bulge: 4, ...tn }); br.position.set(-20, 45, 190); t.add(br);   // the corner crosses the cushion's front edge and drops down its face
-    const dr = softBox(kit, 290, 120, 24, { r: 11, bulge: 4, ...tn }); dr.position.set(-20, 0, 252); dr.rotation.x = -0.04; t.add(dr);
-    t.position.set(tx, cy + cuH, 14); g.add(t);
-  }
   return kit.merge(g);
 }
 
 export function readingLamp(kit, { form = 'arc', h = 1700, shade = 'drum', seed = 1 } = {}) {   // a floor lamp for the reading chair: a long arc from a stone base, a tripod under a drum, or a pharmacy lamp with a swing arm
   const T = kit.THREE, g = kit.group(), R = rnd(seed), Rb = rb(kit);
-  const sh = (r, hh) => { const s = kit.group(); if (shade === 'cone') s.add(kit.cyl(0, -hh, 0, r, hh, { rTop: r * 0.45, seg: 30 })); else if (shade === 'dome') s.add(kit.solid(new T.LatheGeometry([[r * 0.96, -hh + 3], [r, -hh], [r * 0.9, -hh * 0.55], [r * 0.6, -hh * 0.2], [r * 0.3, 0]].map(([a, b]) => new T.Vector2(a, b)), 30), 0, 0, 0, { smooth: true })); else s.add(kit.cyl(0, -hh, 0, r, hh, { seg: 30 })); s.add(kit.cyl(0, -hh - 2, 0, r * 0.35, 4, { seg: 12, ...lo })); return s; };
+  const sh = (r, hh) => { const s = kit.group(); if (shade === 'cone') s.add(kit.cyl(0, -hh, 0, r, hh, { rTop: r * 0.45, seg: 30 })); else if (shade === 'dome') s.add(kit.solid(new T.LatheGeometry([[r * 0.96, -hh + 3], [r, -hh], [r * 0.9, -hh * 0.55], [r * 0.6, -hh * 0.2], [r * 0.3, 0]].map(([a, b]) => new T.Vector2(a, b)), 30), 0, 0, 0, { smooth: true })), s.add(kit.solid(new T.CircleGeometry(r * 0.94, 30).rotateX(Math.PI / 2), 0, -hh + 2, 0, { linen: true })); else s.add(kit.cyl(0, -hh, 0, r, hh, { seg: 30 })); s.add(kit.cyl(0, -hh - 2, 0, r * 0.35, 4, { seg: 12, ...lo })); return s; };
   if (form === 'arc') {
     g.add(Rb(0, 0, 0, 300, 60, 220, 14, lo)); g.add(kit.cyl(-60, 60, 0, 16, h * 0.6, { seg: 12, ...lo }));
     const n = 16, p0 = [-60, 60 + h * 0.6]; let prev = [p0[0], p0[1], 0]; for (let i = 1; i <= n; i++) { const t = i / n, a = t * Math.PI * 0.55, cx2 = -60 + Math.sin(a) * 620, cy2 = p0[1] + (1 - Math.cos(a)) * 260 + t * 90; const cur = [cx2, cy2 - (t > 0.8 ? (t - 0.8) * 120 : 0), 0]; g.add(rod(kit, prev, cur, 9, 9, 'lo')); prev = cur; }
