@@ -16,3 +16,6 @@ export function adapt(q, x, y, w, h, mode) {
 }
 // brightness of the toned image: mean, and the 5th and 95th percentile, from ImageData
 export function toneStats(img) { const a = img.data, hist = new Uint32Array(256); let sum = 0; const n = a.length / 4; for (let i = 0; i < a.length; i += 4) { const l = Math.round(0.3 * a[i] + 0.59 * a[i + 1] + 0.11 * a[i + 2]); hist[l]++; sum += l; } const pct = (f) => { let s = 0; for (let v = 0; v < 256; v++) { s += hist[v]; if (s >= n * f) return v; } return 255; }; return { mean: sum / n, p5: pct(0.05), p95: pct(0.95) }; }
+
+// structure of the toned image at the size a painting really has in a home view (about 70 px wide): the share of pixels on an edge (a brightness step of 14 or more to the right or below), and the number of 16-level tonal bins that hold 3% of the pixels or more
+export function structStats(img) { const a = img.data, W = img.width, H = img.height, L = (i) => 0.3 * a[i] + 0.59 * a[i + 1] + 0.11 * a[i + 2], bins = new Uint32Array(16); let e = 0; for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const i = (y * W + x) * 4, l = L(i); bins[Math.min(15, l >> 4)]++; if ((x < W - 1 && Math.abs(l - L(i + 4)) >= 14) || (y < H - 1 && Math.abs(l - L(i + W * 4)) >= 14)) e++; } const n = W * H; return { edges: e / n, steps: bins.filter((c) => c >= n * 0.03).length }; }

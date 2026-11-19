@@ -109,14 +109,15 @@ const { TASKLAMP_POSES } = await import('./src/library/officeset.js');
 
 // Every painting x colour mode stays readable at home-view size (150 px wide): the toned image (library/paintTone.js, run as is in a browser page) must not turn into a dark smudge or a pale blank: mean brightness 100-215 of 255, and the 5th-95th percentile spread at least 80. Needs Playwright; skipped without it.
 {
-  const { PAINTINGS } = await import('./src/library/paintings.js'), { createRequire } = await import('node:module'), { execSync } = await import('node:child_process'), bad = [], rows = [];
+  const EDGES = Number(process.env.EDGES || 0.08), STEPS = Number(process.env.STEPS || 4), { PAINTINGS } = await import('./src/library/paintings.js'), { createRequire } = await import('node:module'), { execSync } = await import('node:child_process'), bad = [], rows = [];
   let chromium; try { ({ chromium } = createRequire(join(execSync('npm root -g', { encoding: 'utf8' }).trim(), 'x.js'))('playwright')); } catch { console.log('painting tone: skipped (no Playwright)'); }
   if (chromium) {
     const code = fs.readFileSync(join(here, 'src/library/paintTone.js'), 'utf8').replace(/^export /gm, ''), browser = await chromium.launch(), page = await browser.newPage();
     await page.setContent('<canvas id=c></canvas>'); await page.addScriptTag({ content: code + `
-      window.measure = async (src, pw, ph, mode) => { const img = new Image(); img.src = src; await img.decode(); const W = 150, H = Math.round(W * ph / pw), c = document.getElementById('c'); c.width = W; c.height = H; const q = c.getContext('2d', { willReadFrequently: true }); q.fillStyle = 'rgb(244,243,238)'; q.fillRect(0, 0, W, H); q.drawImage(img, 0, 0, W, H); adapt(q, 0, 0, W, H, mode); return toneStats(q.getImageData(0, 0, W, H)); };` });
+      window.measure = async (src, pw, ph, mode, W = 150) => { const img = new Image(); img.src = src; await img.decode(); H = Math.round(W * ph / pw), c = document.getElementById('c'); c.width = W; c.height = H; const q = c.getContext('2d', { willReadFrequently: true }); q.fillStyle = 'rgb(244,243,238)'; q.fillRect(0, 0, W, H); q.drawImage(img, 0, 0, W, H); adapt(q, 0, 0, W, H, mode); const D = q.getImageData(0, 0, W, H); return { ...toneStats(D), ...structStats(D) }; };` });
     for (const P of PAINTINGS) for (const mode of ['keep', 'soft', 'ink', 'sepia']) {
-      const t = await page.evaluate(([src, w, h, m]) => window.measure(src, w, h, m), [P.src, P.w, P.h, mode]); rows.push(`${P.name.split(',')[1]?.trim() || P.name} ${mode}: mean ${Math.round(t.mean)}, p5 ${t.p5}, p95 ${t.p95}`);
+      const t = await page.evaluate(([src, w, h, m]) => window.measure(src, w, h, m), [P.src, P.w, P.h, mode]), u = await page.evaluate(([src, w, h, m]) => window.measure(src, w, h, m, 70), [P.src, P.w, P.h, mode]); rows.push(`${P.name.split(',')[1]?.trim() || P.name} ${mode}: mean ${Math.round(t.mean)}, p5 ${t.p5}, p95 ${t.p95}; at 70 px: mean ${Math.round(u.mean)}, edges ${(u.edges * 100).toFixed(0)}%, steps ${u.steps}`);
+      if (u.mean < 100 || u.mean > 215 || u.edges < EDGES || u.steps < STEPS) bad.push(`${P.name} in ${mode} at 70 px wide: mean ${Math.round(u.mean)}, edges ${(u.edges * 100).toFixed(0)}% (${(EDGES * 100).toFixed(0)}% at least), tonal steps ${u.steps} (${STEPS} at least): it does not read in a home view`);
       if (t.mean < 100 || t.mean > 215 || t.p95 - t.p5 < 80) bad.push(`${P.name} in ${mode}: mean ${Math.round(t.mean)}, spread ${t.p95 - t.p5} (p5 ${t.p5}, p95 ${t.p95}): it reads as a ${t.mean < 100 ? 'dark smudge' : t.mean > 215 ? 'pale blank' : 'flat patch'}`);
     }
     await browser.close(); if (args.includes('--tones')) console.log(rows.join('\n'));

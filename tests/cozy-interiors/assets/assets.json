@@ -29,6 +29,60 @@
   ],
   "objects": [
    {
+    "id": "sheet-pic6-keep",
+    "asset": "picture",
+    "at": [
+     10000,
+     900,
+     40
+    ],
+    "mount": "wall",
+    "params": {
+     "form": 6,
+     "w": 600,
+     "h": 800,
+     "colour": "keep"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-pic6-soft",
+    "asset": "picture",
+    "at": [
+     11500,
+     900,
+     40
+    ],
+    "mount": "wall",
+    "params": {
+     "form": 6,
+     "w": 600,
+     "h": 800,
+     "colour": "soft"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-pic6-ink",
+    "asset": "picture",
+    "at": [
+     13000,
+     900,
+     40
+    ],
+    "mount": "wall",
+    "params": {
+     "form": 6,
+     "w": 600,
+     "h": 800,
+     "colour": "ink"
+    },
+    "group": "sheet:row",
+    "area": "sheet"
+   },
+   {
     "id": "sheet-tt-1",
     "asset": "table",
     "at": [
@@ -226,19 +280,6 @@
      "h": 750,
      "form": "legs"
     },
-    "group": "sheet:row5",
-    "area": "sheet"
-   },
-   {
-    "id": "sheet-tableRunner",
-    "asset": "tableRunner",
-    "at": [
-     10000,
-     750,
-     1500
-    ],
-    "mount": "on",
-    "params": {},
     "group": "sheet:row5",
     "area": "sheet"
    }

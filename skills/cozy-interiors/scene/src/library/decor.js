@@ -27,8 +27,8 @@ export function vase(kit, { h = 280, stems = 5, seed = 3 } = {}) {   // a bottle
 export function bookStack(kit, { n = 4, seed = 5 } = {}) {   // books lying on each other, each turned a little; the top one a thin paperback
   const g = kit.group(), R = rnd(seed); let y = 0;
   for (let i = 0; i < n; i++) {
-    const w = 200 + R() * 70 - i * 6, d = 150 + R() * 40 - i * 4, th = i === n - 1 && R() < 0.6 ? 18 : 22 + R() * 34, m = kit.box(-w / 2, y, d / 2, w, th, d, i % 2 ? lo : {});
-    m.rotation.y = (R() - 0.5) * 0.7; g.add(m); y += th;
+    const w = 210 + R() * 50 - i * 8, d = 155 + R() * 30 - i * 4, th = i === n - 1 && R() < 0.6 ? 18 : 22 + R() * 34, m = kit.box(-w / 2, y, d / 2, w, th, d, i % 2 ? lo : {});
+    m.rotation.y = (R() - 0.5) * 0.3; g.add(m); y += th;
   }
   return kit.merge(g);
 }

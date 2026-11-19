@@ -10,7 +10,7 @@ export function fitFrame(P, w, h, F = FRAME.F, mat = FRAME.mat) {
 }
 export function artPlane(kit, P, { w, h, fit = 'contain', margins = [0, 0, 0, 0], mode = 'keep', crop, px = 480 } = {}) {
   const T = kit.THREE, cw = px, ch = Math.max(64, Math.min(2 * px, Math.round(px * h / w))), c = document.createElement('canvas'); c.width = cw; c.height = ch;
-  const q = c.getContext('2d'), sx = cw / w, mat = kit.paint(c), m = new T.Mesh(new T.PlaneGeometry(w, h), mat); q.fillStyle = `rgb(${PAPER})`; q.fillRect(0, 0, cw, ch);
+  const q = c.getContext('2d'), sx = cw / w, mat = kit.paint(c, false, true), m = new T.Mesh(new T.PlaneGeometry(w, h), mat); q.fillStyle = `rgb(${PAPER})`; q.fillRect(0, 0, cw, ch);
   if (typeof Image !== 'undefined') {
     const draw = (img) => {
       const nw = img.naturalWidth || P.w, nh = img.naturalHeight || P.h, bx = Math.round(margins[0] * sx), by = Math.round(margins[2] * sx), bw = Math.round(cw - (margins[0] + margins[1]) * sx), bh = Math.round(ch - (margins[2] + margins[3]) * sx);
