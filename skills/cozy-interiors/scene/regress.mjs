@@ -39,7 +39,7 @@ const run = (x) => new Promise((res) => {
 
   if (x.refuses) { const log = console.log; console.log = () => {}; let msg = ''; try { x.build({ Home }); } catch (e) { msg = e.message; } finally { console.log = log; } return res({ x, findings: msg.includes(x.refuses) ? [{ rule: 'refused', text: msg }] : [], error: '' }); }   // fixture.refuses: the build must throw with this text (compose refuses it)
   if (!x.replay) try { const log = console.log; console.log = () => {}; let H; try { H = x.build({ Home }); H.write(json, fs); } finally { console.log = log; } if (x.patch) { const S = JSON.parse(fs.readFileSync(json, 'utf8')); x.patch(S); fs.writeFileSync(json, JSON.stringify(S)); } } catch (e) { return res({ x, error: 'build: ' + e.message, findings: [] }); }
-  let out = ''; const p = spawn('node', [join(here, 'check-home.mjs'), json, '--quick']); p.stdout.on('data', (d) => (out += d)); p.stderr.on('data', (d) => (out += d));
+  let out = ''; const p = spawn('node', [join(here, 'check-home.mjs'), json, ...((x.pairs || []).some(([r]) => r === 'visible') ? [] : ['--quick'])]); p.stdout.on('data', (d) => (out += d)); p.stderr.on('data', (d) => (out += d));
   p.on('close', () => { const findings = out.split('\n').map((l) => l.match(/^\[([\w-]+)\] (.*)$/)).filter(Boolean).map((m) => ({ rule: m[1], text: m[2] })), err = out.split('\n').filter((l) => /^PAGE ERROR|Error:/.test(l)).join(' | '); res({ x, findings, error: err || (/No problems|issue\(s\)/.test(out) ? '' : 'check-home printed no verdict: ' + out.slice(-200)) }); });
 });
 const queue = [...list], results = [];
