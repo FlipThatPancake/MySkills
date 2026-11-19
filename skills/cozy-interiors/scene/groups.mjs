@@ -36,6 +36,7 @@ const make = (a, phrase, o) => {
     on(name, surfaceId, items, ex = {}) { if (!surfaceId || skip(name)) return []; let list = items.map((it, i) => ({ id: `${prefix}-${name}${i}`, ...it })), done = false;
       while (list.length && !done) { try { a.onTop(surfaceId, list, { group: grp, ...ex }); done = true; placed.push(...list.map((x) => x.id)); } catch (e) { list = list.slice(0, -1); } }
       if (!done && !ex.quiet) fail(name, new Error('nothing fits')); return done ? list : []; },
+    pt: (ox, off) => o.wall.at(ox, off), hero: !!o.hero,
     dims: (id) => a.dims(id), top: (id) => a.topOf(id),
   };
   rec.make(c, { slot, ov });
@@ -56,7 +57,7 @@ const ARM = (c) => { const shape = c.pick(['upholstered', 'upholstered', 'wing',
 
 const RECIPES = [
   { id: 'furnart', needs: { w: 1200, d: 550, wall: 'any' }, hero: 'furn', phrases: [
-      'sideboard or dresser with a still life on top and a picture, shelf or mirror above', 'sideboard or dresser with a still life and a picture', 'console or sideboard with a still life under a picture', 'console or sideboard with a printer and a still life', 'wardrobe or chest of drawers with a still life and a mirror', 'cabinet with a plant on top', 'glazed cabinet with dishes and a plant'],
+      'sideboard or dresser with a still life on top and a picture, shelf or mirror above', 'sideboard or dresser with a still life and a picture', 'console or sideboard with a still life under a picture', 'console or sideboard with a printer and a still life', 'wardrobe or chest of drawers with a still life and a mirror', 'cabinet with a plant on top', 'glazed cabinet with dishes and a plant', 'sideboard with a big mirror'],
     slots: { furn: 'the furniture (sideboard, console, chest, cabinet)', still: 'the things on top', art: 'the picture, mirror or shelf above', printer: 'a printer on the top (printer phrase)' },
     make(c, { slot }) { const ph = c.phrase;
       const kind = /wardrobe or chest/.test(ph) ? ['chestOfDrawers', 'wardrobe'] : /glazed/.test(ph) ? ['glazedCabinet'] : /cabinet with a plant/.test(ph) ? ['sideboard', 'glazedCabinet'] : /printer/.test(ph) ? ['sideboard'] : /console or sideboard/.test(ph) ? ['console', 'sideboard'] : ['sideboard', 'sideboard', 'console'];
@@ -64,7 +65,7 @@ const RECIPES = [
       const tall = c.dims(fid).h > 1300;
       const things = /printer/.test(ph) ? [{ asset: 'printer' }, ...stillPool(c, 1)] : /cabinet with a plant|glazed/.test(ph) ? [{ asset: 'plant' }] : stillPool(c, c.chance(0.4) ? 3 : 2);
       const top0 = c.top(fid); c.on('still', fid, things);
-      if (!tall && !/printer/.test(ph)) artOver(c, 'art', fid, /mirror/.test(ph) && /wardrobe|chest/.test(ph) ? ['mirror'] : /picture, shelf or mirror/.test(ph) ? ['picture', 'picture', 'mirror', 'wallShelf'] : /picture/.test(ph) ? ['picture'] : ['picture'], top0);
+      if (!tall && !/printer/.test(ph)) artOver(c, 'art', fid, /mirror/.test(ph) && /wardrobe|chest|big mirror/.test(ph) ? ['mirror'] : /picture, shelf or mirror/.test(ph) ? ['picture', 'picture', 'mirror', 'wallShelf'] : /picture/.test(ph) ? ['picture'] : ['picture'], top0);
       else if (/printer/.test(ph)) artOver(c, 'art', fid, ['picture', 'wallShelf'], top0);
     } },
 ];
@@ -96,7 +97,7 @@ RECIPES.push(
     make(c) { const ph = c.phrase;
       if (/side table with a lamp/.test(ph)) { const t = c.place('table', 'table', 'sideTable', c.xc, { params: { r: c.rnd(250, 290, 10) } }); if (t) c.on('top', t, [{ asset: 'bedsideLamp' }, { asset: 'mug' }]); c.place('soft', 'soft', 'pouf', c.xc + (c.chance(0.5) ? -1 : 1) * 700); return; }
       const sa = c.asset('seat', ['chair', 'armchair']), seat = c.place('seat', 'seat', sa, c.xc, sa === 'armchair' ? ARM(c) : {}); if (!seat) return; const sd = c.dims(seat), flip = c.chance(0.5) ? -1 : 1; const t = c.place('table', 'table', 'sideTable', c.xc + flip * (sd.w / 2 + 330), { params: { r: c.rnd(250, 290, 10) } }); if (t) c.on('top', t, [{ asset: 'bedsideLamp' }]); } },
-  { id: 'benchgroup', needs: { w: 1500, d: 600, wall: 'any' }, hero: 'bench', phrases: ['bench under a picture, with a cushion and a basket', 'bench at a wall with a blanket and a basket', 'bench or window seat with cushions', 'window seat or bench with cushions', 'coat hooks with a bench, shoes and an umbrella stand', 'shelf with baskets above a bench'],
+  { id: 'benchgroup', needs: { w: 1500, d: 600, wall: 'any' }, hero: 'bench', phrases: ['bench under a picture, with a cushion and a basket', 'bench at a wall with a blanket and a basket', 'bench or window seat with cushions', 'window seat or bench with cushions', 'coat hooks with a bench, shoes and an umbrella stand', 'shelf with baskets above a bench', 'coat hooks over a bench'],
     slots: { bench: 'the bench or window seat', art: 'the picture, shelf or hooks above', cushion: 'the cushions on it', basket: 'the basket beside it', extra: 'shoes, umbrella stand' },
     make(c) { const ph = c.phrase, ws = /window seat/.test(ph) && c.chance(0.6), id = c.place('bench', 'bench', ws ? 'windowSeat' : 'bench', c.xc, ws || !/cushion|blanket/.test(ph) ? {} : { params: { form: c.pick(['plank', 'trestle', 'upholstered']) } }); if (!id) return; const d = c.dims(id), half = d.w / 2, side = c.chance(0.5) ? -1 : 1;
       if (ws) { c.place('basket', 'basket', ['basket', 'pouf'], c.xc + side * (half + 330)); return; }
@@ -122,7 +123,7 @@ RECIPES.push(
   { id: 'desk', needs: { w: 1800, d: 900, wall: 'any' }, hero: 'desk', phrases: ['desk or dressing table with a stool and a lamp'],
     slots: { desk: 'the desk', seat: 'the stool', lamp: 'the lamp on it' },
     make(c) { const id = c.place('desk', 'desk', 'desk', c.xc); if (!id) return; const d = c.dims(id); { const at = c.chance(0.5) ? 'back' : 'centre'; for (const margin of [100, 50, 20]) if (c.on('lamp', id, [{ asset: 'taskLamp', params: { pose: 'upright' } }], { at, margin, quiet: margin > 20 }).length) break; } c.putW('seat', 'seat', 'stool', c.xc + (c.chance(0.5) ? -1 : 1) * Math.round(d.w / 2 + 240), Math.round(d.d / 2), 0, { params: { form: 1 } }); } },
-  { id: 'console', needs: { w: 1100, d: 400, wall: 'any' }, hero: 'console', phrases: ['console with a mirror, a key bowl and a plant'],
+  { id: 'console', needs: { w: 1100, d: 400, wall: 'any' }, hero: 'console', phrases: ['console with a mirror, a key bowl and a plant', 'console with a mirror'],
     slots: { console: 'the console', top: 'key bowl and plant', art: 'the mirror' },
     make(c) { const id = c.place('console', 'console', 'console', c.xc); if (!id) return; const top0 = c.top(id); c.on('top', id, [{ asset: 'keyBowl' }, { asset: 'plant' }]); artOver(c, 'art', id, ['mirror'], top0); } },
   { id: 'island', needs: { w: 2200, d: 1800, free: true, foreground: true }, hero: 'table', free: true, phrases: ['island or table with two stools'],
@@ -133,11 +134,70 @@ RECIPES.push(
       for (const [k, sx] of [[1, -w / 4], [2, w / 4]]) c.put('stool', `stool${k}`, 'stool', [x + sx, z + d / 2 + 190 + 90], 180, { params: { form: 1 } }); } },
 );
 
+// hero groups (item 4): the dealt hero phrases of tables.json, one recipe each. A hero stands on the back wall's third (slot back:left | back:right); what stands in front of it is placed by the wall's own frame: c.pt(ox, off) is the area point ox along and off out from the wall.
+const sofaSides = (c, sofa) => { const sd = c.dims(sofa); return { sd, half: sd.w / 2 }; };
+const heroRug = (c, name, W, off, d = 1700, dx = 0) => c.put(name, 'rug', 'rug', c.pt(c.xc + dx, off), 0, { params: { w: Math.min(3200, Math.max(1800, Math.round((W + 700) / 100) * 100)), d } });
+RECIPES.push(
+  { id: 'sofaset', needs: { w: 3200, d: 2400, wall: 'any' }, hero: 'seat', phrases: ['sofa with a rug and coffee table', 'sofa with an armchair, a rug and a coffee table', 'sofa under a window with a side table and a rug'],
+    slots: { seat: 'the sofa', rug: 'the rug under the front', table: 'the coffee table', arm: 'the armchair', side: 'the side table', top: 'things on a table' },
+    make(c) { const ph = c.phrase, sofa = c.place('seat', 'seat', 'sofa', c.xc, {}); if (!sofa) return; const { sd, half } = sofaSides(c, sofa);
+      heroRug(c, 'rug', sd.w, Math.round(sd.d / 2 + 880), 1800);
+      if (/side table/.test(ph)) { const t = c.place('side', 'side', 'sideTable', c.xc + (c.chance(0.5) ? -1 : 1) * (half + 820), { params: { r: c.rnd(230, 290, 10) } }); if (t) c.on('top', t, [{ asset: 'plant', params: { form: Math.floor(c.r() * 5) } }]); }
+      else { try { c.a.coffeeTable('ct', sofa, { group: c.grp }); } catch (e) { /* a sofa with no clear seat front gets no coffee table */ } }
+      if (/armchair/.test(ph)) { const sx = c.chance(0.5) ? -1 : 1; c.putW('arm', 'arm', 'armchair', c.xc + sx * (half + 330), Math.round(sd.d / 2 + 1700), sx > 0 ? 90 : -90, { params: { shape: 'upholstered' } }); } } },
+  { id: 'twoarm', needs: { w: 3000, d: 1000, wall: 'any' }, hero: 'seat', phrases: ['two armchairs and a side table'],
+    slots: { seat: 'the left armchair', seat2: 'the right armchair', table: 'the side table between' },
+    make(c) { const a1 = c.place('seat', 'seat1', 'armchair', c.xc - 900, ARM(c)), a2 = c.place('seat2', 'seat2', 'armchair', c.xc + 900, ARM(c)); if (!a1 || !a2) return; const t = c.place('table', 'table', 'sideTable', c.xc, { params: { r: c.rnd(230, 270, 10) } }); if (t) c.on('top', t, [{ asset: 'plant' }]); } },
+  { id: 'shelfwall', needs: { w: 3000, d: 1100, wall: 'solid' }, hero: 'shelf', phrases: ['shelf wall with an armchair', 'sofa facing a shelf wall, with a rug'],
+    slots: { shelf: 'the shelf wall', seat: 'the armchair or sofa', rug: 'the rug' },
+    make(c) { const sofa = /sofa/.test(c.phrase); const sh = c.place('shelf', 'shelf', 'shelf', sofa ? c.xc : c.xc - 600, { params: { w: sofa ? 1500 : 1300 } }); if (!sh) return;
+      if (sofa) { const sd = c.a.dealt('sofa', {}); c.putW('seat', 'seat', 'sofa', c.xc + 1700, 2300, 180); heroRug(c, 'rug', 2000, 1500, 1800, 1700); }
+      else c.place('seat', 'seat', 'armchair', c.xc + 900, ARM(c)); } },
+  { id: 'diningset', needs: { w: 3000, d: 2800, wall: 'any' }, hero: 'table', phrases: ['long table under a pendant', 'round table on a rug'],
+    slots: { table: 'the table and its chairs', pendant: 'the pendant' },
+    make(c) { const round = /round/.test(c.phrase), r = c.rnd(550, 650, 25), w = c.rnd(1800, 2200, 100), d = round ? 2 * r : 900, at = c.pt(c.xc, Math.round(d / 2 + 760 + 700)), t = c.a.table('table', round ? { at, r, chairs: 4, rug: true, group: c.grp } : { at, w, d, chairs: 6, rug: !c.chance(0.5), group: c.grp });
+      if (!round && !c.skip('pendant')) { try { t.over('pendantLamp'); } catch (e) { c.left.push('pendant: ' + String(e.message).split(':')[0]); } } } },
+  { id: 'bedset', needs: { w: 3400, d: 2400, wall: 'solid' }, hero: 'bed', phrases: ['bed with a headboard on the backing wall', 'bed with a bedside table each side, headboard on a wall without a window'],
+    slots: { bed: 'the bed', table: 'the bedside tables', lamp: 'the lamps' },
+    make(c) { const bed = c.place('bed', 'bed', 'bed', c.xc, {}); if (!bed) return; const bd = c.dims(bed), both = /each side/.test(c.phrase);
+      for (const [k, sx] of both ? [[1, -1], [2, 1]] : [[1, c.chance(0.5) ? -1 : 1]]) { const t = c.place('table', `bt${k}`, 'bedsideTable', c.xc + sx * (bd.w / 2 + 300)); if (t) c.on('lamp', t, [{ asset: 'bedsideLamp' }], { at: 'centre', margin: 10 }); } } },
+  { id: 'readset', needs: { w: 2600, d: 1600, wall: 'any' }, hero: 'seat', phrases: ['daybed under shelves', 'reading chair with a footstool and a floor lamp', 'window seat with pillows and a reading lamp'],
+    slots: { seat: 'the daybed, chair or window seat', art: 'the shelves above', lamp: 'the lamp', foot: 'the footstool' },
+    make(c) { const ph = c.phrase;
+      if (/daybed/.test(ph)) { const d = c.place('seat', 'seat', 'daybed', c.xc, {}); if (!d) return; const w = c.dims(d).w; c.place('art', 'art', ['readShelf', 'openShelf'], c.xc, { y: 1300 }); c.place('lamp', 'lamp', 'floorLamp', c.xc + (c.chance(0.5) ? -1 : 1) * (w / 2 + 280)); return; }
+      if (/reading chair/.test(ph)) { const ch = c.place('seat', 'seat', 'readingChair', c.xc, {}); if (!ch) return; const w = c.dims(ch).w; c.place('lamp', 'lamp', 'floorLamp', c.xc + (c.chance(0.5) ? -1 : 1) * (w / 2 + 300)); c.putW('foot', 'foot', 'footstool', c.xc, 1100, 180); return; }
+      const ws = c.place('seat', 'seat', 'windowSeat', c.xc, {}); if (!ws) return; const d = c.dims(ws); c.on('pillow', ws, [{ asset: 'benchCushion', params: { w: Math.max(500, Math.round((d.w - 160) / 10) * 10), d: Math.max(200, Math.round((d.d - 110) / 10) * 10) } }], { at: 'back', margin: 20, quiet: true }); c.place('lamp', 'lamp', 'wallSconce', c.xc + (d.w / 2 + 300), { y: 1500 }); } },
+  { id: 'shoerack', needs: { w: 1500, d: 700, wall: 'any', door: true }, hero: 'rack', phrases: ['shoe rack by the door', 'coat stand and a runner'],
+    slots: { rack: 'the shoe rack or coat stand', extra: 'shoes, boots, runner' },
+    make(c) { if (/shoe rack/.test(c.phrase)) { const r = c.place('rack', 'rack', 'shoeRack', c.xc, {}); if (!r) return; c.place('extra', 'shoes', 'shoes', c.xc + c.dims(r).w / 2 + 380, { off: 200, params: { arrange: 'neat', kind: 'sneaker' } }); }
+      else { const s = c.place('rack', 'stand', 'coatStand', c.xc, {}); if (!s) return; c.put('extra', 'runner', 'runner', c.pt(c.xc + 600, 1200), 0, {}); } } },
+  { id: 'officeset', needs: { w: 2400, d: 1100, wall: 'any' }, hero: 'desk', phrases: ['desk under a window', 'desk with a shelf wall', 'trestle desk with a pinboard above', 'writing desk in a corner'],
+    slots: { desk: 'the desk', seat: 'the chair', art: 'the pinboard or shelves', top: 'things on the desk' },
+    make(c) { const ph = c.phrase, id = c.place('desk', 'desk', 'desk', c.xc, /trestle/.test(ph) ? { params: { form: 'trestle' } } : {}); if (!id) return; const d = c.dims(id), top0 = c.top(id);
+      c.on('top', id, [{ asset: c.pick(['laptop', 'monitor']) }, { asset: 'notebook' }].slice(0, 2));
+      c.putW('seat', 'seat', 'deskChair', c.xc, Math.round(d.d / 2 + 460), 180);
+      if (/pinboard/.test(ph)) c.place('art', 'art', 'pinboard', c.xc, { y: top0 + 350 });
+      if (/shelf wall/.test(ph)) { c.place('art', 'art', ['readShelf', 'openShelf'], c.xc, { y: 1300 }); c.place('art', 'side', 'shelf', c.xc + d.w / 2 + 700, {}); } } },
+  { id: 'dresser', needs: { w: 2200, d: 500, wall: 'any' }, hero: 'dresser', phrases: ['open shelves and a dresser'],
+    slots: { furn: 'the dresser', shelf: 'the open shelves above', still: 'the things on top' },
+    make(c) { const f = c.place('furn', 'furn', 'sideboard', c.xc - 500, {}); if (!f) return; c.on('still', f, stillPool(c, 2)); c.place('shelf', 'shelf', 'openShelf', c.xc + 700, { y: 1300 }); } },
+  { id: 'breakfast', needs: { w: 2600, d: 1800, wall: 'any', window: true }, hero: 'table', phrases: ['breakfast table by the window'],
+    slots: { table: 'the small table and two chairs' },
+    make(c) { c.a.table('table', { at: c.pt(c.xc, 1100), w: 900, d: 700, chairs: 2, rug: false, group: c.grp }); } },
+  { id: 'kitchenrun', needs: { w: 3000, d: 700, wall: 'any' }, hero: 'run', phrases: ['range hood over the hob', 'tall pantry wall', 'window over the sink'],
+    slots: { run: 'the cabinet run', hood: 'the hood over the hob', tall: 'the pantry units' },
+    make(c) { const ph = c.phrase, mods = /pantry/.test(ph) ? [{ w: 600, kind: 'doors' }, { w: 900, kind: 'drawers', n: 3 }, { w: 600, kind: 'doors' }] : /sink/.test(ph) ? [{ w: 600, kind: 'doors' }, { w: 900, kind: 'sink' }, { w: 600, kind: 'drawers', n: 3 }, { w: 600, kind: 'doors' }] : [{ w: 600, kind: 'drawers', n: 3 }, { w: 900, kind: 'hob' }, { w: 600, kind: 'doors' }];
+      const len = mods.reduce((s, m) => s + m.w, 0), left = Math.max(60, Math.round((c.xc - len / 2) / 10) * 10), R = c.a.run(c.wall, 'run', left, mods, { group: c.grp, hero: !!c.hero });
+      if (/hood/.test(ph)) { R.on('hob', 'hob'); R.on('hob', 'hood'); R.on('hob', 'pan'); }
+      else if (/sink/.test(ph)) { R.on('sink', 'kettle'); }
+      if (/pantry/.test(ph)) c.place('tall', 'pantry', 'wardrobe', left + len + 450, {}); } },
+);
+
 const phraseSets = RECIPES.map((r) => new Set(r.phrases));
 const recipeFor = (phrase) => RECIPES.find((r, i) => phraseSets[i].has(phrase));
 
 // what a recipe asks of its place (item C, the vocabulary of a.slots()): w, d = footprint in mm (w along the wall); wall: 'any' | 'solid' (no window or door behind it); free: stands on the floor away from a wall; door: near an outside door; window: near a window; foreground: may stand in the near strip
-const PHRASE_NEEDS = { 'reading corner: armchair, floor lamp and a book stack': { window: true }, 'coat hooks with a bench, shoes and an umbrella stand': { door: true, w: 1800 }, 'tall unit or fridge with a trolley beside it': { wall: 'solid' }, 'wardrobe or chest of drawers with a mirror': { wall: 'solid' } };
+const PHRASE_NEEDS = { 'sofa under a window with a side table and a rug': { window: true }, 'window over the sink': { window: true }, 'bed with a headboard on the backing wall': { wall: 'solid' }, 'desk under a window': { window: true }, 'window seat with pillows and a reading lamp': { window: true }, 'coat hooks over a bench': { door: true }, 'tall pantry wall': { wall: 'solid', w: 2200 }, 'reading corner: armchair, floor lamp and a book stack': { window: true }, 'coat hooks with a bench, shoes and an umbrella stand': { door: true, w: 1800 }, 'tall unit or fridge with a trolley beside it': { wall: 'solid' }, 'wardrobe or chest of drawers with a mirror': { wall: 'solid' } };
 export const groupNeeds = (phrase) => { const r = recipeFor(phrase); return r ? { ...r.needs, ...(PHRASE_NEEDS[phrase] || {}) } : null; };
 export const groupPhrases = () => RECIPES.flatMap((r) => r.phrases);
 export const group = (a, phrase, o = {}) => { const rec = recipeFor(phrase); if (!rec) throw new Error(`a.group: no recipe for "${phrase}"`); return make(a, phrase, o); };
