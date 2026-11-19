@@ -26,7 +26,7 @@ export default {
     const free = new T.Vector3().copy(ax).multiplyScalar(-side);   // toward the middle of the window
     const arm = foreleg(kit, { L: 190 }), g = kit.group(), pivot = kit.group();
     pivot.add(arm.group); g.add(pivot); pivot.position.copy(shoulder);
-    const LEN = arm.L + arm.paw, tmp = new T.Vector3(), others = solids.filter((o) => o !== cur && o.box.max.y > 40);
+    const LEN = arm.L + arm.paw, tmp = new T.Vector3(), others = solids.filter((o) => o.id !== cur.id && o.box.max.y > 40);
     const pad = 14, clear = (p, r) => others.every((o) => o.box.distanceToPoint(p) > r + pad);
     // direction from yaw (toward the middle of the window) and pitch (down): rotate az toward `free`
     const dir = (yaw, pitch, out) => out.copy(az).multiplyScalar(Math.cos(yaw)).addScaledVector(free, Math.sin(yaw)).multiplyScalar(Math.cos(pitch)).addScaledVector(new T.Vector3(0, -1, 0), Math.sin(pitch)).normalize();

@@ -5,14 +5,14 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { openable, flyable, hasOpenWindow, hasOpenWay, VISITOR_OPEN } from './src/motion/rules.js';
+import { openable, flyable, clearWidth, hasOpenWindow, hasOpenWay, VISITOR_OPEN } from './src/motion/rules.js';
 const T = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'tables.json'), 'utf8')).motion;
 export const MOTION = T;
 export function dealMotion(out, seed, say) {
   let s = (seed ^ 0x1b873593) >>> 0;
   const rnd = () => { s = (s + 0x6d2b79f5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
   for (const [id, a] of Object.entries(out.areas)) {
-    const has = { openWindow: a.openings.some(openable), openWay: a.openings.some(flyable), plant: (a.plantAt || []).length > 0, plantNear: (a.plantAt || []).includes('sill'), noGlass: !a.openings.some((o) => o.style === 'wall' || o.style === 'slider' || o.style === 'french'), curtain: /curtain/.test(JSON.stringify(a)) && a.openings.some((o) => o.style !== 'wall' && o.style !== 'slider' && o.style !== 'french' && (o.kind === 'window' || o.sill > 0) && (o.width || 1000) >= 1340) }, widest = Math.max(0, ...a.openings.filter(flyable).map((op) => op.width || 1000));
+    const has = { openWindow: a.openings.some(openable), openWay: a.openings.some(flyable), plant: (a.plantAt || []).length > 0, plantNear: (a.plantAt || []).includes('sill'), noGlass: !a.openings.some((o) => o.style === 'wall' || o.style === 'slider' || o.style === 'french'), curtain: /curtain/.test(JSON.stringify(a)) && a.openings.some((o) => o.style !== 'wall' && o.style !== 'slider' && o.style !== 'french' && (o.kind === 'window' || o.sill > 0) && (o.width || 1000) >= 1340) }, widest = Math.max(0, ...a.openings.filter(flyable).map(clearWidth));
     const pool = Object.entries(T.kinds).filter(([, k]) => k.in.includes(id) && k.needs.every((n) => has[n]) && (typeof k.flies !== 'number' || widest >= k.flies)).map(([kind, k]) => ({ kind, k }));
     const want = T.count[0] + Math.floor(rnd() * (T.count[1] - T.count[0] + 1)), picked = [];
     while (picked.length < want && pool.length) {
@@ -36,7 +36,7 @@ export function checkAlive(areaId, walls, entries) {
     if (T.kinds[e.kind].needs.includes('openWay') && !hasOpenWay(walls)) throw new Error(`alive('${areaId}'): "${e.kind}" needs a way in: a window that is rendered open (a sash window, a tall pair or glass doors, without sash: 'fixed' and not open: 0), an arch or a door open 60 degrees or more; this area has none`);
     if (T.kinds[e.kind].needs.includes('openWindow') && !hasOpenWindow(walls)) throw new Error(`alive('${areaId}'): "${e.kind}" needs a window that is rendered open (a sash window, a tall pair or glass doors, without sash: 'fixed' and not open: 0); this area has none`);
     const wide = T.kinds[e.kind].flies;
-    if (typeof wide === 'number' && !walls.some((w) => (w.openings || []).some((op) => flyable(op) && (op.width || 1000) >= wide))) throw new Error(`alive('${areaId}'): "${e.kind}" needs an open window at least ${wide} mm wide; this area has none`);
+    if (typeof wide === 'number' && !walls.some((w) => (w.openings || []).some((op) => flyable(op) && clearWidth(op) >= wide))) throw new Error(`alive('${areaId}'): "${e.kind}" needs an open window at least ${wide} mm wide; this area has none`);
   }
   if (entries.length > 3) throw new Error(`alive('${areaId}'): ${entries.length} living things; 3 at most`);
 }
@@ -45,7 +45,7 @@ export function pickVia(walls, flies) {   // `flies` may be a number: only openi
   let best = null;
   const min = typeof flies === 'number' ? flies : 0;
   const rank = (op) => (op.kind === 'window' ? 3 : openable(op) ? 2 : 1);   // a window, then a glass door, then a passage (an arch or an open door)
-  for (const w of walls) (w.openings || []).forEach((op, i) => { if (flyable(op) && (op.width || 1000) >= min && (!best || rank(op) > rank(best.op))) best = { w, op, i }; });
+  for (const w of walls) (w.openings || []).forEach((op, i) => { if (flyable(op) && clearWidth(op) >= min && (!best || rank(op) > rank(best.op))) best = { w, op, i }; });
   if (!best) return null;
   if (flies && openable(best.op) && (best.op.open ?? 0) < VISITOR_OPEN) best.op.open = VISITOR_OPEN;
   return [best.w.id, best.i];
