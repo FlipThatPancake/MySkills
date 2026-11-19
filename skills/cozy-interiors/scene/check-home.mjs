@@ -143,10 +143,10 @@ const issues = await page.evaluate(() => {
     const xc = W.len - b.op.at, w = b.op.width, y0 = b.op.sill ?? 1000, zone = { x0: xc - w / 2, x1: xc + w / 2, z0: 0, z1: w / 2 + 60, y0, y1: y0 + (b.op.height ?? 1100) };
     for (const t of things) { if (sc(t.id.split("'")[0])?.mount === 'wall' && false) continue; if (sc(t.id.split("'")[0])?.asset === 'windowSeat') continue; if (hit3(toLocal(W, t.box), zone)) out.push({ rule: 'sash', what: `${t.id} stands in the sweep of the window on ${W.id || W.i} at ${b.op.at} (make that window fixed or move it)` }); }
   }
-  // 2b. wall pieces keep 150 mm clear of an opening and its casing (a tea towel rail or a shelf touching a window frame)
+  // 2b. wall pieces keep 300 mm clear of an opening and its casing (a tea towel rail or a shelf touching a window frame)
   for (const W of home.walls) for (const b of W.built) {
-    const xc = W.len - b.op.at, w = b.op.width, y0 = b.op.kind === 'window' ? (b.op.sill ?? 1000) : 0, y1 = b.op.kind === 'window' ? y0 + (b.op.height ?? 1100) : 2400, zone = { x0: xc - w / 2 - 150, x1: xc + w / 2 + 150, z0: -50, z1: 500, y0: y0 - 150, y1: y1 + 150 };
-    for (const id of Object.keys(objs)) { if (sc(id).mount !== 'wall' || ['curtain', 'blind', 'socket', 'lightSwitch'].includes(sc(id).asset)) continue; if (hit3(toLocal(W, boxes[id]), zone, 2)) out.push({ rule: 'casing', what: `${id} is within 150 mm of the ${b.op.kind} on ${W.id || W.i} at ${b.op.at}: move it along the wall to keep 150 mm clear of the casing` }); }
+    const xc = W.len - b.op.at, w = b.op.width, y0 = b.op.kind === 'window' ? (b.op.sill ?? 1000) : 0, y1 = b.op.kind === 'window' ? y0 + (b.op.height ?? 1100) : 2400, zone = { x0: xc - w / 2 - 300, x1: xc + w / 2 + 300, z0: -50, z1: 500, y0: y0 - 150, y1: y1 + 150 };
+    for (const id of Object.keys(objs)) { if (sc(id).mount !== 'wall' || ['curtain', 'blind', 'socket', 'lightSwitch'].includes(sc(id).asset)) continue; if (hit3(toLocal(W, boxes[id]), zone, 2)) out.push({ rule: 'casing', what: `${id} is within 300 mm of the ${b.op.kind} on ${W.id || W.i} at ${b.op.at}: move it along the wall to keep 300 mm clear of the frame (curtains hang and stack there)` }); }
   }
   const SMALLFG1 = ['pouf', 'basket', 'floorPlant', 'plant', 'stool', 'footstool', 'sideTable', 'cat', 'crate', 'stepStool', 'wateringCan', 'umbrellaStand', 'shoes', 'wasteBin', 'fileBox'];
   // 3. a table has something under its middle (a pendant or a rug), and stands against a wall or keeps 900 mm clear all round
@@ -185,7 +185,7 @@ const issues = await page.evaluate(() => {
     for (const id of Object.keys(objs).filter((i) => SEATS.includes(sc(i).asset))) {
       const near = Object.keys(objs).filter((o) => o !== id && SERVE.includes(sc(o).asset)).flatMap((o) => legsOf(o).map((b) => ({ o, b }))).map(({ o, b }) => ({ o, g: gap2(boxes[id], b), b })).filter((q) => q.g <= 300);
       const th = objs[id].rotation.y, fx = Math.sin(th), fz = Math.cos(th), facing = (q) => { const c = q.b.getCenter(new T.Vector3()), me = boxes[id].getCenter(new T.Vector3()), dx = c.x - me.x, dz = c.z - me.z, L = Math.hypot(dx, dz) || 1; return (dx * fx + dz * fz) / L > 0.5; };
-      const atIt = near.some((q) => sc(id).asset === 'stool' || facing(q));
+      const atIt = near.some((q) => (sc(id).asset === 'stool' && (sc(id).params || {}).form !== 2) || facing(q));   /* round 6 item 5: a stool with a back (form 2) is a chair: it faces what it serves */
       const wall = home.walls.some((W) => { let lo = 1e9, s0 = 1e9, s1 = -1e9; for (const { x, z } of boxes[id].pts) { const dx = x - W.to[0], dz = z - W.to[1], d = dx * W.n[0] + dz * W.n[1], s = -(dx * W.d[0] + dz * W.d[1]); lo = Math.min(lo, d); s0 = Math.min(s0, s); s1 = Math.max(s1, s); } return lo > -30 && lo < 150 && s1 > 0 && s0 < W.len; });
       if (!atIt && !wall) out.push({ rule: 'seat', what: `${id} stands ${near.length ? 'at a table but turned away from it' : 'away from any table, desk or counter (300 mm or less) and away from a wall'}: put it at the table, desk or counter it serves (a chair facing it), or push it against a wall` }); } }
   // 6. a small seat or table serves a piece: another floor piece within 600 mm (a stool alone in front of an arch is a prop on its own)
@@ -196,6 +196,10 @@ const issues = await page.evaluate(() => {
   { const ids = Object.keys(objs), tall = ids.filter((i) => sc(i).asset === 'stool' && ((sc(i).params || {}).form ?? 0) === 0);
     for (const id of tall) { const mate = tall.some((o) => o !== id && gap2(boxes[id], boxes[o]) <= 700), counter = ids.some((o) => sc(o).asset === 'baseRun' && gap2(boxes[id], boxes[o]) <= 800);
       if (!mate || !counter) out.push({ rule: 'stool', what: `${id} is a bar stool ${!counter ? 'away from a counter or island' : 'on its own'}: bar stools stand in pairs at a counter or island; elsewhere use a low stool (params.form 1 or 2) or nothing` }); } }
+  // 6b2. round 6 item 2: a throw is thrown over something (a sofa arm or back, a chair, the foot of a bed); it never lies on the floor
+  for (const id of Object.keys(objs)) if (/^(foldedThrow|armThrow)$/.test(sc(id).asset) || (sc(id).asset === 'cloth' && /throw/i.test(id))) { const under = Object.keys(objs).some((o) => o !== id && sc(o).mount === 'floor' && !['rug', 'runner'].includes(sc(o).asset) && boxes[o].min.y < 50 && boxes[id].min.y > 60 && gap2(boxes[id], boxes[o]) <= 0); if (!under && boxes[id].min.y < 60) out.push({ rule: 'throw', what: `${id} lies on the floor: a throw goes over a sofa arm or back, a chair or the foot of a bed` }); }
+  // 6b3. round 6 item 4: shoes stand within 1 m of an outside door (a door with no `to`) or beside a bench in a hallway
+  for (const id of Object.keys(objs).filter((i) => sc(i).asset === 'shoes')) { const nearDoor = home.walls.some((W) => W.built.some((b) => { if (b.op.kind !== 'door' || b.op.to) return false; const l = toLocal(W, boxes[id]), xc = W.len - b.op.at; return l.z0 < 1300 && l.x1 > xc - b.op.width / 2 - 1000 && l.x0 < xc + b.op.width / 2 + 1000; })), nearBench = Object.keys(objs).some((o) => sc(o).asset === 'bench' && /hall/.test(sc(o).area || '') && gap2(boxes[id], boxes[o]) <= 1000); if (!nearDoor && !nearBench) out.push({ rule: 'shoes', what: `${id} stands away from the door: shoes stand within 1 m of an outside door or beside the hallway bench` }); }
   // 6c. small things sit on a surface that suits them: footwear on the floor, tableware and books never on the floor
   { for (const id of Object.keys(objs)) { const a = sc(id).asset, b = boxes[id];
       if (['shoes', 'boots'].includes(a) && b.min.y > 40) out.push({ rule: 'surface', what: `${id} (${a}) stands ${b.min.y.toFixed(0)} mm above the floor: footwear goes on the floor or a rack, never on a seat or table` });

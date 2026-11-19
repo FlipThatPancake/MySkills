@@ -317,7 +317,7 @@
  "bedroom": {
   "hero": [
    "bed with a headboard on the backing wall",
-   "bed under a window with a bedside table each side"
+   "bed with a bedside table each side, headboard on a wall without a window"
   ],
   "openings": [
    [
@@ -714,15 +714,6 @@
    ]
   },
   {
-   "id": "folded throw",
-   "say": "a folded throw",
-   "in": [
-    "living",
-    "bedroom",
-    "reading-corner"
-   ]
-  },
-  {
    "id": "cloth dropped",
    "say": "a cloth dropped over something",
    "in": [
@@ -736,9 +727,7 @@
    "id": "shoes askew",
    "say": "shoes kicked off",
    "in": [
-    "hallway",
-    "bedroom",
-    "living"
+    "hallway"
    ]
   },
   {
@@ -1552,7 +1541,9 @@
       "shelf wall with an armchair": "shelf+armchair",
       "two armchairs and a side table": "armchair+sideTable",
       "bed with a headboard on the backing wall": "bed",
-      "bed under a window with a bedside table each side": "bed+bedsideTable",
+      "bed with a bedside table each side, headboard on a wall without a window": "bed+bedsideTable",
+      "bed with its headboard on the second wall (the back wall holds the window)": "bed",
+      "bed with its headboard on a side wall (the back wall holds the window)": "bed",
       "reading chair with a footstool and a floor lamp": "readingChair+footstool+floorLamp",
       "daybed under shelves": "daybed+shelf",
       "window seat with pillows and a reading lamp": "windowSeat+readingLamp",
