@@ -125,6 +125,7 @@ export function planHome(out, seed, kinds, opts = {}) {
       if (Math.abs(a) < 14) a = (rnd() < 0.5 ? -1 : 1) * (14 + rnd() * 14); az[id] = Math.round(a); }
     // neighbours never share a heading: the camera turns at least 30 degrees between two areas that connect (the world azimuth is the area's own minus its turn)
     for (const id of order) { const A = areas[id]; if (!A.parent) continue; const world = (q, v) => v - placed[q].pose.psi, diff = (p, q, v) => { const dd = Math.abs((((world(q, v) - world(p, az[p])) % 360) + 540) % 360 - 180); return dd; };
+      if (A.entry?.kind === 'open' && placed[A.parent].pose.psi === placed[id].pose.psi && rnd() < 0.6) { const g = 10 + Math.round(rnd() * 30), sg = rnd() < 0.5 ? -1 : 1, base = az[A.parent]; az[id] = Math.abs(base + sg * g) <= 50 ? base + sg * g : base - sg * g; continue; }   // neighbours in one row room often share the room's long back wall and each look at their own part of it: a small turn (10 to 40 degrees), made a walk by the curved glide
       if (diff(A.parent, id, az[id]) < 30) { const opts = [-az[id], 28, -28, 40, -40].filter((v) => diff(A.parent, id, v) >= 30); if (opts.length) az[id] = opts[0]; } }
     for (const id of order) areas[id].az = az[id];
     const adj = {}; links.forEach((l) => { (adj[l.a] ||= []).push(l.b); (adj[l.b] ||= []).push(l.a); });
