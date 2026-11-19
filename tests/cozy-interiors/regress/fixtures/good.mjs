@@ -36,6 +36,8 @@ export const fixtures = [
     build({ Home }) { const { H, a } = room(Home); a.put('rug', 'rug', [3000, 1300], 0, { group: 'g', params: { w: 2800, d: 1900 } }); a.put('sofa', 'sofa', [3000, 560], 0, { group: 'g', hero: true }); a.put('ct', 'coffeeTable', [3000, 1740], 0, { group: 'g', params: { w: 1100 } }); a.seatSoft('sofa', { tone: 'lo', group: 'g' }); return H; } },
   { name: 'good-table-set', from: 'a round table with four chairs on its rug, a cloth and a pendant over it', kind: 'good',
     build({ Home }) { const { H, a } = room(Home); const T = a.table('dt', { at: [3000, 2200], r: 650, chairs: 4, cloth: true }); T.over('pendantLamp'); return H; } },
+  { name: 'good-seat-pad-on-chair', from: 'round 5 E17: a cushion on a chair lies flat as a seat pad (lean 85, 40 mm thick)', kind: 'good',
+    build({ Home }) { const { H, a } = room(Home); const T = a.table('dt', { at: [3000, 2200], r: 650, chairs: 1, cloth: true }); T.over('pendantLamp'); a.restOn('pad', 'cushion', 'dt-chair-1', { group: 'dt', params: { w: 400, h: 380, thick: 40, lean: 85 } }); return H; } },
   { name: 'good-books-on-shelf-top', from: 'a book stack resting on top of a shelf', kind: 'good',
     build({ Home }) { const { H, a } = room(Home); a.put('shelf', 'shelf', [3000, 185], 0, { group: 'g', params: { h: 1800 } }); a.restOn('stack', 'bookStack', 'shelf', { group: 'g' }); return H; } },
   { name: 'good-plant-on-sill', from: 'round-2 tester: a pot on a window sill is supported (onSill centres it on the 160 mm of sill between sash and lip)', kind: 'good',

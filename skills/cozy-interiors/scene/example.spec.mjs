@@ -26,7 +26,7 @@ a.put('bench', 'bench', [330, 3750], 90, { group: 'bench', params: { w: 1000 } }
 const T = a.table('bt', { at: [3300, 3200], r: 520, chairs: 2, group: 'breakfast', cloth: true });   // a cloth on the table
 T.on('mug', { y: 757, dx: -180 }); T.on('saltPepper', { y: 757, dx: 260 });   // the roll's table still life: a mug and salt and pepper
 // The roll's foreground piece, a trolley with fruit and a plant on it, stands against the wall at the end of the run.
-a.put('stool', 'trolley', [3400, 230], 0, { group: 'cook' }); a.onTop('stool', [{ id: 'tfb', asset: 'fruitBowl' }, { id: 'tjg', asset: 'jug' }], { group: 'cook' });
+a.put('stool', 'trolley', [3400, 230], 0, { group: 'cook' }); a.onTop('stool', [{ id: 'tfb', asset: 'mug' }, { id: 'tjg', asset: 'jug' }], { group: 'cook' });
 a.skip('hanging', 'no hanging-plant asset yet: the plant stands on the sill and the worktop instead');
 a.skip('mokaPot', 'the hob carries a pan under the hood: a moka pot would stand in its place');
 a.skip('utensilCrock', 'the hob has no room beside it for a crock: pans hang on the rail instead');   // a thing the roll dealt and the scene leaves out says why
