@@ -45,7 +45,7 @@ export function phraseAssets(t) {   // the assets a phrase names for certain (on
 }
 // the slot names of a group's place: <wall>:<third> (wall = back | left | right | window, third = left | middle | right); the hero group takes the back wall's third on its side of the home view
 export const SLOTS = { 'on the back wall, left third': 'back:left', 'on the back wall, right third': 'back:right', 'on the window wall or the second wall': 'window:middle', 'on the open floor': 'floor:middle' };
-export function groupSlot(g) { const h = g.match(/the hero group, on the (left|right) of the home view/); if (h) return `back:${h[1]}`; const at = g.lastIndexOf(', on the '); return at < 0 ? null : SLOTS[g.slice(at + 2)] ?? null; }
+export function groupSlot(g) { const h = g.match(/the hero group, on the (left|right) of the home view/); if (h) return `${groupNeeds(g.replace(/ \(the hero group.*\)$/, ''))?.window ? 'window' : 'back'}:${h[1]}`; const at = g.lastIndexOf(', on the '); return at < 0 ? null : SLOTS[g.slice(at + 2)] ?? null; }
 function homeCaps(out, kinds, describe) {
   const count = {}, areasOf = {};   // asset -> number of slots, asset -> areas that hold it
   const stampable = (as) => ONE_AREA.has(as) || (!STAMP_SKIP.test(as) && SMALL_ON.has(as));
