@@ -18,6 +18,23 @@ Confirm the target before live edits and use one editing controller per scene at
 a time. For visual work, inspect a viewport capture or render at useful
 checkpoints. Report any gap in visual verification.
 
+## Choose a production recipe
+
+Before planning the implementation or writing Blender Python, check the
+[EL4CTEO recipe index](references/el4cteo.md) when the request names a
+production technique, asks for a repeatable workflow, or implies technical
+requirements for the deliverable. Examples include a game-ready prop, an
+engine-ready rig, a seamless animation loop, and a reusable environment kit.
+
+For a deliverable that spans several stages, start with a matching end-to-end
+playbook. Open individual guides when a stage needs more detail. For a single
+technique or fix, open the matching specialist guide directly.
+
+Use the recipe to identify prerequisites, implementation steps, and checks
+that affect the requested result. Use the selected Blender controller to
+execute and verify the work. For straightforward scene edits, proceed directly
+with that controller.
+
 ## Reuse assets
 
 When a ready-made asset could fit the brief, offer to search the user's
