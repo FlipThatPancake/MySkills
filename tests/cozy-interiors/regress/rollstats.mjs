@@ -1,5 +1,6 @@
 // node rollstats.mjs [seeds=150] → rolls many homes and counts the deals that break a check or contradict themselves. Exit 1 when any case is found.
 // Cases: a still life with more than two things on one top; the same thing on two tops of one area; two lamps in one area; a named asset the library lacks; the cutting board dealt twice; a plant corner without a floor plant place; an area behind a passage that has no arch or door of its own.
+if (process.argv.includes('--build')) { await import('./groupbuild.mjs'); await new Promise(() => {}); }   // stage 1 proof by building: pass rate per group phrase (groupbuild.mjs)
 import { roll, phraseAssets, ONE_AREA, STAMP_SKIP, SMALL_ON } from '../../../skills/cozy-interiors/scene/roll.mjs';
 import fs from 'node:fs';
 import { ASSETS } from '../../../skills/cozy-interiors/scene/src/library/meta.js';
