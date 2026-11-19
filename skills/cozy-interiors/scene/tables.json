@@ -149,6 +149,9 @@
    "basket of vegetables",
    "trolley"
   ],
+  "foregroundSwap": [
+   "chair pulled out"
+  ],
   "above": [
    "wall units over the run (wallRun)",
    "an open shelf with plates and jars over the worktop (openShelf)",
@@ -1134,7 +1137,7 @@
     "say": "the coffee table",
     "things": [
      "book stack (bookStack)",
-     "tray with a mug (mug)",
+     "mug (mug)",
      "vase (vase)",
      "candle (candlesticks)",
      "bowl (fruitBowl)",
@@ -1148,7 +1151,7 @@
      "lamp (readingLamp)",
      "mug (mug)",
      "book stack (bookStack)",
-     "small plant (herbs)",
+     "small plant (plant)",
      "glasses on a book (glassesBook)"
     ]
    }
@@ -1170,14 +1173,14 @@
      "alarm clock (alarmClock)",
      "glasses on a book (glassesBook)",
      "mug (mug)",
-     "small plant (herbs)"
+     "small plant (plant)"
     ]
    },
    {
     "id": "chest of drawers",
     "say": "the chest of drawers",
     "things": [
-     "tray with a jewellery dish (letterTray)",
+     "letter tray (letterTray)",
      "vase (vase)",
      "framed photo (photoFrame)",
      "book stack (bookStack)",
@@ -1208,7 +1211,7 @@
     "id": "shelf",
     "say": "the shelf or window sill",
     "things": [
-     "small plant (herbs)",
+     "small plant (plant)",
      "candle (candlesticks)",
      "framed photo (photoFrame)",
      "book stack (bookStack)"
@@ -1254,7 +1257,7 @@
      "laptop (laptop)",
      "notebook (notebook)",
      "mug (mug)",
-     "small plant (herbs)",
+     "small plant (plant)",
      "printer (printer)"
     ]
    }
