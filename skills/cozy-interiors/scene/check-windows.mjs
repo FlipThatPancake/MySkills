@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Blank-pane check: the painted outside must show through every window and glass door, from the home view and from each tour shot camera.
 // Ground truth: the same picture drawn as a plain depth-tested plane (in magenta) is what a pane ought to show; the picture as drawn now (also magenta) must cover at least 85% of those pixels.
+// A picture drawn under 60% is reported too: a window's picture belongs to its wall, so the view fade must not thin it (the bay's picture stands 660 mm out and was thinned to 18%: a white pane that this check once skipped as "faded").
 // Leaves and sashes are hidden in both draws, so an opened sash never counts as a blank.
 //   camerasByArea entries are [from, look, fov] or { look: [azimuth, elevation] } (the home view's distance and target, seen from there). opt.angles: more { name: { look: [az, el] } } cameras for every area. opt.unclipped: draw the pictures the old way (no stencil), to prove the check can fail.
 //   hook: `import { windowIssues } from './check-windows.mjs'`; `await windowIssues(page, camerasByArea, { frames: dir? })` -> [{ rule: 'pane', what }]. page: the built home page, loop stopped by this function.
@@ -57,12 +58,13 @@ export async function windowIssues(page, camerasByArea = {}, opt = {}) {
     for (const r of res) {
       cov.views++; if (r.truth < 300) cov.offscreen++; else if (r.op < 0.6) cov.faded++; else cov.tested++;
       if (opt.frames && r.png) { fs.mkdirSync(opt.frames, { recursive: true }); r.png.forEach((b, i) => { const f = join(opt.frames, `${id}-${r.name}-w${r.sky}-${['truth', 'drawn'][i]}.png`); fs.writeFileSync(f, Buffer.from(b, 'base64')); saved.push(f); }); }
+      if (r.truth >= 300 && r.op < 0.6) issues.push({ rule: 'pane', what: `${id} window ${r.sky}, camera ${r.name}: the outside picture is drawn at ${Math.round(100 * r.op)}% (it must be solid: the view fade thins what stands beyond the area's box, and a window's picture belongs to its wall, so a faded picture reads as a white pane)` });
       if (r.truth >= 300 && r.op >= 0.6 && r.now < 0.85 * r.truth) issues.push({ rule: 'pane', what: `${id} window ${r.sky}, camera ${r.name}: the outside picture covers ${r.now} px of the ${r.truth} the pane shows (a blank pane: something is drawn over the picture)` });
       if (process.argv.includes('--time')) console.error('[time]   pane', id, JSON.stringify({ name: r.name, sky: r.sky, truth: r.truth, now: r.now }));
     }
   }
   await page.evaluate(() => window.cozyScene.loop(true));
-  issues.saved = saved; issues.coverage = `panes: ${cov.windows} window(s) with an outside picture, ${cov.views} window-camera view(s): ${cov.tested} judged, ${cov.offscreen} skipped (window out of frame), ${cov.faded} skipped (picture faded by the view fade)`;
+  issues.saved = saved; issues.coverage = `panes: ${cov.windows} window(s) with an outside picture, ${cov.views} window-camera view(s): ${cov.tested} judged, ${cov.offscreen} skipped (window out of frame), ${cov.faded} faded (reported)`;
   return issues;
 }
 
