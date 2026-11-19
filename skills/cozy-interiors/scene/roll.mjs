@@ -44,8 +44,27 @@ export function phraseAssets(t) {   // the assets a phrase names for certain (on
   return m ? m.split('+').filter((p) => !p.includes('|')) : [];
 }
 // the slot names of a group's place: <wall>:<third> (wall = back | left | right | window, third = left | middle | right); the hero group takes the back wall's third on its side of the home view
-export const SLOTS = { 'on the back wall, left third': 'back:left', 'on the back wall, right third': 'back:right', 'on the window wall or the second wall': 'window:middle', 'on the open floor': 'floor:middle' };
-export function groupSlot(g) { const h = g.match(/the hero group, on the (left|right) of the home view/); if (h) return `${(() => { const n = groupNeeds(g.replace(/ \(the hero group.*\)$/, '')); return n?.window || n?.second; })() ? 'window' : 'back'}:${h[1]}`; const at = g.lastIndexOf(', on the '); return at < 0 ? null : SLOTS[g.slice(at + 2)] ?? null; }
+export const SLOTS = { 'on the back wall, left third': 'back:left', 'on the back wall, right third': 'back:right', 'on the window wall or the second wall': 'window:middle', 'on the open floor': 'floor:middle', 'on the back wall, middle third': 'back:middle', 'on the window wall, left third': 'window:left', 'on the window wall, right third': 'window:right' };
+export function groupSlot(g, two = true) { const h = g.match(/the hero group, on the (left|right) of the home view/); if (h) return `${two && (() => { const n = groupNeeds(g.replace(/ \(the hero group.*\)$/, '')); return n?.window || n?.second; })() ? 'window' : 'back'}:${h[1]}`; const at = g.lastIndexOf(', on the '); return at < 0 ? null : SLOTS[g.slice(at + 2)] ?? null; }
+// each group to a slot that suits its needs and exists in the shell its backing builds; a still life only for a top that one of the groups stands
+function dealSlots(out, kinds) {
+  for (const id of kinds) { const a = out.areas[id]; if (!a.groups) continue;
+    // a group goes only to a slot that suits its needs (groups.mjs groupNeeds): a free-standing group to the floor, a window group to the window wall, a solid-wall group not to the window wall; two groups never share a slot
+    const two = (T.backing.find((x) => x.id === a.backing) || {}).walls === 2, used = new Set([groupSlot(a.groups[0], two)]), at = (g) => g.lastIndexOf(', on the '), base = (g) => (at(g) < 0 ? g : g.slice(0, at(g))), say = (sl) => Object.entries(SLOTS).find(([, v]) => v === sl)[0];
+    // after the plan: a wall slot needs 600 mm of its third clear of the plan's ways through (a door 450 mm each side, an arch the same) on that wall
+    const second = two ? (T.backing.find((x) => x.id === a.backing) || {}).second : null, PA = out.plan?.areas?.[id], links = out.plan?.links || [];
+    const bare = (v, n) => { if (!PA || /^floor:/.test(v)) return true; const wn = v.startsWith('back:') ? 'back' : (a.openings || []).find((o) => o.kind === 'window')?.on === 'second' && second ? second : 'back',   // window:* is the wall that holds the dealt window, else the second wall
+       len = wn === 'back' ? PA.fit[0] : PA.fit[1], i = ['left', 'middle', 'right'].indexOf(v.split(':')[1]), lo = i * len / 3, hi = (i + 1) * len / 3;
+      const cuts = links.filter((l) => l.kind !== 'open' && ((l.a === id && l.aWall === wn) || (l.b === id && l.bWall === wn))).map((l) => { const x = (l.a === id ? l.aF : l.bF) * len, h = (l.width || 1000) / 2 + 450; return [x - h, x + h]; });
+      let free = 0, at = lo; for (const [c0, c1] of cuts.sort((p, q) => p[0] - q[0])) { if (c0 > at) free += Math.max(0, Math.min(c0, hi) - at); at = Math.max(at, c1); } if (at < hi) free += hi - at; return free >= 600; };
+    const allowed = (g, strict = true) => { const n = groupNeeds(base(g)) || {}; return Object.values(SLOTS).filter((v) => (n.free ? v.startsWith('floor:') : !v.startsWith('floor:')) && (two || !v.startsWith('window:')) && (!strict || bare(v, n)) && (!(n.window || n.second) || (two ? v.startsWith('window:') : v.startsWith('back:'))) && (n.wall !== 'solid' || n.second || !v.startsWith('window:'))); };
+    const order = a.groups.map((g, k) => k).slice(1).sort((x, y) => allowed(a.groups[x]).length - allowed(a.groups[y]).length);   // the most constrained group chooses first
+    for (const k of order) { const g = a.groups[k], ok = allowed(g), cur = groupSlot(g, two); let sl = ok.includes(cur) && !used.has(cur) ? cur : ok.find((v) => !used.has(v)) || allowed(g, false).find((v) => !used.has(v)) || cur; if (sl && sl !== cur && at(g) >= 0) a.groups[k] = base(g) + ', ' + say(sl); else if (sl && at(g) < 0) a.groups[k] = base(g) + ', ' + say(sl); used.add(sl); }
+    a.groupSlots = a.groups.map((g) => groupSlot(g, two));
+    // a still life is dealt only for a top that one of the area's groups stands (round 6 stage harness: "no coffee table placed for the dealt still life")
+    const prov = { worktop: /./, table: /table|island/, sideboard: /sideboard|dresser/, 'coffee table': /coffee table/, 'side table': /side table/, 'bedside table': /^bed /, 'chest of drawers': /chest of drawers/, shelf: /shelf|bookcase|window seat|bookshelf/, console: /console/, desk: /desk/ };
+    a.still = (a.still || []).filter((st) => a.groups.some((g) => (prov[st.top] || /./).test(base(g)))); }   // item C: the slot of each group in the words of a.slots() (wall:third, see SLOTS below); homeCaps swaps phrases, not places
+}
 function homeCaps(out, kinds, describe) {
   const count = {}, areasOf = {};   // asset -> number of slots, asset -> areas that hold it
   const stampable = (as) => ONE_AREA.has(as) || (!STAMP_SKIP.test(as) && SMALL_ON.has(as));
@@ -103,7 +122,7 @@ export function roll(seed, kinds = ['kitchen', 'dining', 'living'], opts = {}) {
     const t = T[id], shape = id === 'kitchen' ? pick(t.shape) : null;
     const W = T.backingWeights[shape === 'L' || shape === 'U' ? 'cornerShapes' : 'freeShapes'], bag = T.backing.flatMap((x) => Array(W[x.id] || 0).fill(x)); let b0 = pick(bag); { const fresh = bag.filter((x) => !usedBack.has(x.id)); if (usedBack.has(b0.id) && fresh.length) b0 = fresh[Math.floor(rnd6() * fresh.length)]; } const b = b0; usedBack.add(b.id);   // weighted so the backings come up evenly overall; a backing already used in this home is swapped for a fresh one (own stream, so no other pick moves)
     const a = { backing: b.id, hero: pick(t.hero), openings: pick(t.openings.filter((o) => b.walls === 2 || o.every((x) => x.on === 'first'))).map((o) => ({ ...o, on: b.walls === 1 ? 'first' : o.on })), accents: some(t.accents, 3 + Math.floor(rnd() * 3)), plants: pick(T.plants) };
-    if (id === 'bedroom' && a.openings.some((o) => o.kind === 'window' && o.on === 'first')) a.hero = b.walls === 2 ? 'bed with its headboard on the second wall (the back wall holds the window)' : 'bed with its headboard on a side wall (the back wall holds the window)';   // round 6 item 8: a headboard never stands under a window
+    if (id === 'bedroom' && a.openings.some((o) => o.kind === 'window' && o.on === 'first')) { if (b.walls !== 2) a.backing = T.backing.find((x) => x.walls === 2).id; a.hero = 'bed with its headboard on the second wall (the back wall holds the window)'; }   // round 6 item 8: a headboard never stands under a window
     { let special = false; a.openings = a.openings.map((o) => { if (o.kind !== 'window') return o; const fixed = o.sash === 'fixed' || o.sash === 'out' || /sink/.test(a.hero); if (fixed) return o; const st = winStyle(id, !special); if (st.style === 'sash') return o; usedWin.add(st.style); if (st.style === 'picture' || st.style === 'pair') return { ...o, style: st.style }; special = true; const { sash, ...rest } = o; return { ...rest, ...(st.kind ? { kind: st.kind } : {}), style: st.style }; }); }   // a window wall or glass door is the area's one big opening: the other openings stay plain
     a.accents = a.accents.map((x) => { if (!(ONE.includes(x) && usedAcc.has(x))) return x; const spare = t.accents.filter((y) => !a.accents.includes(y) && !(ONE.includes(y) && usedAcc.has(y))); return spare.length ? spare[Math.floor(rnd2() * spare.length)] : x; });   // a basket, pouf or trolley already dealt to another area is swapped for a spare accent (from the seed itself, so no other pick moves)
     a.accents.forEach((x) => { if (ONE.includes(x)) usedAcc.add(x); });
@@ -127,13 +146,7 @@ export function roll(seed, kinds = ['kitchen', 'dining', 'living'], opts = {}) {
     out.areas[id] = a;
   }
   homeCaps(out, kinds, describe);   // round 6 item 12: what the checks allow across the whole home (variety: one area per basket, pouf, trolley, stool..., two of any small piece)
-  for (const id of kinds) { const a = out.areas[id]; if (!a.groups) continue;
-    // a group goes only to a slot that suits its needs (groups.mjs groupNeeds): a free-standing group to the floor, a window group to the window wall, a solid-wall group not to the window wall; two groups never share a slot
-    const used = new Set([groupSlot(a.groups[0])]), at = (g) => g.lastIndexOf(', on the '), base = (g) => (at(g) < 0 ? g : g.slice(0, at(g))), say = (sl) => Object.entries(SLOTS).find(([, v]) => v === sl)[0];
-    const allowed = (g) => { const n = groupNeeds(base(g)) || {}; return Object.values(SLOTS).filter((v) => (n.free ? v.startsWith('floor:') : !v.startsWith('floor:')) && (!(n.window || n.second) || v === 'window:middle') && (n.wall !== 'solid' || n.second || v !== 'window:middle')); };
-    const order = a.groups.map((g, k) => k).slice(1).sort((x, y) => allowed(a.groups[x]).length - allowed(a.groups[y]).length);   // the most constrained group chooses first
-    for (const k of order) { const g = a.groups[k], ok = allowed(g), cur = groupSlot(g); let sl = ok.includes(cur) && !used.has(cur) ? cur : ok.find((v) => !used.has(v)) || cur; if (sl && sl !== cur && at(g) >= 0) a.groups[k] = base(g) + ', ' + say(sl); else if (sl && at(g) < 0) a.groups[k] = base(g) + ', ' + say(sl); used.add(sl); }
-    a.groupSlots = a.groups.map(groupSlot); }   // item C: the slot of each group in the words of a.slots() (wall:third, see SLOTS below); homeCaps swaps phrases, not places
+  dealSlots(out, kinds);   // item C and round 6: the slot of each group, and the still lifes whose top a group stands (again after the plan: it can change an area's backing)
   dealMotion(out, seed);
   { const dropCat = (a) => { a.accents = (a.accents || []).filter((x) => !/^cat\b/.test(x)); a.say = a.say.replace(/accents: cat, /, 'accents: ').replace(/(accents: [^;]*?), cat(?=[,;])/, '$1'); };   // round 6 T9: a home has one cat; the motion roll's cat is the one (it keeps its own area), else the first area that dealt a cat accent
     const motionCat = Object.keys(out.areas).find((id) => (out.areas[id].motion || []).some((m) => m.kind === 'cat')); let kept = motionCat != null;
@@ -146,6 +159,7 @@ export function roll(seed, kinds = ['kitchen', 'dining', 'living'], opts = {}) {
     try { out.plan = planHome(out, seed, kinds, opts); break; }
     catch (e) { if (!e.needBacking || k > 2) throw e; for (const id of e.needBacking) { const a = out.areas[id], b = pick3(T.backing.filter((x) => x.walls === 2 && x.angle === 90)); a.backing = b.id; a.openings = a.openings.map((o) => ({ ...o })); if (id === 'bedroom' && a.openings.some((o) => o.kind === 'window' && o.on === 'first')) a.hero = 'bed with its headboard on the second wall (the back wall holds the window)'; a.say = describe(id, a); } }
   }
+  dealSlots(out, kinds);
   if (out.openPlan) out.openPlan.behind = [];   // every area outside the open room is linked by the plan
   for (const id of kinds) { out.areas[id].say = describe(id, out.areas[id]); }
   for (const id of kinds) out.areas[id].say += ` | plan: view az ${out.plan.areas[id].az}, cell ${out.plan.areas[id].fit.join(' x ')} (the deal needs ${out.plan.areas[id].need.w} x ${out.plan.areas[id].need.d})`;
