@@ -153,11 +153,6 @@
    "trolley",
    "step stool"
   ],
-  "accentOn": [
-   "teaTowel",
-   "tablecloth",
-   "runner"
-  ],
   "above": [
    "wall units over the run (wallRun)",
    "an open shelf with plates and jars over the worktop (openShelf)",
@@ -243,12 +238,6 @@
    "basket",
    "bench end",
    "chair pulled out"
-  ],
-  "accentOn": [
-   "tablecloth",
-   "benchCushion",
-   "tableRunner",
-   "cushion"
   ]
  },
  "living": {
@@ -326,11 +315,6 @@
    "basket",
    "footstool",
    "log basket"
-  ],
-  "accentOn": [
-   "cushion",
-   "foldedThrow",
-   "cloth"
   ]
  },
  "bedroom": {
@@ -409,11 +393,6 @@
    "bench at the foot of the bed",
    "clothes chair",
    "hamper"
-  ],
-  "accentOn": [
-   "duvetCloth",
-   "cushion",
-   "foldedThrow"
   ]
  },
  "reading-corner": {
@@ -491,11 +470,6 @@
    "basket",
    "floor cushion",
    "magazine box"
-  ],
-  "accentOn": [
-   "cushion",
-   "foldedThrow",
-   "floorCushion"
   ]
  },
  "hallway": {
@@ -568,10 +542,6 @@
    "shoes",
    "basket",
    "umbrella stand"
-  ],
-  "accentOn": [
-   "runner",
-   "hungBag"
   ]
  },
  "home-office": {
@@ -656,10 +626,6 @@
    "waste bin",
    "file box",
    "basket"
-  ],
-  "accentOn": [
-   "cushion",
-   "binders"
   ]
  },
  "backingWeights": {
@@ -887,33 +853,6 @@
  ],
  "plantsNote": "plants is how many; plantPlaces says where each one lives. An area gets distinct places, so at most one floor plant.",
  "foregroundNote": "Each area's near-camera piece comes from its own use first; a plant only when none of these fits.",
- "accentTones": [
-  {
-   "id": "terracotta",
-   "hex": "#c9775a"
-  },
-  {
-   "id": "ochre",
-   "hex": "#d1a53c"
-  },
-  {
-   "id": "rust",
-   "hex": "#b5603f"
-  },
-  {
-   "id": "sage",
-   "hex": "#8d9f7a"
-  },
-  {
-   "id": "clay rose",
-   "hex": "#cf8f7f"
-  },
-  {
-   "id": "honey",
-   "hex": "#d9a85c"
-  }
- ],
- "accentNote": "One warm accent per home, from terracotta, ochre, rust, sage, clay rose or honey: its hex goes to new Home({ accent }). Each area names the textile that carries it (accentOn); set tone: 'accent' on that piece (cushion, foldedThrow, cloth, tablecloth, teaTowel, benchCushion, floorCushion, runner, tableRunner, duvetCloth).",
  "passages": [
   {
    "style": "round",

@@ -1,11 +1,7 @@
 {
  "seed": 4,
  "floor": "plain",
- "accent": {
-  "name": "rust",
-  "hex": "#b5603f"
- },
- "use": "plantAt: place each plant at those places (one floor plant at most). foreground: the near-camera piece of the shots. groups: build every listed group (a few pieces under one group name, at the place named) and make each the subject of one tour shot; the hero group counts as the first. accent: new Home({ accent: hex }); accentOn: put params { tone: 'accent' } on that textile. Soft things: a.seatSoft(id, { tone }), a.table(id, { cloth: true }). still: put each thing on its top with a.onTop; wallArr: hang it on the longest bare wall stretch. side: the hero group sits on that side of the home view. See compose.mjs. motion: a.alive(roll.areas[id].motion) in the spec; see src/motion/index.js.",
+ "use": "plantAt: place each plant at those places (one floor plant at most). foreground: the near-camera piece of the shots. groups: build every listed group (a few pieces under one group name, at the place named) and make each the subject of one tour shot; the hero group counts as the first. Soft things: a.seatSoft(id, { tone }), a.table(id, { cloth: true }). still: put each thing on its top with a.onTop; wallArr: hang it on the longest bare wall stretch. side: the hero group sits on that side of the home view. See compose.mjs. motion: a.alive(roll.areas[id].motion) in the spec; see src/motion/index.js.",
  "areas": {
   "kitchen": {
    "backing": "one-wall",
@@ -62,7 +58,6 @@
     "sideboard or dresser with a still life and a picture, on the back wall, left third"
    ],
    "light": "pendant",
-   "accentOn": "runner",
    "foreground": "step stool",
    "signs": [
     "table runner",

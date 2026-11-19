@@ -7,7 +7,7 @@ import { Home } from './compose.mjs';
 import { cameras } from './cameras.mjs';
 const out = process.argv[2] || 'example.json', C = cameras(out.replace(/\.json$/, '.cameras.json'));   // the fitted shots from the last fitshots run, in the area's own frame
 const H = new Home({ seed: 12, floor: 'boards' });
-H.roll(JSON.parse(fs.readFileSync(new URL('./example.roll.json', import.meta.url), 'utf8')));   // the home's accent comes from the roll
+H.roll(JSON.parse(fs.readFileSync(new URL('./example.roll.json', import.meta.url), 'utf8')));
 const a = H.area('kitchen', 'Kitchen', { rect: [0, 0, 5700, 5200] });
 const back = a.back(5700, [{ kind: 'window', x: 4700, width: 1300, height: 1200, sill: 1000 }]);
 const left = a.left(5200);
@@ -17,13 +17,13 @@ R.on('hob', 'hob', { group: 'cook' }); R.on('hob', 'hood', { group: 'cook' }); R
 R.on('drawers', 'herbs', { group: 'cook' }); R.on('doors', 'fruitBowl', { group: 'cook' });   // the roll's herbs stand on the worktop
 back.place('wc1', 'wallRun', 2700, { group: 'cook', params: { modules: [{ w: 500, kind: 'door' }] } });
 back.place('shelf', 'openShelf', 450, { group: 'cook', y: 1520 });
-a.put('runner', 'runner', [1900, 1250], 90, { group: 'cook', params: { w: 700, l: 2400, form: 'stripe', tone: 'accent' } });   // the roll's accent (rust) is on a runner in front of the cooking
+a.put('runner', 'runner', [1900, 1250], 90, { group: 'cook', params: { w: 700, l: 2400, form: 'stripe' } });   // a runner in front of the cooking
 left.place('dresser', 'sideboard', 3000, { group: 'dresser' }); left.place('dpic', 'picture', 3000, { group: 'dresser', y: 1000, params: { w: 1000, h: 600 } }); a.onTop('dresser', [{ id: 'dplant', asset: 'plant' }, { id: 'djug', asset: 'jug' }], { group: 'dresser' });   // the roll's dresser group: a sideboard with a still life under a picture
 left.place('shelves', 'openShelf', 600, { group: 'shelves' }); a.put('kstool', 'stool', [300, 4650], 0, { group: 'shelves' });   // the roll's shelves group: open shelves with a stool below
 a.put('bsk', 'basket', [1000, 4500], 0, { group: 'shelves' });
 a.put('bench', 'bench', [330, 3750], 90, { group: 'bench' }); left.place('bpic', 'picture', 1680, { group: 'bench' });   // a bench on the left wall
 // A table set: a round table with two chairs and a rug, standing in open floor within reach of the cooking.
-const T = a.table('bt', { at: [3800, 3300], r: 520, chairs: 2, group: 'breakfast', cloth: 'accent' });   // the roll's accent (rust) is on the tablecloth (it names the runner; any textile of the area may carry it)
+const T = a.table('bt', { at: [3800, 3300], r: 520, chairs: 2, group: 'breakfast', cloth: true });   // a cloth on the table
 T.on('mug', { y: 757, dx: -180 }); T.on('saltPepper', { y: 757, dx: 260 });   // the roll's table still life: a mug and salt and pepper
 // The roll's foreground piece, a step stool, stands at the front corner of the table group.
 a.put('stool', 'stepStool', [2385, 3900], 25, { group: 'breakfast' });

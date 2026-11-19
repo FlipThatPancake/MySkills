@@ -19,9 +19,9 @@ fixtures.push(
   { name: 'good-fixed-window-where-the-roll-needs-no-open-window', from: 'round 4 tester: sash: fixed was refused (the window rule wants something in the sweep) although the area has only floor-bound living things', kind: 'good',
     build({ Home }) { const { H, b } = two(Home, 'fixed'); b.put('sofa', 'sofa', [2500, 3300], 180, { group: 'seat', hero: true }); b.alive([{ kind: 'cat' }]); return H; } },
   { name: 'good-seatsoft-on-a-sofa-with-a-chaise', from: 'round 4 tester: a sofa dealt a chaise got cushions in front of the seats (sunk in the rug, leaning on nothing) and a throw that slid off; the cushions belong on the seats beside the chaise', kind: 'good',
-    build({ Home }) { const { H, a } = two(Home); a.put('sofa', 'sofa', [2500, 600], 0, { group: 'seat', hero: true, params: { seats: 3, chaise: 'right', arms: 'none', back: 'loose' } }); a.seatSoft('sofa', { cushions: 2, throw: 'drape', tone: 'accent', group: 'seat' }); return H; } },
+    build({ Home }) { const { H, a } = two(Home); a.put('sofa', 'sofa', [2500, 600], 0, { group: 'seat', hero: true, params: { seats: 3, chaise: 'right', arms: 'none', back: 'loose' } }); a.seatSoft('sofa', { cushions: 2, throw: 'drape', tone: 'mid', group: 'seat' }); return H; } },
   { name: 'good-seatsoft-on-a-sofa-with-a-left-chaise', from: 'round 4 tester: the chaise on the left end', kind: 'good',
-    build({ Home }) { const { H, a } = two(Home); a.put('sofa', 'sofa', [2500, 600], 0, { group: 'seat', hero: true, params: { seats: 3, chaise: 'left', arms: 'rolled', back: 'tight' } }); a.seatSoft('sofa', { cushions: 2, throw: 'band', tone: 'accent', group: 'seat' }); return H; } },
+    build({ Home }) { const { H, a } = two(Home); a.put('sofa', 'sofa', [2500, 600], 0, { group: 'seat', hero: true, params: { seats: 3, chaise: 'left', arms: 'rolled', back: 'tight' } }); a.seatSoft('sofa', { cushions: 2, throw: 'band', tone: 'mid', group: 'seat' }); return H; } },
   { name: 'good-sofa-with-a-chaise-backs-onto-its-wall', from: 'round 4 tester: the seating rule measured the back of a sofa from the middle of its box, which a chaise pushes 200 mm forward, so the back read 405 mm from the wall', kind: 'good',
     build({ Home }) { const { H, ab } = two(Home); ab.place('sofa', 'sofa', 2500, { group: 'seat', hero: true, params: { seats: 3, chaise: 'right', arms: 'none', back: 'loose' } }); return H; } },
   { name: 'sill-message-names-what-to-change-for-a-bench', from: 'round 4 tester: pair window (sill 450) plus a bench: the sill message told a bench owner to lower a bed headboard; it now names the sill to raise or the piece height', kind: 'bug', expect: { rules: ['sill'], ids: ['raise the window'] },
@@ -36,7 +36,6 @@ fixtures.push(
       bug('roll-piece-dropped', 'round 4 mistake 4: the roll lists a curtain at a window as a piece', { pieces: ['curtain at a window'] }, 'piece "curtain at a window"'),
       bug('roll-sign-dropped', 'round 4 mistake 4: the roll deals sofa scratches as a sign', { signs: ['sofa scratches'] }, 'sign "sofa scratches"'),
       bug('roll-named-extra-dropped', 'round 4 mistake 4: the roll deals a laundry hamper (hamper) among the extras', { more: ['laundry hamper (hamper)'], named: undefined }, 'extra "laundry hamper'),
-      bug('roll-accent-on-not-in-tone', 'round 4 mistake 4: accentOn names the runner and no runner has tone accent', { accentOn: 'runner' }, 'puts the accent on the runner', (a) => a.put('rn', 'runner', [3000, 1800], 90, { group: 'seat', params: { w: 700, l: 2000, form: 'stripe', tone: 'lo' } })),
       bug('roll-hero-lacks-its-rug', 'round 4 mistake 4: the roll hero is a sofa with a rug and a coffee table and the hero group holds no rug', { hero: 'sofa with a rug and coffee table' }, 'hero "sofa with a rug and coffee table" needs rug'),
       bug('roll-group-not-built', 'round 4 mistake 4: the roll deals a bench group with a blanket and a basket and a chest group stands there instead (the count still matched)', { groups: ['sofa with a rug and coffee table (the hero group, on the left of the home view)', 'bench at a wall with a blanket and a basket, on the back wall, right third'] }, 'group "bench at a wall with a blanket and a basket" is not in the scene', (a) => a.put('chest', 'sideboard', [4500, 300], 0, { group: 'chest' })),
       bug('roll-hero-on-the-wrong-side', 'round 4 mistake 4: the roll puts the hero group on the right of the home view and it stands on the left', { side: 'right' }, 'puts the hero group on the right', (a) => a.put('chest', 'sideboard', [4800, 300], 0, { group: 'chest' })),
@@ -151,13 +150,5 @@ fixtures.push(
   fixtures.push(
     { name: 'wind-mover-in-an-area-without-an-open-window', from: 'the user, Nov 18: a wind-stirred plant in an area whose only window is fixed', kind: 'bug', expect: { rules: ['windmover'], ids: ['driven by wind'] }, build({ Home }) { return homeW(Home, 'fixed'); }, patch(S) { S.areas[0].motion = [{ kind: 'wind' }]; } },
     { name: 'good-cat-alone-where-no-window-opens', from: 'the user, Nov 18: one mover that needs no wind is enough', kind: 'good', counts: ['windmover'], build({ Home }) { return homeW(Home, 'fixed'); }, patch(S) { S.areas[0].motion = [{ kind: 'cat' }]; } },
-  );
-}
-// U14: the accent textile shows in the home view
-{
-  const kitchen = (Home, runnerZ) => { const { H, a } = room(Home); a.put('isl', 'baseRun', [2000, 1900], 0, { group: 'island', params: { depth: 600, finishedBack: true, modules: [{ w: 900, kind: 'doors' }, { w: 900, kind: 'drawers', n: 3 }] } }); a.put('rn', 'runner', [2900, runnerZ], 0, { group: 'island', params: { w: 700, l: 2000, form: 'stripe', tone: 'accent' } }); return H; };
-  fixtures.push(
-    { name: 'accent-runner-hidden-behind-the-island', from: 'round 4 U14: the accent runner stood behind the island and barely showed in the home view', kind: 'bug', expect: { rules: ['accent'], ids: ['t-rn'] }, build({ Home }) { return kitchen(Home, 1500); } },
-    { name: 'good-accent-runner-in-the-open', from: 'round 4 U14: the runner in front of the island shows', kind: 'good', counts: ['accent'], build({ Home }) { return kitchen(Home, 3300); } },
   );
 }
