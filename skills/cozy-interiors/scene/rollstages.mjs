@@ -58,7 +58,7 @@ export async function buildSeed(seed, dir, { Home, roll, KINDS, group }) {
         { const c = a.c, sn = a.s, [o0, o1] = a.O, mine = objs.filter((o) => o.mount === 'floor' || o.group); if (mine.length) { let sx = 0, sz = 0; for (const o of mine) { const dx = o.at[0] - o0, dz = o.at[2] - o1; sx += dx * c + dz * sn; sz += -dx * sn + dz * c; } quiet(() => a.view({ target: [Math.round(sx / mine.length), 700, Math.round(sz / mine.length)], el: 18 })); } }   // the home view as an agent sets it: the plan's az, the target at the middle of what stands in the area
         if (ra.wallArr) { try { const w0 = R.plan.areas[id].fit[0], r = quiet(() => a.wallArr(ra.wallArr, { wall: made[id + ':back'], xc: Math.round(w0 / 2), group: objs.find((o) => o.group)?.group.split(':')[1] })); if (r.left?.length) fails.push({ stage: 5, rule: 'wallArr', what: `${id}: ${r.left.join('; ').slice(0, 140)}` }); } catch (e) { fails.push({ stage: 5, rule: 'wallArr', what: `${id}: ${String(e.message).split('\n')[0].slice(0, 140)}` }); } }
       }
-      quiet(() => H.write(json, fs)); out.json = json; out.fails.push(...fails); return out;
+      out.fits = Object.fromEntries(R.plan.order.map((id) => [id, R.plan.areas[id].fit])); quiet(() => H.write(json, fs)); out.json = json; out.fails.push(...fails); return out;
     } catch (e) { if (process.env.RS_DEBUG) console.error(attempt, fr, String(e.message).slice(0, 120)); if (attempt < 1 && /too close|keep 300 mm clear/.test(String(e.message))) { clash = String(e.message).split(';')[0].slice(0, 110); continue; } out.fails.push({ stage: 3, rule: 'shell', what: `build: ${String(e.message).split('\n')[0].slice(0, 200)}` }); return out; }
   }
   return out;
@@ -89,7 +89,7 @@ export async function rollStages(argv) {
   console.log('\ncause (stage | rule | owner): seeds');
   for (const [k, v] of Object.entries(by).sort((a, b) => b[1].size - a[1].size)) console.log(`  ${String(v.size).padStart(4)}  ${k}   e.g. seeds ${[...v].slice(0, 5).join(', ')}`);
   console.log('\nper seed:'); for (const l of lines) console.log('  ' + l);
-  if (jsonOut) fs.writeFileSync(jsonOut, JSON.stringify(results.map((r) => ({ seed: r.seed, kinds: r.kinds, fails: r.fails, issues: r.issues })), null, 1));
+  if (jsonOut) fs.writeFileSync(jsonOut, JSON.stringify(results.map((r) => ({ seed: r.seed, kinds: r.kinds, fails: r.fails, issues: r.issues, fits: r.fits })), null, 1));
   if (!argv.includes('--keep')) fs.rmSync(dir, { recursive: true, force: true }); else console.log(`\nscenes kept in ${dir}`);
   return { seeds: seeds.length, green };
 }
