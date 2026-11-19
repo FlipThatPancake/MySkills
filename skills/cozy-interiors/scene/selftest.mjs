@@ -43,6 +43,7 @@ for (const a of list) for (let k = 0; k < K; k++) {
 const dir = fs.mkdtempSync(join(os.tmpdir(), 'selftest-')), json = join(dir, 'sheet.json');
 H.write(json, fs);
 const { checkParts } = await import('./geom/parts.mjs');
+console.log(`coverage: parts test: ${K} variants of each of ${list.length} of ${Object.keys(ASSETS).length} assets (left out: baseRun, wallRun, pendantLamp${named.length ? '; only the named assets' : ''}); params beyond those variants are not sampled`);
 const found = await checkParts(json);
 console.log(found.map((f) => `[parts] ${f.text}`).join('\n') || 'no part passes 20 mm into another'); console.log(`${found.length} asset variant(s) with parts through each other, of ${i} checked`);
 

@@ -22,6 +22,7 @@ page.on('pageerror', (e) => errors.push(String(e)));
 await page.goto('file://' + scene.replace(/\.json$/, '.html') + '?check');
 await page.waitForFunction(() => window.cozyScene);
 lap('page load');
+const coverage = [];
 const issues = await page.evaluate(() => {
   const { home, kit } = window.cozyScene, T = kit.THREE, out = [], objs = home.objects;
   home.group.updateMatrixWorld(true);
@@ -472,7 +473,7 @@ lap('ghost renders');
 }
 lap('variety distance');
 {   // rigid bodies: the geometry core (geom/) measures the real parts in Node: contacts, support, overhang, sinking, one second of settling (no page needed)
-  try { const { checkScene } = await import('./geom/index.mjs'); for (const f of (await checkScene(scene)).findings) issues.push({ rule: f.rule, what: f.text }); } catch (e) { issues.push({ rule: 'physics', what: 'geom/index.mjs did not run: ' + String(e.stack || e.message).slice(0, 200) }); }
+  try { const { checkScene } = await import('./geom/index.mjs'); const gr = await checkScene(scene); for (const f of gr.findings) issues.push({ rule: f.rule, what: f.text }); coverage.push(...gr.coverage); } catch (e) { issues.push({ rule: 'physics', what: 'geom/index.mjs did not run: ' + String(e.stack || e.message).slice(0, 200) }); }
 }
 lap('geom (rigid bodies)');
 {   // windows on one back wall share a head height (the top of the glass): in an area, and along a row home's one long back wall; a feature window (style picture, pair, wall, bay, or feature: true) may differ
@@ -531,6 +532,7 @@ lap('motion');
 await browser.close();
 for (const e of errors) console.log('PAGE ERROR', e);
 const notes = []; for (let k = issues.length - 1; k >= 0; k--) if (/^note-/.test(issues[k].rule)) notes.unshift(...issues.splice(k, 1));   // notes: taste, not failures (placement coverage): printed, never counted
+for (const l of coverage) console.log(`coverage: ${l}`);   // what each sampling check looked at and what it left out
 for (const i of issues) console.log(`[${i.rule}] ${i.what}`);
 for (const i of notes) console.log(`[${i.rule}] ${i.what}`);
 { const S = JSON.parse((await import('node:fs')).readFileSync(scene, 'utf8')); if ((S.areas || []).some((a) => a.motion?.length)) console.log(`NEXT: the rules cannot see motion. Run  node ${join(here, 'watch.mjs')} ${scene}  and look at the strips (watch-<area>.png): do the living things read, stay in frame, and start where the home view shows them?`); }

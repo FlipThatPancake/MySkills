@@ -11,7 +11,9 @@ const qrot = (q, [x, y, z]) => { const ix = q.w * x + q.y * z - q.z * y, iy = q.
 const hull2 = (P) => { P = [...P].sort((a, b) => a[0] - b[0] || a[1] - b[1]); if (P.length < 3) return P; const cr = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]); const lo = [], up = []; for (const p of P) { while (lo.length >= 2 && cr(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); } for (const p of [...P].reverse()) { while (up.length >= 2 && cr(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); } return lo.slice(0, -1).concat(up.slice(0, -1)); };
 const margin = (H, p) => { if (H.length < 3) return H.length ? -Math.min(...H.map((q) => Math.hypot(q[0] - p[0], q[1] - p[1]))) : -Infinity; let m = Infinity; for (let i = 0; i < H.length; i++) { const a = H[i], b = H[(i + 1) % H.length], ex = b[0] - a[0], ez = b[1] - a[1], L = Math.hypot(ex, ez) || 1; m = Math.min(m, (ex * (p[1] - a[1]) - ez * (p[0] - a[0])) / L); } return m; };
 
+export const COVER = { falling: 0, fixed: 0, skipped: {} };   // what the last settle test looked at (geom/index.mjs prints it)
 export function settleScene(Q, list, opt = {}, polys = {}) {
+  COVER.falling = 0; COVER.fixed = 0; COVER.skipped = {};
   const S = { ...SETTLE, ...opt }, L = Q.loaded, find = [], O = Q.objects;
   const W = new RAPIER.World({ x: 0, y: -9.81, z: 0 }); W.timestep = 1 / S.hz; W.integrationParameters.normalizedAllowedLinearError = S.linError; W.integrationParameters.numSolverIterations = S.iters;
   // which objects fall: free, not a drape, and nothing soft under them
@@ -26,7 +28,8 @@ export function settleScene(Q, list, opt = {}, polys = {}) {
   for (const p of environment(L)) addFixed(p, p.role);
   for (const o of L.objects) {
     const free = isFree(o) && !/^(roundTable|table|desk)$/.test(o.asset || '');   // a table is heavy: a chair tucked against it must not carry it (and the books on it) sideways
-    if (DRAPE.test(o.asset || '') || softUnder.has(o.id)) continue;   // left out of the world (a fixed cat sunk into its cushion would push the seat down)
+    if (DRAPE.test(o.asset || '') || softUnder.has(o.id)) { const k = DRAPE.test(o.asset || '') ? o.asset : 'on-soft'; COVER.skipped[k] = (COVER.skipped[k] || 0) + 1; continue; }   // left out of the world (a fixed cat sunk into its cushion would push the seat down)
+    if (!free) COVER.fixed++; else COVER.falling++;
     if (!free) { for (const p of o.parts) if (p.kind !== 'flat' || !isFree(o)) addFixed(p, o.id); continue; }
     let cx = 0, cy = 0, cz = 0, n = 0, y0 = Infinity; for (const p of o.parts) { y0 = Math.min(y0, p.box.mn[1]); for (let i = 0; i < p.tris.length; i += 3) { cx += p.tris[i]; cy += p.tris[i + 1]; cz += p.tris[i + 2]; n++; } } if (!n) continue; cx /= n; cy /= n; cz /= n;
     const foot = []; for (const p of o.parts) { const V = p.verts || p.tris; for (let i = 0; i < V.length; i += 3) if (V[i + 1] < y0 + S.foot) foot.push([(V[i] - cx) * M, (V[i + 1] - cy) * M, (V[i + 2] - cz) * M]); }   // the foot: where it stands. A tall lamp rocking half a degree moves its centre of mass 8 mm and its foot nothing
