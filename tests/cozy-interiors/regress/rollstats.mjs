@@ -1,7 +1,7 @@
 // node rollstats.mjs [seeds=150] → rolls many homes and counts the deals that break a check or contradict themselves. Exit 1 when any case is found.
 // Cases: a still life with more than two things on one top; the same thing on two tops of one area; two lamps in one area; a named asset the library lacks; the cutting board dealt twice; a plant corner without a floor plant place; an area behind a passage that has no arch or door of its own.
 if (process.argv.includes('--build')) { await import('./groupbuild.mjs'); await new Promise(() => {}); }   // stage 1 proof by building: pass rate per group phrase (groupbuild.mjs)
-import { roll, phraseAssets, ONE_AREA, STAMP_SKIP, SMALL_ON } from '../../../skills/cozy-interiors/scene/roll.mjs';
+import { roll, slotFits, phraseAssets, ONE_AREA, STAMP_SKIP, SMALL_ON } from '../../../skills/cozy-interiors/scene/roll.mjs';
 import { phraseOf } from '../../../skills/cozy-interiors/scene/rollstages.mjs';
 import { wallLoad } from '../../../skills/cozy-interiors/scene/plan.mjs';
 import { groupNeeds, groupPhrases } from '../../../skills/cozy-interiors/scene/groups.mjs';
@@ -25,7 +25,8 @@ for (let seed = 1; seed <= N; seed++) for (const kinds of sets) {
     if (a.groups && (!a.groupSlots || a.groupSlots.length !== a.groups.length || a.groupSlots.some((q) => !q) || new Set(a.groupSlots).size !== a.groupSlots.length)) bad('group-slot', seed, kinds, id, `groupSlots ${JSON.stringify(a.groupSlots)}: each group needs its own slot name (item C)`);
     for (const [gi, g] of (a.groups || []).entries()) { const n = groupNeeds(g.replace(/ \(the hero group.*\)$/, '').replace(/, on the .*$/, '')), sl = (a.groupSlots || [])[gi]; if (!n || !sl) continue;   // item 1-2 (lead): a group goes to a slot that suits its needs
       if (!!n.free !== sl.startsWith('floor:')) bad('group-slot-needs', seed, kinds, id, `"${g}" ${n.free ? 'stands free but is dealt' : 'stands at a wall but is dealt'} ${sl}`);
-      if ((n.window || n.second) && !sl.startsWith('window:') && BK(a).walls === 2) bad('group-slot-needs', seed, kinds, id, `"${g}" needs a window but is dealt ${sl}`);
+      if (n.second && !sl.startsWith('second:') && BK(a).walls === 2) bad('group-slot-needs', seed, kinds, id, `"${g}" needs the second wall but is dealt ${sl}`);
+      if (n.window && !n.second && !sl.startsWith('window:') && BK(a).walls === 2) bad('group-slot-needs', seed, kinds, id, `"${g}" needs a window but is dealt ${sl}`);
       if (n.wall === 'solid' && !n.second && sl.startsWith('window:')) bad('group-slot-needs', seed, kinds, id, `"${g}" needs a solid wall but is dealt ${sl}`); }
     for (const g of a.groups || []) { const ph = phraseOf(g); if (!groupPhrases().includes(ph)) bad('group-without-recipe', seed, kinds, id, `"${ph}" has no a.group recipe (groups.mjs)`); }   // round 6 stage harness: every dealt group phrase, not only the hero
     if (a.hero && !groupPhrases().includes(a.hero)) bad('hero-without-recipe', seed, kinds, id, `"${a.hero}" has no a.group recipe (groups.mjs)`);   // round 6 T8: every dealt hero is a group the builder can make
@@ -37,6 +38,7 @@ for (let seed = 1; seed <= N; seed++) for (const kinds of sets) {
     { const bk = BK(a), PA = R.plan?.areas?.[id], k = id.replace(/\d+$/, '');   // round 6 (plan thread rollstats case, "a wall holds its groups, windows and ways through"): a wall too short for what stands on it while another group stands there too is a deal the roll should have moved or left out; a wall short for the hero and its openings alone is the plan's to size
       if (PA && a.groups) for (const [wall, len] of [['back', PA.fit[0]], ...(bk.walls === 2 ? [[bk.second, PA.fit[1]]] : [])]) { const ways = R.plan.links.filter((l) => l.kind !== 'open' && ((l.a === id && l.aWall === wall) || (l.b === id && l.bWall === wall))).length, load = wallLoad(a, k, wall, ways), onWall = (a.groupSlots || []).filter((sl, i) => i > 0 && !/^floor:/.test(sl) && ((/^window:/.test(sl) && bk.walls === 2 ? bk.second : 'back') === wall)).length;
         if (load > len + 1 && onWall) bad('wall-over-stuffed', seed, kinds, id, `the ${wall} wall is ${Math.round(load - len)} mm short and ${onWall} dealt group(s) besides the hero stand on it`); } }
+    if (R.plan) slotFits(R, id).forEach((ok, k) => { if (!ok) bad(k === 0 ? 'hero-slot-without-stretch' : 'group-slot-without-stretch', seed, kinds, id, `"${phraseOf(a.groups[k])}" at ${a.groupSlots[k]}: no bare stretch as wide as its recipe (a.slots() would refuse it)`); });   // round 6 run e: the roll's slot measure is a.slots()'s (slotmath.mjs thirdSlot): a dealt slot a.slots() refuses is a case; a hero with no stretch is the plan's to keep (its windows and ways through cut the wall)
     const seen = new Set();
     for (const st of a.still || []) { if (st.things.length > 2) bad('top>2', seed, kinds, id, st.top); for (const x of st.things) { const n = asset(x); if (n && !ASSETS[n]) bad('missing-asset', seed, kinds, id, n); if (n && seen.has(n)) bad('same-thing-twice', seed, kinds, id, n); seen.add(n); } }
     const txt = JSON.stringify(a), lamps = (a.light && /pendant|floor lamp|table lamp|desk lamp/.test(a.light) ? 1 : 0) + (seen.has('readingLamp') ? 1 : 0) + ((a.groups || []).filter((g) => /\blamp\b/.test(g)).length);

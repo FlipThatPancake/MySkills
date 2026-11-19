@@ -54,16 +54,24 @@ export function groupSlot(g, two = true) { const h = g.match(/the hero group, on
 const prov = { worktop: /./, table: /table|island/, sideboard: /sideboard|dresser/, 'coffee table': /coffee table/, 'side table': /side table/, 'bedside table': /^bed /, 'chest of drawers': /chest of drawers/, shelf: /shelf|bookcase|window seat|bookshelf/, console: /console/, desk: /desk/ };   // the furniture a still life stands on -> the dealt group that provides it
 // each group to a slot that suits its needs and exists in the shell its backing builds; a still life only for a top that one of the groups stands.
 // After the plan the deal measures a slot exactly as a.slots() does (slotmath.mjs thirdSlot, one function): the plan's windows at their x with the shell's widths, the plan's ways through, and the groups already dealt to that wall.
+// the shell the plan will build for one area, measured by slotmath.mjs (the measure a.slots() uses): fit(slot, group) says whether a bare stretch holds the group there, stand(slot, group) takes that stretch for it
+function shellFor(out, id) {
+  const a = out.areas[id], bk = T.backing.find((x) => x.id === a.backing) || {}, two = bk.walls === 2, second = two ? bk.second : null, PA = out.plan?.areas?.[id], links = (out.plan?.links || []).filter((l) => l.kind !== 'open');
+  const at = (g) => g.lastIndexOf(', on the '), base = (g) => groupPhrase(g), nd = (g) => groupNeeds(base(g)) || {};
+  const wallLen = { back: PA?.fit[0], ...(second ? { [second]: PA?.fit[1] } : {}) }, winsOn = (wn) => (PA?.windows || []).filter((q) => q.wall === wn && q.x != null);
+  const winWall = slotWall([{ id: 'back', window: winsOn('back').length > 0 }, ...(second ? [{ id: second, window: winsOn(second).length > 0 }] : [])]).id, wallOf = (v) => (v.startsWith('back:') ? 'back' : v.startsWith('second:') ? second : winWall), taken = {};
+  const cutsOf = (wn, n) => [...links.filter((l) => (l.a === id && l.aWall === wn) || (l.b === id && l.bWall === wn)).map((l) => { const o = { kind: l.kind, width: l.width || 1000 }, x = (l.a === id ? l.aF : l.bF) * wallLen[wn]; return { a: x - zone(o), b: x + zone(o) }; }),
+    ...(n.window ? [] : winsOn(wn).map((q) => { const w = STYLE[q.style]?.width ?? DEFAULTS.window.width; return { a: q.x - (w / 2 + 300), b: q.x + (w / 2 + 300) }; })), ...(taken[wn] || [])];
+  const slot = (v, g) => { const n = nd(g), wn = wallOf(v); return thirdSlot(wallLen[wn], cutsOf(wn, n), THIRD.indexOf(v.split(':')[1]), Math.max(600, n.w || 600), n.window ? winsOn(wn).map((q) => q.x) : []); };
+  const fit = (v, g) => { if (!PA || v.startsWith('floor:')) return true; const wn = wallOf(v); return !!wn && !!wallLen[wn] && !!slot(v, g).best; };   // a.slots(): a bare stretch as wide as the recipe, its middle in the third
+  const stand = (v, g) => { if (!PA || v.startsWith('floor:')) return; const r = slot(v, g), w = nd(g).w || 600; if (r.best) (taken[wallOf(v)] ||= []).push({ a: r.xc - w / 2 - 50, b: r.xc + w / 2 + 50 }); };
+  return { fit, stand, two, PA };
+}
+// per group of an area: does the dealt slot hold the group, in the order the groups stand (the roll's own measure, for rollstats)
+export function slotFits(out, id) { const a = out.areas[id], sh = shellFor(out, id); return (a.groups || []).map((g, k) => { const v = a.groupSlots[k], ok = sh.fit(v, g); sh.stand(v, g); return ok; }); }
 function dealSlots(out, kinds) {
   for (const id of kinds) { const a = out.areas[id]; if (!a.groups) continue;
-    const bk = T.backing.find((x) => x.id === a.backing) || {}, two = bk.walls === 2, second = two ? bk.second : null, PA = out.plan?.areas?.[id], links = (out.plan?.links || []).filter((l) => l.kind !== 'open');
-    const at = (g) => g.lastIndexOf(', on the '), base = (g) => (at(g) < 0 ? g : g.slice(0, at(g))), say = (sl) => Object.entries(SLOTS).find(([, v]) => v === sl)[0], nd = (g) => groupNeeds(base(g)) || {};
-    const wallLen = { back: PA?.fit[0], ...(second ? { [second]: PA?.fit[1] } : {}) }, winsOn = (wn) => (PA?.windows || []).filter((q) => q.wall === wn && q.x != null);
-    const winWall = slotWall([{ id: 'back', window: winsOn('back').length > 0 }, ...(second ? [{ id: second, window: winsOn(second).length > 0 }] : [])]).id, wallOf = (v) => (v.startsWith('back:') ? 'back' : v.startsWith('second:') ? second : winWall), taken = {};
-    const cutsOf = (wn, n) => [...links.filter((l) => (l.a === id && l.aWall === wn) || (l.b === id && l.bWall === wn)).map((l) => { const o = { kind: l.kind, width: l.width || 1000 }, x = (l.a === id ? l.aF : l.bF) * wallLen[wn]; return { a: x - zone(o), b: x + zone(o) }; }),
-      ...(n.window ? [] : winsOn(wn).map((q) => { const o = { kind: 'window', style: q.style === 'sash' ? undefined : q.style }, w = STYLE[q.style]?.width ?? DEFAULTS.window.width; return { a: q.x - (w / 2 + 300), b: q.x + (w / 2 + 300) }; })), ...(taken[wn] || [])];
-    const fit = (v, g) => { if (!PA || v.startsWith('floor:')) return true; const n = nd(g), wn = wallOf(v); if (!wn || !wallLen[wn]) return false; return !!thirdSlot(wallLen[wn], cutsOf(wn, n), THIRD.indexOf(v.split(':')[1]), Math.max(600, n.w || 600), n.window ? winsOn(wn).map((q) => q.x) : []).best; };   // a.slots(): a bare stretch as wide as the recipe, its middle in the third
-    const stand = (v, g) => { if (!PA || v.startsWith('floor:')) return; const n = nd(g), wn = wallOf(v), r = thirdSlot(wallLen[wn], cutsOf(wn, n), THIRD.indexOf(v.split(':')[1]), Math.max(600, n.w || 600), n.window ? winsOn(wn).map((q) => q.x) : []); if (r.best) (taken[wn] ||= []).push({ a: r.xc - (n.w || 600) / 2 - 50, b: r.xc + (n.w || 600) / 2 + 50 }); };
+    const at = (g) => g.lastIndexOf(', on the '), base = (g) => groupPhrase(g), say = (sl) => Object.entries(SLOTS).find(([, v]) => v === sl)[0], nd = (g) => groupNeeds(base(g)) || {}, { fit, stand, two, PA } = shellFor(out, id);
     const allowed = (g, strict = true) => { const n = nd(g); return Object.values(SLOTS).filter((v) => (n.free ? v.startsWith('floor:') : !v.startsWith('floor:')) && (two || !/^(window|second):/.test(v)) && (!strict || fit(v, g)) && (n.second ? v.startsWith('second:') : n.window ? (two ? v.startsWith('window:') : v.startsWith('back:')) : !n.window) && (n.wall !== 'solid' || n.second || !v.startsWith('window:'))); };
     const heroSides = (g) => { const h = groupSlot(g, two), [pre, side] = h.split(':'); return [h, `${pre}:middle`, `${pre}:${side === 'left' ? 'right' : 'left'}`, ...(two && !nd(g).free && pre !== 'second' ? ['second:left', 'second:right', 'second:middle'] : [])]; };   // its own wall first, then the second wall
     const used = new Set(), hero = a.groups[0], hs = heroSides(hero), hv = hs.find((v) => fit(v, hero)) || hs[0]; used.add(hv); stand(hv, hero);   // the hero keeps its side of the home view; when its third has no bare stretch it takes the next third of the same wall
@@ -72,7 +80,7 @@ function dealSlots(out, kinds) {
     for (const k of order) { const g = a.groups[k], ok = allowed(g), cur = groupSlot(g, two); const sl = ok.includes(cur) && !used.has(cur) ? cur : ok.find((v) => !used.has(v)); if (!sl) { if (PA) { dropped.push(k); continue; } const rel = allowed(g, false).find((v) => !used.has(v)) || cur; if (rel && rel !== cur) a.groups[k] = base(g) + ', ' + say(rel); used.add(rel); continue; }
       if (sl !== cur && at(g) >= 0) a.groups[k] = base(g) + ', ' + say(sl); else if (at(g) < 0) a.groups[k] = base(g) + ', ' + say(sl); used.add(sl); stand(sl, g); }
     for (const k of dropped.sort((x, y) => y - x)) a.groups.splice(k, 1);   // a group no bare stretch can hold, on either wall or the floor: left out of the deal
-    a.groupSlots = a.groups.map((g) => groupSlot(g, two)); a.groupSlots[0] = hv;
+    a.groupSlots = a.groups.map((g) => groupSlot(g, two)); a.groupSlots[0] = a.heroSlot = hv;   // the hero's own slot (it may have moved off its side of the home view to a bare stretch)
     a.still = (a.still || []).filter((st) => a.groups.some((g) => (prov[st.top] || /./).test(base(g)))); }   // a still life only for a top that one of the groups stands (round 6 stage harness)
 }
 // after the plan: a wall holds its groups, its windows and outside doors, and the ways through (plan.mjs wallLoad). A wall that cannot: the group that asks most of it moves to the other wall when that wall has room, else it is left out
@@ -81,8 +89,8 @@ function fitWalls(out, kinds) {
     const bk = T.backing.find((x) => x.id === a.backing) || {}, two = bk.walls === 2, walls = ['back', ...(two ? [bk.second] : [])], links = out.plan.links.filter((l) => l.kind !== 'open'), kind = id.replace(/\d+$/, '');
     const len = (w) => (w === 'back' ? PA.fit[0] : PA.fit[1]), ways = (w) => links.filter((l) => (l.a === id && l.aWall === w) || (l.b === id && l.bWall === w)).length;
     const short = (w) => wallLoad(a, kind, w, ways(w)) - len(w) > 1, winSide = (a.openings || []).some((o) => o.kind === 'window' && o.on === 'second') || !(a.openings || []).some((o) => o.kind === 'window'), onSide = (v) => two && (v.startsWith('second:') || (v.startsWith('window:') && winSide)), wallOf = (k) => (onSide(a.groupSlots[k]) ? bk.second : 'back');   // the plan's own reading of a slot (plan.mjs needLists)
-    const at = (g) => g.lastIndexOf(', on the '), base = (g) => (at(g) < 0 ? g : g.slice(0, at(g))), say = (sl) => Object.entries(SLOTS).find(([, v]) => v === sl)[0];
-    const sync = () => { a.groupSlots = a.groups.map((g) => groupSlot(g, two)); };
+    const at = (g) => g.lastIndexOf(', on the '), base = (g) => groupPhrase(g), say = (sl) => Object.entries(SLOTS).find(([, v]) => v === sl)[0];
+    const sync = () => { a.groupSlots = a.groups.map((g) => groupSlot(g, two)); if (a.heroSlot) a.groupSlots[0] = a.heroSlot; };
     sync();
     for (let guard = 0; guard < 8; guard++) { const wall = walls.find((w) => short(w) && a.groups.some((g, k) => k > 0 && wallOf(k) === w && !(groupNeeds(base(g)) || {}).free)); if (!wall) break;   // a wall short for the hero and its openings alone is the plan's to size
       const cand = a.groups.map((g, k) => k).filter((k) => k > 0 && wallOf(k) === wall && !(groupNeeds(base(a.groups[k])) || {}).free).sort((x, y) => (groupNeeds(base(a.groups[y])).w || 0) - (groupNeeds(base(a.groups[x])).w || 0));
@@ -90,7 +98,7 @@ function fitWalls(out, kinds) {
       let moved = false;
       if (other && !n.window && !n.second && n.wall !== 'solid' || (other && wall !== 'back' && !n.window && !n.second)) {   // a group that wants the window wall or a solid wall stays where its need is met
         const free = Object.values(SLOTS).filter((v) => !v.startsWith('floor:') && (other === 'back' ? v.startsWith('back:') : onSide(v)) && !a.groupSlots.includes(v));
-        for (const v of free) { a.groups[k] = base(was) + ', ' + say(v); sync(); if (!short(other) && !short(wall)) { moved = true; break; } }
+        for (const v of free) { a.groups[k] = base(was) + ', ' + say(v); sync(); if (!short(other) && !short(wall) && slotFits(out, id)[k]) { moved = true; break; } }
         if (!moved) { a.groups[k] = was; sync(); } }
       if (!moved) { a.groups.splice(k, 1); sync(); }
     }
