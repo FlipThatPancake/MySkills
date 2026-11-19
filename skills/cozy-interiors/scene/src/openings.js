@@ -38,10 +38,22 @@ export function opening(kit, op, vis = null) {
   };
   const Z0 = -w / 2, Z1 = w / 2, Y0 = op.kind === 'window' ? sill : 0, Y1 = Y0 + h;
   let hole;
+  const openables = [];
+  // A vent: a picture window, window wall or bay keeps its big fixed lights and carries one casement leaf in its last light (`op.vent`: 'r' (default) | 'l' the end it stands at; sash: 'fixed' for none). It opens inward (outward with sash: 'out') op.open degrees (default 38) so something small can come in and the wind can reach the room.
+  // Its place is kept in g.userData.vent = { z0, z1, y0, y1, hinge } (the leaf's span along the wall from the opening's middle, its height, which jamb it hangs on): motion/rules.js and the page read it.
+  const ventOn = op.kind === 'window' && ['picture', 'wall', 'bay'].includes(op.style) && op.sash !== 'fixed', ventAjar = op.open ?? 38;
+  const ventLeaf = (zh, dir, vw, y0, y1, xAt, zOff = 0) => {   // zh: the hinge's z in the parent frame; dir -1 hinged at its +z end, 1 at its -z end; the leaf spans vw from the hinge
+    const q = kit.group(), SD = 30, ST = 34, u0 = Math.min(0, dir * vw), u1 = Math.max(0, dir * vw);
+    q.add(ext(rectPts(u0, y0, u1, y1), [rectPts(u0 + ST, y0 + ST, u1 - ST, y1 - ST)], -SD / 2, SD));
+    [y0 + 110, y1 - 190].forEach((y) => { q.add(kit.box(SD / 2, y, Math.max(dir * 8, dir * 26), 2.5, 80, 18, lo)); q.add(kit.cyl(SD / 2 + 3, y, dir * 17, 3.5, 80, { seg: 10, ...lo })); });
+    q.add(kit.rbox(SD / 2, (y0 + y1) / 2 - 30, dir * (vw - ST / 2 - 8), 16, 60, 2.5, 4, lo), kit.cyl(SD / 2 + 2.5, (y0 + y1) / 2, dir * (vw - ST / 2 - 2), 3, 28, { axis: 'z', seg: 10, ...lo }));
+    q.position.set(xAt, 0, zh); q.rotation.y = OUT * dir * rad(ventAjar);
+    q.userData.open = { kind: 'door', dir: OUT * dir, max: 75, v: ventAjar / 75, target: ventAjar / 75, states: [ventAjar / 75, 1, 0], i: 0 };
+    openables.push(q); return q;
+  };
 
   // What lies beyond a door or arch is the world itself: the floor, its tiles and whatever room is there. Nothing is painted in.
   const beyond = () => {};
-  const openables = [];
   const hitPlane = () => {   // clear, but still hit by a click: a door or arch that leads to another area
     const m = new T.Mesh(new T.PlaneGeometry(w, h), new T.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }));
     m.rotation.y = Math.PI / 2; m.position.set(-40, h / 2, 0); m.userData.go = op.to;
@@ -75,9 +87,11 @@ export function opening(kit, op, vis = null) {
     }
     const fz0 = Z0 + L, fz1 = Z1 - L, fy0 = Y0 + L, fy1 = Y1 - L, iz0 = fz0 + FW, iz1 = fz1 - FW, iy0 = fy0 + (wl ? 90 : FW), iy1 = fy1 - FW, MUL = 36;   // a wall's bottom rail is 90 mm
     const holes = [], tz = top ? iy1 - top : iy1;
-    const cols = (ya, yb) => { for (let i = 0; i < bars; i++) { const a = iz0 + i * (iz1 - iz0 + MUL) / bars, b = iz0 + (i + 1) * (iz1 - iz0 + MUL) / bars - MUL; holes.push(rectPts(a, ya, b, yb)); } };
-    cols(iy0, top ? tz - MUL : iy1); if (top) cols(tz, iy1);
+    const cols = (ya, yb, vent) => { for (let i = 0; i < bars; i++) { const a = iz0 + i * (iz1 - iz0 + MUL) / bars, b = iz0 + (i + 1) * (iz1 - iz0 + MUL) / bars - MUL; if (vent && i === (op.vent === 'l' ? 0 : bars - 1)) { const full = b - a <= 960, vw = full ? b - a : 900, left = op.vent === 'l'; if (!full) holes.push(left ? rectPts(a + vw + MUL, ya, b, yb) : rectPts(a, ya, b - vw - MUL, yb)); const z0v = left ? a : b - vw, z1v = left ? a + vw : b; holes.push(rectPts(z0v, ya, z1v, yb)); g.userData.vent = { z0: z0v, z1: z1v, y0: ya, y1: yb, hinge: left ? -1 : 1 }; pendVent = { zh: left ? a : b, dir: left ? 1 : -1, vw, ya, yb }; } else holes.push(rectPts(a, ya, b, yb)); } };
+    let pendVent = null;
+    cols(iy0, top ? tz - MUL : iy1, ventOn); if (top) cols(tz, iy1, false);
     g.add(ext(rectPts(fz0, fy0, fz1, fy1), holes, XF - 45, 45));   // one frame, all the lights cut from it
+    if (pendVent) g.add(ventLeaf(pendVent.zh, pendVent.dir, pendVent.vw, pendVent.ya, pendVent.yb, XF - 22));   // the vent leaf in its light
     const lines = [], xg = XF - 20;   // two short slanting strokes on each light: the glass catching the light
     for (const hp of holes) { const [a, b, c2, d2] = [hp[0][0], hp[0][1], hp[2][0], hp[2][1]]; if (d2 - b < 500) continue; const q = Math.min(c2 - a, d2 - b) * 0.35; lines.push([xg, d2 - q * 0.6, a + q * 0.4], [xg, d2 - q * 1.6, a + q * 1.4], [xg, d2 - q * 1.0, a + q * 0.4 + q * 0.9], [xg, d2 - q * 2.0, a + q * 1.3 + q * 0.9]); }
     g.add(kit.lines(lines, 'mid'));
@@ -117,7 +131,10 @@ export function opening(kit, op, vis = null) {
     const outer = kit.group(); g.add(outer);
     g.add(outside(-P - 160, Y0, h + 100, false));
     // the pane frames: one ring each (ring 40 mm, one big glazed light), standing on the seat
-    const pane = (len, x, z, r) => { const q = kit.group(), a = -len / 2, b = len / 2; q.add(ext(rectPts(a, py0, b, py1), [rectPts(a + FW, py0 + FW, b - FW, py1 - FW)], -22, 44)); q.position.set(x, 0, z); q.rotation.y = r; return q; };
+    const vw = Math.min(800, wc - 2 * FW - 40), left = op.vent === 'l';
+    const pane = (len, x, z, r) => { const q = kit.group(), a = -len / 2, b = len / 2, vent = ventOn && r === 0;
+      if (vent) { const v0 = left ? a + FW : b - FW - vw, v1 = left ? a + FW + vw : b - FW, mu = 36; q.add(ext(rectPts(a, py0, b, py1), [left ? rectPts(v1 + mu, py0 + FW, b - FW, py1 - FW) : rectPts(a + FW, py0 + FW, v0 - mu, py1 - FW), rectPts(v0, py0 + FW, v1, py1 - FW)], -22, 44)); q.add(ventLeaf(left ? v0 : v1, left ? 1 : -1, vw, py0 + FW, py1 - FW, 0)); g.userData.vent = { z0: v0, z1: v1, y0: py0 + FW, y1: py1 - FW, hinge: left ? -1 : 1, depth: P }; }
+      else q.add(ext(rectPts(a, py0, b, py1), [rectPts(a + FW, py0 + FW, b - FW, py1 - FW)], -22, 44)); q.position.set(x, 0, z); q.rotation.y = r; return q; };
     const sl = Math.hypot(P, side), r = Math.atan2(P, side);
     g.add(pane(wc, -P, 0, 0), pane(sl, -P / 2, wc / 2 + side / 2, r), pane(sl, -P / 2, -(wc / 2 + side / 2), -r));
     // seat and head: a flat plate in plan (x, -z), set at height y
