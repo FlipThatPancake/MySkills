@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // node tests/cozy-interiors/openings/render-checks.mjs  → red and green fixtures for the two render checks check-visible.mjs and check-pendants.mjs (about 3 min).
 //  visible: a wardrobe standing in front of a chest and a picture hides them (red); the same room with the wardrobe at the side shows them (green).
-//  cord: a pendant over a table shows its cord (green); with the cord's lines hidden the check names it (red).
+//  cord: the round-5 hairline cord (ink 0.2) is named (red); with a 20 mm cord added the check is quiet (green).
 import { createRequire } from 'node:module';
 import { execSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
@@ -22,7 +22,7 @@ let bad = 0; const expect = (ok, msg) => { if (!ok) bad++; log((ok ? 'ok:   ' : 
 let p = await open(hid), r = await visibleIssues(p);
 expect(r.some((i) => /t-chest/.test(i.what)), `wardrobe in front: the chest is named hidden (${r.map((i) => i.what.split(' ')[0]).join(', ') || 'nothing'})`); await p.close();
 p = await open(shown); r = await visibleIssues(p); expect(!r.some((i) => /t-chest/.test(i.what)), 'wardrobe at the side: the chest shows'); await p.close();
-p = await open(pend); const AT = { at: [[3000, 1700, 6500], [3000, 1900, 2000]] }; r = await pendantIssues(p, AT); expect(r.length === 0 && /1 judged/.test(r.coverage), `pendant with its cord: no problem (${r.coverage})`);
-await p.evaluate(() => { const c = window.cozyScene; for (const k of Object.keys(c.objects)) if (/pendant/i.test(c.objects[k].userData.scene?.asset || '')) c.objects[k].traverse((o) => { if (o.userData.kitLine || o.isLineSegments2 || (o.isMesh && o.geometry.type === 'CylinderGeometry' && o.geometry.parameters.height > 400)) o.visible = false; }); });
-r = await pendantIssues(p, AT); expect(r.length > 0, `cord hidden: the check names the pendant (${r[0]?.what.slice(0, 80) || 'nothing'})`); await p.close();
+p = await open(pend); const AT = { at: [[3000, 1700, 6500], [3000, 1900, 2000]] }; r = await pendantIssues(p, AT); expect(r.length > 0 && /cord/.test(r[0].what), `round-5 hairline cord (ink ~0.2): the check names the pendant (${r[0]?.what.slice(0, 90) || 'nothing'})`);
+await p.evaluate(() => { const c = window.cozyScene, T = c.kit.THREE; for (const k of Object.keys(c.objects)) if (/pendant/i.test(c.objects[k].userData.scene?.asset || '')) { const o = c.objects[k]; o.updateMatrixWorld(true); const b = new T.Box3().setFromObject(o), q = o.worldToLocal(new T.Vector3((b.min.x + b.max.x) / 2, b.min.y + 250, (b.min.z + b.max.z) / 2)); o.add(c.kit.cyl(q.x, q.y, q.z, 10, 1100, { seg: 8, tone: 'lo' })); o.updateMatrixWorld(true); } });
+r = await pendantIssues(p, AT); expect(r.length === 0 && /1 judged/.test(r.coverage), `a 20 mm cord added: no problem (${r.coverage}; ${r[0]?.what.slice(0, 90) || ''})`); await p.close();
 await browser.close(); fs.rmSync(tmp, { recursive: true, force: true }); process.exit(bad ? 1 : 0);

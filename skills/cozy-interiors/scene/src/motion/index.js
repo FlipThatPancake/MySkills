@@ -50,10 +50,12 @@ export function createMotion(kit, home, S) {
   const contextOf = (A, entry) => {
     const ws = home.walls.filter((W) => W.id && W.id.startsWith(A.id + '-')).map((W) => ({ W, id: W.id }));
     const openings = ws.flatMap(({ W }) => W.built.map((b, index) => {
-      const p = b.group.getWorldPosition(new T.Vector3()), st = b.openables[0]?.userData.open, op = b.op, slider = op.kind === 'door' && op.style === 'slider';
+      const p = b.group.getWorldPosition(new T.Vector3()), p0 = p.clone(), st = b.openables[0]?.userData.open, op = b.op, slider = op.kind === 'door' && op.style === 'slider';
       if (slider) { const off = sliderClear(op).off; p.x += W.d[0] * off; p.z += W.d[1] * off; }   // a slider's clear strip is off-centre: fliers aim at its middle
-      const o = { id: `${W.id}#${index}`, index, W, op, centre: [p.x, p.z], n: W.n, u: W.d, width: op.width, height: op.height, sill: op.sill || 0,
-        open: () => (passage(op) || slider ? 1 : st ? st.v : 0), gap: () => (flyable(op) ? gapOf(op, st ? st.v : 0, st?.max) : 0), usable: (r) => o.gap() >= 2 * r + 30 };
+      const vent = b.group.userData.vent;   // a big fixed window's vent leaf: fliers aim at the clear strip beside the open leaf, between the vent's own sill and head
+      if (vent && st) { const gapNow = gapOf(op, st.v, st.max, vent), off = vent.hinge > 0 ? vent.z0 + gapNow / 2 : vent.z1 - gapNow / 2; p.x += W.d[0] * off; p.z += W.d[1] * off; }
+      const o = { id: `${W.id}#${index}`, index, W, op, vent: !!vent, real: { centre: [p0.x, p0.z], width: op.width, sill: op.sill || 0 }, centre: [p.x, p.z], n: W.n, u: W.d, width: vent ? vent.z1 - vent.z0 : op.width, height: vent ? vent.y1 - vent.y0 : op.height, sill: vent ? vent.y0 : op.sill || 0,
+        open: () => (passage(op) || slider ? 1 : st ? st.v : 0), gap: () => (flyable(op) ? gapOf(op, st ? st.v : 0, st?.max, vent) : 0), usable: (r) => o.gap() >= 2 * r + 30 };
       return o;
     }));
     // a curtain is two panels with the middle open: a flier's air is blocked by the panels, not by one box over the whole width

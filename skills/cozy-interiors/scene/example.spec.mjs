@@ -31,8 +31,8 @@ a.skip('hanging', 'no hanging-plant asset yet: the plant stands on the sill and 
 a.skip('mokaPot', 'the hob carries a pan under the hood: a moka pot would stand in its place');
 a.skip('utensilCrock', 'the hob has no room beside it for a crock: pans hang on the rail instead');   // a thing the roll dealt and the scene leaves out says why
 // Shots: a.shot(name, from, look, fov, group). fitshots.mjs finds the cameras; its numbers go in here.
-a.shot('cook', ...C('kitchen', 'cook', [[1850, 1100, 6150], [2080, 1100, 774], 40]), 'cook');   // C(area, name, fallback): the fitted camera, or the fallback on the first run
-a.shot('table', ...C('kitchen', 'table', [[200, 2100, 6150], [3068, 300, 2803], 38]), 'breakfast');
-a.shot('cook2', ...C('kitchen', 'cook2', [[350, 850, 6000], [1036, 900, 684], 40]), 'cook');
+a.shot('cook', ...C('kitchen', 'cook', [[2000, 1400, 5700], [2119, 900, 332], 40]), 'cook');   // C(area, name, fallback): the fitted camera, or the fallback on the first run
+a.shot('table', ...C('kitchen', 'table', [[200, 2100, 6150], [3068, 486, 2803], 38]), 'breakfast');
+a.shot('cook2', ...C('kitchen', 'cook2', [[350, 700, 5550], [945, 900, 266], 40]), 'cook');
 a.view({ target: [2800, 700, 2000], az: 14, el: 20 });
 H.write(out, fs);

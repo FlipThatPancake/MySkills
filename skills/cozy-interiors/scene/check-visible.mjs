@@ -37,13 +37,13 @@ export async function visibleIssues(page, camerasByArea = {}, opt = {}) {
       cov.judged++;
       const f = r.seen / r.alone;
       if (f >= MIN) continue;
-      if (r.shot) { cov.rescued++; continue; }
+      if (r.shot) { cov.rescued++; (cov.ids ||= []).push(`${id} by shot ${r.shot}`); continue; }
       if (r.asset === 'table' && Object.values(res).some((o) => o.asset === 'tablecloth' && o.group === r.group)) continue;   // a table under its own cloth
       issues.push({ rule: 'visible', what: `${id} (${r.asset}): ${Math.round(100 * f)}% of it shows in the ${A} home view (${r.seen} of ${r.alone} px) and no tour shot shows it better: it is hidden behind other pieces; move it or what stands in front` });
     }
   }
   await page.setViewportSize(size); await page.evaluate(() => window.cozyScene.loop(true));
-  issues.rows = rows; issues.coverage = `visible: ${cov.objects} object(s) in ${ids.length} area(s): ${cov.judged} judged from the home view, ${cov.tiny} skipped (under ${TINY} px), flat rugs and runners left out, ${cov.rescued} shown by a tour shot instead`;
+  issues.rows = rows; issues.coverage = `visible: ${cov.objects} object(s) in ${ids.length} area(s): ${cov.judged} judged from the home view, ${cov.tiny} skipped (under ${TINY} px), flat rugs and runners left out, ${cov.rescued} shown by a tour shot instead${cov.ids ? ' (' + cov.ids.join(', ') + ')' : ''}`;
   return issues;
 }
 
