@@ -415,7 +415,7 @@ for (const i of areaIssues) if (i.rule !== '_heroside') issues.push(i);
   for (const [id, names] of list) for (let i = 0; i < names.length; i++) {
     const n = await page.evaluate(([id, i]) => {
       const c = window.cozyScene, s = c.areas[id].camera.shots[i], { home } = c; c.setArea(id, true); c.controls.minDistance = 10; c.at(s.from, s.look); c.camera.fov = s.fov || 30; c.camera.updateProjectionMatrix(); for (const g of Object.values(c.objects)) { g.userData.tick = null; g.userData.update = null; } c.tour.update = () => false;   // frozen: no sway, no butterfly
-      c.advance(1.5);
+      c.advance(1.5); c.home.update(c.camera, c.tour.look || c.controls.target, true, true); c.draw();   // the fade of what stands in the shot's way settles first, so the two frames differ only by a neighbour
       const grab = () => { const cv = c.draw(), w = cv.width, h = Math.round(cv.height * 690 / 750), k = document.createElement('canvas'); k.width = w; k.height = h; const x = k.getContext('2d'); x.drawImage(cv, 0, 0, w, h, 0, 0, w, h); return x.getImageData(0, 0, w, h).data; };
       const A = grab(), hid = []; for (const k of Object.keys(home.objects)) if (c.groupOf(home.objects[k].userData.scene.area) !== c.groupOf(id)) { home.objects[k].visible = false; hid.push(home.objects[k]); } for (const W of home.walls) if (!(c.areaIds.some((q) => (W.id || '').startsWith(q + '-') && c.groupOf(q) === c.groupOf(id)))) { W.node.visible = false; hid.push(W.node); }
       const B = grab(); for (const o of hid) o.visible = true;

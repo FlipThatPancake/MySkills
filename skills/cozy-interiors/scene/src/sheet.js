@@ -16,14 +16,24 @@ export function sheet(kit, canvas, w, h, vis = null, first = false) {
   return sheetTex(kit, t, w, h, vis, null, first);
 }
 // the same plane from any texture (a baked render target, say)
-export function sheetTex(kit, t, w, h, vis = null, gain = null, first = false) {   // gain: { value } 0..1, a fade a caller drives; first: a backdrop drawn before everything else (see below)
+export function sheetTex(kit, t, w, h, vis = null, gain = null, first = false, masks = null) {   // gain: { value } 0..1, a fade a caller drives; first: a backdrop drawn before everything else (see below)
   const T = kit.THREE, mid = new T.Vector3();
   // first: the plane is drawn in the opaque pass before every other piece, writes no depth, and fades by custom blending (so opacity still works): whatever is drawn later, a sash or a bird outside a window, lies over it whatever its depth
   const mat = first ? new T.MeshBasicMaterial({ map: t, transparent: false, blending: T.CustomBlending, blendSrc: T.SrcAlphaFactor, blendDst: T.OneMinusSrcAlphaFactor, blendSrcAlpha: T.OneFactor, blendDstAlpha: T.OneMinusSrcAlphaFactor, depthWrite: false, toneMapped: false })
     : new T.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
   const m = new T.Mesh(new T.PlaneGeometry(w, h), mat);
   m.renderOrder = first ? -10 : 1;
+  // masks: [{ box: [x0, z0, x1, z1] in world mm, sv: { value } }] on a floor sheet: where a piece's contact shadow is baked in, the shadow lets go as the piece fades (sv.value 1 = drawn, 0 = gone), around the footprint and 150 mm beyond, melting over 150 mm more
+  const MK = 12, mk = { uMk: { value: Array.from({ length: MK }, () => new T.Vector4()) }, uMa: { value: new Array(MK).fill(0) } };
+  if (masks) {
+    mat.onBeforeCompile = (sh) => {
+      Object.assign(sh.uniforms, mk);
+      sh.vertexShader = 'varying vec2 vMk;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vMk = (modelMatrix * vec4(transformed, 1.0)).xz;');
+      sh.fragmentShader = 'varying vec2 vMk; uniform vec4 uMk[' + MK + ']; uniform float uMa[' + MK + '];\n' + sh.fragmentShader.replace('#include <map_fragment>', '#include <map_fragment>\n float keep = 1.0; for (int i = 0; i < ' + MK + '; i++) { vec2 d = max(max(uMk[i].xy - vMk, vMk - uMk[i].zw), 0.0); float m = 1.0 - smoothstep(150.0, 300.0, length(d)); keep *= 1.0 - uMa[i] * m; } diffuseColor.a *= keep;');
+    };
+  }
   m.onBeforeRender = () => {
+    if (masks) { let n = 0; for (const e of masks) { const a = 1 - e.sv.value; if (a > 0.001 && n < MK) { mk.uMk.value[n].set(e.box[0], e.box[1], e.box[2], e.box[3]); mk.uMa.value[n++] = a; } } for (; n < MK; n++) mk.uMa.value[n] = 0; }
     let f = 1;
     if (VIEW.c) { (m.fadeRef || m).getWorldPosition(mid); mid.sub(VIEW.c); mid.set(Math.max(Math.abs(mid.x) - VIEW.h.x, 0), Math.max(Math.abs(mid.y) - VIEW.h.y, 0), Math.max(Math.abs(mid.z) - VIEW.h.z, 0)); f = 1 - sm(VIEW.r0, VIEW.r1, mid.length()); }
     mat.opacity = kit.fill.uniforms.uOpacity.value * f * (vis ? vis.value : 1) * (gain ? gain.value : 1);

@@ -33,8 +33,8 @@ fixtures.push(
 );
 
 // what stands between the camera and its target fades out (home.js update; check-openplan orbitIssues): a wardrobe at the side of the room is in the way when the camera swings round; with the fade switched off the orbit check names it
-const orbitRoom = (Home, blockerFade) => {
-  const H = new Home({ seed: 5, floor: 'plain', detached: true, blockerFade }), a = H.area('t', 'T', { rect: [0, 0, 6000, 4500] }); a.back(6000); a.left(4500); a.right(4500);
+const orbitRoom = (Home, blockerFade, shadowFade = true) => {
+  const H = new Home({ seed: 5, floor: 'plain', detached: true, blockerFade, shadowFade }), a = H.area('t', 'T', { rect: [0, 0, 6000, 4500] }); a.back(6000); a.left(4500); a.right(4500);
   a.put('sofa', 'sofa', [3000, 700], 0, { group: 'seat', hero: true, params: { seats: 3, arms: 'rolled', back: 'tight' } });
   a.put('wd', 'wardrobe', [5200, 1100], 90, { group: 'store' });
   a.view({ target: [3000, 600, 800], az: 20, el: 18 });
@@ -43,6 +43,8 @@ const orbitRoom = (Home, blockerFade) => {
 fixtures.push(
   { name: 'orbit-blocker-stays-in-front-of-the-view', from: 'round 6 (Paul): objects between the camera and its target fade out; here the fade is switched off, so the wardrobe stays between camera and sofa when the camera swings round', kind: 'bug', expect: { rules: ['orbit'], ids: ['wd'] },
     build({ Home }) { return orbitRoom(Home, false); } },
+  { name: 'orbit-faded-piece-keeps-its-contact-shadow', from: 'round 6 (lead): the faded wardrobe left its dark contact shadow on the floor, so the sofa looked as if it hovered over a dark patch; the shadow must fade with its piece (here it does not)', kind: 'bug', expect: { rules: ['orbit'], ids: ['wd'] },
+    build({ Home }) { return orbitRoom(Home, true, false); } },
   { name: 'good-orbit-blocker-fades', from: 'round 6 (Paul): the same wardrobe fades out while it is in the way; the sofa (the subject) never fades', kind: 'good', counts: ['orbit'],
     build({ Home }) { return orbitRoom(Home, true); } },
 );

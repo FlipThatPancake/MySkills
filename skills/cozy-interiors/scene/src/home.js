@@ -31,7 +31,7 @@ export function buildHome(kit, home, registry, areas = []) {
   // what stands between the camera and its target fades out (and returns once it no longer blocks): every object gets its own fade, except flat floor pieces; the area's own subject group (the hero's group) never fades in the home view
   const heroGroups = {}; for (const o of home.objects || []) if (o.hero) (heroGroups[o.area] ||= new Set()).add(o.group);
   const NOFADE = new Set(['rug', 'runner', 'doormat']), blockers = [];
-  for (const o of home.objects || []) { if (NOFADE.has(o.asset)) continue; const g = objects[o.id], fa = kit.fadable(); kit.useFade(g, fa); blockers.push({ id: o.id, g, fa, main: !!(o.hero || heroGroups[o.area]?.has(o.group)), goal: 1, cur: undefined, last: 1 }); }
+  for (const o of home.objects || []) { if (NOFADE.has(o.asset)) continue; const g = objects[o.id], fa = kit.fadable(); kit.useFade(g, fa); blockers.push({ id: o.id, g, fa, main: !!(o.hero || heroGroups[o.area]?.has(o.group)), goal: 1, cur: undefined, last: 1, sv: { value: 1 } }); }   // sv: how much of the piece's contact shadow is drawn, the same number as its fade (halos and the baked light both read it)
   const openables = Object.values(objects).flatMap((g) => g.userData.openables || []);
   const boxes = {}, feet = {};
   for (const o of home.objects || []) {
@@ -129,13 +129,13 @@ export function buildHome(kit, home, registry, areas = []) {
   }
 
   // ---- contact shadows, generated from each object's footprint and mount
-  const shadows = kit.group();
+  const shadows = kit.group(), shadowMasks = [];   // shadowMasks: where the baked light must let go of a faded floor piece's own contact shadow
   for (const o of home.objects || []) {
     if (o.shadow === false) continue;
-    const b = feet[o.id], g = objects[o.id];
+    const b = feet[o.id], g = objects[o.id], sv = blockers.find((B) => B.id === o.id)?.sv || null;
     if (o.mount === 'ceiling') continue;   // it is daylight: a lamp casts no light and no shadow
-    if (o.mount === 'floor') shadows.add(halo(kit, 'floor', b.min.x, b.max.x, b.min.z, b.max.z, (o.lift || 0) + 1.5, o.asset === 'rug' ? 0.14 : 0.26));
-    else if (o.mount === 'on' && o.asset !== 'hob') shadows.add(halo(kit, 'floor', b.min.x, b.max.x, b.min.z, b.max.z, b.min.y + 1.5, 0.3));
+    if (o.mount === 'floor') { shadows.add(halo(kit, 'floor', b.min.x, b.max.x, b.min.z, b.max.z, (o.lift || 0) + 1.5, o.asset === 'rug' ? 0.14 : 0.26, sv)); if (sv) shadowMasks.push({ box: [b.min.x, b.min.z, b.max.x, b.max.z], sv }); }
+    else if (o.mount === 'on' && o.asset !== 'hob') shadows.add(halo(kit, 'floor', b.min.x, b.max.x, b.min.z, b.max.z, b.min.y + 1.5, 0.3, sv));
     else if (o.mount === 'wall') {   // under a wall unit: on the wall it hangs from
       for (const W of walls) {
         const c = [...[b.min.x, b.max.x].flatMap((x) => [b.min.z, b.max.z].map((z) => [x, z]))].map(([x, z]) => [(x - W.to[0]) * -W.d[0] + (z - W.to[1]) * -W.d[1], (x - W.to[0]) * W.n[0] + (z - W.to[1]) * W.n[1]]);
@@ -148,13 +148,13 @@ export function buildHome(kit, home, registry, areas = []) {
 
   const w3 = 3 * Math.PI / 180; let lastT;
   return {
-    group, objects, openables, walls, bounds: bb, blockers,
+    group, objects, openables, walls, bounds: bb, blockers, shadowMasks,
     // the footprint halos and wall-base shadows: kept as the fallback, hidden once the light is baked
     useBake(on = true) { shadows.visible = !on; for (const W of walls) W.shadows.visible = !on; },
     // Each frame: a wall's frames, window light, seams and shadows fade away once the camera is past that wall (over about 3 degrees).
-    update(camera, target, rest = false) {
+    update(camera, target, rest = false, instant = false) {
       floorDraw?.update(camera);
-      const now = performance.now(), dt = Math.min(0.1, (now - (lastT ?? now)) / 1000), ease = 1 - Math.exp(-dt / 0.07); lastT = now;   // what blocks the view fades over about a tenth of a second, then comes back the same way
+      const now = performance.now(), dt = Math.min(0.1, (now - (lastT ?? now)) / 1000), ease = instant ? 1 : 1 - Math.exp(-dt / 0.07); lastT = now;   // what blocks the view fades over about a tenth of a second, then comes back the same way
       const dist = camera.position.distanceTo(target), span = Math.min(200, Math.max(1, dist * Math.sin(w3)));   // never more than 200 mm: a wall the camera passes thins out over a short distance, not over metres
       for (const W of walls) {
         const d = (camera.position.x - W.to[0]) * W.n[0] + (camera.position.z - W.to[1]) * W.n[1];
@@ -175,7 +175,7 @@ export function buildHome(kit, home, registry, areas = []) {
         if (B.wall === undefined) { B.wall = null; if (!b.isEmpty() && b.min.y > 250) { let best = 160; for (const W of walls) { const x = (b.min.x + b.max.x) / 2, z = (b.min.z + b.max.z) / 2, side = (x - W.to[0]) * W.n[0] + (z - W.to[1]) * W.n[1], al = -((x - W.to[0]) * W.d[0] + (z - W.to[1]) * W.d[1]), half = Math.abs(W.n[0]) * (b.max.x - b.min.x) / 2 + Math.abs(W.n[1]) * (b.max.z - b.min.z) / 2, gap = Math.abs(side) - half; if (gap < best && al > -100 && al < W.len + 100) { best = gap; B.wall = W; } } } }   // a piece hung on a wall (off the floor, touching its plane) takes that wall's fade
         if (home.blockerFade === false) hit = false;
         B.goal = hit || (B.wall && B.wall.goal === 0) ? 0 : 1; let c = B.cur === undefined ? B.goal : B.cur + (B.goal - B.cur) * ease; if (Math.abs(c - B.goal) < 0.02) c = B.goal; B.cur = c;
-        if (c !== B.last) { B.last = c; B.fa.set(c); }
+        if (c !== B.last) { B.last = c; B.fa.set(c); B.sv.value = home.shadowFade === false ? 1 : c; }
         if (c <= 0.001 && B.g.visible) { B.g.visible = false; B.fh = true; } else if (c > 0.001 && B.fh) { B.g.visible = true; B.fh = false; }   // fully faded: not drawn at all (area-run's only() resets fh)
       }
     },
