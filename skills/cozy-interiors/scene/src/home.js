@@ -80,7 +80,7 @@ export function buildHome(kit, home, registry, areas = []) {
     W.holes.forEach((h) => s.holes.push(new T.Path(h.map(([a, y]) => new T.Vector2(a, y)))));
     const sg = new T.ShapeGeometry(s); { const ps = sg.attributes.position, uv = new Float32Array(ps.count * 2); for (let k = 0; k < ps.count; k++) { uv[2 * k] = ps.getX(k) / len; uv[2 * k + 1] = ps.getY(k) / H; } sg.setAttribute('uv', new T.BufferAttribute(uv, 2)); }
     // a free end and the top edge melt into the backdrop over their last END mm: the plane carries an alpha map (1 inside, 0 at the very edge)
-    const plane = new T.Mesh(sg, endMat(len, H, !W.joinedTo && !W.runsOnTo, !W.joinedFrom && !W.runsOnFrom)); plane.position.z = -4; plane.userData.caster = true;
+    const plane = new T.Mesh(sg, endMat(len, H, !W.joinedTo && !W.runsOnTo, !W.joinedFrom && !W.runsOnFrom)); plane.position.z = -4; plane.userData.caster = true; plane.material = plane.material.clone(); W.plane = plane;   // an own copy of the tone, so the wall can fade out with its frames
     node.add(plane, W.frames);
     // seams: the wall meets the floor (broken where a door or arch lets the floor through), and the corner it makes with the next wall
     const seams = kit.group(); let a = 0;
@@ -142,7 +142,7 @@ export function buildHome(kit, home, registry, areas = []) {
   }
   group.add(shadows);
 
-  const w3 = 3 * Math.PI / 180;
+  const w3 = 3 * Math.PI / 180; let lastT;
   return {
     group, objects, openables, walls, bounds: bb,
     // the footprint halos and wall-base shadows: kept as the fallback, hidden once the light is baked
@@ -150,12 +150,14 @@ export function buildHome(kit, home, registry, areas = []) {
     // Each frame: a wall's frames, window light, seams and shadows fade away once the camera is past that wall (over about 3 degrees).
     update(camera, target) {
       floorDraw?.update(camera);
-      const dist = camera.position.distanceTo(target), span = Math.max(1, dist * Math.sin(w3));
+      const now = performance.now(), dt = Math.min(0.1, (now - (lastT ?? now)) / 1000), ease = 1 - Math.exp(-dt / 0.07); lastT = now;   // what blocks the view fades over about a tenth of a second, then comes back the same way
+      const dist = camera.position.distanceTo(target), span = Math.min(200, Math.max(1, dist * Math.sin(w3)));   // never more than 200 mm: a wall the camera passes thins out over a short distance, not over metres
       for (const W of walls) {
         const d = (camera.position.x - W.to[0]) * W.n[0] + (camera.position.z - W.to[1]) * W.n[1];
-        let s = step((d + span / 2) / span);
+        let s = Math.min(step((d + span / 2) / span), d > 300 ? 1 : 0);   // a wall is out altogether when the camera is within 300 mm of its plane, so no half-faded sheet hangs in front of the lens
         if (s > 0 && blocksView(W, camera.position, target, home.height || 2700)) s = 0;   // a wall that stands between the camera and the view centre (not through one of its openings) fades too, so a glide through the house never looks at the back of a wall
-        if (s !== W.last) { W.last = s; W.vis.value = s; W.fa.set(s); }
+        W.goal = s; let c = W.cur === undefined ? s : W.cur + (s - W.cur) * ease; if (Math.abs(c - s) < 0.02) c = s; W.cur = c;   // goal: where the fade is heading (the checks read it); cur: what is drawn now
+        if (c !== W.last) { W.last = c; W.vis.value = c; W.fa.set(c); if (W.plane) { W.plane.visible = c > 0.001; W.plane.material.opacity = c; } }
       }
     },
   };
@@ -166,7 +168,7 @@ export function blocksView(W, cam, tgt, top) {
   const side = (p) => (p.x - W.to[0]) * W.n[0] + (p.z - W.to[1]) * W.n[1], a = side(cam), b = side(tgt);
   if (!(a > 150 && b < -150)) return false;
   const t = a / (a - b), x = cam.x + (tgt.x - cam.x) * t, y = cam.y + (tgt.y - cam.y) * t, z = cam.z + (tgt.z - cam.z) * t, s = -((x - W.to[0]) * W.d[0] + (z - W.to[1]) * W.d[1]);
-  return s > 0 && s < W.len && y < top && !W.through.some(([lo, hi, h]) => s >= lo && s <= hi && y < (h || top));
+  return s > -2500 && s < W.len + 2500 && y < top;   // 2.5 m beyond either end too, and an arch or door does not save it: a wall in front of any part of the frame fades, so no sheet of a neighbour's wall hangs over the view (the wall's own arch is still seen when the camera stands in its room)
 }
 
 // An area's fade numbers, from its bounds { x0, x1, z0, z1, top }: the planes' box and the view fade's sphere, all in world mm.

@@ -51,7 +51,7 @@ export function planHome(out, seed, kinds, opts = {}) {
     if (fix.length) { const e = new Error(`plan: ${fix.join(', ')} need a second wall`); e.needBacking = fix; throw e; }
     if (short.length) throw new Error(`plan: ${short.map((id) => `${id} touches ${deg[id]} areas but its free walls (no outside door) hold ${cap(id)} way(s) through`).join('; ')}: ask for fewer touches there`); }
   const best = { tries: 0 };
-  for (let attempt = 0; attempt < 600; attempt++) {
+  for (let attempt = 0; attempt < 2400; attempt++) {   // the first 600 tries at the sizes dealt; a crowded home then shrinks its cells a little (to 85%, then 70%) before it gives up
     const res = tryPlan(attempt); best.tries = attempt + 1; if (res) return finish(res);
   }
   if (!required.length && !opts.noRebacking && !opts.rebacked) { const e = new Error('plan: no floor plan; the single-wall areas take a corner'); e.needBacking = ids.filter((id) => !chain.includes(id) && T.backing.find((x) => x.id === roll[id].backing).walls === 1); if (e.needBacking.length) throw e; }
@@ -59,9 +59,10 @@ export function planHome(out, seed, kinds, opts = {}) {
 
   function tryPlan(attempt) {
     const rnd = mkRnd((seed ^ 0x51ed270b) + attempt * 7919), size = {}, kind = (id) => id.replace(/\d+$/, '');
-    for (const id of ids) { const base = SIZES[kind(id)] || SIZES.living, f = (k) => Math.round(base[k] * (0.85 + 0.15 * rnd()) / 100) * 100; size[id] = [f(0), f(1)]; }
+    for (const id of ids) { const base = SIZES[kind(id)] || SIZES.living, shrink = attempt < 600 ? 1 : attempt < 1500 ? 0.85 : 0.7, f = (k) => Math.round(base[k] * shrink * (0.85 + 0.15 * rnd()) / 100) * 100; size[id] = [f(0), f(1)]; }
     const placed = {}, links = [], used = {}, order = [];   // used[id][wall] = [[lo, hi], ...] along the wall
-    const wc = {}, walls = (id) => (wc[id] ||= linkWalls(roll[id])), wlen = (id, w) => wallGeo(w, ...size[id]).len;
+    const relax = attempt >= 900, wc = {}, walls = (id) => (wc[id] ||= relax ? Object.fromEntries(Object.entries(linkWalls(roll[id])).map(([w, q]) => [w, q.blocked ? { ...q, blocked: false, drop: true } : q])) : linkWalls(roll[id])),   // a crowded home that no cells can hold (every wall short or taken) takes the walls an outside door or hatch holds: that dealt opening is dropped, and the plan says so
+       wlen = (id, w) => wallGeo(w, ...size[id]).len;
     const free = (id, w, x, wd) => { const len = wlen(id, w); if (x - wd / 2 < EDGE || x + wd / 2 > len - EDGE) return false; return !((used[id]?.[w]) || []).some(([lo, hi]) => x + wd / 2 + SPACE > lo && x - wd / 2 - SPACE < hi); };
     const take = (id, w, x, wd) => { ((used[id] ||= {})[w] ||= []).push([x - wd / 2, x + wd / 2]); };
     const putArea = (id, pose, rect = [0, 0, ...size[id]]) => { placed[id] = { id, pose, rect, foot: foot(pose, rect) }; order.push(id); };
@@ -74,7 +75,7 @@ export function planHome(out, seed, kinds, opts = {}) {
         links.push({ a: chain[i - 1], b: chain[i], kind: 'open', share, tree: true }); }
     } else putArea(rootId, { O: [0, 0], psi: 0 });
     const linkedPair = (a, b) => links.some((l) => (l.a === a && l.b === b) || (l.a === b && l.b === a));
-    const forceKind = (qU, qV) => { const q = [qU, qV].find((x) => x.door) , a = [qU, qV].find((x) => x.arch); if (qU.door && qV.arch || qU.arch && qV.door) return null; return q ? { kind: 'door', style: null } : a ? { kind: 'arch', style: a.arch } : pickKind(null); };
+    const forceKind = (qU, qV) => { const q = [qU, qV].find((x) => x.door) , a = [qU, qV].find((x) => x.arch); if (qU.door && qV.arch || qU.arch && qV.door) return { kind: 'arch', style: (qU.arch || qV.arch), merged: true }; return q ? { kind: 'door', style: null } : a ? { kind: 'arch', style: a.arch } : pickKind(null); };
     const pickKind = (arch) => { if (arch) return { kind: 'arch', style: arch }; if (rnd() < 0.4) return { kind: 'door', style: null }; const pool = T.passages.filter((p) => !p.counter), p = pool[Math.floor(rnd() * pool.length)]; return { kind: 'arch', style: p.style }; };
     const clear = (id, pose, rect) => { const f = foot(pose, rect); return Object.values(placed).every((q) => { const o = overlap(f, q.foot); return !(o.x > GAP && o.z > GAP); }); };
     const spot = (id, w, wd) => { const len = wlen(id, w); for (let k = 0; k < 14; k++) { const x = Math.round((EDGE + wd / 2 + rnd() * Math.max(0, len - 2 * EDGE - wd)) / 50) * 50; if (free(id, w, x, wd)) return x; } return null; };
@@ -86,7 +87,7 @@ export function planHome(out, seed, kinds, opts = {}) {
         const gU = wallGeo(wU, ...size[u]), pw = toWorld(placed[u].pose, [gU.at(xu)[0] + placed[u].rect[0] * 0, gU.at(xu)[1]]), nU = dirWorld(placed[u].pose, gU.inward);
         const pose = matePose([0, 0, ...size[v]], { wall: wV, x: xv }, pw, nU); if (!clear(v, pose, [0, 0, ...size[v]])) continue;
         if (loopHome && k < 34) { placed[v] = { id: v, pose, rect: [0, 0, ...size[v]], foot: foot(pose, [0, 0, ...size[v]]) }; const hit = Object.keys(placed).some((w) => w !== v && w !== u && roomOf[w] !== roomOf[v] && touch(v, w, true)); delete placed[v]; if (!hit) continue; }   // a home that wants a loop: this spot is one where the new area's wall also meets another
-        take(u, wU, xu, wd); take(v, wV, xv, wd); const cu = qU.door ? 'door' : qU.arch ? 'arch' : null, cv = qV.door ? 'door' : qV.arch ? 'arch' : null; qU.door = qV.door = false; qU.arch = qV.arch = null; putArea(v, pose); links.push({ a: u, b: v, ...kd, useA: cu && [wU, cu], useB: cv && [wV, cv], width: wd, aWall: wU, aX: xu, bWall: wV, bX: xv, tree: true }); return true; }
+        take(u, wU, xu, wd); take(v, wV, xv, wd); const cu = qU.door ? 'door' : qU.arch ? 'arch' : qU.drop ? 'drop' : null, cv = qV.door ? 'door' : qV.arch ? 'arch' : qV.drop ? 'drop' : null; qU.door = qV.door = false; qU.arch = qV.arch = null; qU.drop = qV.drop = false; putArea(v, pose); links.push({ a: u, b: v, ...kd, useA: cu && [wU, cu], useB: cv && [wV, cv], width: wd, aWall: wU, aX: xu, bWall: wV, bX: xv, tree: true }); return true; }
       return false; };
     const touch = (u, v, dry = false) => {   // two areas already placed whose walls happen to stand back to back: a link between them
       const cand = [];
@@ -131,11 +132,11 @@ export function planHome(out, seed, kinds, opts = {}) {
     const adj = {}; links.forEach((l) => { (adj[l.a] ||= []).push(l.b); (adj[l.b] ||= []).push(l.a); });
     const walk = [], seen = new Set(); const dfs = (id) => { seen.add(id); walk.push(id); for (const n of (adj[id] || [])) if (!seen.has(n)) dfs(n); }; dfs(order[0]);
     const bk = (id) => T.backing.find((x) => x.id === roll[id].backing), nameOf = (id, w) => (w === 'back' ? 'first' : 'second');
-    for (const l of links) for (const [id, u] of [[l.a, l.useA], [l.b, l.useB]]) { if (!u) continue; const a = roll[id], [w, kind] = u, on = nameOf(id, w); let i = (a.openings || []).findIndex((o) => o.kind === kind && o.on === on && !o.style); if (i < 0) continue;
-      if (kind === 'arch') { const k = a.openings.slice(0, i).filter((o) => o.kind === 'arch').length; (a.passages || []).splice(k, 1); } a.openings.splice(i, 1); (a.consumed ||= []).push(`${kind} on the ${w} wall (now the way to ${id === l.a ? l.b : l.a})`); }
+    for (const l of links) for (const [id, u] of [[l.a, l.useA], [l.b, l.useB]]) { if (!u) continue; const a = roll[id], [w, kind0] = u, on = nameOf(id, w); let kind = kind0, i = (a.openings || []).findIndex((o) => kind === 'drop' ? o.on === on && o.kind !== 'window' && (o.kind === 'arch' || o.style) : o.kind === kind && o.on === on && !o.style); if (i < 0) continue; const was = kind === 'drop' ? a.openings[i].kind : kind, dropped = kind === 'drop'; kind = was;
+      if (kind === 'arch') { const k = a.openings.slice(0, i).filter((o) => o.kind === 'arch').length; (a.passages || []).splice(k, 1); } a.openings.splice(i, 1); (a.consumed ||= []).push(`${dropped ? 'the dealt ' + kind + ' (outside door or hatch) on the ' + w + ' wall was dropped: the plan needs the wall for the way to ' + (id === l.a ? l.b : l.a) : kind + ' on the ' + w + ' wall (now the way to ' + (id === l.a ? l.b : l.a) + ')'}`); }
     const plan = { root: order[0], order, walk, areas, links, rooms: rooms.map((r) => r.slice()), tries: best.tries };
     plan.map = mapText(placed, links, size);
-    plan.say = sayOf(plan, size);
+    plan.say = sayOf(plan, size); { const drops = ids.flatMap((id) => (roll[id].consumed || []).filter((c) => /was dropped/.test(c)).map((c) => `${id}: ${c}`)); if (drops.length) plan.say += `\nDropped to make room (this home was too crowded for its walls): ${drops.join('; ')}.`; }
     plan.world = Object.fromEntries(order.map((id) => [id, { pose: placed[id].pose, foot: placed[id].foot }]));   // the planned poses (compose works from its own, with the real rects)
     return plan;
   }
@@ -151,7 +152,7 @@ export function mapText(placed, links, size) {
   return g.map((row) => row.join('')).join('\n') + `\n(one letter per area, # = a way through; one column is ${cw} mm, one row ${ch} mm; the page never shows this)`;
 }
 function sayOf(plan, size) {
-  const L = (l) => l.kind === 'open' ? `${l.a} and ${l.b} share one floor (open plan)` : `${l.a} | ${l.b}: ${l.kind === 'arch' ? (l.style || 'round') + ' arch' : 'door'}, ${l.aWall} wall of ${l.a} at ${l.aX} mm, ${l.bWall} wall of ${l.b} at ${l.bX} mm`;
+  const L = (l) => l.kind === 'open' ? `${l.a} and ${l.b} share one floor (open plan)` : `${l.a} | ${l.b}: ${l.kind === 'arch' ? (l.style || 'round') + ' arch' : 'door'}, ${l.aWall} wall of ${l.a} at ${l.aX} mm, ${l.bWall} wall of ${l.b} at ${l.bX} mm${l.merged ? ' (a dealt door on one side and a dealt arch on the other became this one way: build neither separately)' : ''}`;
   return `HOUSE PLAN (never shown whole: it only places the areas and decides where the camera comes in from)\n${plan.map}\nBuild the areas in this order: ${plan.order.join(', ')}. Each rect starts at [0, 0] and is no larger than its cell: ${plan.order.map((id) => `${id} ${size[id][0]} x ${size[id][1]}`).join('; ')}.\n` +
     `Ways through (compose puts these openings in the walls itself; keep 1200 mm of clear wall beside each, and a smaller rect moves the opening along with the wall): ${plan.links.map(L).join('; ')}.\nView azimuth (a.view leaves az out and takes it from the plan): ${plan.order.map((id) => `${id} ${plan.areas[id].az}`).join(', ')}. Each area looks away from where it is entered.`;
 }
