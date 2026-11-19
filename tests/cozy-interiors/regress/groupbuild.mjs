@@ -9,10 +9,10 @@ const here = path.dirname(fileURLToPath(import.meta.url)), scene = path.resolve(
 const { ASSETS } = await import(path.join(scene, 'src/library/meta.js'));
 const { Home } = await import(path.join(scene, 'compose.mjs')), { group, groupPhrases, RECIPES, groupNeeds } = await import(path.join(scene, 'groups.mjs')), { physical } = await import(path.join(scene, 'geom/comp.mjs'));
 const arg = (k, d) => (process.argv.find((a) => a.startsWith(`--${k}=`)) || '').slice(k.length + 3) || d, N = Number(process.argv.find((a) => /^\d+$/.test(a)) || 4), only = arg('only', ''), JOBS = Number(arg('jobs', 4));
-const COUNT = ['artbehind', 'chairback', 'footstool', 'pair', 'lights', 'stoolheight', 'rugreach', 'rugrun', 'group'];
+const COUNT = ['artbehind', 'chairback', 'footstool', 'pair', 'lights', 'stoolheight', 'rugreach', 'rugrun', 'group', 'seatface'];
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'groupbuild-')), jobs = [];
 const quiet = (f) => { const log = console.log; console.log = () => {}; try { return f(); } finally { console.log = log; } };
-for (const ph of arg('stage', '') === '2' ? [] : groupPhrases().filter((p) => !only || p.includes(only))) for (let seed = 1; seed <= N; seed++) {
+for (const ph of arg('stage', '') === '2' || only === 'floating' ? [] : groupPhrases().filter((p) => !only || p.includes(only))) for (let seed = 1; seed <= N; seed++) {
   const rec = RECIPES.find((r) => r.phrases.includes(ph)), json = path.join(dir, `${jobs.length}.json`), j = { ph, seed, json, left: [], err: null };
   try { quiet(() => { const H = new Home({ seed, floor: 'plain' }), a = H.area(/coat hooks/.test(ph) ? 'hallway' : 't', 'T', { rect: [0, 0, 6000, 4200] }), back = a.back(6000, []); a.left(4200); a.right(4200); a.view({ target: [3000, 700, 2000], az: 20, el: 15 });
     const o = rec.free ? { at: [3000, 2000] } : { wall: back, xc: 3000 }; const r = group(a, ph, { ...o, hero: true }); j.left = r.left; { let lo = 1e9, hi = -1e9; for (const id of r.ids) { let q; try { q = a.dims(id); } catch { continue; } if (ASSETS[q.asset]?.mount === 'wall' || q.asset === 'pendantLamp') continue; const x0 = ASSETS[q.asset]?.origin === 'front-left' ? q.at[0] : q.at[0] - q.w / 2; lo = Math.min(lo, x0); hi = Math.max(hi, x0 + q.w); } j.span = hi - lo; { let zhi = 0; for (const id of r.ids) { let b; try { b = a.boxOf(id); } catch { continue; } const q = a.dims(id); if (ASSETS[q.asset]?.mount === 'wall' || q.asset === 'pendantLamp') continue; zhi = Math.max(zhi, b.z1); } j.depth = zhi; const nd = groupNeeds(ph);
@@ -20,6 +20,11 @@ for (const ph of arg('stage', '') === '2' ? [] : groupPhrases().filter((p) => !o
       if (nd && !rec.free && zhi > nd.d) j.left.push(`deeper than its needs: ${Math.round(zhi)} mm out from the wall, the recipe says needs.d ${nd.d}`); }
     if (j.span > 3600) j.left.push(`too wide for one tour shot: ${Math.round(j.span)} mm along the wall (3600 at most)`); }   // the group's width along the back wall (a bare room, no turn); round 6 T11: a group wider than a shot frames is cut down
     H.write(json, fs); }); } catch (e) { j.err = String(e.message || e).split('\n')[0].slice(0, 160); }
+  jobs.push(j); }
+// a group that can stand out in the room (groups.mjs FLOATS) is built there too, on a floor slot of a room 8000 x 5000: it is the same recipe against a line on the open floor
+for (const ph of arg('stage', '') === '2' ? [] : groupPhrases().filter((p) => groupNeeds(p)?.float && (!only || only === 'floating' || p.includes(only)))) for (let seed = 1; seed <= N; seed++) {
+  const json = path.join(dir, `${jobs.length}.json`), j = { ph: `${ph} (floating)`, seed, json, left: [], err: null };
+  try { quiet(() => { const H = new Home({ seed, floor: 'plain' }), a = H.area('t', 'T', { rect: [0, 0, 8000, 5000] }); a.back(8000, []); a.left(5000); a.right(5000); a.view({ target: [4000, 700, 2500], az: 20, el: 15 }); const r = a.group(ph, { slot: 'floor:middle', hero: true }); j.left = r.left; H.write(json, fs); }); } catch (e) { j.err = String(e.message || e).split('\n')[0].slice(0, 160); }
   jobs.push(j); }
 // --stage=1 or --stage=2 runs one stage. stage 2: every wall arrangement and still life of tables.json, built by arrange.mjs over the furniture its phrase names (--only=text picks phrases)
 if (arg('stage', '') !== '1') { const { wallArr } = await import(path.join(scene, 'arrange.mjs')); const T = JSON.parse(fs.readFileSync(path.join(scene, 'tables.json'), 'utf8')), SL = T.stillLife;
