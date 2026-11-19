@@ -42,4 +42,8 @@ export const fixtures = [
     build({ Home }) { const { H, a } = room(Home, { openings: [{ kind: 'door', x: 3000, width: 1000, height: 2100, open: 20 }] }); H.roll({ seed: 1, areas: { t: { openings: [{ kind: 'door', on: 'first', open: 70 }] } } }); a.alive([{ kind: 'butterfly' }]); } },
   { name: 'good-door-opened-as-the-roll-asked', from: 'round 6 (lead): the spec hangs the door open 70, as the roll asked', kind: 'good',
     build({ Home }) { const { H, a } = room(Home, { openings: [{ kind: 'door', x: 3000, width: 1000, height: 2100, open: 70 }] }); H.roll({ seed: 1, areas: { t: { openings: [{ kind: 'door', on: 'first', open: 70 }] } } }); a.alive([{ kind: 'butterfly' }]); return H; } },
+  { name: 'pot-under-a-vent-leaf-refused', from: 'round 6 (lead): the vent leaf of a picture window swings into the room, over a pot standing on the sill below it', kind: 'bug', refuses: 'vent leaf swings', expect: { rules: ['refused'], ids: [] },
+    build({ Home }) { const { back } = room(Home, { openings: [{ kind: 'window', style: 'picture', x: 3000, width: 2100, height: 1400, sill: 650 }] }); back.onSill('pot1', 'plant', 2300, { group: 'g' }); } },
+  { name: 'good-pot-beside-a-vent-leaf', from: 'round 6 (lead): a pot on the other end of the sill is clear of the leaf', kind: 'good',
+    build({ Home }) { const { H, back } = room(Home, { openings: [{ kind: 'window', style: 'picture', x: 3000, width: 2100, height: 1400, sill: 650 }] }); back.onSill('pot1', 'plant', 3700, { group: 'g' }); return H; } },
 ];
