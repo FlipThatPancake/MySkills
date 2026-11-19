@@ -33,6 +33,8 @@ import { createKit } from './src/kitchen3d.js';
 import { restOn as geomRestOn, fits as geomFits, topAt } from './geom/place.mjs';
 import { SOFT, OVERHANG_TOL, BAND } from './geom/kinds.mjs';
 import { REGISTRY } from './src/library/index.js';
+import { PAINTINGS } from './src/library/paintings.js';
+import { fitFrame } from './src/library/artPlane.js';
 import { joinAreas, seamLine, zoneList } from './openplan.mjs';
 import { matePose, wallGeo, LINK_WIDTH } from './plan.mjs';
 import { checkAlive, pickVia, MOTION } from './motion-roll.mjs';
@@ -426,6 +428,10 @@ class Area {
   }
   group(phrase, opts = {}) { if (opts.slot) { const { slot, ...rest } = opts, r = this.resolveSlot(slot, phrase); opts = r.wall ? { ...rest, wall: r.wall, xc: r.xc } : { ...rest, at: r.at }; } else if (typeof opts.xc === 'string' && opts.wall) opts = { ...opts, xc: this.slotOnWall(opts.wall, opts.xc, phrase) }; return runGroup(this, phrase, opts); }   // one roll group phrase as a built arrangement, see groups.mjs
   dims(id) { const o = this.h.S.home.objects.find((q) => q.id === `${this.id}-${id}`); if (!o) throw new Error(`dims('${id}'): place it first`); const { w, d, h } = sizeOf(o.asset, o.params || {}); return { w, d, h, asset: o.asset, params: o.params || {}, at: o.at }; }   // the placed piece's dealt size in mm (what a group recipe measures its picture or lamp against)
+  // the params a.put / place would deal for an asset (its form, its space), so a caller can measure the piece before it stands: a.dealt('picture', { w, h })
+  dealt(asset, params) { return vary(this.h, asset, params, this.id); }
+  // the height of a picture's real frame bottom above its y: a painting keeps its own proportions, centred in the w x h box asked for
+  frameLift(params) { const f = params?.form ?? 0; if (f < 4) return 0; const P = PAINTINGS[(f - 4) % PAINTINGS.length], fr = fitFrame(P, params.w ?? 600, params.h ?? 800); return Math.round(((params.h ?? 800) - fr.H) / 2); }
   topOf(id) { const o = this.h.S.home.objects.find((q) => q.id === `${this.id}-${id}`); if (!o) throw new Error(`topOf('${id}'): place it first`); const { tris, all, T } = this.targetTris('topOf', id), c = all.getCenter(new T.Vector3()), y = heightField(tris)(c.x, c.z); return y > 0 ? Math.round(y) : o.at[1] + (o.params?.h ?? ASSETS[o.asset].size[2]); }   // the height of the top of a placed thing, measured on its real parts under its middle: stand something on it with y: a.topOf('side-table')
   view({ target, az = this.h.plan?.areas?.[this.id]?.az ?? 20, el = 15, dist, fit = 'objects' }) { this.cam = { target: this.P3(target), az: az - this.psi, el, fit, ...(dist ? { dist } : {}) }; }
   shot(name, from, look, fov = 30, subject, core) { this.shots.push({ name, from: this.P3(from), look: this.P3(look), fov, ...(subject ? { subject: `${this.id}:${subject}` } : {}), ...(core?.length ? { core } : {}) }); }   // core: the pieces of a group too wide for one camera that the shot frames (fitshots names them: C.core(area, name))

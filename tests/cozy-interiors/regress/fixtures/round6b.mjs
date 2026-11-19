@@ -8,7 +8,7 @@ export const fixtures = [
   { name: 'good-plant-on-round-side-table', from: 'rollstats --build: any plant on a round side table (r 260, h 560, hairpin legs) tipped over in the settle test: the top was a 40-sided cone frustum; it is now a fully rounded box', kind: 'good',
     build({ Home }) { const { H, a } = room(Home); a.put('st', 'sideTable', [3000, 1500], 0, { group: 'g', params: { r: 260, h: 560, top: 'round', legs: 'hairpin', shelf: 'none' } }); a.put('pl', 'plant', [3000, 1500], 0, { group: 'g', y: 560, mount: 'on', params: { form: 0 } }); return H; } },
   { name: 'good-armchair-shapes-stand-on-the-floor', from: 'rollstats --build: armchair shapes lounge, sling, rocking and beanbag stood 6-9 mm below the floor (the group code lifted them); each now has its lowest point at y 0', kind: 'good',
-    build({ Home }) { const { H, a } = room(Home); ['lounge', 'sling', 'rocking', 'beanbag'].forEach((s, i) => a.put('ch' + i, 'armchair', [1200 + i * 1800, 1500], 0, { group: 'g', params: { shape: s } })); return H; } },
+    build({ Home }) { const { H, a } = room(Home); ['lounge', 'sling', 'rocking', 'beanbag'].forEach((s, i) => a.put('ch' + i, 'armchair', [1200 + i * 1800, 1500], 0, { group: 'g' + i, params: { shape: s } })); return H; } },
   { name: 'good-cushion-on-slatted-bench', from: 'rollstats --build: a benchCushion on a slatted bench sank 33 mm into it', kind: 'good',
     build({ Home }) { const { H, a } = room(Home); a.put('b', 'bench', [3000, 1500], 0, { group: 'g', params: { form: 'slatted' } }); a.put('c', 'benchCushion', [3000, 1500], 0, { group: 'g', y: 450, mount: 'on', params: { w: 1000, d: 330 } }); return H; } },
 ];
