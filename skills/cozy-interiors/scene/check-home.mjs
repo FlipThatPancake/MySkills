@@ -10,7 +10,7 @@ import { execSync } from 'node:child_process';
 import { existsSync, statSync } from 'node:fs';
 import { dirname, join, resolve, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
-const here = dirname(fileURLToPath(import.meta.url)), scene = process.argv.slice(2).find((a) => !a.startsWith('--')) ? resolve(process.argv.slice(2).find((a) => !a.startsWith('--'))) : (console.error('usage: node check-home.mjs <scene.json>   (the scene a spec wrote)'), process.exit(2));
+const here = dirname(fileURLToPath(import.meta.url)), scene = process.argv.slice(2).find((a, i, v) => !a.startsWith('--') && v[i - 1] !== '--until') ? resolve(process.argv.slice(2).find((a, i, v) => !a.startsWith('--') && v[i - 1] !== '--until')) : (console.error('usage: node check-home.mjs <scene.json>   (the scene a spec wrote)'), process.exit(2));
 const T0 = Date.now(); let TL = T0; const lap = (what) => { if (process.argv.includes('--time')) { console.error(`[time] ${what}: ${((Date.now() - TL) / 1000).toFixed(1)} s (total ${((Date.now() - T0) / 1000).toFixed(1)} s)`); TL = Date.now(); } };   // --time prints where the minutes go
 const QUICK = process.argv.includes('--quick'), REUSE = process.argv.includes('--reuse');   // --quick skips the ghost renders (the slow part: run it on the final pass only); --reuse keeps the built page when it is newer than the scene
 if (!(REUSE && existsSync(scene.replace(/\.json$/, '.html')) && statSync(scene.replace(/\.json$/, '.html')).mtimeMs > statSync(scene).mtimeMs)) execSync(`node ${join(here, 'build.mjs')} ${scene}`, { stdio: 'ignore' });
@@ -28,6 +28,7 @@ const issues = await page.evaluate(() => {
   const { home, kit } = window.cozyScene, T = kit.THREE, out = [], objs = home.objects;
   home.group.updateMatrixWorld(true);
   const sc = (id) => objs[id].userData.scene;
+  for (const id of Object.keys(objs)) { let bad = 0; objs[id].traverse((o) => { const g = o.geometry; if (!g || !g.attributes) return; for (const k of ['position', 'instanceStart']) { const a = g.attributes[k], d = a && (a.data ? a.data.array : a.array); if (d && d.some(Number.isNaN)) { bad++; break; } } }); if (bad) out.push({ rule: 'nan', what: `${id} (${objs[id].userData.scene.asset}): ${bad} line or mesh buffer(s) hold NaN positions (a zero-length rod or a square root of a negative number in the asset): fix the asset's numbers` }); }   // one short issue per object, not three's dump
   const box = (g) => {   // the solid parts only: painted sheets (light, shadow, sky) and lines are not things
     g.updateMatrixWorld(true); const b = new T.Box3(), bb = new T.Box3();
     g.traverse((o) => { if (!o.isMesh || o.isLineSegments2 || o.userData.lines || o.material.isMeshBasicMaterial || kit.hulls.includes(o.material) || o.material === kit.depth) return; o.geometry.computeBoundingBox(); b.union(bb.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld)); });
@@ -414,7 +415,7 @@ for (const i of areaIssues) if (i.rule !== '_heroside') issues.push(i);
   for (const [id, names] of list) for (let i = 0; i < names.length; i++) {
     const n = await page.evaluate(([id, i]) => {
       const c = window.cozyScene, s = c.areas[id].camera.shots[i], { home } = c; c.setArea(id, true); c.controls.minDistance = 10; c.at(s.from, s.look); c.camera.fov = s.fov || 30; c.camera.updateProjectionMatrix(); for (const g of Object.values(c.objects)) { g.userData.tick = null; g.userData.update = null; } c.tour.update = () => false;   // frozen: no sway, no butterfly
-      c.advance(1.5);
+      c.advance(1.5); c.home.update(c.camera, c.tour.look || c.controls.target, true, true); c.draw();   // the fade of what stands in the shot's way settles first, so the two frames differ only by a neighbour
       const grab = () => { const cv = c.draw(), w = cv.width, h = Math.round(cv.height * 690 / 750), k = document.createElement('canvas'); k.width = w; k.height = h; const x = k.getContext('2d'); x.drawImage(cv, 0, 0, w, h, 0, 0, w, h); return x.getImageData(0, 0, w, h).data; };
       const A = grab(), hid = []; for (const k of Object.keys(home.objects)) if (c.groupOf(home.objects[k].userData.scene.area) !== c.groupOf(id)) { home.objects[k].visible = false; hid.push(home.objects[k]); } for (const W of home.walls) if (!(c.areaIds.some((q) => (W.id || '').startsWith(q + '-') && c.groupOf(q) === c.groupOf(id)))) { W.node.visible = false; hid.push(W.node); }
       const B = grab(); for (const o of hid) o.visible = true;
@@ -564,15 +565,19 @@ lap('window heads and roll');
   if (!QUICK) { const { visibleIssues } = await import('./check-visible.mjs'), { existsSync, readFileSync } = await import('node:fs'), cf = scene.replace(/\.json$/, '.cameras.json'); let C = {}; try { if (existsSync(cf)) C = JSON.parse(readFileSync(cf, 'utf8')); } catch {} delete C._core; const vi = await visibleIssues(page, C); for (const i of vi) issues.push(i); coverage.push(vi.coverage); }   // every object shows from the home view or a tour shot (check-visible.mjs)
   if (!QUICK) { const { pendantIssues } = await import('./check-pendants.mjs'); const pi2 = await pendantIssues(page); for (const i of pi2) issues.push(i); coverage.push(pi2.coverage); }   // every pendant's cord shows in the home view (check-pendants.mjs)
 lap('panes, visibility, cords');
-{ const { openPlanIssues, glideIssues } = await import('./check-openplan.mjs'); for (const i of await openPlanIssues(page, scene, { quick: QUICK })) issues.push(i); for (const i of await glideIssues(page, scene)) issues.push(i); }   // open-plan homes (scene.groups): layout, separators, glimpse, glide
+{ const { openPlanIssues, glideIssues, orbitIssues } = await import('./check-openplan.mjs'); for (const i of await openPlanIssues(page, scene, { quick: QUICK })) issues.push(i); for (const i of await glideIssues(page, scene)) issues.push(i); for (const i of await orbitIssues(page, scene)) issues.push(i); }   // open-plan homes (scene.groups): layout, separators, glimpse, glide
 lap('open plan');
 { const { motionIssues } = await import('./check-motion.mjs'); for (const i of await motionIssues(page, scene)) issues.push(i); }   // living things (src/motion): rolled kinds, open-window rule, nothing through furniture or walls in 240 s of simulated motion
 lap('motion');
+const assetOf = await page.evaluate(() => Object.fromEntries(Object.keys(window.cozyScene.objects).map((k) => [k, window.cozyScene.objects[k].userData.scene?.asset])));   // for the stage split of rules that mix large and small pieces (stages.mjs)
 await browser.close();
 for (const e of errors) console.log('PAGE ERROR', e);
 const notes = []; for (let k = issues.length - 1; k >= 0; k--) if (/^note-/.test(issues[k].rule)) notes.unshift(...issues.splice(k, 1));   // notes: taste, not failures (placement coverage): printed, never counted
+const { stageReport, makeCtx } = await import('./stages.mjs'), untilArg = (process.argv.find((a) => a.startsWith('--until=')) || '').slice(8) || (process.argv.includes('--until') ? process.argv[process.argv.indexOf('--until') + 1] : null);   // --until <stage>: only the stages up to that one (deal plan shell anchors dress life photographs walk, or 1-8)
+const staged = stageReport(issues, makeCtx(assetOf), untilArg && /^\d$/.test(untilArg) ? +untilArg : untilArg); coverage.push(staged.coverage);
+issues.splice(0, issues.length, ...staged.shown);   // the count below is what the chosen stages report
 for (const l of coverage) console.log(`coverage: ${l}`);   // what each sampling check looked at and what it left out
-for (const i of issues) console.log(`[${i.rule}] ${i.what}`);
+for (const l of staged.lines) console.log(l);   // the issues grouped by stage, earliest first, each ending with its stage and next move (stages.mjs)
 for (const i of notes) console.log(`[${i.rule}] ${i.what}`);
 { const S = JSON.parse((await import('node:fs')).readFileSync(scene, 'utf8')); if ((S.areas || []).some((a) => a.motion?.length)) console.log(`NEXT: the rules cannot see motion. Run  node ${join(here, 'watch.mjs')} ${scene}  and look at the strips (watch-<area>.png): do the living things read, stay in frame, and start where the home view shows them?`); }
 console.log(issues.length || errors.length ? `${basename(scene)}: ${issues.length} issue(s)` : `${basename(scene)}: No problems.`);

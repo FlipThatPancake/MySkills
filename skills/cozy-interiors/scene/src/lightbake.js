@@ -8,7 +8,7 @@ const CAST = 5, FAR = 20000, GREY = [138 / 255, 138 / 255, 128 / 255];
 const WIN_N = [5, 4], SKY_N = 32, SHADOW_A = 0.36, W_WIN = 0.7, W_SKY = 0.3, CONTACT = 0.4, REACH = 300;   // window and sky weights share SHADOW_A; CONTACT is the alpha right at a contact, found within REACH mm
 const rnd = (seed) => () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
 
-export async function bakeLight({ THREE: T, renderer, scene, kit, walls, areas, group, seed = 7, size = 1024, quality = 1, debug = false, wWin = W_WIN, wSky = W_SKY, contact = CONTACT, strength = SHADOW_A, gain, withAll = (fn) => fn() }) {
+export async function bakeLight({ THREE: T, renderer, scene, kit, walls, areas, group, seed = 7, size = 1024, quality = 1, debug = false, wWin = W_WIN, wSky = W_SKY, contact = CONTACT, strength = SHADOW_A, gain, withAll = (fn) => fn(), masks = null }) {
   const gl = renderer.extensions;
   if (!(renderer.capabilities.isWebGL2 && (gl.has('EXT_color_buffer_float') || gl.has('EXT_color_buffer_half_float')))) return null;
   const t0 = performance.now(), R = rnd(seed), out = { passes: 0, sheets: 0 };
@@ -134,7 +134,7 @@ export async function bakeLight({ THREE: T, renderer, scene, kit, walls, areas, 
       if (debug) { const px = new Uint16Array(rw * rh * 4); renderer.readRenderTargetPixels(r.sky, 0, 0, rw, rh, px); let mr = 0, mb = 0, sb = 0, cnt = 0; for (let i = 0; i < px.length; i += 4) { const g = T.DataUtils.fromHalfFloat(px[i + 1]); if (g > 0.01) { mr = Math.max(mr, 1 - T.DataUtils.fromHalfFloat(px[i]) / g); const nb = T.DataUtils.fromHalfFloat(px[i + 2]) / g; mb = Math.max(mb, nb); sb += nb; cnt++; } } (out.stats ||= []).push(`${A.id}:${r.kind} sky maxShadow ${mr.toFixed(2)} maxNear ${mb.toFixed(2)} meanNear ${(sb / cnt).toFixed(3)}`); }
       r.win.dispose(); r.sky.dispose();
       if (r.kind === 'floor') {
-        const m = sheetTex(kit, fin.texture, r.w, r.h, null, gain); m.rotation.x = -Math.PI / 2; m.position.set(b.x0 - pad + bw / 2, 8, b.z1 + pad - bd / 2); later.push(() => group.add(m));
+        const m = sheetTex(kit, fin.texture, r.w, r.h, null, gain, false, masks); m.rotation.x = -Math.PI / 2; m.position.set(b.x0 - pad + bw / 2, 8, b.z1 + pad - bd / 2); later.push(() => group.add(m));
       } else {
         const m = sheetTex(kit, fin.texture, r.w, r.h, r.W.vis, gain); m.position.set(r.W.len / 2, r.h / 2, 2.5); later.push(() => r.W.node.add(m));
       }

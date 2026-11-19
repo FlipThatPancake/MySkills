@@ -74,7 +74,7 @@ export function createAreaScene(canvas, S) {
     const h = A.camera?.home || {}, b = A.bounds, top = b.top || 2500;
     const target = h.target || [(b.x0 + b.x1) / 2, top / 2 - 150, (b.z0 + b.z1) / 2];
     const v = { target, az: h.az ?? 20, el: h.el ?? 15, dist: h.dist || fit(b) };
-    return h.fit === 'objects' ? fitView(A, v) : v;
+    if (h.fit !== 'objects') return v; const f = fitView(A, v); return [...f.target, f.dist].every(Number.isFinite) ? f : v;   // an area with nothing in it keeps its plain view
   };
   // open plan: areas of one group share a floor and are drawn together, and the fade box is the group's bounds, so nothing thins out at a seam
   const groupOf = (id) => areas[id].group || id, together = (a, b) => !!a && !!b && groupOf(a) === groupOf(b);
@@ -110,7 +110,7 @@ export function createAreaScene(canvas, S) {
   }
   // at rest only the current area exists: other areas' walls (frames, seams, shadows) and objects are hidden outright, so no half-faded ghost of a neighbour shows in any view or tour shot; a glide shows everything
   const shown = (id, area) => id === null || (area ? area === id || groupOf(area) === groupOf(id) : false);
-  const only = (id) => { for (const W of home.walls) W.node.visible = id === null || shown(id, order.find((a) => (W.id || '').startsWith(a + '-'))); for (const o of Object.values(home.objects)) o.visible = shown(id, o.userData.scene.area); };   // an area's whole open-plan group is drawn at rest
+  const only = (id) => { for (const W of home.walls) W.node.visible = id === null || shown(id, order.find((a) => (W.id || '').startsWith(a + '-'))); for (const o of Object.values(home.objects)) o.visible = shown(id, o.userData.scene.area); for (const b of home.blockers) b.fh = false; };   // an area's whole open-plan group is drawn at rest
   function arrive(id) {
     cur = id; api.area = id; only(id);
     const v = viewOf(areas[id]);
@@ -127,7 +127,7 @@ export function createAreaScene(canvas, S) {
     let daz = ((to.az - from.az + 540) % 360) - 180;   // the short way round
     const ways = cur && links ? route(links, cur, id) : [], path = ways.length || (cur && links && !together(cur, id)) ? glidePath(from, to, ways, { height: S.home.height || 2700 }) : null;
     glide = { id, from, to, daz, path, fade0: cur ? fadeOf(areas[cur]) : fadeOf(areas[id]), fade1: fadeOf(areas[id]), t0: performance.now(), hold, k: 0 };
-    controls.enabled = false; markLabels(id); if (!together(cur, id)) only(null);   // between areas of one group nothing switches on or off
+    glide.apart = !together(cur, id); controls.enabled = false; markLabels(id); if (glide.apart) only(cur);   // the first frame is the start view itself; the other areas are drawn from the first step on (glideAt)   // between areas of one group nothing switches on or off
   }
   function glideAt(k) {
     const g = glide, e = smooth(Math.min(1, Math.max(0, k))); g.k = k;
@@ -137,8 +137,12 @@ export function createAreaScene(canvas, S) {
       controls.target.set(...tg);
       camera.position.copy(controls.target).add(sph(g.from.dist + (g.to.dist - g.from.dist) * e, g.from.az + g.daz * e, g.from.el + (g.to.el - g.from.el) * e));
     }
-    camera.lookAt(controls.target);
-    applyFade(g.fade0.map((a, i) => a + (g.fade1[i] - a) * e));
+    camera.lookAt(controls.target); if (k > 0 && !g.shown && g.apart) { g.shown = true; only(null); }
+    let f = g.fade0.map((a, i) => a + (g.fade1[i] - a) * e);
+    if (g.apart && g.path) {   // on the way the fade box (what is drawn solid) grows to hold both areas and the walk between them, so nothing along the route thins into a milky veil; it is the start's box at k = 0 and the destination's at k = 1
+      const U = g.union ||= (() => { const lo = [1e9, 1e9, 1e9], hi = [-1e9, -1e9, -1e9]; const add = (p, m) => { for (let i = 0; i < 3; i++) { lo[i] = Math.min(lo[i], p[i] - m[i]); hi[i] = Math.max(hi[i], p[i] + m[i]); } }; for (const F of [g.fade0, g.fade1]) add(F.slice(0, 3), F.slice(3, 6)); for (let j = 0; j <= 20; j++) add(g.path.pos(j / 20), [2500, 0, 2500]); return [...lo.map((l, i) => (l + hi[i]) / 2), ...lo.map((l, i) => (hi[i] - l) / 2), Math.max(g.fade0[6], g.fade1[6]), Math.max(g.fade0[7], g.fade1[7]), g.fade0[8], Math.max(g.fade0[9], g.fade1[9])]; })(), a = smooth(Math.min(1, Math.min(e, 1 - e) / 0.15));
+      f = f.map((v, i) => v + (U[i] - v) * a); }
+    applyFade(f);
     if (k >= 1) { const id = g.id; glide = null; arrive(id); }
   }
   function setArea(id, snap = false) { if (snap || !cur) { glide = null; arrive(id); } else startGlide(id); }
@@ -225,13 +229,13 @@ export function createAreaScene(canvas, S) {
     for (const g of Object.values(home.objects)) { g.userData.tick?.(dt); g.userData.update?.(dt); }
     api.motion.update(dt, api.area);
     moveFronts(dt);
-    home.update(camera, tour.look || controls.target);
+    home.update(camera, tour.look || controls.target, !glide);
     renderer.render(scene, camera);
   };
   renderer.setAnimationLoop(loopFn);
   // for the checks (check-home ghosts): stop the live loop (one software-GL frame takes over half a second), settle the fades without drawing, then draw one frame on demand
   api.loop = (on) => renderer.setAnimationLoop(on ? loopFn : null);
-  api.advance = (sec, live) => { const dt = live ? 0.05 : 0.1; for (let t = 0; t < sec - 1e-9; t += dt) { for (const g of Object.values(home.objects)) { g.userData.tick?.(dt); g.userData.update?.(dt); } if (live) api.motion.update(dt, api.area); moveFronts(dt); home.update(camera, tour.look || controls.target); } };   // live: the living things move too (watch.mjs)
+  api.advance = (sec, live) => { const dt = live ? 0.05 : 0.1; for (let t = 0; t < sec - 1e-9; t += dt) { for (const g of Object.values(home.objects)) { g.userData.tick?.(dt); g.userData.update?.(dt); } if (live) api.motion.update(dt, api.area); moveFronts(dt); home.update(camera, tour.look || controls.target, !glide); } };   // live: the living things move too (watch.mjs)
   api.swayFit = (maxDeg = 25) => {   // the idle sway turns the camera round the home view's target: objects of the area that are inside the frame now stay inside, by pulling the camera back (up to 35%) as it turns; where that is not enough the swing is cut short
     const T = THREE, Y = new T.Vector3(0, 1, 0), id = api.area, tgt = controls.target, off0 = camera.position.clone().sub(tgt), pos = camera.position.clone(), quat = camera.quaternion.clone();
     home.group.updateMatrixWorld(true);
@@ -246,7 +250,7 @@ export function createAreaScene(canvas, S) {
     const scale = (deg) => { const lo = Math.floor(deg), hi = Math.ceil(deg), a = table[lo] ?? 1.35, b = table[hi] ?? 1.35; return a + (b - a) * (deg - lo); };
     return { max, scale };
   };
-  api.draw = () => { home.update(camera, tour.look || controls.target); renderer.render(scene, camera); return renderer.domElement; };
+  api.draw = () => { home.update(camera, tour.look || controls.target, !glide); renderer.render(scene, camera); return renderer.domElement; };
   window.cozyScene = api;
   // the light is baked after the page is up (the passes are spread over frames) and fades in; until then, and if the bake is not possible, the old halos stand in
   window.cozyBaked = q.has('nobake') || q.has('check');
@@ -254,7 +258,7 @@ export function createAreaScene(canvas, S) {
     const withAll = (fn) => { const ws = home.walls.map((W) => W.node.visible), os = Object.values(home.objects).map((o) => o.visible); only(null); try { fn(); } finally { home.walls.forEach((W, i) => { W.node.visible = ws[i]; }); Object.values(home.objects).forEach((o, i) => { o.visible = os[i]; }); } };   // every area's pieces must stand in the light passes, though only one is shown
     const gain = { value: 0 }, tune = (q.get('baket') || '').split(',').map(Number);   // ?baket=strength,contact,wWin,wSky
     home.useBake(true);   // no halos while the light is baking: the page shows plain, then the soft light fades in
-    bakeLight({ THREE, renderer, scene, kit, walls: home.walls, areas: bakeAreas(), group: home.group, quality: Number(q.get('bake')) || 1, debug: q.has('bakedebug'), gain, withAll, ...(tune[0] ? { strength: tune[0], contact: tune[1], wWin: tune[2], wSky: tune[3] } : {}) }).then((bake) => {
+    bakeLight({ THREE, renderer, scene, kit, walls: home.walls, areas: bakeAreas(), group: home.group, quality: Number(q.get('bake')) || 1, debug: q.has('bakedebug'), gain, withAll, masks: home.shadowMasks, ...(tune[0] ? { strength: tune[0], contact: tune[1], wWin: tune[2], wSky: tune[3] } : {}) }).then((bake) => {
       if (!bake) { home.useBake(false); window.cozyBaked = true; return; }
       window.cozyBake = bake; const t0 = performance.now(), fade = (now) => { gain.value = Math.min(1, (now - t0) / 1200); if (gain.value < 1) requestAnimationFrame(fade); else window.cozyBaked = true; }; requestAnimationFrame(fade);
     });

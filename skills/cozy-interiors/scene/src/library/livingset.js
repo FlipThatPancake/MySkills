@@ -145,6 +145,7 @@ export function logBasket(kit, { r = 270, h = 190, logs = 9, seed = 3 } = {}) { 
     const y = layer === 0 ? 40 + lr + 1 : yPrev + Math.sqrt(Math.max(1, (lrs[layer - 1] + lr + gap) ** 2 - ((2 * lr + gap) / 2) ** 2));
     zs.forEach((z, i) => {
       const half = Math.sqrt(Math.max(0, (rIn(y - lr * 0.6) - 12) ** 2 - (Math.abs(z) + lr) ** 2)), L2 = Math.min(half, (layer === 2 ? 150 : 190) + R() * (layer === 2 ? 70 : 90)), dx = (R() - 0.5) * 50, yaw = (R() - 0.5) * 0.14;
+      if (L2 < 30) return;   // a basket too narrow for a log at this height: no log (a zero-length rod made NaN lines)
       const c = Math.cos(yaw), sn = Math.sin(yaw); logRod([dx - L2 * c, y, z + L2 * sn], [dx + L2 * c, y, z - L2 * sn], lr);
     });
     yPrev = y; zsPrev = zs;
