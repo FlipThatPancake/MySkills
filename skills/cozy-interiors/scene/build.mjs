@@ -2,11 +2,12 @@
 // node build.mjs <scene.json> [out.html] → one self-contained page for any scene (src/page.html + page.js + run.js, the scene bundled in).
 import { readFileSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import { globalPkg } from './needs.mjs';
 import { execSync } from 'node:child_process';
 import { dirname, join, extname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 const here = dirname(fileURLToPath(import.meta.url)), src = join(here, 'src');
-const esbuild = createRequire(join(execSync('npm root -g', { encoding: 'utf8' }).trim(), 'x.js'))('esbuild');   // global install: npm i -g esbuild
+const esbuild = globalPkg('esbuild');   // global install: npm i -g esbuild
 if (!process.argv[2]) { console.error('usage: node build.mjs <scene.json> [out.html]'); process.exit(1); }
 {
   const scenePath = resolve(process.argv[2]), scene = readFileSync(scenePath, 'utf8'), name = process.argv[2].replace(/^.*\//, '').replace(/\.json$/, '');

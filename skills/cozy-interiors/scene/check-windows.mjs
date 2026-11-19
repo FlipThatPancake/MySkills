@@ -7,6 +7,7 @@
 //   hook: `import { windowIssues } from './check-windows.mjs'`; `await windowIssues(page, camerasByArea, { frames: dir? })` -> [{ rule: 'pane', what }]. page: the built home page, loop stopped by this function.
 //   node check-windows.mjs <scene.json> [--frames=dir]   builds the page, runs the check, prints the issues, saves per window and camera a frame with the picture shown plain and as drawn.
 import { createRequire } from 'node:module';
+import { globalPkg, buildPage } from './needs.mjs';
 import { execSync } from 'node:child_process';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -72,8 +73,8 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const here = dirname(fileURLToPath(import.meta.url)), scene = process.argv.slice(2).find((a) => !a.startsWith('--'));
   if (!scene) { console.log('usage: node check-windows.mjs <scene.json> [--frames=dir]'); process.exit(1); }
   const frames = (process.argv.find((a) => a.startsWith('--frames=')) || '').slice(9) || null, sceneAbs = resolve(scene);
-  execSync(`node ${join(here, 'build.mjs')} ${sceneAbs}`, { stdio: 'ignore' });
-  const { chromium } = createRequire(join(execSync('npm root -g', { encoding: 'utf8' }).trim(), 'x.js'))('playwright');
+  buildPage(here, sceneAbs);
+  const { chromium } = globalPkg('playwright');
   const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
   const page = await browser.newPage({ viewport: { width: 1200, height: 750 } });
   page.on('pageerror', (e) => console.log('PAGE ERROR', String(e)));

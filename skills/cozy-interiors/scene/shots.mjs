@@ -1,14 +1,15 @@
 #!/usr/bin/env node
 // node shots.mjs <scene.json> <out.png> → a contact sheet of every tour shot of every area (one row per area), to spot shots that look into a wall or cut the hero. Needs Playwright (global), esbuild (global) and Python with Pillow.
 import { createRequire } from 'node:module';
+import { globalPkg, buildPage } from './needs.mjs';
 import { execSync } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 const here = dirname(fileURLToPath(import.meta.url)), scene = resolve(process.argv[2]), out = resolve(process.argv[3]), tmp = join('/tmp', 'cozy-shots-' + process.pid);
 mkdirSync(tmp, { recursive: true });
-execSync(`node ${join(here, 'build.mjs')} ${scene}`, { stdio: 'ignore' });
-const { chromium } = createRequire(join(execSync('npm root -g', { encoding: 'utf8' }).trim(), 'x.js'))('playwright');
+buildPage(here, scene);
+const { chromium } = globalPkg('playwright');
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 1200, height: 750 } });
 await page.goto('file://' + scene.replace(/\.json$/, '.html')); await page.waitForFunction(() => window.cozyScene && window.cozyBaked, null, { timeout: 280000 });
