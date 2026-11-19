@@ -5,4 +5,6 @@ export const fixtures = [
     build({ Home }) { const { H, a } = room(Home); a.put('ps', 'plantStand', [3000, 1500], 0, { group: 'g', params: { r: 240, h: 540, tiers: 2, plant: 'bush', seed: 84 } }); return H; } },
   { name: 'good-shoes-two-neat-pairs', from: 'rollstats --build: shoes neat with pairs 2 reads as 3 loose pieces (separate shoes are by design: the asset declares its pieces)', kind: 'good',
     build({ Home }) { const { H, a } = room(Home, { openings: [{ kind: 'door', x: 3000, width: 900 }] }); a.put('sh', 'shoes', [4200, 300], 0, { group: 'g', params: { arrange: 'neat', pairs: 2, kind: 'sneaker' } }); return H; } },
+  { name: 'good-plant-on-round-side-table', from: 'rollstats --build: any plant on a round side table (r 260, h 560, hairpin legs) tipped over in the settle test: the top was a 40-sided cone frustum; it is now a fully rounded box', kind: 'good',
+    build({ Home }) { const { H, a } = room(Home); a.put('st', 'sideTable', [3000, 1500], 0, { group: 'g', params: { r: 260, h: 560, top: 'round', legs: 'hairpin', shelf: 'none' } }); a.put('pl', 'plant', [3000, 1500], 0, { group: 'g', y: 560, mount: 'on', params: { form: 0 } }); return H; } },
 ];

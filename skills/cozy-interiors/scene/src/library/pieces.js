@@ -9,7 +9,7 @@ const rnd = (seed) => { let r = (seed || 1) * 9301 + 49297; return () => { r = (
 export function sideTable(kit, { r = 230, h = 520, top = 'round', legs = 'splay', shelf = 'low', drawer = 'none', ajar = 0, tone } = {}) {
   const g = kit.group(), T = 30, round = top === 'round', lr = r * 0.62, pts = [];
   const props = { tone };
-  if (round) g.add(kit.cyl(0, h - T, 0, r, T, { rTop: r - 5, seg: 40, ...props }));
+  if (round) g.add(kit.rbox(-r, h - T, r, 2 * r, T, 2 * r, r - 0.5, props));   // a round top drawn as a fully rounded box: the geometry core then gets one clean convex body to stand things on (a 40-sided cone frustum tipped a plant)
   else g.add(kit.rbox(-r, h - T, r, 2 * r, T, 2 * r, top === 'rounded' ? r * 0.45 : 8, props));
   if (round) for (let i = 0; i < 3; i++) { const a = i * Math.PI * 2 / 3 + 0.5; pts.push([Math.cos(a) * lr, Math.sin(a) * lr]); }
   else for (const sx of [-1, 1]) for (const sz of [-1, 1]) pts.push([sx * (r - 38), sz * (r - 38)]);
