@@ -43,8 +43,8 @@ export function restOn(target, thing, at, turn = 0) {
   return top - lo;
 }
 
-// the share (0..1) of the thing's base that lies over the surface it rests on: the base outline is sampled on a grid and each sample counts when a surface within `tol` mm of the resting height is under it (a hole, an edge, a lower step do not)
-export function fits(target, thing, at, turn = 0, { tol = 30, step = 12 } = {}) {
+// the share (0..1) of the thing's base that lies over the surface it rests on: the base outline is sampled on a grid and each sample counts when a surface within `tol` mm (4, or 12 for soft things: the same bands as geom/rules.mjs) of the resting height is under it (a hole, an edge, a lower step do not)
+export function fits(target, thing, at, turn = 0, { tol = 4, step = 12 } = {}) {
   const { pts } = basePoints(thing, at, turn), H = hull(pts); if (H.length < 3) return 1;
   const y = restOn(target, thing, at, turn) + thing.reduce((q, t) => Math.min(q, t[1], t[4], t[7]), 1e9);
   let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; for (const [x, z] of H) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); z0 = Math.min(z0, z); z1 = Math.max(z1, z); }

@@ -11,3 +11,6 @@ export const isFree = (o) => !/^(wall|ceiling|lines|in)/.test(o.mount) && !FLATM
 export const softKind = (asset) => (CLOTH.test(asset || '') ? 'cloth' : SEAT.test(asset || '') ? 'seat' : null);
 export const FOLDED = /^(foldedThrow|cushion|benchCushion|floorCushion|pillow)$/;                         // folded cloth things lie on a surface like any piece: the support rules (floating, overhangs, sunk) read them, the settle test leaves them be
 export const holdsRules = (o) => isFree(o) || FOLDED.test(o.asset || '');
+
+export const OVERHANG_TOL = 0.15;   // the share of a base that may reach past what it stands on: compose refuses past it and the overhangs rule fails past it (one number)
+export const BAND = { hard: 4, soft: 12 };   // how far a surface may lie from the resting height and still hold the base, in mm
