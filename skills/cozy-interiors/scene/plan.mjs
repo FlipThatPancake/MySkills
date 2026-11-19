@@ -142,6 +142,7 @@ export function planHome(out, seed, kinds, opts = {}) {
     }   // used[id][wall] = [[lo, hi], ...] along the wall
     const relax = attempt >= 900, wc = {}, walls = (id) => (wc[id] ||= relax ? Object.fromEntries(Object.entries(linkWalls(roll[id])).map(([w, q]) => [w, q.blocked && !q.hard ? { ...q, blocked: false, drop: true } : q])) : linkWalls(roll[id])),   // a crowded home that no cells can hold (every wall short or taken) takes the walls an outside door or hatch holds: that dealt opening is dropped, and the plan says so
        wlen = (id, w) => wallGeo(w, ...size[id]).len;
+    const rebacks = {}, w2c = {}, walls2 = (id) => (w2c[id] ||= (() => { const o = { ...walls(id) }; if (id in rebacks) o[rebacks[id]] = { blocked: false, arch: null, door: false }; else { const b = T.backing.find((x) => x.id === roll[id].backing); if (b.angle !== 90 && !(roll[id].openings || []).some((q) => q.on === 'second')) for (const w of b.walls === 1 ? ['left', 'right'] : [b.second]) o[w] = { blocked: false, arch: null, door: false, virtual: true }; } return o; })());   // a loop may stand an area's side wall too: a one-wall area then takes a corner backing on that side (the roll changes it when the plan is done)
     const free = (id, w, x, wd) => { const len = wlen(id, w); if (x - wd / 2 < EDGE || x + wd / 2 > len - EDGE) return false; if (((winUsed[id]?.[w]) || []).some(([lo, hi]) => x + wd / 2 + WINCLEAR > lo && x - wd / 2 - WINCLEAR < hi)) return false; return !((used[id]?.[w]) || []).some(([lo, hi]) => x + wd / 2 + SPACE > lo && x - wd / 2 - SPACE < hi); };
     const take = (id, w, x, wd) => { ((used[id] ||= {})[w] ||= []).push([x - wd / 2, x + wd / 2]); };
     const putArea = (id, pose, rect = [0, 0, ...size[id]]) => { placed[id] = { id, pose, rect, foot: foot(pose, rect) }; order.push(id); };
@@ -160,29 +161,33 @@ export function planHome(out, seed, kinds, opts = {}) {
       if (q.x === null) return false; const g = wallGeo(q.wall, ...size[owner]), c = toWorld(pose, g.at(q.x)), n = dirWorld(pose, g.inward).map((v) => -v), t = [-n[1], n[0]], hw = q.width / 2 + 100, P = [[c[0] - t[0] * hw, c[1] - t[1] * hw], [c[0] + t[0] * hw, c[1] + t[1] * hw]].flatMap((p) => [p, [p[0] + n[0] * WINVIEW, p[1] + n[1] * WINVIEW]]), xs = P.map((p) => p[0]), zs = P.map((p) => p[1]), o = overlap(f, { x0: Math.min(...xs), x1: Math.max(...xs), z0: Math.min(...zs), z1: Math.max(...zs) }); return o.x > 100 && o.z > 100; });
     const clear = (id, pose, rect) => { const f = foot(pose, rect); return Object.values(placed).every((q) => { const o = overlap(f, q.foot); return !(o.x > 20 - WALL_T && o.z > 20 - WALL_T) && (attempt >= 900 || (!behind(q.id, q.pose, f) && !behind(id, pose, q.foot))); }); };   // two cells keep a wall slab (200 mm) between them, as a mated pair does; a crowded home (900 tries) may show a neighbour through a window   // two cells keep a wall slab (200 mm) between them, as a mated pair does
     const spot = (id, w, wd) => { const len = wlen(id, w), at = []; for (let x = Math.ceil((EDGE + wd / 2) / 50) * 50; x <= len - EDGE - wd / 2; x += 50) if (free(id, w, x, wd)) at.push(x); return at.length ? at[Math.floor(rnd() * at.length)] : null; };   // every place on the wall where the way fits (clear of the windows and of other ways), one of them at random
+    const spots = (id, w, wd) => { const len = wlen(id, w), at = []; for (let x = Math.ceil((EDGE + wd / 2) / 50) * 50; x <= len - EDGE - wd / 2; x += 50) if (free(id, w, x, wd)) at.push(x); return at; };
     const attach = (u, v) => {   // v (not placed) takes a wall back to back with a wall of u
       for (let k = 0; k < 40; k++) {
         const wu = Object.entries(walls(u)).filter(([w, q]) => !q.blocked), wv = Object.entries(walls(v)).filter(([w, q]) => !q.blocked); if (!wu.length || !wv.length) return false;
         const pickU = wu.flatMap(([w, q]) => Array(q.windowed ? 1 : 4).fill([w, q])), [wU, qU] = pickU[Math.floor(rnd() * pickU.length)], pickV = wv.flatMap(([w, q]) => Array((w === 'back' ? 1 : 3) * (q.windowed ? 1 : 4)).fill([w, q])), [wV, qV] = pickV[Math.floor(rnd() * pickV.length)];
         if (qU.windowed && qV.windowed && attempt < 100) continue;   // (a crowded home lets it through after 100 tries) two windows back to back would open into each other
-        const kd = forceKind(qU, qV); if (!kd) continue; const wd = LINK_WIDTH[kd.style || 'door'], xu = spot(u, wU, wd), xv = spot(v, wV, wd); if (xu === null || xv === null) continue;
-        const gU = wallGeo(wU, ...size[u]), pw = toWorld(placed[u].pose, [gU.at(xu)[0] + placed[u].rect[0] * 0, gU.at(xu)[1]]), nU = dirWorld(placed[u].pose, gU.inward);
-        const pose = matePose([0, 0, ...size[v]], { wall: wV, x: xv }, pw, nU); if (!clear(v, pose, [0, 0, ...size[v]])) continue;
-        if (loopHome && k < 34) { placed[v] = { id: v, pose, rect: [0, 0, ...size[v]], foot: foot(pose, [0, 0, ...size[v]]) }; const hit = Object.keys(placed).some((w) => w !== v && w !== u && roomOf[w] !== roomOf[v] && touch(v, w, true)); delete placed[v]; if (!hit) continue; }   // a home that wants a loop: this spot is one where the new area's wall also meets another
+        const kd = forceKind(qU, qV); if (!kd) continue; const wd = LINK_WIDTH[kd.style || 'door'], xv = spot(v, wV, wd); if (xv === null) continue;
+        const wantLoop = loopHome && k < 12, xus = wantLoop ? shuffled(spots(u, wU, wd), rnd) : [spot(u, wU, wd)];   // a home that wants a loop tries every place for the way on u's wall: the one where v's side wall also meets another area's wall
+        const gU = wallGeo(wU, ...size[u]), nU = dirWorld(placed[u].pose, gU.inward); let xu = null, pose = null;
+        for (const cx of xus) { if (cx === null) continue; const pw = toWorld(placed[u].pose, [gU.at(cx)[0] + placed[u].rect[0] * 0, gU.at(cx)[1]]), ps = matePose([0, 0, ...size[v]], { wall: wV, x: xv }, pw, nU); if (!clear(v, ps, [0, 0, ...size[v]])) continue;
+          if (wantLoop) { placed[v] = { id: v, pose: ps, rect: [0, 0, ...size[v]], foot: foot(ps, [0, 0, ...size[v]]) }; const hit = Object.keys(placed).some((w) => w !== v && w !== u && roomOf[w] !== roomOf[v] && touch(v, w, true)); delete placed[v]; if (!hit) continue; }
+          xu = cx; pose = ps; break; }
+        if (xu === null) continue;
         take(u, wU, xu, wd); take(v, wV, xv, wd); const cu = qU.door ? 'door' : qU.arch ? 'arch' : qU.drop ? 'drop' : null, cv = qV.door ? 'door' : qV.arch ? 'arch' : qV.drop ? 'drop' : null; qU.door = qV.door = false; qU.arch = qV.arch = null; qU.drop = qV.drop = false; putArea(v, pose); links.push({ a: u, b: v, ...kd, useA: cu && [wU, cu], useB: cv && [wV, cv], width: wd, aWall: wU, aX: xu, bWall: wV, bX: xv, tree: true }); return true; }
       return false; };
     const touch = (u, v, dry = false) => {   // two areas already placed whose walls happen to stand back to back: a link between them
       const cand = [];
-      for (const [wU, qU] of Object.entries(walls(u))) for (const [wV, qV] of Object.entries(walls(v))) { if (qU.blocked || qV.blocked || (qU.windowed && qV.windowed && attempt < 100)) continue;
+      for (const [wU, qU] of Object.entries(walls2(u))) for (const [wV, qV] of Object.entries(walls2(v))) { if (qU.blocked || qV.blocked || (qU.windowed && qV.windowed && attempt < 100) || (qU.virtual && qV.virtual && wU === wV && false)) continue;
         const gU = wallGeo(wU, ...size[u]), gV = wallGeo(wV, ...size[v]), U = placed[u], V = placed[v], a0 = toWorld(U.pose, gU.at(0)), a1 = toWorld(U.pose, gU.at(gU.len)), b0 = toWorld(V.pose, gV.at(0)), b1 = toWorld(V.pose, gV.at(gV.len)), nU = dirWorld(U.pose, gU.inward), nV = dirWorld(V.pose, gV.inward);
         if (Math.abs(nU[0] + nV[0]) > 0.01 || Math.abs(nU[1] + nV[1]) > 0.01) continue;   // facing apart
-        const t = [-nU[1], nU[0]], off = (p) => (p[0] - a0[0]) * nU[0] + (p[1] - a0[1]) * nU[1]; if (Math.abs(off(b0) + WALL_T) > GAP || Math.abs(off(b1) + WALL_T) > GAP) continue;   // one slab apart
-        const along = (p) => (p[0] - a0[0]) * t[0] + (p[1] - a0[1]) * t[1], uLo = 0, uHi = Math.abs(along(a1)), [vLo, vHi] = [along(b0), along(b1)].sort((x, y) => x - y), lo = Math.max(uLo, vLo), hi = Math.min(uHi, vHi); if (hi - lo < TOUCH) continue;
-        for (let k = 0; k < 8; k++) { const s = lo + EDGE + rnd() * (hi - lo - 2 * EDGE), p = [a0[0] + t[0] * s * Math.sign(along(a1) || 1), a0[1] + t[1] * s * Math.sign(along(a1) || 1)], xu = Math.round(Math.hypot(p[0] - a0[0], p[1] - a0[1]) / 50) * 50, xv = Math.round(Math.hypot(p[0] - b0[0], p[1] - b0[1]) / 50) * 50, kd = forceKind(qU, qV); if (!kd) continue; const wd = LINK_WIDTH[kd.style || 'door'];
-          if (free(u, wU, xu, wd) && free(v, wV, xv, wd)) { cand.push({ wU, wV, xu, xv, kd, wd, cu: qU.door ? [wU, 'door'] : qU.arch ? [wU, 'arch'] : null, cv: qV.door ? [wV, 'door'] : qV.arch ? [wV, 'arch'] : null }); break; } } }
-      if (!cand.length) return false; if (dry) return true; const c = cand[Math.floor(rnd() * cand.length)]; for (const q of [walls(u)[c.wU], walls(v)[c.wV]]) { q.door = false; q.arch = null; } take(u, c.wU, c.xu, c.wd); take(v, c.wV, c.xv, c.wd); links.push({ a: u, b: v, ...c.kd, useA: c.cu, useB: c.cv, width: c.wd, aWall: c.wU, aX: c.xu, bWall: c.wV, bX: c.xv, tree: false }); return true; };
+        const L0 = Math.hypot(a1[0] - a0[0], a1[1] - a0[1]) || 1, t = [(a1[0] - a0[0]) / L0, (a1[1] - a0[1]) / L0], off = (p) => (p[0] - a0[0]) * nU[0] + (p[1] - a0[1]) * nU[1]; if (Math.abs(off(b0) + WALL_T) > GAP || Math.abs(off(b1) + WALL_T) > GAP) continue;   // one slab apart
+        const along = (p) => (p[0] - a0[0]) * t[0] + (p[1] - a0[1]) * t[1], uLo = 0, uHi = L0, [vLo, vHi] = [along(b0), along(b1)].sort((x, y) => x - y), lo = Math.max(uLo, vLo), hi = Math.min(uHi, vHi); if (hi - lo < TOUCH) continue;
+        for (let k = 0; k < 8; k++) { const s = lo + EDGE + rnd() * (hi - lo - 2 * EDGE), p = [a0[0] + t[0] * s, a0[1] + t[1] * s], xu = Math.round(Math.hypot(p[0] - a0[0], p[1] - a0[1]) / 50) * 50, xv = Math.round(Math.hypot(p[0] - b0[0], p[1] - b0[1]) / 50) * 50, kd = forceKind(qU, qV); if (!kd) continue; const wd = LINK_WIDTH[kd.style || 'door'];
+          if (free(u, wU, xu, wd) && free(v, wV, xv, wd)) { cand.push({ wU, wV, xu, xv, kd, wd, vu: !!qU.virtual, vv: !!qV.virtual, cu: qU.door ? [wU, 'door'] : qU.arch ? [wU, 'arch'] : null, cv: qV.door ? [wV, 'door'] : qV.arch ? [wV, 'arch'] : null }); break; } } }
+      if (!cand.length) return false; if (dry) return true; const c = cand[Math.floor(rnd() * cand.length)]; for (const q of [walls2(u)[c.wU], walls2(v)[c.wV]]) { q.door = false; q.arch = null; } if (c.vu) { rebacks[u] = c.wU; delete w2c[u]; } if (c.vv) { rebacks[v] = c.wV; delete w2c[v]; } take(u, c.wU, c.xu, c.wd); take(v, c.wV, c.xv, c.wd); links.push({ a: u, b: v, ...c.kd, useA: c.cu, useB: c.cv, width: c.wd, aWall: c.wU, aX: c.xu, bWall: c.wV, bX: c.xv, tree: false }); return true; };
     // the roots first: every area of the open room is placed; then the rest, one at a time, joined to what stands (the touches asked for first)
-    const loopHome = rnd() < 0.6;   // some homes get a second way round
+    const loopHome = rnd() < 0.65;   // some homes get a second way round
     const todo = new Set(ids.filter((id) => !placed[id])), pend = required.slice();
     const wt = (id) => (/hallway/.test(id) ? 3 : 1);
     while (todo.size) {
@@ -193,12 +198,29 @@ export function planHome(out, seed, kinds, opts = {}) {
       for (const u of [...new Set([...tryOrder, ...shuffled(Object.keys(placed), rnd)])]) if (attach(u, v)) { ok = true; break; } if (!ok) return null; todo.delete(v);   // the liked and non-private parents first, then any
     }
     for (const [a, b] of pend) if (!linkedPair(a, b) && !touch(a, b)) return null;   // a touch asked for between two areas that already stand: their walls must meet
+    if (loopHome && ids.length >= 4) {   // a second way round: two areas that stand a little apart, their walls facing, close the gap (one cell grows to the other's wall, one slab away) and join
+      const cap = (id) => (SIZES[KIND(id)] || SIZES.living), grow = (a, b) => {
+        if (roomOf[a] === roomOf[b] || linkedPair(a, b) || (dislikes(a, b) && ids.length > 2)) return false; const wa = walls2(a).right; if (!wa || wa.blocked || (used[a]?.right || []).length) return false;
+        const A = placed[a], gA = wallGeo('right', ...size[a]), a0 = toWorld(A.pose, gA.at(0)), a1 = toWorld(A.pose, gA.at(gA.len)), nA = dirWorld(A.pose, gA.inward), L0 = Math.hypot(a1[0] - a0[0], a1[1] - a0[1]), t = [(a1[0] - a0[0]) / L0, (a1[1] - a0[1]) / L0];
+        for (const [wb, qb] of Object.entries(walls2(b))) { if (qb.blocked) continue; const gB = wallGeo(wb, ...size[b]), B = placed[b], b0 = toWorld(B.pose, gB.at(0)), b1 = toWorld(B.pose, gB.at(gB.len)), nB = dirWorld(B.pose, gB.inward); if (Math.abs(nA[0] + nB[0]) > 0.01 || Math.abs(nA[1] + nB[1]) > 0.01) continue;
+          const off = (p) => (p[0] - a0[0]) * nA[0] + (p[1] - a0[1]) * nA[1]; if (Math.abs(off(b0) - off(b1)) > GAP) continue; const gap = -off(b0); if (gap < WALL_T - GAP || gap > 1700) continue;
+          const along = (p) => (p[0] - a0[0]) * t[0] + (p[1] - a0[1]) * t[1], [lo, hi] = [Math.max(0, Math.min(along(b0), along(b1))), Math.min(L0, Math.max(along(b0), along(b1)))]; if (hi - lo < 2800) continue;
+          const w2 = size[a][0] + Math.max(0, gap - WALL_T); if (w2 > cap(a)[0] * 1.3 && w2 > need[a].w * 1.3) continue; const old = size[a].slice(), oldRect = A.rect, oldFoot = A.foot;
+          delete placed[a]; const rect = [0, 0, w2, size[a][1]], ok = clear(a, A.pose, rect); placed[a] = A; if (!ok) continue;
+          size[a] = [w2, size[a][1]]; A.rect = rect; A.foot = foot(A.pose, rect); const saveL = links.length, saveR = { ...rebacks }; if (touch(a, b)) return true;
+          size[a] = old; A.rect = oldRect; A.foot = oldFoot; links.length = saveL; for (const k of Object.keys(rebacks)) delete rebacks[k]; Object.assign(rebacks, saveR); }
+        return false; };
+      for (const [a, b] of shuffled(ids.flatMap((a) => ids.filter((b) => b !== a).map((b) => [a, b])), rnd)) if (grow(a, b)) break;
+    }
     let extra = 0; for (const [a, b] of shuffled(ids.flatMap((a, i) => ids.slice(i + 1).map((b) => [a, b])), rnd)) { if (extra >= (loopHome ? 2 : 1) || roomOf[a] === roomOf[b] || linkedPair(a, b) || (dislikes(a, b) && ids.length > 2)) continue; if (rnd() < (loopHome ? 0.9 : 0.3) && touch(a, b)) extra++; }   // walls that meet by chance may give a second way round
+    if (loopHome && ids.length >= 4 && attempt < 150 && !links.some((l) => !l.tree && l.kind !== 'open')) return null;   // a home of four areas or more that wants a second way round keeps trying for one (a crowded home gives up after 150 tries)
     if (!validWays(links, attempt)) return null;   // the likes table: nothing but the front door's shared rooms stand between it and the shared rooms, and no unwanted pair is joined
-    return { placed, links, order, size, winOf };
+    return { placed, links, order, size, winOf, rebacks };
   }
 
-  function finish({ placed, links, order, size, winOf }) {
+  function finish({ placed, links, order, size, winOf, rebacks = {} }) {
+    for (const [id, side] of Object.entries(rebacks)) roll[id].backing = `corner-${side}`;   // a loop stands this one-wall area's side wall: it takes a corner backing on that side
+
     const rnd = mkRnd((seed ^ 0x2545f491) >>> 0), areas = {}, linkId = (l) => `${l.a}-${l.b}`;
     links.forEach((l) => { l.id = linkId(l); if (l.kind !== 'open') { l.aF = Math.round(l.aX / wallGeo(l.aWall, ...size[l.a]).len * 1e5) / 1e5; l.bF = Math.round(l.bX / wallGeo(l.bWall, ...size[l.b]).len * 1e5) / 1e5; } });
     for (const id of order) areas[id] = { room: roomOf[id], fit: size[id], need: need[id], windows: winOf[id] || [], parent: null, via: null, entry: null };
