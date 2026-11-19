@@ -24,11 +24,16 @@ export function vase(kit, { h = 280, stems = 5, seed = 3 } = {}) {   // a bottle
   g.add(kit.lines(pts, 'mid'));
   return kit.merge(g);
 }
-export function bookStack(kit, { n = 4, seed = 5 } = {}) {   // books lying on each other, each turned a little; the top one a thin paperback
+export function bookStack(kit, { n = 4, seed = 5 } = {}) {   // books lying on each other, each turned a little; the top one a thin paperback. Each book: a rounded spine, two boards that overhang the pages by 3 mm, and faint page lines on the fore-edge and the head
   const g = kit.group(), R = rnd(seed); let y = 0;
   for (let i = 0; i < n; i++) {
-    const w = 210 + R() * 50 - i * 8, d = 155 + R() * 30 - i * 4, th = i === n - 1 && R() < 0.6 ? 18 : 22 + R() * 34, m = kit.box(-w / 2, y, d / 2, w, th, d, i % 2 ? lo : {});
-    m.rotation.y = (R() - 0.5) * 0.3; g.add(m); y += th;
+    const w = 210 + R() * 50 - i * 8, d = 155 + R() * 30 - i * 4, th = i === n - 1 && R() < 0.6 ? 18 : 22 + R() * 34, cv = i % 2 ? lo : {}, B = kit.group(), bd = 3, sp = 10, pts = [];
+    B.add(kit.rbox(-w / 2, 0, d / 2, sp, th, d, Math.min(5, th / 2 - 1), cv));   // the spine
+    B.add(kit.box(-w / 2 + sp - 2, 0, d / 2, w - sp + 2, bd, d, cv)); B.add(kit.box(-w / 2 + sp - 2, th - bd, d / 2, w - sp + 2, bd, d, cv));   // the boards: they reach 3 mm past the page block on the three open sides
+    const px0 = -w / 2 + sp - 2, px1 = w / 2 - 3, pz = d / 2 - 3, pd = d - 6, ph = th - 2 * bd;
+    B.add(kit.box(px0, bd, pz, px1 - px0, ph, pd));   // the page block
+    for (let yy = bd + 2.2; yy < th - bd - 1; yy += 2.4) pts.push([px1 + 0.6, yy, pz], [px1 + 0.6, yy, pz - pd], [px0, yy, pz + 0.6], [px1, yy, pz + 0.6]);
+    B.add(kit.lines(pts, 'faint')); B.position.y = y; B.rotation.y = (R() - 0.5) * 0.3; g.add(B); y += th;
   }
   return kit.merge(g);
 }

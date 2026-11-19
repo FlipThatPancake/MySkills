@@ -29,60 +29,6 @@
   ],
   "objects": [
    {
-    "id": "sheet-pic6-keep",
-    "asset": "picture",
-    "at": [
-     10000,
-     900,
-     40
-    ],
-    "mount": "wall",
-    "params": {
-     "form": 6,
-     "w": 600,
-     "h": 800,
-     "colour": "keep"
-    },
-    "group": "sheet:row",
-    "area": "sheet"
-   },
-   {
-    "id": "sheet-pic6-soft",
-    "asset": "picture",
-    "at": [
-     11500,
-     900,
-     40
-    ],
-    "mount": "wall",
-    "params": {
-     "form": 6,
-     "w": 600,
-     "h": 800,
-     "colour": "soft"
-    },
-    "group": "sheet:row",
-    "area": "sheet"
-   },
-   {
-    "id": "sheet-pic6-ink",
-    "asset": "picture",
-    "at": [
-     13000,
-     900,
-     40
-    ],
-    "mount": "wall",
-    "params": {
-     "form": 6,
-     "w": 600,
-     "h": 800,
-     "colour": "ink"
-    },
-    "group": "sheet:row",
-    "area": "sheet"
-   },
-   {
     "id": "sheet-tt-1",
     "asset": "table",
     "at": [
@@ -227,6 +173,93 @@
     "mount": "floor",
     "params": {},
     "group": "sheet:row3",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-hpend",
+    "asset": "pendantLamp",
+    "at": [
+     1000,
+     0,
+     7800
+    ],
+    "mount": "ceiling",
+    "params": {
+     "rim": 1650
+    },
+    "group": "sheet:row4",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-pf-dome",
+    "asset": "pendantForm",
+    "at": [
+     2500,
+     0,
+     7800
+    ],
+    "mount": "ceiling",
+    "params": {
+     "form": "dome",
+     "rim": 1650,
+     "r": 200,
+     "canopy": "disc"
+    },
+    "group": "sheet:row4",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-pf-globe",
+    "asset": "pendantForm",
+    "at": [
+     4000,
+     0,
+     7800
+    ],
+    "mount": "ceiling",
+    "params": {
+     "form": "globe",
+     "rim": 1650,
+     "r": 260,
+     "canopy": "bar"
+    },
+    "group": "sheet:row4",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-pf-cone",
+    "asset": "pendantForm",
+    "at": [
+     5500,
+     0,
+     7800
+    ],
+    "mount": "ceiling",
+    "params": {
+     "form": "cone",
+     "rim": 1650,
+     "r": 220,
+     "canopy": "bar"
+    },
+    "group": "sheet:row4",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-pf-rattan",
+    "asset": "pendantForm",
+    "at": [
+     7000,
+     0,
+     7800
+    ],
+    "mount": "ceiling",
+    "params": {
+     "form": "rattan",
+     "rim": 1650,
+     "r": 210,
+     "canopy": "disc"
+    },
+    "group": "sheet:row4",
     "area": "sheet"
    },
    {

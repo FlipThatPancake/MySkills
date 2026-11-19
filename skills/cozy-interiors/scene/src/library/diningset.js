@@ -31,8 +31,8 @@ export function jug(kit, { r = 70, h = 220, form = 'belly', water = true, band =
   const rt = P[P.length - 1][0], ht = h;
   if (band === 'banded') g.add(kit.lines([...ringXZ(0, h * 0.5, 0, P[2][0] * 1.01, 30), ...ringXZ(0, h * 0.58, 0, P[2][0] * 1.0, 30)], 'mid'));
   // the handle: one closed loop of swept tube, from just under the rim out and down to the belly (both ends in the wall), always present; `handle` only picks the shape: loop (tall D) | ring (small round ear)
-  { const bx = P[2][0], loop = handle === 'ring' ? [[rt * 0.9, ht - 30], [rt * 1.75, ht - 24], [rt * 1.75, ht * 0.5], [bx * 1.0, ht * 0.5 - 6]] : [[rt * 1.0, ht - 14], [rt * 2.0, ht - 6], [rt * 2.0, h * 0.24], [bx * 1.0, h * 0.26]], B = (t) => { const u = 1 - t; return [0, 1].map((k) => u * u * u * loop[0][k] + 3 * u * u * t * loop[1][k] + 3 * u * t * t * loop[2][k] + t * t * t * loop[3][k]); };
-    const pts = Array.from({ length: 21 }, (_, i) => { const [x, y] = B(i / 20); return [x, y, 0]; }); for (let k = 0; k < 5; k++) { const hd = sweptTube(kit, pts.slice(k * 4, k * 4 + 5), 5.5, 5.5, 5, { tone: 'lo' }); hd.userData.part = 'handle'; g.add(hd); } }   // five short pieces: one convex hull round the whole D would be a solid blob
+  { const bx = P[2][0], loop = handle === 'ring' ? [[rt * 0.9, ht - 30], [rt * 1.75, ht - 24], [rt * 1.75, ht * 0.5], [bx + 4.5, ht * 0.5 - 6]] : [[rt + 4.5, ht - 14], [rt * 2.0, ht - 6], [rt * 2.0, h * 0.24], [bx + 4.5, h * 0.26]], B = (t) => { const u = 1 - t; return [0, 1].map((k) => u * u * u * loop[0][k] + 3 * u * u * t * loop[1][k] + 3 * u * t * t * loop[2][k] + t * t * t * loop[3][k]); };
+    const pts = Array.from({ length: 21 }, (_, i) => { const [x, y] = B(i / 20); return [x, y, 0]; }); for (let k = 0; k < 4; k++) { const hd = sweptTube(kit, pts.slice(k * 5, k * 5 + 6), 7, 7, 8, { tone: 'mid', crease: 100, caps: false }); hd.userData.part = 'handle'; g.add(hd); } }   // five short pieces: one convex hull round the whole D would be a solid blob
   { const shp = new T.Shape([new T.Vector2(-rt * 0.62, ht - 40), new T.Vector2(-rt * 1.42, ht + 16), new T.Vector2(-rt * 0.62, ht + 4)]); const lip = kit.solid(new T.ExtrudeGeometry(shp, { depth: 40, bevelEnabled: false }), 0, 0, -20, { smooth: false }); lip.userData.part = 'spout'; g.add(lip); }   // a pinched pouring lip
   return kit.merge(g);
 }
@@ -131,7 +131,7 @@ export function wallPlates(kit, { n = 5, r = 110, seed = 4, layout = 'cluster' }
 // a pendant lamp for over a table: the shade's lower rim at `rim` above the floor, a cord up to 2700. form: dome | globe | cone | cluster | rattan | linear
 export function pendantForm(kit, { form = 'dome', rim = 1950, r = 220, seed = 1, canopy = 'disc' } = {}) {
   const g = kit.group(), T = kit.THREE, R = rnd(seed), top = 2700;
-  const cord = (x, y0, z) => g.add(kit.lines([[x, y0, z], [x, top, z]], 'mid'));   // the cord is an outline-weight line, so it reads at any distance and ties the lamp to the ceiling
+  const cord = (x, y0, z) => { const mt = top - 250; g.add(kit.cyl(x, y0, z, 5, mt - y0, { seg: 8, tone: 'mid' })); g.add(kit.lines([[x, mt, z], [x, top, z]], 'mid')); };   // the cord is a 20 mm mesh up to 250 mm below the top, so it reads at home-view size (check-pendants), then a fine line to the top
   if (form === 'globe') { g.add(kit.solid(new T.SphereGeometry(r * 0.8, 28, 20), 0, rim + r * 0.8, 0, { smooth: true })); cord(0, rim + r * 1.6, 0); }
   else if (form === 'cone') { g.add(kit.cyl(0, rim, 0, r, r * 0.9, { rTop: r * 0.18, seg: 36 })); g.add(kit.cyl(0, rim + r * 0.9, 0, r * 0.2, r * 0.12, { seg: 16, tone: 'lo' })); cord(0, rim + r * 1.02, 0); }
   else if (form === 'cluster') for (let i = 0; i < 3; i++) { const x = (i - 1) * r * 0.85, rr = r * (0.38 + 0.12 * ((i * 5) % 3)), y = rim + (i === 1 ? r * 0.5 : 0); g.add(kit.solid(new T.SphereGeometry(rr, 20, 14), x, y + rr, 0, { smooth: true })); cord(x, y + rr * 2, 0); }
