@@ -32,6 +32,7 @@ function fitted({ length, modules, ...rest }) {
   if (length && length > have) return { ...rest, modules: [...given, ...fillWidths(length, given).fill] };
   return { ...rest, modules: given };
 }
+const onFloor = (kit, o) => { const b = new kit.THREE.Box3(); o.updateMatrixWorld(true); o.traverse((m) => { if (m.isMesh && !m.userData.kitLine) b.union(new kit.THREE.Box3().setFromObject(m, true)); }); if (b.isEmpty() || b.min.y > -0.05) return o; const q = kit.group(); o.position.y -= b.min.y; q.add(o); return kit.merge(q); };   // a piece whose lowest solid dips below its foot (a round or tilted part) is lifted so its feet stand at y 0
 export const REGISTRY = {
   baseRun: (kit, p) => baseRun(kit, fitted(p)),
   wallRun: (kit, p) => wallRun(kit, fitted(p)),
@@ -41,13 +42,14 @@ export const REGISTRY = {
   bed, bedsideTable, wardrobe, desk, deskChair, coatHooks, daybed, readingChair, footstool, console: console_,
   candlesticks, photoFrame, jug, breadBasket, placeSetting, glazedCabinet, benchCushion, wallPlates, pendantForm,
   dishRack, utensilCrock, breadBin, toaster, mokaPot, potRail, openShelf, spiceRack, ovenGlove, wallClock, cookbookStand,
-  windowSeat, readingLamp, floorBooks, teaSet, readShelf,
+  windowSeat, floorBooks, teaSet, readShelf,
+  readingLamp: (kit, p = {}) => onFloor(kit, readingLamp(kit, p)),
   taskLamp, monitor, notebook, pinboard, binders, deskOrganiser, printer, globe, wallCalendar,
   shoeRack, keyBowl, coatStand, hungHat, hungBag, boots, runner, letterTray,
   bedsideLamp, alarmClock, glassesBook, chestOfDrawers, clothesRail, clothesChair, hamper, leaningMirror, wallSconce,
   floorCushion, logBasket, woodStove, recordPlayer, magazineBox, plantStand, galleryWall, scratches,
   armchair: (kit, p = {}) => (p.shape && p.shape !== 'upholstered' ? armChair(kit, p) : armchair(kit, p)),
-  coffeeTable: (kit, p = {}) => (p.shape && p.shape !== 'frame' ? coffeeShape(kit, p.shape, p.w ?? 1000, p.d ?? 600, p.h ?? 380) : coffeeTable(kit, p)),
+  coffeeTable: (kit, p = {}) => (p.shape && p.shape !== 'frame' ? onFloor(kit, coffeeShape(kit, p.shape, p.w ?? 1000, p.d ?? 600, p.h ?? 380)) : coffeeTable(kit, p)),
   sofa: (kit, p = {}) => {
     const { chaise: side = 'none', ...rest } = p, base = sofa(kit, rest);
     if (side === 'none') return base;

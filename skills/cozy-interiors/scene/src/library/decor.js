@@ -18,7 +18,7 @@ export function vase(kit, { h = 280, stems = 5, seed = 3 } = {}) {   // a bottle
     bud(x, y, a, 15 + R() * 8);
   };
   for (let s = 0; s < stems; s++) {
-    const lean = (s - (stems - 1) / 2) * 0.24 + (R() - 0.5) * 0.14, len = 420 + R() * 380, bow = (R() - 0.5) * 0.9;
+    const lean = (s - (stems - 1) / 2) * Math.min(0.24, 0.6 / Math.max(1, stems - 1)) + (R() - 0.5) * 0.1, len = 380 + R() * 260, bow = (R() - 0.5) * 0.5;   // the fan stays about 0.6 rad wide however many stems, so the bunch stays inside a console's width
     twig(0, h, lean, len, bow, 16, 1);
   }
   g.add(kit.lines(pts, 'mid'));

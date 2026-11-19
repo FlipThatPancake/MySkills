@@ -66,12 +66,12 @@ export function placeSetting(kit, { r = 140, glass: gl = true, napkin: nk = true
   const g = kit.group(), pts = [], T = kit.THREE;
   g.add(kit.cyl(0, 0, 0, r, 12, { seg: 36 })); g.add(kit.cyl(0, 12, 0, r * 0.55, 8, { seg: 28, tone: 'lo' }));
   pts.push(...ringXZ(0, 12.5, 0, r * 0.78, 32));
-  const kx = r + 50;   // knife on the right, fork on the left
+  const kx = r + 8;   // knife on the right, fork on the left, close beside the plate (within the 8 mm that joins pieces)
   g.add(kit.box(kx, 0, 160, 20, 5, 330, lo)); g.add(kit.box(-kx - 20, 0, 150, 22, 5, 300, lo));
   for (const i of [-1, 0, 1]) pts.push([-kx - 9 + i * 7, 5.6, -150], [-kx - 9 + i * 7, 5.6, -80]);
   pts.push([kx + 10, 5.6, -150], [kx + 10, 5.6, 150]);
-  if (glass) g.add(kit.solid(new T.LatheGeometry([[0.01, 0], [34, 0], [34, 3], [6, 8], [5, 70], [48, 100], [50, 160], [44, 164], [43, 102], [4, 74], [0.01, 10]].map(([a, b]) => new T.Vector2(a, b)), 22), kx + 90, 0, -r * 0.8, { smooth: true, tone: 'lo' }));
-  if (napkin) { const sh = new T.Shape([new T.Vector2(0, 0), new T.Vector2(150, 0), new T.Vector2(0, 150)]), ng = new T.ExtrudeGeometry(sh, { depth: 10, bevelEnabled: true, bevelThickness: 3, bevelSize: 3, bevelSegments: 2 }); ng.rotateX(-Math.PI / 2); const nb = kit.solid(ng, -kx - 190, 5, 40, { linen: true, smooth: false }); nb.rotation.y = 0.3; g.add(nb); pts.push([-kx - 190, 16, 50], [-kx - 60, 16, 50]); }   // a folded triangle
+  if (glass) g.add(kit.solid(new T.LatheGeometry([[0.01, 0], [34, 0], [34, 3], [6, 8], [5, 70], [48, 100], [50, 160], [44, 164], [43, 102], [4, 74], [0.01, 10]].map(([a, b]) => new T.Vector2(a, b)), 22), kx + 56, 0, -r * 0.8, { smooth: true, tone: 'lo' }));
+  if (napkin) { const sh = new T.Shape([new T.Vector2(0, 0), new T.Vector2(150, 0), new T.Vector2(0, 150)]), ng = new T.ExtrudeGeometry(sh, { depth: 10, bevelEnabled: true, bevelThickness: 3, bevelSize: 3, bevelSegments: 2 }); ng.rotateX(-Math.PI / 2); const nb = kit.solid(ng, -kx - 170, 5, 40, { linen: true, smooth: false }); nb.rotation.y = 0.3; g.add(nb); pts.push([-kx - 170, 16, 50], [-kx - 50, 16, 50]); }   // a folded triangle
   g.add(kit.lines(pts, 'lo'));
   return kit.merge(g);
 }

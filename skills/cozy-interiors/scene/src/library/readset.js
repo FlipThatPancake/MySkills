@@ -86,7 +86,7 @@ export function teaSet(kit, { form = 'cup', saucer = 'yes', biscuit = 'yes', ste
 }
 
 export function readShelf(kit, { form = 'ledge', w = 800, seed = 1 } = {}) {   // a small wall shelf: a picture ledge with leaning books and a small frame, a thick floating board with a book pile and a candle, or a board on two brackets with a book row and a jar
-  const g = kit.group(), R = rnd(seed), B = bx(kit), Rb = rb(kit), T = kit.THREE, dz = form === 'ledge' ? 46 : form === 'floating' ? 130 : 110;   // the parts are built about the board's middle; the whole is shifted so its back lies on the wall (z 0)
+  const g = kit.group(), R = rnd(seed), B = bx(kit), Rb = rb(kit), T = kit.THREE, dz = form === 'ledge' ? 46 : form === 'floating' ? 130 : form === 'pegs' ? 12 : 110;   // the parts are built about the board's middle; the whole is shifted so its back lies on the wall (z 0)
   if (form === 'ledge') {
     g.add(B(0, 0, 0, w, 24, 90)); g.add(B(0, 24, -45 + 8, w, 40, 16, lo)); let x = -w / 2 + 50;
     for (let i = 0; i < 3; i++) { const bw = 140 + R() * 40, bh = 190 + R() * 60; if (x + bw > w / 2 - 270) break; const b = kit.rbox(-bw / 2, 0, 10, bw, bh, 22, 3, { tone: i % 2 ? 'lo' : 'mid' }); b.position.set(x + bw / 2, 24, 26); b.rotation.x = -0.16; g.add(kit.content(b)); x += bw + 30; }
@@ -102,7 +102,7 @@ export function readShelf(kit, { form = 'ledge', w = 800, seed = 1 } = {}) {   /
   } else if (form === 'pegs') {   // a peg rail with a hung cloth and a hung bag
     g.add(Rb(0, 0, 0, w, 90, 24, 4)); const k = Math.max(3, Math.round(w / 220));
     for (let i = 0; i < k; i++) { const x = -w / 2 + 80 + i * (w - 160) / (k - 1); g.add(rod(kit, [x, 45, 12], [x, 45, 100], 10, 10, 'lo')); g.add(kit.cyl(x, 45, 104, 15, 12, { axis: 'z', seg: 12 })); if (i === 1) g.add(kit.rbox(x - 70, -260, 118, 140, 312, 14, 6, lo));   // a folded throw over a peg
-      if (i === k - 1) { g.add(kit.rbox(x - 75, -280, 162, 150, 250, 46, 18)); g.add(kit.lines([[x - 8, 45, 108], [x - 62, -30, 140], [x + 8, 45, 108], [x + 62, -30, 140]], 'lo')); g.add(kit.rbox(x - 56, -40, 152, 34, 130, 26, 2, lo)); g.add(kit.rbox(x - 8, -40, 152, 30, 105, 26, 2)); g.add(kit.rbox(x + 26, -40, 152, 26, 118, 26, 2, lo)); } }   // a tote with books standing in it
+      if (i === k - 1) { g.add(kit.rbox(x - 75, -280, 112, 150, 250, 46, 18)); g.add(kit.box(x - 6, -34, 106, 12, 86, 10, lo)); g.add(kit.lines([[x - 8, 45, 108], [x - 62, -30, 120], [x + 8, 45, 108], [x + 62, -30, 120]], 'lo')); g.add(kit.rbox(x - 56, -40, 124, 34, 130, 26, 2, lo)); g.add(kit.rbox(x - 8, -40, 124, 30, 105, 26, 2)); g.add(kit.rbox(x + 26, -40, 124, 26, 118, 26, 2, lo)); } }   // a tote with books standing in it
   } else {
     g.add(Rb(0, 0, 0, w, 28, 220, 4)); for (const s of [-1, 1]) { const x = s * (w / 2 - 110); g.add(B(x, -150, -103, 22, 170, 14, lo)); g.add(rod(kit, [x, -140, -96], [x, -10, 80], 8, 8, 'lo')); g.add(B(x, -22, -10, 22, 22, 200, lo)); }
     let x = -w / 2 + 60; for (let i = 0; i < 7 && x < w / 2 - 330; i++) { const bw = 30 + R() * 22, bh = 170 + R() * 80; g.add(kit.content(kit.rbox(x, 28, 130, bw, bh, 150, 2, { tone: i % 2 ? 'lo' : 'mid' }))); x += bw + 2; }
