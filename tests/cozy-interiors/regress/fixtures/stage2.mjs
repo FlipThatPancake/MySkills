@@ -12,3 +12,7 @@ export const fixtures = [
   { name: 'good-wall-unknown-phrase-is-left-not-thrown', from: 'stage 2: a wall phrase the builder does not know is listed in left, not thrown', kind: 'good',
     build({ Home }) { const { H, a, back } = room(Home); back.place('sb', 'sideboard', 3000, { group: 'g', hero: true }); const r = a.wallArr('stained glass panel (glass)', { wall: back, xc: 4300, group: 'g2' }); if (!r.left.length) throw new Error('expected the phrase in left'); return H; } },
 ];
+fixtures.push(
+  { name: 'good-wall-arrangement-keeps-out-of-a-window-sweep', from: 'stage harness run c: a.wallArr at the middle of the back wall stood in the sweep of a window\'s vent leaf (rule swing, 89 of 200 seeds); it now moves to a bare stretch clear of the window and its sweep', kind: 'good',
+    build({ Home }) { const { H, a, back } = room(Home, { openings: [{ kind: 'window', x: 3000, width: 1200, height: 1200, sill: 900, style: 'sash' }] }); back.place('sb', 'sideboard', 1200, { group: 'g', hero: true }); a.wallArr('open shelf with plates and jars (openShelf)', { wall: back, xc: 3000, group: 'g2' }); a.wallArr('wall clock (wallClock)', { wall: back, xc: 3000, group: 'g3' }); return H; } },
+);
