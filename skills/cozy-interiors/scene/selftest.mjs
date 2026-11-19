@@ -122,6 +122,11 @@ const { TASKLAMP_POSES } = await import('./src/library/officeset.js');
     }
     await browser.close(); if (args.includes('--tones')) console.log(rows.join('\n'));
     console.log(bad.map((x) => `[painting-tone] ${x}`).join('\n') || `every painting x mode reads at home-view size (${rows.length} checked)`); console.log(`${bad.length} painting tone problem(s)`);
+    if (!args.includes('--no-render')) {   // the same paintings in the rendered scene, on a wall seen at 65 degrees at home-view size: mipmaps, anisotropy, shading and angle included (tests/cozy-interiors/assets/oblique.mjs)
+      const root = join(here, '../../../tests/cozy-interiors/assets'); let txt = '';
+      try { execSync(`node ${join(root, 'assets.spec.mjs')}`, { env: { ...process.env, ONLY: 'pic' }, stdio: 'ignore' }); txt = execSync(`node ${join(root, 'oblique.mjs')}`, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }); } catch (e) { txt = String(e.stdout || '') + String(e.stderr || ''); }
+      console.log(txt.split('\n').filter((l) => /painting-oblique|oblique painting|PAGE ERROR|rror/.test(l)).join('\n') || 'oblique painting test: no result');
+    }
   }
 }
 

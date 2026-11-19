@@ -226,7 +226,7 @@ export function createKit() {
     // The fill shading times a painted canvas: for the things that carry a faint colour (a fruit, a butterfly wing). `uv` shapes map 0..1 across the canvas.
     // It follows the kitchen's fade like the plain fill; `double` shows both sides of a flat shape.
     paint(canvas, double = false, raw = false) {   // raw: the canvas shows exactly as drawn (no sRGB decode: this shader writes its colour without re-encoding, so a decoded photo would come out darker)
-      const tex = new THREE.CanvasTexture(canvas);
+      const tex = new THREE.CanvasTexture(canvas); tex.anisotropy = 16; tex.generateMipmaps = true; tex.minFilter = THREE.LinearMipmapLinearFilter;   // seen at a steep angle a painting must not smear: mipmaps plus anisotropic filtering (three clamps 16 to what the GPU has)
       tex.colorSpace = raw ? THREE.NoColorSpace : THREE.SRGBColorSpace;
       const m = new THREE.ShaderMaterial({
         uniforms: { uOpacity: uniforms.uOpacity, uMap: { value: tex }, ...viewFade },
