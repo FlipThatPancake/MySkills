@@ -60,7 +60,7 @@ const RECIPES = [
       'sideboard or dresser with a still life on top and a picture, shelf or mirror above', 'sideboard or dresser with a still life and a picture', 'console or sideboard with a still life under a picture', 'console or sideboard with a printer and a still life', 'wardrobe or chest of drawers with a still life and a mirror', 'cabinet with a plant on top', 'glazed cabinet with dishes and a plant', 'sideboard with a big mirror'],
     slots: { furn: 'the furniture (sideboard, console, chest, cabinet)', still: 'the things on top', art: 'the picture, mirror or shelf above', printer: 'a printer on the top (printer phrase)' },
     make(c, { slot }) { const ph = c.phrase;
-      const kind = /wardrobe or chest/.test(ph) ? ['chestOfDrawers', 'wardrobe'] : /glazed/.test(ph) ? ['glazedCabinet'] : /cabinet with a plant/.test(ph) ? ['sideboard', 'glazedCabinet'] : /printer/.test(ph) ? ['sideboard'] : /console or sideboard/.test(ph) ? ['console', 'sideboard'] : ['sideboard', 'sideboard', 'console'];
+      const kind = /wardrobe or chest/.test(ph) ? ['chestOfDrawers'] : /glazed/.test(ph) ? ['glazedCabinet'] : /cabinet with a plant/.test(ph) ? ['sideboard', 'glazedCabinet'] : /printer/.test(ph) ? ['sideboard'] : /console or sideboard/.test(ph) ? ['console', 'sideboard'] : ['sideboard', 'sideboard', 'console'];
       const fid = c.place('furn', 'furn', kind, c.xc, /printer/.test(ph) ? { params: { d: 500 } } : {}); if (!fid) return;
       const tall = c.dims(fid).h > 1300;
       const things = /printer/.test(ph) ? [{ asset: 'printer' }, ...stillPool(c, 1)] : /cabinet with a plant|glazed/.test(ph) ? [{ asset: 'plant' }] : stillPool(c, c.chance(0.4) ? 3 : 2);

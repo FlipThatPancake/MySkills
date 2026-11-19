@@ -4,6 +4,7 @@ if (process.argv.includes('--build')) { await import('./groupbuild.mjs'); await 
 import { roll, phraseAssets, ONE_AREA, STAMP_SKIP, SMALL_ON } from '../../../skills/cozy-interiors/scene/roll.mjs';
 import { groupNeeds, groupPhrases } from '../../../skills/cozy-interiors/scene/groups.mjs';
 import fs from 'node:fs';
+const TT = JSON.parse(fs.readFileSync(new URL('../../../skills/cozy-interiors/scene/tables.json', import.meta.url), 'utf8')), BK = (a) => (TT.backing || []).find((x) => x.id === a.backing) || {};
 import { ASSETS } from '../../../skills/cozy-interiors/scene/src/library/meta.js';
 const NAMES = JSON.parse(fs.readFileSync(new URL('../../../skills/cozy-interiors/scene/tables.json', import.meta.url), 'utf8')).names, UNNAMED = /^(drawer ajar|pillow creased|cloth dropped|unmade bed|tablecloth|runner|cloth|cushion|teaTowel|duvetCloth|floorCushion|foldedThrow|benchCushion|tableRunner|hungBag|binders|hungHat|boots)$/;   // a sign that is a state of another piece (a drawer ajar) has no asset to look for
 // E11 naming: the head noun of a phrase is its own asset ("tray with a mug (mug)" builds no tray, "small plant (herbs)" builds kitchen herbs)
@@ -22,9 +23,14 @@ for (let seed = 1; seed <= N; seed++) for (const kinds of sets) {
     if (a.groups && (!a.groupSlots || a.groupSlots.length !== a.groups.length || a.groupSlots.some((q) => !q) || new Set(a.groupSlots).size !== a.groupSlots.length)) bad('group-slot', seed, kinds, id, `groupSlots ${JSON.stringify(a.groupSlots)}: each group needs its own slot name (item C)`);
     for (const [gi, g] of (a.groups || []).entries()) { const n = groupNeeds(g.replace(/ \(the hero group.*\)$/, '').replace(/, on the .*$/, '')), sl = (a.groupSlots || [])[gi]; if (!n || !sl) continue;   // item 1-2 (lead): a group goes to a slot that suits its needs
       if (!!n.free !== sl.startsWith('floor:')) bad('group-slot-needs', seed, kinds, id, `"${g}" ${n.free ? 'stands free but is dealt' : 'stands at a wall but is dealt'} ${sl}`);
-      if ((n.window || n.second) && !sl.startsWith('window:')) bad('group-slot-needs', seed, kinds, id, `"${g}" needs a window but is dealt ${sl}`);
+      if ((n.window || n.second) && !sl.startsWith('window:') && BK(a).walls === 2) bad('group-slot-needs', seed, kinds, id, `"${g}" needs a window but is dealt ${sl}`);
       if (n.wall === 'solid' && !n.second && sl.startsWith('window:')) bad('group-slot-needs', seed, kinds, id, `"${g}" needs a solid wall but is dealt ${sl}`); }
     if (a.hero && !groupPhrases().includes(a.hero)) bad('hero-without-recipe', seed, kinds, id, `"${a.hero}" has no a.group recipe (groups.mjs)`);   // round 6 T8: every dealt hero is a group the builder can make
+    { const two = BK(a).walls === 2;   // round 6 stage harness: the dealt slots exist in the shell the roll's backing builds
+      for (const sl of a.groupSlots || []) if (!two && /^window:/.test(sl || '')) bad('group-slot-no-wall', seed, kinds, id, `${sl} is dealt but the backing "${a.backing}" has one wall`);
+      if (/on a side wall|on the second wall/.test(a.hero || '') && !two) bad('group-slot-no-wall', seed, kinds, id, `"${a.hero}" needs a second wall and the backing "${a.backing}" has one`);
+      const prov = { worktop: /./, table: /table|island/, sideboard: /sideboard|dresser/, 'coffee table': /coffee table/, 'side table': /side table/, 'bedside table': /^bed /, 'chest of drawers': /chest of drawers/, shelf: /shelf|bookcase|window seat|bookshelf/, console: /console/, desk: /desk/ };
+      for (const st of a.still || []) if (!(a.groups || []).some((g) => (prov[st.top] || /./).test(g.replace(/ \(the hero group.*\)$/, '').replace(/, on the .*$/, '')))) bad('still-top-without-furniture', seed, kinds, id, `the roll deals a still life for "${st.top}" and no group of the area stands one`); }
     const seen = new Set();
     for (const st of a.still || []) { if (st.things.length > 2) bad('top>2', seed, kinds, id, st.top); for (const x of st.things) { const n = asset(x); if (n && !ASSETS[n]) bad('missing-asset', seed, kinds, id, n); if (n && seen.has(n)) bad('same-thing-twice', seed, kinds, id, n); seen.add(n); } }
     const txt = JSON.stringify(a), lamps = (a.light && /pendant|floor lamp|table lamp|desk lamp/.test(a.light) ? 1 : 0) + (seen.has('readingLamp') ? 1 : 0) + ((a.groups || []).filter((g) => /\blamp\b/.test(g)).length);
