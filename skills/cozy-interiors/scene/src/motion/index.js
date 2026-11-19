@@ -62,10 +62,22 @@ export function createMotion(kit, home, S) {
       g.traverse((o) => { if (!o.isMesh) return; const pos = o.geometry.attributes.position; for (let i = 0; i < pos.count; i++) { v.fromBufferAttribute(pos, i).applyMatrix4(o.matrixWorld); const x = v.clone().applyMatrix4(inv).x; if (x <= -w / 2 - 40 + pw + 1) L.expandByPoint(v); else if (x >= w / 2 + 40 - pw - 1) R.expandByPoint(v); } });
       return [L, R].filter((b) => !b.isEmpty());
     };
+    // the open leaf as slices along its length (one box over a leaf standing at 60 degrees would fill the whole doorway)
+    const leafBoxes = (g) => {
+      g.updateMatrixWorld(true); const hinge = g.getWorldPosition(new T.Vector3()), pts = [], v = new T.Vector3();
+      g.traverse((o) => { if (!o.isMesh || o.isLineSegments2 || o.userData.lines || o.material.isMeshBasicMaterial || kit.hulls.includes(o.material) || o.material === kit.depth) return; const pos = o.geometry.attributes.position; for (let i = 0; i < pos.count; i++) pts.push(v.fromBufferAttribute(pos, i).applyMatrix4(o.matrixWorld).clone()); });
+      if (!pts.length) return [];
+      let far = pts[0], fd = 0; for (const q of pts) { const d = Math.hypot(q.x - hinge.x, q.z - hinge.z); if (d > fd) { fd = d; far = q; } }
+      const ax = new T.Vector2(far.x - hinge.x, far.z - hinge.z).normalize(), N = 8, boxes = Array.from({ length: N }, () => new T.Box3());
+      for (const q of pts) { const t = ((q.x - hinge.x) * ax.x + (q.z - hinge.z) * ax.y) / fd; boxes[Math.min(N - 1, Math.max(0, Math.floor(t * N)))].expandByPoint(q); }
+      return boxes.filter((b) => !b.isEmpty());
+    };
     const objects = Object.entries(home.objects).filter(([, g]) => inArea(A, g)).flatMap(([id, g]) => {
       const L = g.userData.landing, asset = g.userData.scene?.asset, landing = L ? new T.Vector3(...L).applyMatrix4(g.matrixWorld).toArray() : null;
       return (asset === 'curtain' ? panelBoxes(g) : [solidBox(g)]).map((box) => ({ id, g, asset, box, landing }));
     }).filter((o) => !o.box.isEmpty());
+    // a plain door standing open is a solid too: its leaf, from the hinge, the open angle and the thickness the page built (fliers keep PAD off it; the check counts a pass through it)
+    for (const { W } of ws) W.built.forEach((b, index) => { const op = b.op; if (op.kind !== 'door' || op.style || !b.openables[0]) return; for (const box of leafBoxes(b.openables[0])) objects.push({ id: `${W.id}#${index}-leaf`, g: b.openables[0], asset: 'doorLeaf', box, landing: null }); });
     const b = A.bounds, via = entry.via ? openings.find((o) => o.W.id === entry.via[0] && o.index === entry.via[1]) || null : null;
     return { T, kit, home, entry, area: A, now: () => time, rnd: seeded(hash(`${S.seed}/${A.id}/${entry.kind}`)), objects, solids: objects.filter((o) => o.box.max.y > 500), walls: ws, openings, via, cameras: () => (api?.cameraOf ? api.cameraOf(A.id) : []),
       room: { x0: b.x0 + 150, x1: b.x1 - 150, z0: b.z0 + 150, z1: b.z1 - 150, ymin: 1000, ymax: Math.min((b.top || 2500) - 250, 2150) } };
