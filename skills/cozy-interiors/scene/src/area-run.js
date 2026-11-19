@@ -74,7 +74,7 @@ export function createAreaScene(canvas, S) {
     const h = A.camera?.home || {}, b = A.bounds, top = b.top || 2500;
     const target = h.target || [(b.x0 + b.x1) / 2, top / 2 - 150, (b.z0 + b.z1) / 2];
     const v = { target, az: h.az ?? 20, el: h.el ?? 15, dist: h.dist || fit(b) };
-    return h.fit === 'objects' ? fitView(A, v) : v;
+    if (h.fit !== 'objects') return v; const f = fitView(A, v); return [...f.target, f.dist].every(Number.isFinite) ? f : v;   // an area with nothing in it keeps its plain view
   };
   // open plan: areas of one group share a floor and are drawn together, and the fade box is the group's bounds, so nothing thins out at a seam
   const groupOf = (id) => areas[id].group || id, together = (a, b) => !!a && !!b && groupOf(a) === groupOf(b);
@@ -127,7 +127,7 @@ export function createAreaScene(canvas, S) {
     let daz = ((to.az - from.az + 540) % 360) - 180;   // the short way round
     const ways = cur && links ? route(links, cur, id) : [], path = ways.length || (cur && links && !together(cur, id)) ? glidePath(from, to, ways, { height: S.home.height || 2700 }) : null;
     glide = { id, from, to, daz, path, fade0: cur ? fadeOf(areas[cur]) : fadeOf(areas[id]), fade1: fadeOf(areas[id]), t0: performance.now(), hold, k: 0 };
-    controls.enabled = false; markLabels(id); if (!together(cur, id)) only(null);   // between areas of one group nothing switches on or off
+    glide.apart = !together(cur, id); controls.enabled = false; markLabels(id); if (glide.apart) only(cur);   // the first frame is the start view itself; the other areas are drawn from the first step on (glideAt)   // between areas of one group nothing switches on or off
   }
   function glideAt(k) {
     const g = glide, e = smooth(Math.min(1, Math.max(0, k))); g.k = k;
@@ -137,8 +137,12 @@ export function createAreaScene(canvas, S) {
       controls.target.set(...tg);
       camera.position.copy(controls.target).add(sph(g.from.dist + (g.to.dist - g.from.dist) * e, g.from.az + g.daz * e, g.from.el + (g.to.el - g.from.el) * e));
     }
-    camera.lookAt(controls.target);
-    applyFade(g.fade0.map((a, i) => a + (g.fade1[i] - a) * e));
+    camera.lookAt(controls.target); if (k > 0 && !g.shown && g.apart) { g.shown = true; only(null); }
+    let f = g.fade0.map((a, i) => a + (g.fade1[i] - a) * e);
+    if (g.apart && g.path) {   // on the way the fade box (what is drawn solid) grows to hold both areas and the walk between them, so nothing along the route thins into a milky veil; it is the start's box at k = 0 and the destination's at k = 1
+      const U = g.union ||= (() => { const lo = [1e9, 1e9, 1e9], hi = [-1e9, -1e9, -1e9]; const add = (p, m) => { for (let i = 0; i < 3; i++) { lo[i] = Math.min(lo[i], p[i] - m[i]); hi[i] = Math.max(hi[i], p[i] + m[i]); } }; for (const F of [g.fade0, g.fade1]) add(F.slice(0, 3), F.slice(3, 6)); for (let j = 0; j <= 20; j++) add(g.path.pos(j / 20), [2500, 0, 2500]); return [...lo.map((l, i) => (l + hi[i]) / 2), ...lo.map((l, i) => (hi[i] - l) / 2), Math.max(g.fade0[6], g.fade1[6]), Math.max(g.fade0[7], g.fade1[7]), g.fade0[8], Math.max(g.fade0[9], g.fade1[9])]; })(), a = smooth(Math.min(1, Math.min(e, 1 - e) / 0.15));
+      f = f.map((v, i) => v + (U[i] - v) * a); }
+    applyFade(f);
     if (k >= 1) { const id = g.id; glide = null; arrive(id); }
   }
   function setArea(id, snap = false) { if (snap || !cur) { glide = null; arrive(id); } else startGlide(id); }
