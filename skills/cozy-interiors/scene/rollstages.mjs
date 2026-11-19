@@ -19,7 +19,8 @@ const quiet = (f) => { const log = console.log, warn = console.warn; console.log
 const OWNER = (stage, rule, what = '') => (/^(still|wallArr)$/.test(rule) ? 'arrange.mjs / tops (a.still, a.wallArr)' : /no-recipe/.test(rule) ? 'recipes (groups.mjs has none; a.table / a.run / a.put build it today)' : stage === 1 ? 'roll' : stage === 2 ? 'plan tool' : stage === 3 ? (/slot|group|recipe/.test(what) ? 'slots or recipes' : /dealt window|too close/.test(what) ? 'roll vs plan (a window and a way through on one short wall)' : 'plan tool / compose shell') : /recipe|no such slot|under 600|corridor|slot/.test(what) ? 'slots or recipes' : /rolled|hero|groups/.test(rule) ? 'roll / recipes' : 'checks or recipes');
 
 const DEP = new Set(['interest', 'fill', 'depth', 'emptyfloor', 'floorcover', 'rectfit', 'frame', 'rolled', 'open-separator', 'hidden', 'placement-18']);
-export const phraseOf = (g) => g.replace(/ \(the hero group, on the (left|right) of the home view\)$/, '').replace(/, on the (back wall, (left|right) third|window wall or the second wall)$/, '');
+import { groupPhrase as phraseOf } from './roll.mjs';
+export { phraseOf };   // the roll owns the place wording (SLOTS in roll.mjs): one reader for every place text
 
 // build the anchors-only home of one seed → { json, kinds, fails: [{ stage, rule, what }], areas }
 const TOPASSET = { worktop: ['baseRun'], table: ['table', 'roundTable'], sideboard: ['sideboard'], 'coffee table': ['coffeeTable'], 'side table': ['sideTable'], 'bedside table': ['bedsideTable'], 'chest of drawers': ['chestOfDrawers'], shelf: ['shelf', 'openShelf'], console: ['console'], desk: ['desk'] };

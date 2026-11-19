@@ -2,6 +2,7 @@
 // Cases: a still life with more than two things on one top; the same thing on two tops of one area; two lamps in one area; a named asset the library lacks; the cutting board dealt twice; a plant corner without a floor plant place; an area behind a passage that has no arch or door of its own.
 if (process.argv.includes('--build')) { await import('./groupbuild.mjs'); await new Promise(() => {}); }   // stage 1 proof by building: pass rate per group phrase (groupbuild.mjs)
 import { roll, phraseAssets, ONE_AREA, STAMP_SKIP, SMALL_ON } from '../../../skills/cozy-interiors/scene/roll.mjs';
+import { phraseOf } from '../../../skills/cozy-interiors/scene/rollstages.mjs';
 import { groupNeeds, groupPhrases } from '../../../skills/cozy-interiors/scene/groups.mjs';
 import fs from 'node:fs';
 const TT = JSON.parse(fs.readFileSync(new URL('../../../skills/cozy-interiors/scene/tables.json', import.meta.url), 'utf8')), BK = (a) => (TT.backing || []).find((x) => x.id === a.backing) || {};
@@ -25,6 +26,7 @@ for (let seed = 1; seed <= N; seed++) for (const kinds of sets) {
       if (!!n.free !== sl.startsWith('floor:')) bad('group-slot-needs', seed, kinds, id, `"${g}" ${n.free ? 'stands free but is dealt' : 'stands at a wall but is dealt'} ${sl}`);
       if ((n.window || n.second) && !sl.startsWith('window:') && BK(a).walls === 2) bad('group-slot-needs', seed, kinds, id, `"${g}" needs a window but is dealt ${sl}`);
       if (n.wall === 'solid' && !n.second && sl.startsWith('window:')) bad('group-slot-needs', seed, kinds, id, `"${g}" needs a solid wall but is dealt ${sl}`); }
+    for (const g of a.groups || []) { const ph = phraseOf(g); if (!groupPhrases().includes(ph)) bad('group-without-recipe', seed, kinds, id, `"${ph}" has no a.group recipe (groups.mjs)`); }   // round 6 stage harness: every dealt group phrase, not only the hero
     if (a.hero && !groupPhrases().includes(a.hero)) bad('hero-without-recipe', seed, kinds, id, `"${a.hero}" has no a.group recipe (groups.mjs)`);   // round 6 T8: every dealt hero is a group the builder can make
     { const two = BK(a).walls === 2;   // round 6 stage harness: the dealt slots exist in the shell the roll's backing builds
       for (const sl of a.groupSlots || []) if (!two && /^window:/.test(sl || '')) bad('group-slot-no-wall', seed, kinds, id, `${sl} is dealt but the backing "${a.backing}" has one wall`);
