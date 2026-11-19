@@ -11,6 +11,6 @@ const regress = args.includes('--regress') ? new Promise((res) => { let out = ''
 const smoke = new Promise((res) => { let out = ''; const p = spawn('node', [join(here, 'smoke.mjs'), ...scenes]); p.stdout.on('data', (d) => (out += d)); p.stderr.on('data', (d) => (out += d)); p.on('close', (code) => res({ out, code })); });   // page-load smoke test: a page that throws on load fails here
 let bad = 0; for (const r of await Promise.all(runs)) { console.log(r.out.trimEnd()); if (!/No problems\.\s*$/.test(r.out)) bad++; }
 { const r = await smoke; console.log(r.out.trimEnd()); if (r.code) bad++; }
-if (self) { const r = await self; const lines = r.out.split('\n').filter((l) => /^\[parts\]|variant\(s\)|^no part|rror/i.test(l)); console.log('Assets on a bare floor (selftest):\n' + lines.join('\n')); if (!/^0 asset variant/m.test(r.out)) bad++; }
+if (self) { const r = await self; const lines = r.out.split('\n').filter((l) => /^\[parts\]|variant\(s\)|^no part|^coverage|rror/i.test(l)); console.log('Assets on a bare floor (selftest):\n' + lines.join('\n')); if (!/^0 asset variant/m.test(r.out)) bad++; }
 if (regress) { const r = await regress; console.log('Bug memory (regress):\n' + r.out.trimEnd()); if (r.code) bad++; }
 process.exitCode = bad ? 1 : 0;

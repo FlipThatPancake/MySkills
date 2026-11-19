@@ -44,6 +44,7 @@ export async function motionIssues(page, sceneFile, { seconds = 240 } = {}) {
         for (const cam of cams[th.area] || []) if (c.distanceTo(cam) < 900) say(tag + 'cam', `${tag}: comes within ${Math.round(c.distanceTo(cam))} mm of a camera at ${t.toFixed(1)} s (900 mm at least: a flier that close fills the frame, clipped)`);
         for (const o of ctx.objects) {
           if (b.perch === o.id) continue;
+          if (o.asset === 'doorLeaf') window.__leafGap = Math.min(window.__leafGap ?? 1e9, o.box.distanceToPoint(c) - r);   // closest a body comes to an open door leaf (mm), for the report
           if (o.box.distanceToPoint(c) < r - 6 && o.box.max.y > 100) say(tag + o.id, `${tag}: passes through ${o.id} at ${t.toFixed(1)} s (${c.toArray().map(Math.round)})`);
         }
         let inGap = false;
@@ -63,7 +64,7 @@ export async function motionIssues(page, sceneFile, { seconds = 240 } = {}) {
     for (const th of motion.things) if (th.sampled && !th.error && !bodiesSeen[`${th.area}: ${th.kind}`]) say(`${th.area}: ${th.kind}never`, `${th.area}: ${th.kind}: never came in during ${seconds} s (the way in may be blocked, or it waits for a window that is shut)`);
     // with the window shut a fresh thing never shows
     for (const th of motion.things) {
-      if (!th.sampled || th.error || !th.ctx.via || th.ctx.via.op.kind === 'arch' || th.ctx.via.op.kind === 'door' && !th.ctx.via.op.style) continue;   // a passage has no sash to shut
+      if (!th.sampled || th.error || !th.ctx.via || th.ctx.via.op.kind === 'arch' || th.ctx.via.op.style === 'slider' || th.ctx.via.op.kind === 'door' && !th.ctx.via.op.style) continue;   // a passage has no sash to shut, and a slider is drawn with its panel slid across (no state to shut)
       const via = th.ctx.via, built = via.W.built[via.index], saved = built.openables.map((o) => o.userData.open?.v);
       built.openables.forEach((o) => { if (o.userData.open) o.userData.open.v = 0; });
       const fresh = motion.PLUGINS[th.kind].build(th.ctx); let shown = 0;
@@ -84,6 +85,7 @@ if (process.argv[1] && process.argv[1].endsWith('check-motion.mjs')) {
   page.on('pageerror', (e) => console.log('PAGE ERROR', String(e)));
   await page.goto('file://' + html + '?check'); await page.waitForFunction(() => window.cozyScene, null, { timeout: 280000 });
   const issues = await motionIssues(page, scene);
+  const lg = await page.evaluate(() => window.__leafGap); if (lg !== undefined && lg !== null) console.log(`closest gap to an open door leaf: ${Math.round(lg)} mm`);
   for (const i of issues) console.log(`[${i.rule}] ${i.what}`);
   console.log(issues.length ? `${issues.length} issue(s)` : 'No motion problems.');
   await browser.close();

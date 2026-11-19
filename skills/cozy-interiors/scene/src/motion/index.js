@@ -22,7 +22,7 @@
 //   2. src/motion/<kind>.js: export default { sampled: true, build(ctx) } as above; chance only from ctx.rnd; bodies() lists the spheres it fills (a paw from a cabinet lists the sphere it sweeps).
 //   3. Register it in PLUGINS below. check-motion.mjs (part of check-home) then replays it for 240 s and names any crossing of furniture, walls or a shut window.
 import * as THREE from '../vendor/three/three.module.js';
-import { openable, passage, flyable, gapOf } from './rules.js';
+import { openable, passage, flyable, gapOf, sliderClear } from './rules.js';
 import butterfly from './butterfly.js';
 import bee from './bee.js';
 import bird from './bird.js';
@@ -50,14 +50,34 @@ export function createMotion(kit, home, S) {
   const contextOf = (A, entry) => {
     const ws = home.walls.filter((W) => W.id && W.id.startsWith(A.id + '-')).map((W) => ({ W, id: W.id }));
     const openings = ws.flatMap(({ W }) => W.built.map((b, index) => {
-      const p = b.group.getWorldPosition(new T.Vector3()), st = b.openables[0]?.userData.open, op = b.op;
+      const p = b.group.getWorldPosition(new T.Vector3()), st = b.openables[0]?.userData.open, op = b.op, slider = op.kind === 'door' && op.style === 'slider';
+      if (slider) { const off = sliderClear(op).off; p.x += W.d[0] * off; p.z += W.d[1] * off; }   // a slider's clear strip is off-centre: fliers aim at its middle
       const o = { id: `${W.id}#${index}`, index, W, op, centre: [p.x, p.z], n: W.n, u: W.d, width: op.width, height: op.height, sill: op.sill || 0,
-        open: () => (passage(op) ? 1 : st ? st.v : 0), gap: () => (flyable(op) ? gapOf(op, st ? st.v : 0, st?.max) : 0), usable: (r) => o.gap() >= 2 * r + 30 };
+        open: () => (passage(op) || slider ? 1 : st ? st.v : 0), gap: () => (flyable(op) ? gapOf(op, st ? st.v : 0, st?.max) : 0), usable: (r) => o.gap() >= 2 * r + 30 };
       return o;
     }));
-    const objects = Object.entries(home.objects).filter(([, g]) => inArea(A, g)).map(([id, g]) => {
-      const L = g.userData.landing; return { id, g, asset: g.userData.scene?.asset, box: solidBox(g), landing: L ? new T.Vector3(...L).applyMatrix4(g.matrixWorld).toArray() : null };
+    // a curtain is two panels with the middle open: a flier's air is blocked by the panels, not by one box over the whole width
+    const panelBoxes = (g) => {
+      const w = g.userData.scene?.params?.w ?? 1500, pw = w * 0.22, inv = new T.Matrix4().copy(g.matrixWorld).invert(), v = new T.Vector3(), L = new T.Box3(), R = new T.Box3();
+      g.traverse((o) => { if (!o.isMesh) return; const pos = o.geometry.attributes.position; for (let i = 0; i < pos.count; i++) { v.fromBufferAttribute(pos, i).applyMatrix4(o.matrixWorld); const x = v.clone().applyMatrix4(inv).x; if (x <= -w / 2 - 40 + pw + 1) L.expandByPoint(v); else if (x >= w / 2 + 40 - pw - 1) R.expandByPoint(v); } });
+      return [L, R].filter((b) => !b.isEmpty());
+    };
+    // the open leaf as slices along its length (one box over a leaf standing at 60 degrees would fill the whole doorway)
+    const leafBoxes = (g) => {
+      g.updateMatrixWorld(true); const hinge = g.getWorldPosition(new T.Vector3()), pts = [], v = new T.Vector3();
+      g.traverse((o) => { if (!o.isMesh || o.isLineSegments2 || o.userData.lines || o.material.isMeshBasicMaterial || kit.hulls.includes(o.material) || o.material === kit.depth) return; const pos = o.geometry.attributes.position; for (let i = 0; i < pos.count; i++) pts.push(v.fromBufferAttribute(pos, i).applyMatrix4(o.matrixWorld).clone()); });
+      if (!pts.length) return [];
+      let far = pts[0], fd = 0; for (const q of pts) { const d = Math.hypot(q.x - hinge.x, q.z - hinge.z); if (d > fd) { fd = d; far = q; } }
+      const ax = new T.Vector2(far.x - hinge.x, far.z - hinge.z).normalize(), N = 8, boxes = Array.from({ length: N }, () => new T.Box3());
+      for (const q of pts) { const t = ((q.x - hinge.x) * ax.x + (q.z - hinge.z) * ax.y) / fd; boxes[Math.min(N - 1, Math.max(0, Math.floor(t * N)))].expandByPoint(q); }
+      return boxes.filter((b) => !b.isEmpty());
+    };
+    const objects = Object.entries(home.objects).filter(([, g]) => inArea(A, g)).flatMap(([id, g]) => {
+      const L = g.userData.landing, asset = g.userData.scene?.asset, landing = L ? new T.Vector3(...L).applyMatrix4(g.matrixWorld).toArray() : null;
+      return (asset === 'curtain' ? panelBoxes(g) : [solidBox(g)]).map((box) => ({ id, g, asset, box, landing }));
     }).filter((o) => !o.box.isEmpty());
+    // a plain door standing open is a solid too: its leaf, from the hinge, the open angle and the thickness the page built (fliers keep PAD off it; the check counts a pass through it)
+    for (const { W } of ws) W.built.forEach((b, index) => { const op = b.op; if (op.kind !== 'door' || op.style || !b.openables[0]) return; for (const box of leafBoxes(b.openables[0])) objects.push({ id: `${W.id}#${index}-leaf`, g: b.openables[0], asset: 'doorLeaf', box, landing: null }); });
     const b = A.bounds, via = entry.via ? openings.find((o) => o.W.id === entry.via[0] && o.index === entry.via[1]) || null : null;
     return { T, kit, home, entry, area: A, now: () => time, rnd: seeded(hash(`${S.seed}/${A.id}/${entry.kind}`)), objects, solids: objects.filter((o) => o.box.max.y > 500), walls: ws, openings, via, cameras: () => (api?.cameraOf ? api.cameraOf(A.id) : []),
       room: { x0: b.x0 + 150, x1: b.x1 - 150, z0: b.z0 + 150, z1: b.z1 - 150, ymin: 1000, ymax: Math.min((b.top || 2500) - 250, 2150) } };
