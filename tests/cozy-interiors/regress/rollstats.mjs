@@ -1,6 +1,6 @@
 // node rollstats.mjs [seeds=150] → rolls many homes and counts the deals that break a check or contradict themselves. Exit 1 when any case is found.
 // Cases: a still life with more than two things on one top; the same thing on two tops of one area; two lamps in one area; a named asset the library lacks; the cutting board dealt twice; a plant corner without a floor plant place; an area behind a passage that has no arch or door of its own.
-import { roll } from '../../../skills/cozy-interiors/scene/roll.mjs';
+import { roll, phraseAssets, ONE_AREA, STAMP_SKIP, SMALL_ON } from '../../../skills/cozy-interiors/scene/roll.mjs';
 import fs from 'node:fs';
 import { ASSETS } from '../../../skills/cozy-interiors/scene/src/library/meta.js';
 const NAMES = JSON.parse(fs.readFileSync(new URL('../../../skills/cozy-interiors/scene/tables.json', import.meta.url), 'utf8')).names, UNNAMED = /^(drawer ajar|pillow creased|cloth dropped|unmade bed|tablecloth|runner|cloth|cushion|teaTowel|duvetCloth|floorCushion|foldedThrow|benchCushion|tableRunner|hungBag|binders|hungHat|boots)$/;   // a sign that is a state of another piece (a drawer ajar) has no asset to look for
@@ -20,7 +20,7 @@ for (let seed = 1; seed <= N; seed++) for (const kinds of sets) {
     if (a.board && seen.has('cuttingBoard')) bad('board-twice', seed, kinds, id);
     if ((a.groups || []).some((g) => /floor plant/.test(g)) && !a.plantAt.includes('floor')) bad('plant-corner-without-floor-place', seed, kinds, id);
     { const stripG = (g) => g.replace(/ \(the hero group.*\)$/, '').replace(/, on the [^,]*(, [a-z ]*third)?$/, '');
-      const unnamed = [...(a.accents || []), ...(a.foreground ? [a.foreground] : []), ...(a.pieces || []), ...(a.signs || [])].filter((t) => !NAMES.things[t] && !UNNAMED.test(t) && !/\([A-Za-z, ]+\)\s*$/.test(t)).concat((a.groups || []).slice(1).map(stripG).filter((t) => !NAMES.groups[t]), a.hero && !NAMES.hero[a.hero] ? [a.hero] : [], a.accentOn && !NAMES.things[a.accentOn] ? [a.accentOn] : []);
+      const unnamed = [...(a.accents || []), ...(a.foreground ? [a.foreground] : []), ...(a.pieces || []), ...(a.signs || [])].filter((t) => !NAMES.things[t] && !UNNAMED.test(t) && !/\([A-Za-z, ]+\)\s*$/.test(t)).concat((a.groups || []).slice(1).map(stripG).filter((t) => !NAMES.groups[t]), a.hero && !NAMES.hero[a.hero] ? [a.hero] : []);
       for (const t of unnamed) bad('roll-phrase-without-asset-names', seed, kinds, id, `"${t}" (add it to tables.json names)`); }
     if (seen.has('bedsideLamp') && /wallSconce/.test(JSON.stringify([a.wallArr, a.groups, a.more, a.accents]))) bad('sconce-and-bedside-lamp', seed, kinds, id, 'a wall sconce and a bedside lamp dealt together (two light sources a side)');   // round 4 G4
     if (a.plantAt.includes('sill') && !a.openings.some((o) => o.kind === 'window' && !['wall', 'bay'].includes(o.style))) bad('sill-plant-without-a-ledge', seed, kinds, id, 'a sill plant and no window with a ledge');   // round 4 G6
@@ -28,6 +28,14 @@ for (let seed = 1; seed <= N; seed++) for (const kinds of sets) {
     if (/bedroom/.test(id) && a.openings.some((o) => o.kind === 'window') && !(a.pieces || []).some((p) => /curtain|blind/.test(p))) bad('bedroom-window-uncovered', seed, kinds, id, 'a bedroom window dealt no curtain or blind');   // round 4 U11
     if (a.plants !== a.plantAt.length) bad('plants-count', seed, kinds, id);
   }
+  { const count = {}, areasOf = {};   // round 6 item 12: the home-wide caps of the variety rules (check-home): one area per basket, pouf, trolley, crate, stool or footstool (three at most); two of any other small piece on a surface
+    for (const [id, a] of Object.entries(R.areas)) {
+      const slots = [...(a.still || []).flatMap((st) => st.things), ...(a.accents || []), a.foreground, ...(a.more || []), ...(a.signs || []), ...(a.groups || []).slice(1).map((g) => g.replace(/, on the [^,]*(, [a-z ]*third)?$/, ''))].filter(Boolean), mine = new Set();   // one object of an asset per area satisfies every phrase that names it (a mug sign and a mug on a table)
+      for (const t of slots) for (const as of phraseAssets(t)) { if (!(ONE_AREA.has(as) || (SMALL_ON.has(as) && !STAMP_SKIP.test(as))) || mine.has(as)) continue; mine.add(as); count[as] = (count[as] || 0) + 1; (areasOf[as] ||= new Set()).add(id); }
+      for (const t of [...(a.accents || []), a.foreground, ...(a.more || []), ...(a.pieces || [])].filter(Boolean)) if (/^stool$|\(stool\)/.test(t) || (t === 'stool')) bad('loose-seat', seed, kinds, id, `"${t}": a stool is dealt only with its job (island, desk, plant stand), never loose`);
+      for (const g of a.groups || []) if (/\bstool\b/.test(g) && !/two stools|a stool and a lamp/.test(g)) bad('loose-seat', seed, kinds, id, `group "${g}" deals a stool without a job`);
+    }
+    for (const [as, n] of Object.entries(count)) { if (ONE_AREA.has(as) ? (areasOf[as].size > 1 && n > 1) || n > 3 : n > 2) bad('home-cap', seed, kinds, [...areasOf[as]].join('+'), `${as} dealt ${n}x in ${areasOf[as].size} area(s)`); } }
   for (const b of R.openPlan?.behind || []) if (!(R.areas[b]?.passages || []).length) bad('behind-without-passage', seed, kinds, b);
   for (const p of R.openPlan?.passages || []) if (!(R.areas[p.from]?.passages || []).length || !(R.areas[p.to]?.passages || []).length) bad('passage-one-ended', seed, kinds, p.to, 'a passage with an arch on one area only');   // round 4 G5
   for (const b of R.openPlan?.behind || []) if (!(R.openPlan.passages || []).some((p) => p.to === b)) bad('passage-one-ended', seed, kinds, b, 'the area behind a passage has no passage record naming both ends');

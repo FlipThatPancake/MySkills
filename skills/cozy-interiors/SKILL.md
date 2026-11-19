@@ -18,9 +18,9 @@ Beautiful views of home areas on one page: paper-white fills, thin grey lines, s
 
 ## Build
 Run from `scene/` with Node, global esbuild (`npm i -g esbuild`) and Playwright (Pillow for shots.mjs). Keep the spec, scene json and page in the user's project.
-1. `node roll.mjs [seed] <kinds...>`: this home's choices, including where each plant lives, each area's foreground piece and the accent textile. For a new home leave the seed out: the roll picks one and prints it. A kind the tables lack: add it to tables.json.
+1. `node roll.mjs [seed] <kinds...>`: this home's choices, including where each plant lives and each area's foreground piece. For a new home leave the seed out: the roll picks one and prints it. A kind the tables lack: add it to tables.json.
 2. `node assets.mjs`: every asset with origin, size, mount, params and forms. Missing: a new generator in `src/library/` in the same style, registered in index.js and meta.js; a new painting: [paintings.md](references/paintings.md).
-3. A spec script importing compose.mjs (its header lists the calls) writes the scene json, calling `a.alive(roll.areas[id].motion)` for each area; start from `example.spec.mjs`. Pass the roll to `H.roll` so the check sees everything dealt; build each dealt group as one group of its listed pieces, put the accent on the textile the roll names, and leave a thing out only with `a.skip(what, why)`.
+3. A spec script importing compose.mjs (its header lists the calls) writes the scene json, calling `a.alive(roll.areas[id].motion)` for each area; start from `example.spec.mjs`. Pass the roll to `H.roll` so the check sees everything dealt; build each dealt group as one group of its listed pieces and leave a thing out only with `a.skip(what, why)`.
 4. `node check-home.mjs <scene.json>`: fix every layout issue; shot issues wait for step 5. `--quick` skips the slow renders while you work; run it in full before delivering.
 5. Views: [camera.md](references/camera.md). `node fitshots.mjs <scene.json>` writes a camera per tour shot to `<scene>.cameras.json`, which the spec reads through cameras.mjs; rerun step 3, then check-home until "No problems".
 6. Look by eye: `node snap.mjs <scene.json> out.png all` and `node shots.mjs <scene.json> sheet.png`. `node watch.mjs <scene.json>` shows the living things moving. Each view a still photo of a lived-in home? Fix what reads wrong.

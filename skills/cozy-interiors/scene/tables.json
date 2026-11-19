@@ -119,7 +119,6 @@
    "kettle on the worktop by the sink",
    "tea towel on a rail",
    "herbs on the worktop",
-   "stool",
    "trolley",
    "basket of vegetables",
    "wall shelf with jars"
@@ -148,15 +147,9 @@
    "island": "a run on the wall and a freestanding island parallel to it, stools on its far side"
   },
   "foreground": [
-   "stool",
    "basket of vegetables",
    "trolley",
    "step stool"
-  ],
-  "accentOn": [
-   "teaTowel",
-   "tablecloth",
-   "runner"
   ],
   "above": [
    "wall units over the run (wallRun)",
@@ -239,16 +232,9 @@
    "rug"
   ],
   "foreground": [
-   "stool",
    "basket",
    "bench end",
    "chair pulled out"
-  ],
-  "accentOn": [
-   "tablecloth",
-   "benchCushion",
-   "tableRunner",
-   "cushion"
   ]
  },
  "living": {
@@ -326,17 +312,12 @@
    "basket",
    "footstool",
    "log basket"
-  ],
-  "accentOn": [
-   "cushion",
-   "foldedThrow",
-   "cloth"
   ]
  },
  "bedroom": {
   "hero": [
    "bed with a headboard on the backing wall",
-   "bed under a window with a bedside table each side"
+   "bed with a bedside table each side, headboard on a wall without a window"
   ],
   "openings": [
    [
@@ -409,11 +390,6 @@
    "bench at the foot of the bed",
    "clothes chair",
    "hamper"
-  ],
-  "accentOn": [
-   "duvetCloth",
-   "cushion",
-   "foldedThrow"
   ]
  },
  "reading-corner": {
@@ -491,11 +467,6 @@
    "basket",
    "floor cushion",
    "magazine box"
-  ],
-  "accentOn": [
-   "cushion",
-   "foldedThrow",
-   "floorCushion"
   ]
  },
  "hallway": {
@@ -549,7 +520,6 @@
    "picture over the bench or console, or on open wall at eye level",
    "vase of branches",
    "floor lamp in a corner clear of the door",
-   "stool",
    "key bowl (keyBowl)",
    "letter tray (letterTray)",
    "boots",
@@ -564,14 +534,9 @@
    "magazine box (magazineBox)"
   ],
   "foreground": [
-   "stool",
    "shoes",
    "basket",
    "umbrella stand"
-  ],
-  "accentOn": [
-   "runner",
-   "hungBag"
   ]
  },
  "home-office": {
@@ -652,14 +617,9 @@
    "plant stand (plantStand)"
   ],
   "foreground": [
-   "stool",
    "waste bin",
    "file box",
    "basket"
-  ],
-  "accentOn": [
-   "cushion",
-   "binders"
   ]
  },
  "backingWeights": {
@@ -754,15 +714,6 @@
    ]
   },
   {
-   "id": "folded throw",
-   "say": "a folded throw",
-   "in": [
-    "living",
-    "bedroom",
-    "reading-corner"
-   ]
-  },
-  {
    "id": "cloth dropped",
    "say": "a cloth dropped over something",
    "in": [
@@ -776,9 +727,7 @@
    "id": "shoes askew",
    "say": "shoes kicked off",
    "in": [
-    "hallway",
-    "bedroom",
-    "living"
+    "hallway"
    ]
   },
   {
@@ -887,33 +836,6 @@
  ],
  "plantsNote": "plants is how many; plantPlaces says where each one lives. An area gets distinct places, so at most one floor plant.",
  "foregroundNote": "Each area's near-camera piece comes from its own use first; a plant only when none of these fits.",
- "accentTones": [
-  {
-   "id": "terracotta",
-   "hex": "#c9775a"
-  },
-  {
-   "id": "ochre",
-   "hex": "#d1a53c"
-  },
-  {
-   "id": "rust",
-   "hex": "#b5603f"
-  },
-  {
-   "id": "sage",
-   "hex": "#8d9f7a"
-  },
-  {
-   "id": "clay rose",
-   "hex": "#cf8f7f"
-  },
-  {
-   "id": "honey",
-   "hex": "#d9a85c"
-  }
- ],
- "accentNote": "One warm accent per home, from terracotta, ochre, rust, sage, clay rose or honey: its hex goes to new Home({ accent }). Each area names the textile that carries it (accentOn); set tone: 'accent' on that piece (cushion, foldedThrow, cloth, tablecloth, teaTowel, benchCushion, floorCushion, runner, tableRunner, duvetCloth).",
  "passages": [
   {
    "style": "round",
@@ -1454,7 +1376,7 @@
   "list": {
    "dining": [
     "sideboard or dresser with a still life on top and a picture, shelf or mirror above",
-    "plant corner: a floor plant with a stool or basket beside it",
+    "plant corner: a floor plant on a plant stand, or with a basket beside it",
     "bar cart or trolley with bottles and glasses",
     "armchair with a floor lamp and a side table",
     "bench under a picture, with a cushion and a basket",
@@ -1471,7 +1393,7 @@
    "kitchen": [
     "island or table with two stools",
     "tall unit or fridge with a trolley beside it",
-    "open shelves with jars and a plant, a stool below",
+    "open shelves with jars and a plant",
     "sideboard or dresser with a still life and a picture",
     "plant corner: a floor plant with a basket"
    ],
@@ -1479,7 +1401,7 @@
     "wardrobe or chest of drawers with a still life and a mirror",
     "armchair with a floor lamp and a side table",
     "bench at a wall with a blanket and a basket",
-    "plant corner: a floor plant with a stool",
+    "plant corner: a floor plant on a plant stand",
     "desk or dressing table with a stool and a lamp"
    ],
    "reading-corner": [
@@ -1492,7 +1414,7 @@
     "console with a mirror, a key bowl and a plant",
     "coat hooks with a bench, shoes and an umbrella stand",
     "shelf with baskets above a bench",
-    "plant corner: a floor plant with a stool"
+    "plant corner: a floor plant on a plant stand"
    ],
    "home-office": [
     "bookshelf with files and objects",
@@ -1619,7 +1541,9 @@
       "shelf wall with an armchair": "shelf+armchair",
       "two armchairs and a side table": "armchair+sideTable",
       "bed with a headboard on the backing wall": "bed",
-      "bed under a window with a bedside table each side": "bed+bedsideTable",
+      "bed with a bedside table each side, headboard on a wall without a window": "bed+bedsideTable",
+      "bed with its headboard on the second wall (the back wall holds the window)": "bed",
+      "bed with its headboard on a side wall (the back wall holds the window)": "bed",
       "reading chair with a footstool and a floor lamp": "readingChair+footstool+floorLamp",
       "daybed under shelves": "daybed+shelf",
       "window seat with pillows and a reading lamp": "windowSeat+readingLamp",
@@ -1635,11 +1559,11 @@
     "groups": {
       "island or table with two stools": "baseRun|table|roundTable+stool",
       "tall unit or fridge with a trolley beside it": "fridge|wallRun+trolley",
-      "open shelves with jars and a plant, a stool below": "openShelf|wallShelf+stool",
+      "open shelves with jars and a plant": "openShelf|wallShelf",
       "sideboard or dresser with a still life and a picture": "sideboard+picture",
       "plant corner: a floor plant with a basket": "floorPlant+basket",
       "sideboard or dresser with a still life on top and a picture, shelf or mirror above": "sideboard+picture|wallShelf|mirror",
-      "plant corner: a floor plant with a stool or basket beside it": "floorPlant+stool|basket",
+      "plant corner: a floor plant on a plant stand, or with a basket beside it": "floorPlant|plantStand",
       "bar cart or trolley with bottles and glasses": "trolley",
       "armchair with a floor lamp and a side table": "armchair+floorLamp+sideTable",
       "bench under a picture, with a cushion and a basket": "bench+picture+cushion+basket",
@@ -1652,7 +1576,7 @@
       "bench or window seat with cushions": "bench|windowSeat+cushion",
       "wardrobe or chest of drawers with a still life and a mirror": "wardrobe|chestOfDrawers+mirror|leaningMirror",
       "bench at a wall with a blanket and a basket": "bench+basket",
-      "plant corner: a floor plant with a stool": "floorPlant+stool",
+      "plant corner: a floor plant on a plant stand": "floorPlant|plantStand",
       "desk or dressing table with a stool and a lamp": "desk+stool",
       "bookcase with books and objects": "shelf",
       "side table with a lamp and a cup, a pouf beside it": "sideTable+pouf",
