@@ -22,10 +22,10 @@ const RULE = {
   units: S.shell, openings: S.shell, window: S.shell, 'window-head': S.shell, sash: S.shell, pane: S.shell, cornerop: S.shell, 'open-glimpse': S.shell, rectfit: S.shell,
   casing: split(3),
   // 4 anchors
-  path: S.anchors, depth: S.anchors, front: S.anchors, seating: S.anchors, seat: S.anchors, fill: S.anchors, floorcover: S.anchors, table: S.anchors, rug: S.anchors, rugs: S.anchors, 'rug-edge': S.anchors, runner: S.anchors, group: S.anchors,
+  path: split(4), depth: S.anchors, front: S.anchors, seating: S.anchors, seat: S.anchors, fill: S.anchors, floorcover: S.anchors, table: S.anchors, rug: S.anchors, rugs: S.anchors, 'rug-edge': S.anchors, runner: S.anchors, group: S.anchors,
   'open-walkway': S.anchors, 'open-separator': S.anchors, 'open-island': S.anchors, 'open-island-seat': S.anchors, 'note-bedcentre': S.anchors, '_heroside': S.anchors,
   // split: the same rule on a large piece is stage 4, on a small one stage 5
-  wall: split(), floor: split(), overlap: split(), swing: split(4), hidden: split(), lone: split(), stool: split(), support: split(), floating: split(), physics: split(), parts: split(), penetrates: split(), sunk: split(), overhangs: split(), moves: split(), zfight: split(), 'shape-failed': split(),
+  wall: split(), floor: split(), overlap: split(), swing: split(4), hidden: split(), lone: split(), stool: split(), support: split(), floating: split(), physics: split(), parts: split(), penetrates: split(), sunk: split(), overhangs: split(), moves: split(), zfight: split(), nan: split(), 'shape-failed': split(),
   // frame: the area's cover of the home view and the windows inside it are the view (3); an object outside the frame is a piece (4 or 5)
   frame: (i, c) => (/objects and openings cover|opening|window|backing/.test(i.what) ? 3 : split()(i, c)),
   // interest: what a dressed area has; its backing walls are the shell, its hero an anchor
@@ -58,6 +58,7 @@ const SWAP = new Set(['variety', 'bare', 'interest', 'tabletop', 'lamps']);
 export function nextMove(issue, n) {
   if (n === UNSTAGED) return 'read the message';
   if (issue.rule === 'rolled' || /a\.skip\(/.test(issue.what)) return `a.skip(what, 'why') if it is left out on purpose`;
+  if (issue.rule === 'nan') return 'fix the asset generator (the shape is broken, not misplaced)';
   if (n === 2) return 'go back to stage 2 (the plan)';
   if (n === 3) return 'go back to stage 3 (resize the rect, move the opening or the view)';
   if (n === 4) return 'nudge in its slot, else swap slots, else go back to stage 3';

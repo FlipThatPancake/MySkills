@@ -28,6 +28,7 @@ const issues = await page.evaluate(() => {
   const { home, kit } = window.cozyScene, T = kit.THREE, out = [], objs = home.objects;
   home.group.updateMatrixWorld(true);
   const sc = (id) => objs[id].userData.scene;
+  for (const id of Object.keys(objs)) { let bad = 0; objs[id].traverse((o) => { const g = o.geometry; if (!g || !g.attributes) return; for (const k of ['position', 'instanceStart']) { const a = g.attributes[k], d = a && (a.data ? a.data.array : a.array); if (d && d.some(Number.isNaN)) { bad++; break; } } }); if (bad) out.push({ rule: 'nan', what: `${id} (${objs[id].userData.scene.asset}): ${bad} line or mesh buffer(s) hold NaN positions (a zero-length rod or a square root of a negative number in the asset): fix the asset's numbers` }); }   // one short issue per object, not three's dump
   const box = (g) => {   // the solid parts only: painted sheets (light, shadow, sky) and lines are not things
     g.updateMatrixWorld(true); const b = new T.Box3(), bb = new T.Box3();
     g.traverse((o) => { if (!o.isMesh || o.isLineSegments2 || o.userData.lines || o.material.isMeshBasicMaterial || kit.hulls.includes(o.material) || o.material === kit.depth) return; o.geometry.computeBoundingBox(); b.union(bb.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld)); });
