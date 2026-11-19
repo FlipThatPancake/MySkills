@@ -18,7 +18,7 @@ import { cuttingBoard } from '../kitchen/cuttingBoard.js';
 import { socket, lightSwitch } from '../kitchen/details.js';
 import { pendantLamp, LAMP } from '../kitchen/atmosphere.js';
 import { table, chair } from './dining.js';
-import { bookStack, mirror, wallShelf, roundTable, cat, pouf } from './decor.js';
+import { bookStack, mirror, wallShelf, roundTable, cat, pouf, photoFrame } from './decor.js';
 import { sideTable, cushion, pot, mug, openBook } from './pieces.js';
 import { floorPlant, plant, vase, picture, fridge, stool, basket } from './variants.js';
 import { jars, kettle, herbs, trolley, teaTowel, saltPepper } from './kitchenware.js';
@@ -39,7 +39,7 @@ export const REGISTRY = {
   stepStool, crate, wateringCan, umbrellaStand, shoes, wasteBin, fileBox, laptop,
   jars, kettle, herbs, trolley, teaTowel, saltPepper, hangingPlant,
   bed, bedsideTable, wardrobe, desk, deskChair, coatHooks, daybed, readingChair, footstool, console: console_,
-  candlesticks, jug, breadBasket, placeSetting, glazedCabinet, benchCushion, wallPlates, pendantForm,
+  candlesticks, photoFrame, jug, breadBasket, placeSetting, glazedCabinet, benchCushion, wallPlates, pendantForm,
   dishRack, utensilCrock, breadBin, toaster, mokaPot, potRail, openShelf, spiceRack, ovenGlove, wallClock, cookbookStand,
   windowSeat, readingLamp, floorBooks, teaSet, readShelf,
   taskLamp, monitor, notebook, pinboard, binders, deskOrganiser, printer, globe, wallCalendar,

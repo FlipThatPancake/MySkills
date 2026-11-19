@@ -67,7 +67,6 @@ export function createKit() {
   const leafFill = makeFill(false, [0.62, 0.74, 0.60]);
   const linenFill = makeFill(false, [0.93, 0.915, 0.87]);   // a runner or a throw in faint linen
   const greyFill = makeFill(false, [0.86, 0.86, 0.86]);   // a jacket or a jumper in soft grey, one shade darker than the paper
-  const accentFill = makeFill(false, [0.96, 0.78, 0.7]);   // the home's one warm accent (setAccent): a cushion, a throw, a tea towel, a cloth in a soft colour
   const soilFill = makeFill(false, [0.72, 0.71, 0.69]);   // soil in a pot, an insole: a warm mid grey
   // Lines win ties with fills by a tiny pull toward the camera in clip space (about 0.1 px of depth at the wide view, never more than a fraction of a mm up close), so an edge 2 mm behind a fill stays hidden at every distance.
   const biased = (m) => {
@@ -81,7 +80,6 @@ export function createKit() {
     return m;
   };
   const lineGreen = biased(new LineMaterial({ color: 0x5f7f5b, linewidth: WIDTH, depthTest: true }));
-  const lineAccent = biased(new LineMaterial({ color: 0xa9654c, linewidth: WIDTH, depthTest: true }));
   const lineMid = biased(new LineMaterial({ color: TONES.mid, linewidth: WIDTH, depthTest: true }));
   const lineLo = biased(new LineMaterial({ color: TONES.lo, linewidth: WIDTH, depthTest: true }));
   const lineFaint = biased(new LineMaterial({ color: FAINT.color, linewidth: FAINT.width, depthTest: true }));
@@ -147,17 +145,16 @@ export function createKit() {
     // Wall and floor thin out between r0 and r1 (world units) beyond the box that is `half` wide around `centre`.
     setFade(centre, half, r0, r1) { fadeFill.uniforms.uC.value.copy(centre); fadeFill.uniforms.uH.value.copy(half); fadeFill.uniforms.uR.value.set(r0, r1); },
     // The window size in CSS pixels; call it on every resize so lines stay 1 px.
-    // The home's accent colour (a hex string): the line takes it as is, the fill a soft tint of it. Textiles ask for it with tone: 'accent'.
-    setAccent(hex) { const c = new THREE.Color(hex), hsl = {}; c.getHSL(hsl); lineAccent.color.copy(new THREE.Color().setHSL(hsl.h, Math.min(0.55, hsl.s), Math.min(0.46, hsl.l))); const t = new THREE.Color().setHSL(hsl.h, Math.min(0.5, hsl.s * 0.7), Math.min(0.76, hsl.l + 0.27)); accentFill.uniforms.uTint.value.set(t.r, t.g, t.b); },   // close to the hex itself (a rust stays rust, not pink), a little lighter so the line work still reads
-    setResolution(w, h) { lineFaint.resolution.set(w, h); lineMid.resolution.set(w, h); lineLo.resolution.set(w, h); seamLine.resolution.set(w, h); fadables.forEach((fa) => { fa.mid.resolution.set(w, h); fa.lo.resolution.set(w, h); fa.seam.resolution.set(w, h); }); lineGreen.resolution.set(w, h); lineAccent.resolution.set(w, h); loopMat.resolution.set(w, h); hullU.uRes.value.set(w, h); },
+    setAccent() {},   // the home has no accent colour (colour stays on paintings, the outside view and plants); kept so an old scene file that still names one loads
+    setResolution(w, h) { lineFaint.resolution.set(w, h); lineMid.resolution.set(w, h); lineLo.resolution.set(w, h); seamLine.resolution.set(w, h); fadables.forEach((fa) => { fa.mid.resolution.set(w, h); fa.lo.resolution.set(w, h); fa.seam.resolution.set(w, h); }); lineGreen.resolution.set(w, h); loopMat.resolution.set(w, h); hullU.uRes.value.set(w, h); },
     // 0..1, fills and lines together. Only a fade is transparent; at 1 everything is opaque,
     // so three.js does not sort the meshes every frame.
     // `dim` (0..1) lowers the kitchen alone, e.g. to 0.4 while the oven is highlighted; the backdrop stays full.
     setOpacity(o, dim = 1) {
       const f = o * dim, t = f < 0.999;
-      uniforms.uOpacity.value = f; backU.value = o; lineMid.opacity = lineLo.opacity = lineFaint.opacity = seamLine.opacity = lineGreen.opacity = lineAccent.opacity = f;
+      uniforms.uOpacity.value = f; backU.value = o; lineMid.opacity = lineLo.opacity = lineFaint.opacity = seamLine.opacity = lineGreen.opacity = f;
       paints.forEach(m => { m.transparent = t; });
-      accentFill.transparent = lineAccent.transparent = greyFill.transparent = linenFill.transparent = soilFill.transparent = leafFill.transparent = lineGreen.transparent = fill.transparent = hull.transparent = hullLo.transparent = hullGreen.transparent = lineMid.transparent = lineLo.transparent = lineFaint.transparent = seamLine.transparent = t;
+      greyFill.transparent = linenFill.transparent = soilFill.transparent = leafFill.transparent = lineGreen.transparent = fill.transparent = hull.transparent = hullLo.transparent = hullGreen.transparent = lineMid.transparent = lineLo.transparent = lineFaint.transparent = seamLine.transparent = t;
       fadeFill.transparent = true;
       if (backdropMat) backdropMat.transparent = o < 0.999;
       depthMeshes.forEach(m => { m.visible = t; });
@@ -168,7 +165,7 @@ export function createKit() {
     track(group) {
       roots.push(group);
       const twins = [];
-      group.traverse((o) => { if (o.isMesh && (o.material === fill || o.material === leafFill || o.material === soilFill || o.material === linenFill || o.material === greyFill || o.material === accentFill || paints.includes(o.material))) twins.push(o); });
+      group.traverse((o) => { if (o.isMesh && (o.material === fill || o.material === leafFill || o.material === soilFill || o.material === linenFill || o.material === greyFill || paints.includes(o.material))) twins.push(o); });
       twins.forEach((o) => { const t = new THREE.Mesh(o.geometry, depth); t.renderOrder = -10; o.add(t); depthMeshes.push(t); });
       return group;
     },
@@ -181,7 +178,7 @@ export function createKit() {
       if (!opts.tone) opts = { ...opts, tone: autoTone(mesh.geometry) };
       const edges = new THREE.EdgesGeometry(mesh.geometry, opts.crease ?? CREASE);
       if (edges.attributes.position.count) {
-        const l = new LineSegments2(new LineSegmentsGeometry().fromEdgesGeometry(edges), opts.leaf ? lineGreen : opts.tone === 'accent' ? lineAccent : opts.tone === 'lo' ? lineLo : lineMid);
+        const l = new LineSegments2(new LineSegmentsGeometry().fromEdgesGeometry(edges), opts.leaf ? lineGreen : opts.tone === 'lo' ? lineLo : lineMid);
         l.userData.kitLine = true;
         mesh.add(l);
       }
@@ -195,7 +192,7 @@ export function createKit() {
     },
     // Fill a geometry and outline it, at (x, y, z) — the position of the geometry's own origin.
     solid(geometry, x = 0, y = 0, z = 0, opts = {}) {
-      const m = new THREE.Mesh(geometry, opts.leaf ? leafFill : opts.soil ? soilFill : opts.linen ? linenFill : opts.grey ? greyFill : opts.tone === 'accent' ? accentFill : fill);   // soil: true draws earth in warm grey-brown; leaf: true draws foliage in the sage fill with a green outline
+      const m = new THREE.Mesh(geometry, opts.leaf ? leafFill : opts.soil ? soilFill : opts.linen ? linenFill : opts.grey ? greyFill : fill);   // soil: true draws earth in warm grey-brown; leaf: true draws foliage in the sage fill with a green outline
       m.position.set(x, y, z); if (opts.through) m.userData.through = opts.through;   // through: this part may pass through others of its asset (a trolley post through its trays); scene/geom/parts.mjs
       return kit.outline(m, opts);
     },
@@ -276,7 +273,7 @@ export function createKit() {
     lines(points, tone = 'lo') {
       const g = new LineSegmentsGeometry();
       if (points.length) g.setPositions(points.flat());
-      const l = new LineSegments2(g, tone === 'mid' ? lineMid : tone === 'faint' ? lineFaint : tone === 'green' ? lineGreen : tone === 'accent' ? lineAccent : lineLo);
+      const l = new LineSegments2(g, tone === 'mid' ? lineMid : tone === 'faint' ? lineFaint : tone === 'green' ? lineGreen : lineLo);
       l.userData.kitLine = true;
       return l;
     },
@@ -339,7 +336,7 @@ export function createKit() {
       if (kit.keepParts) return group;   // the scene checks need every part on its own (?check in the page address)
       group.updateMatrixWorld(true);
       const inv = group.matrixWorld.clone().invert();
-      const fills = [], soils = [], linens = [], greys = [], accents = [], hulls = [], hullsLo = [], hullsG = [], leaves = [], segs = { mid: [], lo: [], green: [], accent: [] };
+      const fills = [], soils = [], linens = [], greys = [], hulls = [], hullsLo = [], hullsG = [], leaves = [], segs = { mid: [], lo: [], green: [] };
       const bake = (geo, m, list) => {
         let g = geo.index ? geo.toNonIndexed() : geo.clone();
         g.applyMatrix4(m);
@@ -352,7 +349,7 @@ export function createKit() {
         if (o.isLineSegments2) {
           const a = o.geometry.attributes.instanceStart, b = o.geometry.attributes.instanceEnd, v = new THREE.Vector3();
           for (let i = 0; i < a.count; i++) {
-            const out = o.material === lineMid ? segs.mid : o.material === lineGreen ? segs.green : o.material === lineAccent ? segs.accent : segs.lo;
+            const out = o.material === lineMid ? segs.mid : o.material === lineGreen ? segs.green : segs.lo;
             v.fromBufferAttribute(a, i).applyMatrix4(m); out.push(v.x, v.y, v.z);
             v.fromBufferAttribute(b, i).applyMatrix4(m); out.push(v.x, v.y, v.z);
           }
@@ -364,7 +361,6 @@ export function createKit() {
         else if (o.isMesh && o.material === soilFill) bake(o.geometry, m, soils);
         else if (o.isMesh && o.material === linenFill) bake(o.geometry, m, linens);
         else if (o.isMesh && o.material === greyFill) bake(o.geometry, m, greys);
-        else if (o.isMesh && o.material === accentFill) bake(o.geometry, m, accents);
       });
       const kids = [...group.children];
       kids.forEach(c => group.remove(c));
@@ -382,8 +378,7 @@ export function createKit() {
       if (soils.length) group.add(mesh(soils, soilFill));
       if (linens.length) group.add(mesh(linens, linenFill));
       if (greys.length) group.add(mesh(greys, greyFill));
-      if (accents.length) group.add(mesh(accents, accentFill));
-      ['mid', 'lo', 'green', 'accent'].forEach((t) => { if (segs[t].length) { const l = kit.lines([], t); l.geometry.setPositions(segs[t]); group.add(l); } });
+      ['mid', 'lo', 'green'].forEach((t) => { if (segs[t].length) { const l = kit.lines([], t); l.geometry.setPositions(segs[t]); group.add(l); } });
       return group;
     }
   };
