@@ -18,21 +18,21 @@ R.on('drawers', 'herbs', { group: 'cook' }); R.on('doors', 'fruitBowl', { group:
 back.place('wc1', 'wallRun', 2700, { group: 'cook', params: { modules: [{ w: 500, kind: 'door' }] } });
 back.place('shelf', 'openShelf', 450, { group: 'cook', y: 1520 });
 a.put('runner', 'runner', [1900, 1250], 90, { group: 'cook', params: { w: 700, l: 2400, form: 'stripe' } });   // a runner in front of the cooking
-left.place('dresser', 'sideboard', 3000, { group: 'dresser' }); left.place('dpic', 'picture', 3000, { group: 'dresser', y: 1000, params: { w: 1000, h: 600 } }); a.onTop('dresser', [{ id: 'dplant', asset: 'plant' }, { id: 'djug', asset: 'jug' }], { group: 'dresser' });   // the roll's dresser group: a sideboard with a still life under a picture
-left.place('shelves', 'openShelf', 600, { group: 'shelves' }); // the roll's shelves group: open shelves with jars and a plant
+left.place('dresser', 'sideboard', 3000, { group: 'dresser', params: { w: 1000 } }); left.place('dpic', 'picture', 3000, { group: 'dresser', y: 1000, params: { w: 600, h: 450 } }); a.onTop('dresser', [{ id: 'dplant', asset: 'plant' }, { id: 'djug', asset: 'jug' }], { group: 'dresser' });   // the roll's dresser group: a sideboard with a still life under a picture
+left.place('shelves', 'openShelf', 600, { group: 'shelves', params: { w: 900 } }); // the roll's shelves group: open shelves with jars and a plant
 a.put('bsk', 'basket', [1000, 4500], 0, { group: 'shelves' });
-a.put('bench', 'bench', [330, 3750], 90, { group: 'bench' }); left.place('bpic', 'picture', 1680, { group: 'bench' });   // a bench on the left wall
+a.put('bench', 'bench', [330, 3750], 90, { group: 'bench', params: { w: 1000 } }); left.place('bpic', 'picture', 1500, { group: 'bench', y: 650, params: { w: 500, h: 400 } });   // a bench on the left wall
 // A table set: a round table with two chairs and a rug, standing in open floor within reach of the cooking.
 const T = a.table('bt', { at: [3800, 3300], r: 520, chairs: 2, group: 'breakfast', cloth: true });   // a cloth on the table
 T.on('mug', { y: 757, dx: -180 }); T.on('saltPepper', { y: 757, dx: 260 });   // the roll's table still life: a mug and salt and pepper
-// The roll's foreground piece, a step stool, stands at the front corner of the table group.
-a.put('stool', 'stepStool', [2385, 3900], 25, { group: 'breakfast' });
+// The roll's foreground piece, a trolley with fruit and a plant on it, stands at the front corner of the table group.
+a.put('stool', 'trolley', [2000, 3000], 90, { group: 'breakfast' }); a.onTop('stool', [{ id: 'tfb', asset: 'fruitBowl' }, { id: 'tjg', asset: 'jug' }], { group: 'breakfast' });
 a.skip('hanging', 'no hanging-plant asset yet: the plant stands on the sill and the worktop instead');
 a.skip('mokaPot', 'the hob carries a pan under the hood: a moka pot would stand in its place');
 a.skip('utensilCrock', 'the hob has no room beside it for a crock: pans hang on the rail instead');   // a thing the roll dealt and the scene leaves out says why
 // Shots: a.shot(name, from, look, fov, group). fitshots.mjs finds the cameras; its numbers go in here.
-a.shot('cook', ...C('kitchen', 'cook', [[2000, 1400, 5700], [2119, 900, 332], 40]), 'cook');   // C(area, name, fallback): the fitted camera, or the fallback on the first run
-a.shot('table', ...C('kitchen', 'table', [[200, 2100, 6150], [3068, 486, 2803], 38]), 'breakfast');
-a.shot('cook2', ...C('kitchen', 'cook2', [[350, 700, 5550], [945, 900, 266], 40]), 'cook');
+a.shot('cook', ...C('kitchen', 'cook', [[1700, 1400, 6000], [846, 1100, 413], 40]), 'cook');   // C(area, name, fallback): the fitted camera, or the fallback on the first run
+a.shot('table', ...C('kitchen', 'table', [[200, 1700, 6150], [2793, 300, 2738], 40]), 'breakfast');
+a.shot('cook2', ...C('kitchen', 'cook2', [[200, 850, 5700], [800, 700, 219], 40]), 'cook');
 a.view({ target: [2800, 700, 2000], az: 14, el: 20 });
 H.write(out, fs);
