@@ -18,7 +18,7 @@ R.on('drawers', 'herbs', { group: 'cook' }); R.on('doors', 'fruitBowl', { group:
 back.place('wc1', 'wallRun', 2700, { group: 'cook', params: { modules: [{ w: 500, kind: 'door' }] } });
 back.place('shelf', 'openShelf', 450, { group: 'cook', y: 1520 });
 a.put('runner', 'runner', [1900, 1250], 90, { group: 'cook', params: { w: 700, l: 2400, form: 'stripe' } });   // a runner in front of the cooking
-left.place('dresser', 'sideboard', 3000, { group: 'dresser' }); left.place('dpic', 'picture', 3000, { group: 'dresser', y: 1000, params: { w: 1000, h: 600 } }); a.onTop('dresser', [{ id: 'dplant', asset: 'plant' }, { id: 'djug', asset: 'jug' }], { group: 'dresser' });   // the roll's dresser group: a sideboard with a still life under a picture
+left.place('dresser', 'sideboard', 3000, { group: 'dresser' }); left.place('dpic', 'picture', 3000, { group: 'dresser', y: 1000, params: { w: 1200, h: 800 } }); a.onTop('dresser', [{ id: 'dplant', asset: 'plant' }, { id: 'djug', asset: 'jug' }], { group: 'dresser' });   // the roll's dresser group: a sideboard with a still life under a picture
 left.place('shelves', 'openShelf', 600, { group: 'shelves' }); // the roll's shelves group: open shelves with jars and a plant
 a.put('bsk', 'basket', [1000, 4500], 0, { group: 'shelves' });
 a.put('bench', 'bench', [330, 3750], 90, { group: 'bench' }); left.place('bpic', 'picture', 1680, { group: 'bench' });   // a bench on the left wall

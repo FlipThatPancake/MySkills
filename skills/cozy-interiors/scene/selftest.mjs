@@ -115,11 +115,23 @@ const { TASKLAMP_POSES } = await import('./src/library/officeset.js');
     const code = fs.readFileSync(join(here, 'src/library/paintTone.js'), 'utf8').replace(/^export /gm, ''), browser = await chromium.launch(), page = await browser.newPage();
     await page.setContent('<canvas id=c></canvas>'); await page.addScriptTag({ content: code + `
       window.measure = async (src, pw, ph, mode) => { const img = new Image(); img.src = src; await img.decode(); const W = 150, H = Math.round(W * ph / pw), c = document.getElementById('c'); c.width = W; c.height = H; const q = c.getContext('2d', { willReadFrequently: true }); q.fillStyle = 'rgb(244,243,238)'; q.fillRect(0, 0, W, H); q.drawImage(img, 0, 0, W, H); adapt(q, 0, 0, W, H, mode); return toneStats(q.getImageData(0, 0, W, H)); };` });
-    for (const P of PAINTINGS) for (const mode of ['keep', 'soft', 'ink']) {
+    for (const P of PAINTINGS) for (const mode of ['keep', 'soft', 'ink', 'sepia']) {
       const t = await page.evaluate(([src, w, h, m]) => window.measure(src, w, h, m), [P.src, P.w, P.h, mode]); rows.push(`${P.name.split(',')[1]?.trim() || P.name} ${mode}: mean ${Math.round(t.mean)}, p5 ${t.p5}, p95 ${t.p95}`);
       if (t.mean < 100 || t.mean > 215 || t.p95 - t.p5 < 80) bad.push(`${P.name} in ${mode}: mean ${Math.round(t.mean)}, spread ${t.p95 - t.p5} (p5 ${t.p5}, p95 ${t.p95}): it reads as a ${t.mean < 100 ? 'dark smudge' : t.mean > 215 ? 'pale blank' : 'flat patch'}`);
     }
     await browser.close(); if (args.includes('--tones')) console.log(rows.join('\n'));
     console.log(bad.map((x) => `[painting-tone] ${x}`).join('\n') || `every painting x mode reads at home-view size (${rows.length} checked)`); console.log(`${bad.length} painting tone problem(s)`);
   }
+}
+
+// A painting's frame follows the painting: the mat margins on the four sides differ by at most 1.5 x (the bottom may be a little deeper), at wide, tall and square boxes. Measured on the built picture (userData.fit), not on the spec.
+{
+  (await import('./geom/load.mjs')).installDocument(); const kk = createKit(), bad = []; let n = 0;
+  for (const [w, h] of [[1100, 500], [1400, 450], [800, 600], [600, 800], [500, 500], [300, 400], [400, 1200]]) for (let f = 4; f < 4 + ASSETS.picture.variants; f++) {
+    const o = REGISTRY.picture(kk, { form: f, w, h, seed: 1 }), m = o.userData.fit?.margins; n++;
+    if (!m) { bad.push(`picture form ${f} ${w}x${h}: no margins recorded`); continue; }
+    const hi = Math.max(...m), lo = Math.min(...m);
+    if (hi / lo > 1.5) bad.push(`picture form ${f} ${w}x${h}: mat margins ${m.map(Math.round).join('/')} (left/right/top/bottom) differ by ${(hi / lo).toFixed(2)} x`);
+  }
+  console.log(bad.map((x) => `[mat-margins] ${x}`).join('\n') || 'every painting sits in a frame with even mat margins'); console.log(`${bad.length} uneven-margin problem(s) of ${n} pictures`);
 }

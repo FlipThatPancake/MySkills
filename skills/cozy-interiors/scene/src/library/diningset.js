@@ -1,6 +1,6 @@
 // @js:library-diningset — the Dining batch: things on and around the table. Table pieces: origin the middle of the foot, front +z. Wall pieces: origin bottom middle on the wall face, standing out toward +z.
 // candlesticks, jug, breadBasket, placeSetting (a plate, cutlery and a glass), glazedCabinet, benchCushion, wallPlates, pendantForm.
-import { rod } from './parts.js';
+import { rod, sweptTube } from './parts.js';
 import { softBox, vessel } from './soft.js';
 import { mug } from './pieces.js';
 const lo = { tone: 'lo' }, DEG = Math.PI / 180;
@@ -30,8 +30,10 @@ export function jug(kit, { r = 70, h = 220, form = 'belly', water = true, band =
   g.add(vessel(kit, P, { contents: water ? 'tea' : 'none', seg: 28, rim: true }));
   const rt = P[P.length - 1][0], ht = h;
   if (band === 'banded') g.add(kit.lines([...ringXZ(0, h * 0.5, 0, P[2][0] * 1.01, 30), ...ringXZ(0, h * 0.58, 0, P[2][0] * 1.0, 30)], 'mid'));
-  if (handle === 'loop') { g.add(rod(kit, [rt * 0.9, ht - 14, 0], [rt * 1.6, ht - 30, 0], 9, 9, 'lo')); g.add(rod(kit, [rt * 1.6, ht - 30, 0], [rt * 1.55, h * 0.3, 0], 9, 9, 'lo')); g.add(rod(kit, [rt * 1.55, h * 0.3, 0], [P[2][0] * 0.95, h * 0.26, 0], 9, 9, 'lo')); } else { g.add(kit.cyl(rt * 1.1, h * 0.55, 0, 12, 40, { axis: 'x', seg: 10, tone: 'lo' })); }
-  { const shp = new T.Shape([new T.Vector2(-rt * 0.62, ht - 40), new T.Vector2(-rt * 1.42, ht + 16), new T.Vector2(-rt * 0.62, ht + 4)]); const lip = kit.solid(new T.ExtrudeGeometry(shp, { depth: 54, bevelEnabled: false }), 0, 0, -27, { smooth: false }); g.add(lip); }   // a pinched pouring lip
+  // the handle: one closed loop of swept tube, from just under the rim out and down to the belly (both ends in the wall), always present; `handle` only picks the shape: loop (tall D) | ring (small round ear)
+  { const bx = P[2][0], loop = handle === 'ring' ? [[rt * 0.9, ht - 30], [rt * 1.75, ht - 24], [rt * 1.75, ht * 0.5], [bx * 1.0, ht * 0.5 - 6]] : [[rt * 1.0, ht - 14], [rt * 2.0, ht - 6], [rt * 2.0, h * 0.24], [bx * 1.0, h * 0.26]], B = (t) => { const u = 1 - t; return [0, 1].map((k) => u * u * u * loop[0][k] + 3 * u * u * t * loop[1][k] + 3 * u * t * t * loop[2][k] + t * t * t * loop[3][k]); };
+    const pts = Array.from({ length: 21 }, (_, i) => { const [x, y] = B(i / 20); return [x, y, 0]; }); for (let k = 0; k < 5; k++) { const hd = sweptTube(kit, pts.slice(k * 4, k * 4 + 5), 5.5, 5.5, 5, { tone: 'lo' }); hd.userData.part = 'handle'; g.add(hd); } }   // five short pieces: one convex hull round the whole D would be a solid blob
+  { const shp = new T.Shape([new T.Vector2(-rt * 0.62, ht - 40), new T.Vector2(-rt * 1.42, ht + 16), new T.Vector2(-rt * 0.62, ht + 4)]); const lip = kit.solid(new T.ExtrudeGeometry(shp, { depth: 40, bevelEnabled: false }), 0, 0, -20, { smooth: false }); lip.userData.part = 'spout'; g.add(lip); }   // a pinched pouring lip
   return kit.merge(g);
 }
 
@@ -129,11 +131,11 @@ export function wallPlates(kit, { n = 5, r = 110, seed = 4, layout = 'cluster' }
 // a pendant lamp for over a table: the shade's lower rim at `rim` above the floor, a cord up to 2700. form: dome | globe | cone | cluster | rattan | linear
 export function pendantForm(kit, { form = 'dome', rim = 1950, r = 220, seed = 1, canopy = 'disc' } = {}) {
   const g = kit.group(), T = kit.THREE, R = rnd(seed), top = 2700;
-  const cord = (x, y0, z) => g.add(rod(kit, [x, y0, z], [x, top, z], 4, 4, 'lo', true));
+  const cord = (x, y0, z) => g.add(kit.lines([[x, y0, z], [x, top, z]], 'mid'));   // the cord is an outline-weight line, so it reads at any distance and ties the lamp to the ceiling
   if (form === 'globe') { g.add(kit.solid(new T.SphereGeometry(r * 0.8, 28, 20), 0, rim + r * 0.8, 0, { smooth: true })); cord(0, rim + r * 1.6, 0); }
   else if (form === 'cone') { g.add(kit.cyl(0, rim, 0, r, r * 0.9, { rTop: r * 0.18, seg: 36 })); g.add(kit.cyl(0, rim + r * 0.9, 0, r * 0.2, r * 0.12, { seg: 16, tone: 'lo' })); cord(0, rim + r * 1.02, 0); }
   else if (form === 'cluster') for (let i = 0; i < 3; i++) { const x = (i - 1) * r * 0.85, rr = r * (0.38 + 0.12 * ((i * 5) % 3)), y = rim + (i === 1 ? r * 0.5 : 0); g.add(kit.solid(new T.SphereGeometry(rr, 20, 14), x, y + rr, 0, { smooth: true })); cord(x, y + rr * 2, 0); }
-  else if (form === 'rattan') { g.add(kit.solid(new T.SphereGeometry(r, 28, 18, 0, 6.2832, 0, 2.1), 0, rim + r * 0.9, 0, { smooth: true, tone: 'lo' })); g.add(kit.solid(new T.CircleGeometry(r * Math.sin(2.1) - 2, 28).rotateX(Math.PI / 2), 0, rim + r * 0.9 + r * Math.cos(2.1) + 1, 0, { linen: true })); const wp = []; for (let k = 1; k < 6; k++) { const a = k / 6 * 2.1, rr = Math.sin(a) * r * 1.01; wp.push(...ringXZ(0, rim + r * 0.9 + Math.cos(a) * r, 0, rr, 32)); } g.add(kit.lines(wp, 'mid')); cord(0, rim + r * 1.9, 0); }
+  else if (form === 'rattan') { g.add(kit.solid(new T.SphereGeometry(r, 28, 18, 0, 6.2832, 0, 2.1), 0, rim + r * 0.9, 0, { smooth: true, tone: 'lo' })); g.add(kit.solid(new T.CircleGeometry(r * Math.sin(2.1) - 2, 28).rotateX(Math.PI / 2), 0, rim + r * 0.9 + r * Math.cos(2.1) + 1, 0, { linen: true })); const wp = [], N = 18, cy = rim + r * 0.9; for (const sg of [-1, 1]) for (let k = 0; k < N; k++) for (let i = 0; i < 24; i++) { const pt = (q) => { const th = q / 24 * 2.1, ph = k / N * 6.2832 + sg * q / 24 * 3.4; return [Math.sin(th) * Math.cos(ph) * r * 1.012, cy + Math.cos(th) * r * 1.012, Math.sin(th) * Math.sin(ph) * r * 1.012]; }; wp.push(pt(i), pt(i + 1)); } g.add(kit.lines(wp, 'mid')); cord(0, rim + r * 1.9, 0); }   // rattan: two families of strands wound over the dome in opposite turns, crossing
   else if (form === 'linear') { const L = r * 4; g.add(kit.cyl(-L / 2, rim + 30, 0, 30, L, { axis: 'x', seg: 20 })); for (const s of [-1, 1]) { cord(s * L * 0.35, rim + 60, 0); } g.add(kit.lines([[-L / 2 + 20, rim + 5, 31], [L / 2 - 20, rim + 5, 31]], 'lo')); }
   else { g.add(kit.solid(new T.SphereGeometry(r, 32, 14, 0, 6.2832, 0, 1.45), 0, rim + r * 0.18, 0, { smooth: true })); g.add(kit.solid(new T.CircleGeometry(r * Math.sin(1.45) - 2, 32).rotateX(Math.PI / 2), 0, rim + r * 0.18 + r * Math.cos(1.45) + 1, 0, { linen: true })); g.add(kit.cyl(0, rim + r * 0.18 + r * 0.98, 0, r * 0.12, r * 0.14, { seg: 16, tone: 'lo' })); cord(0, rim + r * 1.3, 0); }   // the pale warm diffuser closes the opening: the inside reads light, not a dark hole
   if (canopy === 'bar') g.add(kit.cyl(-r * 0.5, top - 20, 0, 18, r, { axis: 'x', seg: 12, tone: 'lo' })); else g.add(kit.cyl(0, top - 24, 0, 60, 24, { seg: 20, tone: 'lo' }));

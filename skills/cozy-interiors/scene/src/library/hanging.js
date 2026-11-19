@@ -2,6 +2,7 @@
 // Origin: bottom middle on the wall like other wall things (y = the lowest vine tip); the plate stands 1000 mm above it, the pot 230 mm out from the wall.
 import { blade, stem, place } from './leaves.js';
 import { potTop } from './pots.js';
+import { rod } from './parts.js';
 const rnd = (seed) => { let r = (seed || 1) * 9301 + 49297; return () => { r = (r * 9301 + 49297) % 233280; return r / 233280; }; };
 const norm = (v) => { const l = Math.hypot(...v) || 1; return v.map((x) => x / l); };
 export function hangingPlant(kit, { seed = 6 } = {}) {
@@ -10,7 +11,7 @@ export function hangingPlant(kit, { seed = 6 } = {}) {
   g.add(kit.box(-6, HY - 6, ARM + 6, 12, 12, ARM - 4, mid));              // the arm, from the plate out to the hook (z 10 to 236)
   const py = HY - 400 - PH, rimY = py + PH;                                // the pot: base at py, rim PH above; cords 400 mm long
   const pot = kit.group(); pot.add(kit.cyl(0, 0, 0, PR * 0.62, PH, { rTop: PR, seg: 28, tone: 'lo' })); const t = potTop(kit, PR); t.position.y = PH; pot.add(t); pot.position.set(0, py, ARM); g.add(pot);
-  for (let k = 0; k < 3; k++) { const a = k * 2.094 + 0.5; g.add(stem(kit, [0, HY - 6, ARM], [Math.sin(a) * PR * 0.9, rimY - 2, ARM + Math.cos(a) * PR * 0.9], 2, 2)); }   // three cords from the hook to the rim
+  for (let k = 0; k < 3; k++) { const a = k * 2.094 + 0.5; g.add(rod(kit, [0, HY - 6, ARM], [Math.sin(a) * PR * 0.9, rimY - 2, ARM + Math.cos(a) * PR * 0.9], 2.5, 2.5, 'mid')); }   // three cords from the hook to the rim
   for (let v = 0; v < 5; v++) {                                            // vines over the rim and down, with heart leaves
     const a = v / 5 * 6.28 + R() * 0.5, len = Math.min(py - 30, 240 + R() * 260), n = 9, pts = [];
     for (let i = 0; i <= n; i++) { const u = i / n, out = Math.min(1, u * 3); pts.push([Math.sin(a) * (PR - 8 + 16 * out + 12 * Math.sin(u * 5 + v)), rimY - 6 - len * u, ARM + Math.cos(a) * (PR - 8 + 16 * out + 12 * Math.sin(u * 4 + v))]); }
