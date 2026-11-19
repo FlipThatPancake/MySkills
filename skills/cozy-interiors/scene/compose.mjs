@@ -31,6 +31,7 @@ import { restOn as geomRestOn, fits as geomFits, topAt } from './geom/place.mjs'
 import { REGISTRY } from './src/library/index.js';
 import { joinAreas, seamLine, zoneList } from './openplan.mjs';
 import { checkAlive, pickVia, MOTION } from './motion-roll.mjs';
+import { sliderClear } from './src/motion/rules.js';
 import { installDocument } from './geom/load.mjs';
 installDocument();   // the Node canvas stand-in (geom/load.mjs), so a.onTop and the textures work in a plain Node spec
 const rad = (d) => d * Math.PI / 180, deg = (r) => r * 180 / Math.PI, r0 = (v) => Math.round(v * 10) / 10;
@@ -132,6 +133,7 @@ class Area {
           if (hit && !o.overlap) throw new Error(`place('${oid}', '${asset}', ${xc}): lands inside '${hit.id}' (${hit.asset}) on the same wall: x ${Math.round(hit.x[0])} to ${Math.round(hit.x[1])} is taken at that height; move it along the wall or give it a y above it (x runs as the plan in the header shows)`);
           taken.push({ id: oid, asset, x: bx, y: by, d: bd }); }
         const ox = m.origin === 'front-left' ? xc - w / 2 : xc;
+        if (asset === 'curtain') (p.h.curtainRecs ||= []).push({ area: p.id, wall: `${p.id}-${id}`, id: `${p.id}-${oid}`, xc });   // motion: alive() checks that no panel stands across the way a flier comes in
         const res = F.put(oid, asset, ox, off, { ...o, y, mount });
         return res;
       },
@@ -348,7 +350,17 @@ class Area {
     }
   }
   alive(list) { if (list.some((e) => e.kind === 'paw')) for (const c of this.h.S.home.objects.filter((o) => o.area === this.id && o.asset === 'curtain')) if ((c.params?.w ?? 1500) < 1370) c.params = { ...c.params, w: 1370 };   // a paw needs a panel (22% of w) of 300 mm or more to hide a cat
-  checkAlive(this.id, this.h.S.home.walls.filter((w) => w.id.startsWith(this.id + '-')), list); const ws = this.h.S.home.walls.filter((w) => w.id.startsWith(this.id + '-')); this.motion = list.map(({ kind }) => { const k = MOTION.kinds[kind]; return { kind, needs: k.needs, ...(k.needs.includes('openWindow') || k.needs.includes('openWay') ? { via: pickVia(ws, k.flies) } : {}) }; }); return this; }   // living things (roll's `motion`; src/motion/index.js)
+  checkAlive(this.id, this.h.S.home.walls.filter((w) => w.id.startsWith(this.id + '-')), list); const ws = this.h.S.home.walls.filter((w) => w.id.startsWith(this.id + '-')); this.motion = list.map(({ kind }) => { const k = MOTION.kinds[kind]; return { kind, needs: k.needs, ...(k.needs.includes('openWindow') || k.needs.includes('openWay') ? { via: pickVia(ws, k.flies) } : {}) }; });
+    for (const e of this.motion) if (e.via && MOTION.kinds[e.kind].flies) {   // a curtain panel across the way in blocks a flier: the middle 500 mm of the opening stays clear (a curtain hangs beside it)
+      const W = ws.find((w) => w.id === e.via[0]), op = W?.openings[e.via[1]]; if (!W || !op) continue;
+      const len = Math.hypot(W.to[0] - W.from[0], W.to[1] - W.from[1]), xv = len - op.at - (op.kind === 'door' && op.style === 'slider' ? sliderClear(op).off : 0);
+      for (const r of (this.h.curtainRecs || []).filter((r) => r.wall === W.id)) {
+        const c = this.h.S.home.objects.find((o) => o.id === r.id), w = c?.params?.w ?? 1500, pw = w * 0.22, panels = c?.params?.panels ?? 2;
+        const spans = [[r.xc - w / 2 - 40, r.xc - w / 2 - 40 + pw], ...(panels > 1 ? [[r.xc + w / 2 + 40 - pw, r.xc + w / 2 + 40]] : [])];
+        if (spans.some(([a, b]) => b > xv - 250 && a < xv + 250)) throw new Error(`alive('${this.id}'): "${e.kind}" comes in through ${e.via[0]} at x ${Math.round(xv)}, and a panel of curtain '${r.id.slice(this.id.length + 1)}' (x ${spans.map(([a, b]) => `${Math.round(a)} to ${Math.round(b)}`).join(' and ')}) hangs across it; a curtain stands beside the opening: move it along the wall, widen it (w) or give it panels 1 on the far side`);
+      }
+    }
+    return this; }   // living things (roll's `motion`; src/motion/index.js)
   out() { this.liftOnRugs(); this.liftOnCloths(); const b = this.worldBounds(); return { id: this.id, name: this.name, ...(this.motion?.length ? { motion: this.motion } : {}), ...(this.group ? { group: this.group } : {}), O: this.O, psi: this.psi, bounds: { ...b, top: this.top }, camera: { home: this.cam, shots: this.shots } }; }
 }
 export const facing = (from, to) => deg(Math.atan2(to[0] - from[0], to[1] - from[1]));   // the turn that makes an object at `from` face `to`, in local x/z

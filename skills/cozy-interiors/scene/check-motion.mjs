@@ -63,7 +63,7 @@ export async function motionIssues(page, sceneFile, { seconds = 240 } = {}) {
     for (const th of motion.things) if (th.sampled && !th.error && !bodiesSeen[`${th.area}: ${th.kind}`]) say(`${th.area}: ${th.kind}never`, `${th.area}: ${th.kind}: never came in during ${seconds} s (the way in may be blocked, or it waits for a window that is shut)`);
     // with the window shut a fresh thing never shows
     for (const th of motion.things) {
-      if (!th.sampled || th.error || !th.ctx.via || th.ctx.via.op.kind === 'arch' || th.ctx.via.op.kind === 'door' && !th.ctx.via.op.style) continue;   // a passage has no sash to shut
+      if (!th.sampled || th.error || !th.ctx.via || th.ctx.via.op.kind === 'arch' || th.ctx.via.op.style === 'slider' || th.ctx.via.op.kind === 'door' && !th.ctx.via.op.style) continue;   // a passage has no sash to shut, and a slider is drawn with its panel slid across (no state to shut)
       const via = th.ctx.via, built = via.W.built[via.index], saved = built.openables.map((o) => o.userData.open?.v);
       built.openables.forEach((o) => { if (o.userData.open) o.userData.open.v = 0; });
       const fresh = motion.PLUGINS[th.kind].build(th.ctx); let shown = 0;
