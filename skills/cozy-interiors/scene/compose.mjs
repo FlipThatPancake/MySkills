@@ -18,6 +18,8 @@
 //   A table set:  const T = a.table('dining', { at: [2800, 2800], r: 650 | w: 1700, d: 900, chairs: 4, chairForm: 'ladder'|'spindle'|'bentwood'|'upholstered' (dealt per table if left out), rug: true, cloth: false | true });  T.over('pendantLamp');  T.on('vase')
 //   What roll.mjs deals, and how a spec uses it:  plantAt (distinct places: sill (wall.onSill), shelf, worktop, hanging, floor; one floor plant at most) -> place each plant there;  foreground (the near-camera piece, from the area's own use) -> put it by the shot's near edge;
 //   Soft things:  a.seatSoft('sofa', { tone: 'lo' | 'mid', throw: 'drape' | 'band' | false, group })  one leaning cushion per seat end and a throw dropped on the arm or folded across the seat (armchairs get one cushion);  a.table(id, { cloth: true }) puts a cloth shaped to the table.
+//   a.group(phrase, { wall, xc | at, seed, pieces: { slot: { asset, params, skip } }, hero }): builds a roll group phrase as one arrangement that passes the checks (groups.mjs lists the phrases and slots).
+//   a.dims(id): { w, d, h, asset, params, at } of a placed piece (at: world x, y, z).
 //   a.topOf(id): the height of the top of something placed (its dealt h included), for y of a thing that stands on it.
 //   Things on one top:  a.onTop('desk', [{ id, asset, params }, ...], { at: 'back' | 'centre' | 'front', margin: 50 })  spaces them along the top, every footprint inside its edge (refuses when they do not fit); use it instead of placing by fractions.
 //   Living things:  a.alive(roll.areas[id].motion)  (after the walls: the roll's 2 or 3 kinds; refuses one whose needs the walls do not meet, e.g. a flier with no open window).  See src/motion/index.js.
@@ -35,6 +37,7 @@ import { matePose, wallGeo, LINK_WIDTH } from './plan.mjs';
 import { checkAlive, pickVia, MOTION } from './motion-roll.mjs';
 import { sliderClear, ventZone, VENT_STYLES } from './src/motion/rules.js';
 import { installDocument } from './geom/load.mjs';
+import { group as runGroup } from './groups.mjs';
 installDocument();   // the Node canvas stand-in (geom/load.mjs), so a.onTop and the textures work in a plain Node spec
 const rad = (d) => d * Math.PI / 180, deg = (r) => r * 180 / Math.PI, r0 = (v) => Math.round(v * 10) / 10;
 export const GAP = 3000;
@@ -109,7 +112,7 @@ export class Home {
     for (const a of this.list) if (a.unplaced && !this.detached) throw new Error(`area '${a.id}' has no place: the plan puts it ${this.plan ? `(H.join it to its neighbour in the open room, or use the plan's order: ${this.plan.order.join(', ')})` : 'by H.roll(...) of a roll with a plan, or by passage / O / H.join'}`);
     for (const l of this.plan?.links || []) if (l.kind !== 'open' && !(this.skippedLinks || []).includes(l.id)) for (const [id, w] of [[l.a, l.aWall], [l.b, l.bWall]]) if (this.linkX[`${l.id}:${id}`] === undefined) throw new Error(`the plan's way ${l.a} | ${l.b} needs the ${w} wall of '${id}': build it (a.${w}(...)) and give '${id}' its rect`);
     { const fp = this.list.map((a) => { const [x0, z0, x1, z1] = a.rect, q = [[x0, z0], [x1, z1], [x0, z1], [x1, z0]].map((p) => a.P(p)); return { a, x0: Math.min(...q.map((p) => p[0])), x1: Math.max(...q.map((p) => p[0])), z0: Math.min(...q.map((p) => p[1])), z1: Math.max(...q.map((p) => p[1])) }; });
-      for (let i = 0; i < fp.length; i++) for (let j = i + 1; j < fp.length; j++) { const A = fp[i], B = fp[j]; if (A.a.group && A.a.group === B.a.group) continue; const ox = Math.min(A.x1, B.x1) - Math.max(A.x0, B.x0), oz = Math.min(A.z1, B.z1) - Math.max(A.z0, B.z0); if (ox > 100 && oz > 100) throw new Error(`areas '${A.a.id}' and '${B.a.id}' overlap by ${Math.round(ox)} x ${Math.round(oz)} mm and are not in one open room: shrink a rect (the plan keeps rooms apart; see the plan's cells)`); } }
+      for (let i = 0; i < fp.length; i++) for (let j = i + 1; j < fp.length; j++) { const A = fp[i], B = fp[j]; if (A.a.planGroup && A.a.planGroup === B.a.planGroup) continue; const ox = Math.min(A.x1, B.x1) - Math.max(A.x0, B.x0), oz = Math.min(A.z1, B.z1) - Math.max(A.z0, B.z0); if (ox > 100 && oz > 100) throw new Error(`areas '${A.a.id}' and '${B.a.id}' overlap by ${Math.round(ox)} x ${Math.round(oz)} mm and are not in one open room: shrink a rect (the plan keeps rooms apart; see the plan's cells)`); } }
     for (const l of this.plan?.links || []) if ((this.skippedLinks || []).includes(l.id)) for (const [id, w, o] of [[l.a, l.aWall, l.b], [l.b, l.bWall, l.a]]) { const W = this.S.home.walls.find((q) => q.id === `${id}-${w}`); if (W) W.openings = W.openings.filter((q) => q.to !== o); }   // a loop left out at one end is left out at both
     if (this.S.home.roll?.plan && this.skippedLinks) this.S.home.roll.plan.links = this.S.home.roll.plan.links.filter((l) => !this.skippedLinks.includes(l.id));
     this.S.home.plan = this.planOut(); if (this.detached) this.S.home.detached = true;
@@ -376,6 +379,8 @@ class Area {
   // what the roll named: a.rolled('vase', 'candlesticks') lists the assets the roll dealt to this area; a.skip('vase', 'why') says one is left out (the check 'rolled' wants every rolled asset present or skipped)
   rolled(...assets) { const r = ((this.h.S.home.rolled ||= {})[this.id] ||= { rolled: [], skipped: [] }); r.rolled.push(...assets.flat()); }
   skip(asset, why) { if (!why) throw new Error(`skip('${asset}'): say why it is left out`); const r = ((this.h.S.home.rolled ||= {})[this.id] ||= { rolled: [], skipped: [] }); r.skipped.push({ asset, why }); }
+  group(phrase, opts = {}) { return runGroup(this, phrase, opts); }   // one roll group phrase as a built arrangement, see groups.mjs
+  dims(id) { const o = this.h.S.home.objects.find((q) => q.id === `${this.id}-${id}`); if (!o) throw new Error(`dims('${id}'): place it first`); const { w, d, h } = sizeOf(o.asset, o.params || {}); return { w, d, h, asset: o.asset, params: o.params || {}, at: o.at }; }   // the placed piece's dealt size in mm (what a group recipe measures its picture or lamp against)
   topOf(id) { const o = this.h.S.home.objects.find((q) => q.id === `${this.id}-${id}`); if (!o) throw new Error(`topOf('${id}'): place it first`); const { tris, all, T } = this.targetTris('topOf', id), c = all.getCenter(new T.Vector3()), y = heightField(tris)(c.x, c.z); return y > 0 ? Math.round(y) : o.at[1] + (o.params?.h ?? ASSETS[o.asset].size[2]); }   // the height of the top of a placed thing, measured on its real parts under its middle: stand something on it with y: a.topOf('side-table')
   view({ target, az = this.h.plan?.areas?.[this.id]?.az ?? 20, el = 15, dist, fit = 'objects' }) { this.cam = { target: this.P3(target), az: az - this.psi, el, fit, ...(dist ? { dist } : {}) }; }
   shot(name, from, look, fov = 30, subject, core) { this.shots.push({ name, from: this.P3(from), look: this.P3(look), fov, ...(subject ? { subject: `${this.id}:${subject}` } : {}), ...(core?.length ? { core } : {}) }); }   // core: the pieces of a group too wide for one camera that the shot frames (fitshots names them: C.core(area, name))
@@ -418,6 +423,6 @@ class Area {
       }
     }
     return this; }   // living things (roll's `motion`; src/motion/index.js)
-  out() { this.liftOnRugs(); this.liftOnCloths(); const b = this.worldBounds(); return { id: this.id, name: this.name, ...(this.motion?.length ? { motion: this.motion } : {}), ...(this.group ? { group: this.group } : {}), O: this.O, psi: this.psi, bounds: { ...b, top: this.top }, camera: { home: this.cam, shots: this.shots } }; }
+  out() { this.liftOnRugs(); this.liftOnCloths(); const b = this.worldBounds(); return { id: this.id, name: this.name, ...(this.motion?.length ? { motion: this.motion } : {}), ...(this.planGroup ? { group: this.planGroup } : {}), O: this.O, psi: this.psi, bounds: { ...b, top: this.top }, camera: { home: this.cam, shots: this.shots } }; }
 }
 export const facing = (from, to) => deg(Math.atan2(to[0] - from[0], to[1] - from[1]));   // the turn that makes an object at `from` face `to`, in local x/z

@@ -1,14 +1,19 @@
 // node rollstats.mjs [seeds=150] → rolls many homes and counts the deals that break a check or contradict themselves. Exit 1 when any case is found.
 // Cases: a still life with more than two things on one top; the same thing on two tops of one area; two lamps in one area; a named asset the library lacks; the cutting board dealt twice; a plant corner without a floor plant place; an area behind a passage that has no arch or door of its own.
+if (process.argv.includes('--build')) { await import('./groupbuild.mjs'); await new Promise(() => {}); }   // stage 1 proof by building: pass rate per group phrase (groupbuild.mjs)
 import { roll, phraseAssets, ONE_AREA, STAMP_SKIP, SMALL_ON } from '../../../skills/cozy-interiors/scene/roll.mjs';
 import fs from 'node:fs';
 import { ASSETS } from '../../../skills/cozy-interiors/scene/src/library/meta.js';
 const NAMES = JSON.parse(fs.readFileSync(new URL('../../../skills/cozy-interiors/scene/tables.json', import.meta.url), 'utf8')).names, UNNAMED = /^(drawer ajar|pillow creased|cloth dropped|unmade bed|tablecloth|runner|cloth|cushion|teaTowel|duvetCloth|floorCushion|foldedThrow|benchCushion|tableRunner|hungBag|binders|hungHat|boots)$/;   // a sign that is a state of another piece (a drawer ajar) has no asset to look for
+// E11 naming: the head noun of a phrase is its own asset ("tray with a mug (mug)" builds no tray, "small plant (herbs)" builds kitchen herbs)
+{ const strs = []; (function walk(x, k) { if (typeof x === 'string') strs.push(x); else if (Array.isArray(x)) x.forEach((y) => walk(y)); else if (x && typeof x === 'object') for (const [kk, v] of Object.entries(x)) if (kk !== 'names') walk(v); })(JSON.parse(fs.readFileSync(new URL('../../../skills/cozy-interiors/scene/tables.json', import.meta.url), 'utf8')));
+  const HEAD = /\b(tray|mug|jug|vase|lamp|clock|basket|bowl|plant|mirror|picture|shelf|rug|stool|chair|table|cushion|kettle|toaster|jar|pan|cup)s?\b/i;
+  for (const t of new Set(strs)) { const m = t.match(/^(.*)\(([A-Za-z]+)\)\s*$/); if (!m) continue; const head = m[1].split(/\b(with|over|on|by|above|beside|under|from|and|or)\b/)[0], n = (head.match(HEAD) || [])[1]; if (n && !m[2].toLowerCase().includes(n.toLowerCase()) && !(/gallery/i.test(m[1]) && /gallery/i.test(m[2]))) { console.log(`phrase-head-noun-without-asset: "${t}" names ${n} and builds ${m[2]}`); process.exitCode = 1; } } }
 const N = Number(process.argv[2] || 150), sets = [['kitchen', 'dining', 'living'], ['kitchen', 'reading-corner', 'bedroom'], ['home-office', 'hallway', 'kitchen'], ['dining', 'living', 'kitchen']];
 const asset = (x) => (x.match(/\(([A-Za-z]+)\)\s*$/) || [])[1], count = {}, first = {};
 const bad = (k, seed, kinds, id, extra = '') => { count[k] = (count[k] || 0) + 1; first[k] ||= `seed ${seed} ${kinds.join(',')} ${id} ${extra}`; };
 for (let seed = 1; seed <= N; seed++) for (const kinds of sets) {
-  const R = roll(seed, kinds);
+  let R; try { R = roll(seed, kinds); } catch (e) { if (!/no floor plan found/.test(e.message)) throw e; bad('plan-failure', seed, kinds, '', 'no floor plan in 600 tries'); continue; }   // a roll the planner cannot lay out is a case, not a crash
   const homeOnce = {};
   for (const [id, a] of Object.entries(R.areas)) {
     for (const w of [...(a.still || []).flatMap((st) => st.things.map(asset)).filter((w) => w !== 'picture'), /\(picture\)/.test(a.wallArr || '') ? 'picture' : null]) if (w && /^(vase|candlesticks|picture)$/.test(w)) { if (homeOnce[w] && homeOnce[w] !== id) bad('decor-repeat-in-home', seed, kinds, id, `${w} also in ${homeOnce[w]}`); homeOnce[w] = id; }

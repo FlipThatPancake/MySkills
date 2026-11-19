@@ -107,7 +107,8 @@ export function benchCushion(kit, { w = 1100, d = 360, thick = 60, tone = 'mid',
   else if (stripes === 'check') { for (let i = 1; i < 6; i++) pts.push([-w / 2 + w * i / 6, thick + 0.8, -d / 2 + 20], [-w / 2 + w * i / 6, thick + 0.8, d / 2 - 20]); for (let i = 1; i < 3; i++) pts.push([-w / 2 + 20, thick + 0.8, -d / 2 + d * i / 3], [w / 2 - 20, thick + 0.8, -d / 2 + d * i / 3]); }
   for (const sx of [-1, 1]) { pts.push([sx * w * 0.38, thick * 0.6, -d / 2 - 2], [sx * w * 0.38 + sx * 20, 6, -d / 2 - 30], [sx * w * 0.38, thick * 0.6, -d / 2 - 2], [sx * w * 0.38 - sx * 24, 10, -d / 2 - 36]); }
   g.add(kit.lines(pts, 'lo'));
-  return kit.merge(g);
+  const q = kit.group(), bb = new kit.THREE.Box3().setFromObject(g); g.position.y -= bb.min.y; q.add(g);   // the bulge pushes the underside below the foot: lift so the lowest point is the seat
+  return kit.merge(q);
 }
 
 export function wallPlates(kit, { n = 5, r = 110, seed = 4, layout = 'cluster' } = {}) {   // decorative plates on the wall, hung flat: a cluster, a row or a ring; origin bottom middle
