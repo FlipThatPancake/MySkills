@@ -24,6 +24,9 @@ fixtures.push(
   { ...good('r6-shoes-by-the-door', 'item 4: shoes inside the outside door', ({ Home }) => { const { H, a } = room(Home, { openings: [{ kind: 'door', x: 3000, width: 900 }] }); a.put('sh', 'shoes', [4000, 250], 0, { group: 'g' }); return H; }) },   /* the shoes asset still reports loose pieces (assets thread) */
 );
 fixtures.push(
+  { name: 'r6-wardrobe-mid-side-wall', from: 'E4: a wardrobe in the middle of a side wall hides what stands behind it from the home view; compose refuses it', kind: 'bug', refuses: 'stands at its far end', expect: { rules: ['refused'], ids: [] },
+    build({ Home }) { const { H, a } = room(Home, { D: 4000 }); const left = a.left(4000); left.place('wd', 'wardrobe', 1500, { group: 'g' }); return H; } },
+  good('r6-wardrobe-at-far-end', 'E4: the wardrobe at the far end of the side wall', ({ Home }) => { const { H, a } = room(Home, { D: 4000 }); const left = a.left(4000); left.place('wd', 'wardrobe', 3300, { group: 'g' }); return H; }),
   { name: 'r6-herbs-refused-on-a-shoe-rack', from: 'round 6 item 12: compose and the overhangs rule share one tolerance (OVERHANG_TOL) and one measure; a plant on a 290 mm shoe-rack top is refused at build time, where round 5 compose accepted 85% and the rule failed 86%', kind: 'bug', refuses: 'of the herbs base would lie over the surface', expect: { rules: ['refused'], ids: [] },
     build({ Home }) { const { H, a, back } = room(Home); back.place('sr', 'shoeRack', 3000, { group: 'g' }); a.onTop('sr', [{ id: 'p', asset: 'herbs' }], { group: 'g' }); return H; } },
 );

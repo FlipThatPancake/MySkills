@@ -532,7 +532,7 @@
    "magazine box (magazineBox)"
   ],
   "foreground": [
-   "shoes",
+   "shoes by the door, one neat pair and one dropped",
    "basket",
    "umbrella stand"
   ]
@@ -723,7 +723,7 @@
   },
   {
    "id": "shoes askew",
-   "say": "shoes kicked off",
+   "say": "shoes kicked off (one neat pair and one dropped: arrange mixed)",
    "in": [
     "hallway"
    ]
@@ -1483,6 +1483,7 @@
       "floor cushion": "floorCushion",
       "magazine box": "magazineBox",
       "shoes": "shoes",
+      "shoes by the door, one neat pair and one dropped": "shoes",
       "umbrella stand": "umbrellaStand",
       "waste bin": "wasteBin",
       "file box": "fileBox",

@@ -126,7 +126,7 @@ fixtures.push(
     { name: 'tall-piece-beside-a-window-round-the-corner', from: 'round 4 U7: a wardrobe on the left wall stands against the corner and covers the bedroom window on the back wall', kind: 'bug', expect: { rules: ['cornerop'], ids: ['a tall piece stands'] },
       build({ Home }) { const { H, a } = room(Home, { openings: [win] }); const left = a.left(4000, []); left.place('wd', 'wardrobe', 3400, { group: 'g', hero: true }); return H; } },
     { name: 'good-tall-piece-far-from-the-window-corner', from: 'round 4 U7: the same wardrobe at the front of the left wall', kind: 'good', counts: ['cornerop'],
-      build({ Home }) { const { H, a } = room(Home, { openings: [win] }); const left = a.left(4000, []); left.place('wd', 'wardrobe', 800, { group: 'g', hero: true }); return H; } },
+      build({ Home }) { const { H, a } = room(Home, { openings: [win] }); const left = a.left(4000, []); left.place('wd', 'wardrobe', 800, { group: 'g', hero: true, anywhere: true }); return H; } },
     { name: 'wall-art-too-low-over-a-sideboard', from: 'round 4 U8: a picture 50 mm above the sideboard top is half hidden behind it in angled views', kind: 'bug', expect: { rules: ['artbehind'], ids: ['t-pic'] },
       build({ Home }) { const { H, back } = room(Home); back.place('sb', 'sideboard', 3000, { group: 'g', params: { w: 1400 } }); back.place('pic', 'picture', 3000, { group: 'g', y: 850, params: { w: 900, h: 500 } }); return H; } },
     { name: 'good-art-without-y-hangs-above-the-piece-below', from: 'round 4 U8: compose hangs art given no y 200 mm above the piece under it', kind: 'good', counts: ['artbehind'],
