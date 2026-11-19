@@ -37,7 +37,7 @@ import { REGISTRY } from './src/library/index.js';
 import { PAINTINGS } from './src/library/paintings.js';
 import { fitFrame } from './src/library/artPlane.js';
 import { joinAreas, seamLine, zoneList } from './openplan.mjs';
-import { matePose, wallGeo, LINK_WIDTH } from './plan.mjs';
+import { matePose, wallGeo, LINK_WIDTH, WALL_T } from './plan.mjs';
 import { checkAlive, pickVia, MOTION } from './motion-roll.mjs';
 import { sliderClear, ventZone, VENT_STYLES } from './src/motion/rules.js';
 import { installDocument } from './geom/load.mjs';
@@ -103,8 +103,8 @@ export class Home {
       if (x === undefined) {
         const partner = this.linkX[`${l.id}:${other}`], po = this.S.home.walls.find((w) => w.id === `${other}-${end === 'a' ? l.bWall : l.aWall}`);
         if (partner !== undefined && po) {   // a loop: the other end stands; this one lines up with it
-          const pl = Math.hypot(po.to[0] - po.from[0], po.to[1] - po.from[1]), ua = [(po.to[0] - po.from[0]) / pl, (po.to[1] - po.from[1]) / pl], pt = [po.from[0] + ua[0] * (pl - partner), po.from[1] + ua[1] * (pl - partner)], me = Math.hypot(to[0] - from[0], to[1] - from[1]), um = [(to[0] - from[0]) / me, (to[1] - from[1]) / me], t = (pt[0] - from[0]) * um[0] + (pt[1] - from[1]) * um[1], off = Math.abs((pt[0] - from[0]) * -um[1] + (pt[1] - from[1]) * um[0]);
-          x = Math.round((me - t) / 10) * 10; if (off > 200 || x < l.width / 2 + 300 || x > me - l.width / 2 - 300) { console.log(`plan: the loop way ${l.a} | ${l.b} is left out: the two walls no longer meet (${Math.round(off)} mm apart); use the planned rect sizes to keep it`); (this.skippedLinks ||= []).push(l.id); continue; }
+          const pl = Math.hypot(po.to[0] - po.from[0], po.to[1] - po.from[1]), ua = [(po.to[0] - po.from[0]) / pl, (po.to[1] - po.from[1]) / pl], pt = [po.from[0] + ua[0] * (pl - partner), po.from[1] + ua[1] * (pl - partner)], me = Math.hypot(to[0] - from[0], to[1] - from[1]), um = [(to[0] - from[0]) / me, (to[1] - from[1]) / me], t = (pt[0] - from[0]) * um[0] + (pt[1] - from[1]) * um[1], off = Math.abs(Math.abs((pt[0] - from[0]) * -um[1] + (pt[1] - from[1]) * um[0]) - WALL_T);   // the other wall stands one slab away
+          x = Math.round((me - t) / 10) * 10; if (off > 200 || x < l.width / 2 + 300 || x > me - l.width / 2 - 300) { console.log(off > 200 ? `plan: the loop way ${l.a} | ${l.b} is left out: the two walls no longer meet (${Math.round(off)} mm out of line); use the planned rect sizes to keep it` : `plan: the loop way ${l.a} | ${l.b} is left out: where the two walls meet it would stand at x ${x} of this ${Math.round(me)} mm wall, too near an end for a ${l.width} mm way (it needs ${Math.round(l.width / 2 + 300)} to ${Math.round(me - l.width / 2 - 300)}); use the planned rect sizes to keep it`); (this.skippedLinks ||= []).push(l.id); continue; }
         } else x = Math.round((end === 'a' ? l.aF : l.bF) * len / 10) * 10;
         this.linkX[key] = x; }
       const hit = given.find((g) => g.kind !== 'window' ? Math.abs(g.x - x) < ((g.width || 1000) + l.width) / 2 + 300 : Math.abs(g.x - x) < ((g.width || 1200) + l.width) / 2 + 300);

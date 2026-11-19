@@ -1,12 +1,12 @@
 import { roll } from '../../../../skills/cozy-interiors/scene/roll.mjs';
 // Round 6 house plan: a home of four areas laid out by the plan stays green; the same areas in a row (no way between them) are the round-5 replay (replays.mjs).
-const homeOf = (Home, seed, rooms, touch, shrink = 1, noLikes = false, windows = null) => {   // windows: 'plan' stands each dealt window at the plan's x; 'on-link' stands one on the way through
+const homeOf = (Home, seed, rooms, touch, shrink = 1, noLikes = false, windows = null, piece = null) => {   // windows: 'plan' stands each dealt window at the plan's x; 'on-link' stands one on the way through
   const R = rooms ? roll(seed, rooms.flat(), { rooms, touch, noLikes }) : roll(seed, touch), H = new Home({ seed }), made = {}; H.roll({ seed, plan: R.plan, openPlan: R.openPlan, areas: {} });   // the plan only: the fixture does not furnish the areas
   for (const id of R.plan.order) {
     const pa = R.plan.areas[id], [w, d] = pa.fit.map((v) => Math.round(v * shrink)), a = H.area(id, id, { rect: [0, 0, w, d] });
     if (pa.entry?.kind === 'open') { const i = R.openPlan.chain.indexOf(id); H.join(made[pa.parent], a, { layout: R.openPlan.layout === 'corner' && i - 1 === R.openPlan.turn ? 'corner' : 'row', share: R.openPlan.seams[i - 1].overlap }); }
     const wins = (wall) => windows === 'plan' ? pa.windows.filter((q) => q.wall === wall && q.x !== null).map((q) => ({ kind: 'window', x: q.x, width: q.width, height: 1200, sill: 900, style: 'picture' })) : windows === 'on-link' && !wall.done ? R.plan.links.filter((l) => l.kind !== 'open' && ((l.a === id && l.aWall === wall) || (l.b === id && l.bWall === wall))).slice(0, 1).map((l) => ({ kind: 'window', x: l.a === id ? l.aX : l.bX, width: 1500, height: 1200, sill: 900 })) : [];
-    a.back(w, wins('back')); a.left(d, wins('left')); a.right(d, wins('right')); a.view({ target: [w / 2, 700, d / 2], el: 18 }); made[id] = a;
+    const Fb = a.back(w, wins('back')), Fl = a.left(d, wins('left')), Fr = a.right(d, wins('right')); if (piece) for (const [F, len, n] of [[Fb, w, 'b'], [Fl, d, 'l'], [Fr, d, 'r']]) { const wall = { b: 'back', l: 'left', r: 'right' }[n], at = R.plan.links.filter((l) => l.kind !== 'open' && ((l.a === id && l.aWall === wall) || (l.b === id && l.bWall === wall))).map((l) => (l.a === id ? l.aX : l.bX)), xs = []; for (let x = 1000; x <= len - 1000; x += 100) if (at.every((q) => Math.abs(q - x) > 1800)) xs.push(x); xs.sort((p, q) => Math.abs(p - len / 2) - Math.abs(q - len / 2)); if (xs.length && at.length) F.place(`${id}-${n}-sb`, piece, xs[0], { group: 'furn' }); }; a.view({ target: [w / 2, 700, d / 2], el: 18 }); made[id] = a;
   }
   return H;
 };
@@ -21,6 +21,8 @@ export const fixtures = [
     build({ Home }) { return homeOf(Home, 5, [['hallway'], ['living'], ['bedroom']], [['hallway', 'living'], ['hallway', 'bedroom']], 1, false, 'on-link'); } },
   { name: 'good-windows-at-the-plans-x-beside-the-ways-through', from: 'round 6 tools thread: every dealt window stands at the x the plan gave it, with the ways through clear beside it; the home builds and stays green', kind: 'good', counts: ['plan'],
     build({ Home }) { return homeOf(Home, 10, [['hallway'], ['living'], ['bedroom']], [['hallway', 'living'], ['hallway', 'bedroom']], 1, false, 'plan'); } },
+  { name: 'good-mated-areas-keep-a-wall-slab-between-them', from: 'round 6 tester (T2): an area mated back to back with its parent stood its wall line on the parent\'s, so each 200 mm slab stood in the other room and every piece on the shared wall fired "200 mm inside a wall"; the mate now leaves the slab\'s thickness between the two wall lines (red before the fix: 200 and 250 mm penetrates on the sideboards)', kind: 'good', counts: ['plan'],
+    build({ Home }) { return homeOf(Home, 1, [['living'], ['dining'], ['hallway'], ['bedroom']], [['hallway', 'living'], ['hallway', 'bedroom']], 1, false, null, 'sideboard'); } },
   { name: 'good-plan-four-areas', from: 'round 6 house plan: living, dining, hallway and bedroom stand in one floor plan with ways through; every area reachable, none overlapping', kind: 'good', counts: ['plan'],
     build({ Home }) { return homeOf(Home, 1, [['living'], ['dining'], ['hallway'], ['bedroom']], [['hallway', 'living'], ['hallway', 'bedroom']]); } },
 ];

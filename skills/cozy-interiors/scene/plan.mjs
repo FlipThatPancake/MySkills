@@ -19,7 +19,9 @@ export const wallGeo = (wall, w, d) => ({ back: { len: w, at: (x) => [x, 0], inw
 export const toWorld = (pose, [x, z]) => { const c = Math.cos(pose.psi * D2R), s = Math.sin(pose.psi * D2R); return [pose.O[0] + x * c - z * s, pose.O[1] + x * s + z * c]; };
 export const dirWorld = (pose, [x, z]) => { const c = Math.cos(pose.psi * D2R), s = Math.sin(pose.psi * D2R); return [x * c - z * s, x * s + z * c]; };
 // the pose that stands an area back to back with a wall: its wall `via.wall` at via.x meets the world point pw, whose room (the other side) faces nIn
-export function matePose(rect, via, pw, nIn) {
+export const WALL_T = 200;   // each wall is a 200 mm slab behind its face (geom/env.mjs): two areas back to back share one slab, so their wall lines stand 200 mm apart
+export function matePose(rect, via, pw0, nIn) {
+  const pw = [pw0[0] - nIn[0] * WALL_T, pw0[1] - nIn[1] * WALL_T];   // the child's wall line is on the far side of the parent's slab
   const [rx0, rz0, rx1, rz1] = rect, g = wallGeo(via.wall, rx1 - rx0, rz1 - rz0); if (!g) throw new Error(`matePose: via.wall must be back, left or right (got ${via.wall})`);
   const a = g.at(via.x), q = [rx0 + a[0], rz0 + a[1]], ang = (v) => Math.atan2(v[1], v[0]) / D2R;
   const psi = normPsi(Math.round((ang([-nIn[0], -nIn[1]]) - ang(g.inward)) / 90) * 90), c = Math.cos(psi * D2R), s = Math.sin(psi * D2R);
@@ -153,7 +155,7 @@ export function planHome(out, seed, kinds, opts = {}) {
     const linkedPair = (a, b) => links.some((l) => (l.a === a && l.b === b) || (l.a === b && l.b === a));
     const forceKind = (qU, qV) => { const q = [qU, qV].find((x) => x.door) , a = [qU, qV].find((x) => x.arch); if (qU.door && qV.arch || qU.arch && qV.door) return { kind: 'arch', style: (qU.arch || qV.arch), merged: true }; return q ? { kind: 'door', style: null } : a ? { kind: 'arch', style: a.arch } : pickKind(null); };
     const pickKind = (arch) => { if (arch) return { kind: 'arch', style: arch }; if (rnd() < 0.4) return { kind: 'door', style: null }; const pool = T.passages.filter((p) => !p.counter), p = pool[Math.floor(rnd() * pool.length)]; return { kind: 'arch', style: p.style }; };
-    const clear = (id, pose, rect) => { const f = foot(pose, rect); return Object.values(placed).every((q) => { const o = overlap(f, q.foot); return !(o.x > GAP && o.z > GAP); }); };
+    const clear = (id, pose, rect) => { const f = foot(pose, rect); return Object.values(placed).every((q) => { const o = overlap(f, q.foot); return !(o.x > 20 - WALL_T && o.z > 20 - WALL_T); }); };   // two cells keep a wall slab (200 mm) between them, as a mated pair does
     const spot = (id, w, wd) => { const len = wlen(id, w), at = []; for (let x = Math.ceil((EDGE + wd / 2) / 50) * 50; x <= len - EDGE - wd / 2; x += 50) if (free(id, w, x, wd)) at.push(x); return at.length ? at[Math.floor(rnd() * at.length)] : null; };   // every place on the wall where the way fits (clear of the windows and of other ways), one of them at random
     const attach = (u, v) => {   // v (not placed) takes a wall back to back with a wall of u
       for (let k = 0; k < 40; k++) {
@@ -171,7 +173,7 @@ export function planHome(out, seed, kinds, opts = {}) {
       for (const [wU, qU] of Object.entries(walls(u))) for (const [wV, qV] of Object.entries(walls(v))) { if (qU.blocked || qV.blocked || (qU.windowed && qV.windowed && attempt < 100)) continue;
         const gU = wallGeo(wU, ...size[u]), gV = wallGeo(wV, ...size[v]), U = placed[u], V = placed[v], a0 = toWorld(U.pose, gU.at(0)), a1 = toWorld(U.pose, gU.at(gU.len)), b0 = toWorld(V.pose, gV.at(0)), b1 = toWorld(V.pose, gV.at(gV.len)), nU = dirWorld(U.pose, gU.inward), nV = dirWorld(V.pose, gV.inward);
         if (Math.abs(nU[0] + nV[0]) > 0.01 || Math.abs(nU[1] + nV[1]) > 0.01) continue;   // facing apart
-        const t = [-nU[1], nU[0]], off = (p) => (p[0] - a0[0]) * nU[0] + (p[1] - a0[1]) * nU[1]; if (Math.abs(off(b0)) > GAP || Math.abs(off(b1)) > GAP) continue;   // one line
+        const t = [-nU[1], nU[0]], off = (p) => (p[0] - a0[0]) * nU[0] + (p[1] - a0[1]) * nU[1]; if (Math.abs(off(b0) + WALL_T) > GAP || Math.abs(off(b1) + WALL_T) > GAP) continue;   // one slab apart
         const along = (p) => (p[0] - a0[0]) * t[0] + (p[1] - a0[1]) * t[1], uLo = 0, uHi = Math.abs(along(a1)), [vLo, vHi] = [along(b0), along(b1)].sort((x, y) => x - y), lo = Math.max(uLo, vLo), hi = Math.min(uHi, vHi); if (hi - lo < TOUCH) continue;
         for (let k = 0; k < 8; k++) { const s = lo + EDGE + rnd() * (hi - lo - 2 * EDGE), p = [a0[0] + t[0] * s * Math.sign(along(a1) || 1), a0[1] + t[1] * s * Math.sign(along(a1) || 1)], xu = Math.round(Math.hypot(p[0] - a0[0], p[1] - a0[1]) / 50) * 50, xv = Math.round(Math.hypot(p[0] - b0[0], p[1] - b0[1]) / 50) * 50, kd = forceKind(qU, qV); if (!kd) continue; const wd = LINK_WIDTH[kd.style || 'door'];
           if (free(u, wU, xu, wd) && free(v, wV, xv, wd)) { cand.push({ wU, wV, xu, xv, kd, wd, cu: qU.door ? [wU, 'door'] : qU.arch ? [wU, 'arch'] : null, cv: qV.door ? [wV, 'door'] : qV.arch ? [wV, 'arch'] : null }); break; } } }
