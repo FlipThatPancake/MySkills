@@ -18,6 +18,7 @@
 //   A table set:  const T = a.table('dining', { at: [2800, 2800], r: 650 | w: 1700, d: 900, chairs: 4, chairForm: 'ladder'|'spindle'|'bentwood'|'upholstered' (dealt per table if left out), rug: true, cloth: false | true });  T.over('pendantLamp');  T.on('vase')
 //   What roll.mjs deals, and how a spec uses it:  plantAt (distinct places: sill (wall.onSill), shelf, worktop, hanging, floor; one floor plant at most) -> place each plant there;  foreground (the near-camera piece, from the area's own use) -> put it by the shot's near edge;
 //   Soft things:  a.seatSoft('sofa', { tone: 'lo' | 'mid', throw: 'drape' | 'band' | false, group })  one leaning cushion per seat end and a throw dropped on the arm or folded across the seat (armchairs get one cushion);  a.table(id, { cloth: true }) puts a cloth shaped to the table.
+//   a.still(topId, phrases) / a.wallArr(phrase, { wall, xc, over }): the dealt still lifes and wall arrangements as built pieces (arrange.mjs).
 //   a.group(phrase, { wall, xc | at, seed, pieces: { slot: { asset, params, skip } }, hero }): builds a roll group phrase as one arrangement that passes the checks (groups.mjs lists the phrases and slots).
 //   a.dims(id): { w, d, h, asset, params, at } of a placed piece (at: world x, y, z).
 //   a.topOf(id): the height of the top of something placed (its dealt h included), for y of a thing that stands on it.
@@ -40,6 +41,7 @@ import { checkAlive, pickVia, MOTION } from './motion-roll.mjs';
 import { sliderClear, ventZone, VENT_STYLES } from './src/motion/rules.js';
 import { installDocument } from './geom/load.mjs';
 import { group as runGroup } from './groups.mjs';
+import { still as runStill, wallArr as runWallArr } from './arrange.mjs';
 installDocument();   // the Node canvas stand-in (geom/load.mjs), so a.onTop and the textures work in a plain Node spec
 const rad = (d) => d * Math.PI / 180, deg = (r) => r * 180 / Math.PI, r0 = (v) => Math.round(v * 10) / 10;
 export const GAP = 3000;
@@ -382,11 +384,19 @@ class Area {
   rolled(...assets) { const r = ((this.h.S.home.rolled ||= {})[this.id] ||= { rolled: [], skipped: [] }); r.rolled.push(...assets.flat()); }
   skip(asset, why) { if (!why) throw new Error(`skip('${asset}'): say why it is left out`); const r = ((this.h.S.home.rolled ||= {})[this.id] ||= { rolled: [], skipped: [] }); r.skipped.push({ asset, why }); }
   group(phrase, opts = {}) { return runGroup(this, phrase, opts); }   // one roll group phrase as a built arrangement, see groups.mjs
+  still(topId, phrases, opts = {}) { return runStill(this, topId, phrases, opts); }   // the dealt things of one still life on a placed top, see arrange.mjs
+  wallArr(phrase, opts = {}) { return runWallArr(this, phrase, opts); }   // one dealt wall arrangement (art over a piece, a shelf, a rail, hooks), see arrange.mjs
   dims(id) { const o = this.h.S.home.objects.find((q) => q.id === `${this.id}-${id}`); if (!o) throw new Error(`dims('${id}'): place it first`); const { w, d, h } = sizeOf(o.asset, o.params || {}); return { w, d, h, asset: o.asset, params: o.params || {}, at: o.at }; }   // the placed piece's dealt size in mm (what a group recipe measures its picture or lamp against)
   // the params a.put / place would deal for an asset (its form, its space), so a caller can measure the piece before it stands: a.dealt('picture', { w, h })
   dealt(asset, params) { return vary(this.h, asset, params, this.id); }
   // the height of a picture's real frame bottom above its y: a painting keeps its own proportions, centred in the w x h box asked for
   frameLift(params) { const f = params?.form ?? 0; if (f < 4) return 0; const P = PAINTINGS[(f - 4) % PAINTINGS.length], fr = fitFrame(P, params.w ?? 600, params.h ?? 800); return Math.round(((params.h ?? 800) - fr.H) / 2); }
+  // the measured box of a placed (non-painted) piece in this area's frame: { x0, x1, y0, y1 }
+  boxOf(id) { const { all } = this.targetTris('boxOf', id); return { x0: all.min.x, x1: all.max.x, y0: all.min.y, y1: all.max.y, z0: all.min.z, z1: all.max.z }; }
+  // slides a placed wall piece along its wall until the middle of its measured box stands over the middle of another placed piece: a.centreOn(id, otherId)
+  centreOn(id, otherId) { const o = this.h.S.home.objects.find((q) => q.id === `${this.id}-${id}`), b = this.boxOf(id), c = this.boxOf(otherId), ax = (b.x1 - b.x0) >= (b.z1 - b.z0) ? 'x' : 'z', d = (c[ax + '0'] + c[ax + '1']) / 2 - (b[ax + '0'] + b[ax + '1']) / 2, p0 = this.P([0, 0]), p1 = this.P(ax === 'x' ? [d, 0] : [0, d]); o.at[0] = Math.round(o.at[0] + p1[0] - p0[0]); o.at[2] = Math.round(o.at[2] + p1[1] - p0[1]); return d; }
+  // moves a placed wall piece up or down until its real bottom (or middle) stands where asked: a.hangTo(id, { bottom } | { middle })
+  hangTo(id, { bottom, middle }) { const o = this.h.S.home.objects.find((q) => q.id === `${this.id}-${id}`); if (!o) throw new Error(`hangTo('${id}'): place it first`); const b = this.boxOf(id), now = middle !== undefined ? (b.y0 + b.y1) / 2 : b.y0; o.at[1] = Math.round(o.at[1] + ((middle ?? bottom) - now)); return o.at[1]; }
   topOf(id) { const o = this.h.S.home.objects.find((q) => q.id === `${this.id}-${id}`); if (!o) throw new Error(`topOf('${id}'): place it first`); const { tris, all, T } = this.targetTris('topOf', id), c = all.getCenter(new T.Vector3()), y = heightField(tris)(c.x, c.z); return y > 0 ? Math.round(y) : o.at[1] + (o.params?.h ?? ASSETS[o.asset].size[2]); }   // the height of the top of a placed thing, measured on its real parts under its middle: stand something on it with y: a.topOf('side-table')
   view({ target, az = this.h.plan?.areas?.[this.id]?.az ?? 20, el = 15, dist, fit = 'objects' }) { this.cam = { target: this.P3(target), az: az - this.psi, el, fit, ...(dist ? { dist } : {}) }; }
   shot(name, from, look, fov = 30, subject, core) { this.shots.push({ name, from: this.P3(from), look: this.P3(look), fov, ...(subject ? { subject: `${this.id}:${subject}` } : {}), ...(core?.length ? { core } : {}) }); }   // core: the pieces of a group too wide for one camera that the shot frames (fitshots names them: C.core(area, name))

@@ -16,6 +16,8 @@ const rnd = (r, lo, hi, step = 10) => Math.round((lo + r() * (hi - lo)) / step) 
 // One recipe: { phrases: [the roll phrases it answers], slots: {slot: what it is}, make(c) }. c gives place/on/art helpers; each helper takes the slot name first so overrides apply.
 const make = (a, phrase, o) => {
   const rec = recipeFor(phrase); if (!rec) throw new Error(`a.group: no recipe for "${phrase}"; node groups.mjs lists the phrases`);
+  if (rec.needs?.free && !o.at) throw new Error(`a.group: "${phrase}" stands free on the floor: give { at: [x, z] } (a floor slot such as floor:middle), not a wall or a wall slot`);
+  if (!rec.needs?.free && !o.wall) throw new Error(`a.group: "${phrase}" stands at a wall: give { wall, xc } or { slot }`);
   const prefix = o.id || rec.id, grp = o.group || prefix, seed = (o.seed ?? a.h.S?.seed ?? 1) + hash(prefix + phrase), r = rngOf(seed), ov = o.pieces || {}, placed = [], left = [];
   const slot = (name) => ov[name] || {}, skip = (name) => !!slot(name).skip;
   const fail = (name, e) => { left.push(`${name}: ${String(e.message || e).split(':').slice(0, 1)[0]}`); return null; };
