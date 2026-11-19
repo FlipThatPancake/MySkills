@@ -22,10 +22,10 @@ const RULE = {
   units: S.shell, openings: S.shell, window: S.shell, 'window-head': S.shell, sash: S.shell, pane: S.shell, cornerop: S.shell, 'open-glimpse': S.shell, rectfit: S.shell,
   casing: split(3),
   // 4 anchors
-  path: split(4), depth: S.anchors, front: S.anchors, seating: S.anchors, seat: S.anchors, fill: S.anchors, floorcover: S.anchors, table: S.anchors, rug: S.anchors, rugs: S.anchors, 'rug-edge': S.anchors, runner: S.anchors, group: S.anchors,
+  path: split(4), emptyfloor: S.anchors, herowin: S.anchors, rugreach: S.anchors, rugrun: S.anchors, seatface: S.anchors, depth: S.anchors, front: S.anchors, seating: S.anchors, seat: S.anchors, fill: S.anchors, floorcover: S.anchors, table: S.anchors, rug: S.anchors, rugs: S.anchors, 'rug-edge': S.anchors, runner: S.anchors, group: S.anchors,
   'open-walkway': S.anchors, 'open-separator': S.anchors, 'open-island': S.anchors, 'open-island-seat': S.anchors, 'note-bedcentre': S.anchors, '_heroside': S.anchors,
   // split: the same rule on a large piece is stage 4, on a small one stage 5
-  wall: split(), floor: split(), overlap: split(), swing: split(4), hidden: split(), lone: split(), stool: split(), support: split(), floating: split(), physics: split(), parts: split(), penetrates: split(), sunk: split(), overhangs: split(), moves: split(), zfight: split(), nan: split(), 'shape-failed': split(),
+  wall: split(), floor: split(), overlap: split(), swing: split(4), hidden: split(), lone: split(), stool: split(), support: split(), floating: split(), physics: split(), parts: split(), penetrates: split(), sunk: split(), overhangs: split(), moves: split(), zfight: split(), nan: split(), orbit: split(), artbehind: split(), chairback: split(), fridge: split(), pair: split(), footstool: split(), stoolheight: split(), 'shape-failed': split(),
   // frame: the area's cover of the home view and the windows inside it are the view (3); an object outside the frame is a piece (4 or 5)
   frame: (i, c) => (/objects and openings cover|opening|window|backing/.test(i.what) ? 3 : split()(i, c)),
   // interest: what a dressed area has; its backing walls are the shell, its hero an anchor
@@ -35,7 +35,7 @@ const RULE = {
   // visible: a group hidden in the home view is an anchor fault; a small piece hidden is a dress fault
   visible: (i, c) => (/hides the rest of group/.test(i.what) ? 4 : split()(i, c)),
   // 5 dress
-  variety: S.dress, foreground: S.dress, bare: S.dress, tabletop: S.dress, surface: S.dress, lamps: S.dress, cushion: S.dress, throw: S.dress, shoes: S.dress, sill: S.dress, curtain: S.dress, kettle: S.dress, towel: S.dress, accent: S.dress, cord: S.dress, 'open-light': S.dress, 'note-lampspot': S.dress,
+  variety: S.dress, foreground: S.dress, bare: S.dress, tabletop: S.dress, surface: S.dress, lamps: S.dress, lights: S.dress, cushion: S.dress, throw: S.dress, shoes: S.dress, sill: S.dress, curtain: S.dress, kettle: S.dress, towel: S.dress, accent: S.dress, cord: S.dress, 'open-light': S.dress, 'note-lampspot': S.dress,
   // 6 life
   motion: S.life, windmover: S.life,
   // 7 photographs
@@ -86,7 +86,7 @@ export function stageReport(issues, ctx, until = null) {
 // --lint: every rule name pushed by a check has a stage
 if (process.argv[1] && process.argv[1].endsWith('stages.mjs') && process.argv.includes('--lint')) {
   const here = dirname(fileURLToPath(import.meta.url)), files = ['check-home.mjs', 'check-visible.mjs', 'check-pendants.mjs', 'check-windows.mjs', 'check-motion.mjs', 'check-openplan.mjs', ...readdirSync(join(here, 'geom')).filter((f) => f.endsWith('.mjs')).map((f) => 'geom/' + f)];
-  const seen = new Set(); for (const f of files) for (const m of readFileSync(join(here, f), 'utf8').matchAll(/rule: '([\w-]+)'/g)) seen.add(m[1]);
+  const seen = new Set(); for (const f of files) for (const m of readFileSync(join(here, f), 'utf8').matchAll(/(?:rule: |pushC\()'([\w-]+)'/g)) seen.add(m[1]);
   const missing = [...seen].filter((r) => !/^placement-/.test(r)).filter((r) => !(r in RULE) && !/^note-/.test(r) || (/^note-/.test(r) && !(r in RULE))); for (const r of missing) console.log(`rule without a stage: ${r}`);
   console.log(missing.length ? `${missing.length} rule(s) need a stage in stages.mjs` : `ok: ${seen.size} rule names, all staged`); process.exit(missing.length ? 1 : 0);
 }

@@ -1,5 +1,7 @@
 #!/usr/bin/env node
+// node rollstats.mjs --stages [count] [--jobs=4] → does every seed's roll, plan and dealt slots build a home that is green through stage 4? (rollstages.mjs)
 // node rollstats.mjs [count = 200] [kinds...] → rolls `count` seeds and prints how often each pick and each pair of picks comes up, so a lopsided table shows.
+if (process.argv.includes('--stages')) { const { rollStages } = await import('./rollstages.mjs'); const r = await rollStages(process.argv.slice(2).filter((a) => a !== '--stages')); process.exit(r.green === r.seeds ? 0 : 1); }   // item F: the stages 2 to 4 proved over seeds (rollstages.mjs)
 import { roll } from './roll.mjs';
 import { FURNITURE } from './openplan.mjs';
 import { privateGate, likes, ZONE } from './plan.mjs';
