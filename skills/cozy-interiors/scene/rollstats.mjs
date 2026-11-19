@@ -4,7 +4,7 @@
 if (process.argv.includes('--stages')) { const { rollStages } = await import('./rollstages.mjs'); const r = await rollStages(process.argv.slice(2).filter((a) => a !== '--stages')); process.exit(r.green === r.seeds ? 0 : 1); }   // item F: the stages 2 to 4 proved over seeds (rollstages.mjs)
 import { roll } from './roll.mjs';
 import { FURNITURE } from './openplan.mjs';
-import { privateGate, likes, ZONE } from './plan.mjs';
+import { privateGate, likes, ZONE, wallLoad } from './plan.mjs';
 const args = process.argv.slice(2), N = /^\d+$/.test(args[0] || '') ? Number(args.shift()) : 200, kinds = args.length ? args : ['kitchen', 'dining', 'living'];
 const tally = {}, bump = (k, v) => { (tally[k] ||= {})[v] = (tally[k][v] || 0) + 1; };
 for (let seed = 1; seed <= N; seed++) {
@@ -13,6 +13,8 @@ for (let seed = 1; seed <= N; seed++) {
   { const P = r.plan, deg = {}; bump('plan: areas per room', Math.max(...Object.values(P.areas).map((a) => a.room)) + 1 + ' rooms'); bump('plan: rooms per home', new Set(Object.values(P.areas).map((a) => a.room)).size);
     for (const l of P.links) { bump('plan: links by kind', l.kind); bump('plan: link on wall', l.kind === 'open' ? 'open' : `${l.aWall}/${l.bWall}`); deg[l.a] = (deg[l.a] || 0) + 1; deg[l.b] = (deg[l.b] || 0) + 1; }
     for (const id of Object.keys(P.areas)) { bump('plan: links per area', deg[id] || 0); const { fit, need } = P.areas[id], k = Math.min(fit[0] / need.w, fit[1] / need.d); bump('plan: cell vs the deal needs', k < 0.999 ? 'SMALLER than the deal needs' : k < 1.1 ? 'up to 10% over' : k < 1.3 ? '10 to 30% over' : 'over 30% over'); }
+    for (const id of Object.keys(P.areas)) { const a = r.areas[id], k = id.replace(/\d+$/, ''), bk = a.backing, second = { 'corner-left': 'left', 'corner-right': 'right', 'wide-angle': 'right' }[bk], fit = P.areas[id].fit;   // a wall is long enough for the groups dealt to it, its dealt windows and outside doors, and the ways through (the bare-stretch rule of a.slots())
+      for (const [wall, len] of [['back', fit[0]], ...(second ? [[second, fit[1]]] : [])]) { const ways = P.links.filter((l) => l.kind !== 'open' && ((l.a === id && l.aWall === wall) || (l.b === id && l.bWall === wall))).length; bump('plan: a wall holds its groups, windows and ways through', wallLoad(a, k, wall, ways) <= len + 1 ? 'yes' : `NO (${wall} wall ${Math.round(wallLoad(a, k, wall, ways) - len)} mm short)`.replace(/\d+/, (m) => (+m < 300 ? '<300' : +m < 1000 ? '300-1000' : '>1000'))); } }
     { const ids = Object.keys(P.areas), kind = (i) => i.replace(/\d+$/, ''); bump('plan: front door area', kind(P.entry)); if (ids.length >= 4) bump('plan: a home of 4+ areas has a loop (a second way round)', P.links.some((l) => !l.tree && l.kind !== 'open') ? 'yes' : 'no'); bump('plan: dislikes linked (bedroom-kitchen, office-kitchen)', P.dislikesMet.length ? 'yes' : 'no'); bump('plan: liked pairs linked per home', P.likesMet.length);
       if (privateGate(ids, P.links.map((l) => [l.a, l.b]), P.entry).length) bump('plan: private room is the only way to a shared one', 'BAD');
       const pairs = ids.flatMap((a, i) => ids.slice(i + 1).filter((b) => likes(a, b)).map((b) => [a, b])); for (const [a, b] of pairs) bump('plan: a liked pair present is linked', P.links.some((l) => (l.a === a && l.b === b) || (l.a === b && l.b === a)) ? 'linked' : 'not linked'); }
