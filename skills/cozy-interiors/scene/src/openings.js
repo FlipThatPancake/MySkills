@@ -69,7 +69,7 @@ export function opening(kit, op, vis = null) {
     cg.fillStyle = '#e6e9e8'; cg.beginPath(); cg.moveTo(30, 100); cg.lineTo(60, 78); cg.lineTo(120, 78); cg.lineTo(135, 100); cg.fill();   // far roof
     cg.fillStyle = '#e3e9e1'; for (let i = 0; i < 14; i++) { cg.beginPath(); cg.arc(i * 12 + 4, 112 + (i % 3) * 3, 14 + (i % 4) * 3, 0, 6.3); cg.fill(); }   // hedge
     if (patio) { cg.fillStyle = '#eceae6'; cg.fillRect(0, 112, 160, 16); cg.strokeStyle = '#d4d2cc'; cg.lineWidth = 1; for (let i = 0; i < 9; i++) { cg.beginPath(); cg.moveTo(0, 114 + i * 1.6); cg.lineTo(160, 114 + i * 1.6); cg.stroke(); } }   // decking boards
-    const sky = sheet(kit, c, w, h_, vis, true); sky.name = 'outside-backdrop';   // drawn first, no depth: a sash opened outward or a bird outside lies over it
+    const sky = sheet(kit, c, w, h_, vis, true); sky.name = 'outside-backdrop'; sky.fadeRef = g;   // drawn first, no depth: a sash opened outward or a bird outside lies over it
     sky.rotation.y = Math.PI / 2; sky.position.set(XB, Y0_ + h_ / 2, 0); stencilClip(kit, sky);
     return sky;
   };
@@ -153,7 +153,7 @@ export function opening(kit, op, vis = null) {
     cg.fillStyle = gr; cg.fillRect(0, 0, 160, 128);
     cg.fillStyle = '#e6e9e8'; cg.beginPath(); cg.moveTo(30, 100); cg.lineTo(60, 78); cg.lineTo(120, 78); cg.lineTo(135, 100); cg.fill();   // far roof
     cg.fillStyle = '#e3e9e1'; for (let i = 0; i < 14; i++) { cg.beginPath(); cg.arc(i * 12 + 4, 112 + (i % 3) * 3, 14 + (i % 4) * 3, 0, 6.3); cg.fill(); }   // hedge
-    const sky = sheet(kit, c, w, h, vis, true); sky.name = 'outside-backdrop';   // drawn first, no depth: a sash opened outward or a bird outside lies over it
+    const sky = sheet(kit, c, w, h, vis, true); sky.name = 'outside-backdrop'; sky.fadeRef = g;   // drawn first, no depth: a sash opened outward or a bird outside lies over it
     sky.rotation.y = Math.PI / 2; sky.position.set(XB, (Y0 + Y1) / 2, 0);
     stencilClip(kit, sky); g.add(sky);
     g.add(ext(rectPts(Z0, Y0, Z1, Y1), [rectPts(Z0 + L, Y0 + L, Z1 - L, Y1 - L)], XB, DEPTH));   // the reveal: a tunnel through the wall, 6 mm linings

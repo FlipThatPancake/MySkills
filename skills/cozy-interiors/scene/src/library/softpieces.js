@@ -173,9 +173,9 @@ export function roundCloth(kit, { r: rt = 520, drop = 260, fold: fold0 = 8, amp 
 // A table runner: a linen strip along the table's length, thick at its edge, hanging 200-300 mm over both short ends. rw: its width.
 export function tableRunner(kit, { w = 1600, d = 900, rw = 400, drop = 280, fold = 3, amp = 26, tone = 'lo', seed = 1 } = {}) {
   const hx = w / 2, hz = rw / 2, grid = hangGrid({ bx: [-hx, hx], bz: [-hz, hz], cx: [-hx - drop, hx + drop], cz: [-hz, hz], y: 6, fold, amp, seed, nx: Math.round((w + 2 * drop) / 40), ny: Math.max(10, Math.round(rw / 30)), ripple: 3, flare: 0.04 });
-  const g = cloth(kit, { ...grid, thick: 9, tone, folds: false, linen: true }), ln = [];
-  for (const e of [-1, 1]) for (const k of [-0.28, 0, 0.28]) { const z = k * rw, x = e * (hx + 4); ln.push([x, 5, z], [x + e * 10, -drop * 0.55, z + 8 * Math.sin(k * 9 + seed)]); }   // a few creases down the hanging ends
-  g.add(kit.lines(ln, 'lo')); return g;
+  const g = cloth(kit, { ...grid, thick: 1.2, tone, folds: false, linen: true }), ln = [];
+  for (const e of [-1, 1]) for (const k of [-0.28, 0, 0.28]) { const z = k * rw, x = e * (hx + 4); ln.push([x, -6, z], [x + e * 10, -drop * 0.55, z + 8 * Math.sin(k * 9 + seed)]); }   // a few soft creases down the hanging ends, starting below the table edge
+  g.add(kit.lines(ln, 'mid')); return g;
 }
 // An unmade duvet over a mattress (x: -w/2..w/2, z from `head` to `foot`, the top at the surface): one side hangs low and the other less, the foot hangs, the top has soft lumps,
 // and the pillow-end corner on the getting-out (+x) side is turned back diagonally over the top, showing a triangle of sheet where it lay.

@@ -29,219 +29,6 @@
   ],
   "objects": [
    {
-    "id": "sheet-pic4-keep",
-    "asset": "picture",
-    "at": [
-     1000,
-     900,
-     40
-    ],
-    "mount": "wall",
-    "params": {
-     "form": 4,
-     "w": 600,
-     "h": 800,
-     "colour": "keep"
-    },
-    "group": "sheet:row",
-    "area": "sheet"
-   },
-   {
-    "id": "sheet-pic4-soft",
-    "asset": "picture",
-    "at": [
-     2500,
-     900,
-     40
-    ],
-    "mount": "wall",
-    "params": {
-     "form": 4,
-     "w": 600,
-     "h": 800,
-     "colour": "soft"
-    },
-    "group": "sheet:row",
-    "area": "sheet"
-   },
-   {
-    "id": "sheet-pic4-ink",
-    "asset": "picture",
-    "at": [
-     4000,
-     900,
-     40
-    ],
-    "mount": "wall",
-    "params": {
-     "form": 4,
-     "w": 600,
-     "h": 800,
-     "colour": "ink"
-    },
-    "group": "sheet:row",
-    "area": "sheet"
-   },
-   {
-    "id": "sheet-pic5-keep",
-    "asset": "picture",
-    "at": [
-     5500,
-     900,
-     40
-    ],
-    "mount": "wall",
-    "params": {
-     "form": 5,
-     "w": 600,
-     "h": 800,
-     "colour": "keep"
-    },
-    "group": "sheet:row",
-    "area": "sheet"
-   },
-   {
-    "id": "sheet-pic5-soft",
-    "asset": "picture",
-    "at": [
-     7000,
-     900,
-     40
-    ],
-    "mount": "wall",
-    "params": {
-     "form": 5,
-     "w": 600,
-     "h": 800,
-     "colour": "soft"
-    },
-    "group": "sheet:row",
-    "area": "sheet"
-   },
-   {
-    "id": "sheet-pic5-ink",
-    "asset": "picture",
-    "at": [
-     8500,
-     900,
-     40
-    ],
-    "mount": "wall",
-    "params": {
-     "form": 5,
-     "w": 600,
-     "h": 800,
-     "colour": "ink"
-    },
-    "group": "sheet:row",
-    "area": "sheet"
-   },
-   {
-    "id": "sheet-pic6-keep",
-    "asset": "picture",
-    "at": [
-     10000,
-     900,
-     40
-    ],
-    "mount": "wall",
-    "params": {
-     "form": 6,
-     "w": 600,
-     "h": 800,
-     "colour": "keep"
-    },
-    "group": "sheet:row",
-    "area": "sheet"
-   },
-   {
-    "id": "sheet-pic6-soft",
-    "asset": "picture",
-    "at": [
-     11500,
-     900,
-     40
-    ],
-    "mount": "wall",
-    "params": {
-     "form": 6,
-     "w": 600,
-     "h": 800,
-     "colour": "soft"
-    },
-    "group": "sheet:row",
-    "area": "sheet"
-   },
-   {
-    "id": "sheet-pic6-ink",
-    "asset": "picture",
-    "at": [
-     13000,
-     900,
-     40
-    ],
-    "mount": "wall",
-    "params": {
-     "form": 6,
-     "w": 600,
-     "h": 800,
-     "colour": "ink"
-    },
-    "group": "sheet:row",
-    "area": "sheet"
-   },
-   {
-    "id": "sheet-shoe-neat",
-    "asset": "shoes",
-    "at": [
-     1000,
-     0,
-     3000
-    ],
-    "mount": "floor",
-    "params": {
-     "arrange": "neat",
-     "kind": "sneaker",
-     "pairs": 2
-    },
-    "group": "sheet:row2",
-    "area": "sheet"
-   },
-   {
-    "id": "sheet-shoe-dropped",
-    "asset": "shoes",
-    "at": [
-     2500,
-     0,
-     3000
-    ],
-    "mount": "floor",
-    "params": {
-     "arrange": "dropped",
-     "kind": "boot",
-     "pairs": 1
-    },
-    "group": "sheet:row2",
-    "area": "sheet"
-   },
-   {
-    "id": "sheet-shoe-mixed",
-    "asset": "shoes",
-    "at": [
-     4000,
-     0,
-     3000
-    ],
-    "mount": "floor",
-    "params": {
-     "arrange": "mixed",
-     "kind": "sneaker",
-     "pairs": 2
-    },
-    "group": "sheet:row2",
-    "area": "sheet"
-   },
-   {
     "id": "sheet-tt-1",
     "asset": "table",
     "at": [
@@ -255,24 +42,6 @@
      "d": 700,
      "h": 750,
      "form": "legs"
-    },
-    "group": "sheet:row3",
-    "area": "sheet"
-   },
-   {
-    "id": "sheet-lamp-arm-upright",
-    "asset": "taskLamp",
-    "at": [
-     1000,
-     750,
-     5500
-    ],
-    "mount": "on",
-    "params": {
-     "form": "arm",
-     "pose": "upright",
-     "shade": "cone",
-     "seed": 51
     },
     "group": "sheet:row3",
     "area": "sheet"
@@ -296,24 +65,6 @@
     "area": "sheet"
    },
    {
-    "id": "sheet-lamp-arm-lean",
-    "asset": "taskLamp",
-    "at": [
-     2500,
-     750,
-     5500
-    ],
-    "mount": "on",
-    "params": {
-     "form": "arm",
-     "pose": "lean",
-     "shade": "dome",
-     "seed": 51
-    },
-    "group": "sheet:row3",
-    "area": "sheet"
-   },
-   {
     "id": "sheet-tt-3",
     "asset": "table",
     "at": [
@@ -327,24 +78,6 @@
      "d": 700,
      "h": 750,
      "form": "legs"
-    },
-    "group": "sheet:row3",
-    "area": "sheet"
-   },
-   {
-    "id": "sheet-lamp-arm-reach",
-    "asset": "taskLamp",
-    "at": [
-     4000,
-     750,
-     5500
-    ],
-    "mount": "on",
-    "params": {
-     "form": "arm",
-     "pose": "reach",
-     "shade": "cone",
-     "seed": 51
     },
     "group": "sheet:row3",
     "area": "sheet"
@@ -368,24 +101,6 @@
     "area": "sheet"
    },
    {
-    "id": "sheet-lamp-gooseneck-upright",
-    "asset": "taskLamp",
-    "at": [
-     5500,
-     750,
-     5500
-    ],
-    "mount": "on",
-    "params": {
-     "form": "gooseneck",
-     "pose": "upright",
-     "shade": "dome",
-     "seed": 51
-    },
-    "group": "sheet:row3",
-    "area": "sheet"
-   },
-   {
     "id": "sheet-tt-5",
     "asset": "table",
     "at": [
@@ -399,24 +114,6 @@
      "d": 700,
      "h": 750,
      "form": "legs"
-    },
-    "group": "sheet:row3",
-    "area": "sheet"
-   },
-   {
-    "id": "sheet-lamp-gooseneck-lean",
-    "asset": "taskLamp",
-    "at": [
-     7000,
-     750,
-     5500
-    ],
-    "mount": "on",
-    "params": {
-     "form": "gooseneck",
-     "pose": "lean",
-     "shade": "cone",
-     "seed": 51
     },
     "group": "sheet:row3",
     "area": "sheet"
@@ -440,24 +137,6 @@
     "area": "sheet"
    },
    {
-    "id": "sheet-lamp-gooseneck-reach",
-    "asset": "taskLamp",
-    "at": [
-     8500,
-     750,
-     5500
-    ],
-    "mount": "on",
-    "params": {
-     "form": "gooseneck",
-     "pose": "reach",
-     "shade": "dome",
-     "seed": 51
-    },
-    "group": "sheet:row3",
-    "area": "sheet"
-   },
-   {
     "id": "sheet-ch-0",
     "asset": "console",
     "at": [
@@ -467,25 +146,6 @@
     ],
     "mount": "floor",
     "params": {},
-    "group": "sheet:row3",
-    "area": "sheet"
-   },
-   {
-    "id": "sheet-photo-0",
-    "asset": "photoFrame",
-    "at": [
-     11900,
-     800,
-     5500
-    ],
-    "mount": "on",
-    "params": {
-     "form": 0,
-     "w": 160,
-     "h": 220,
-     "tilt": 10,
-     "seed": 40
-    },
     "group": "sheet:row3",
     "area": "sheet"
    },
@@ -503,25 +163,6 @@
     "area": "sheet"
    },
    {
-    "id": "sheet-photo-1",
-    "asset": "photoFrame",
-    "at": [
-     13400,
-     800,
-     5500
-    ],
-    "mount": "on",
-    "params": {
-     "form": 1,
-     "w": 200,
-     "h": 260,
-     "tilt": 12,
-     "seed": 7
-    },
-    "group": "sheet:row3",
-    "area": "sheet"
-   },
-   {
     "id": "sheet-ch-2",
     "asset": "console",
     "at": [
@@ -531,25 +172,6 @@
     ],
     "mount": "floor",
     "params": {},
-    "group": "sheet:row3",
-    "area": "sheet"
-   },
-   {
-    "id": "sheet-photo-2",
-    "asset": "photoFrame",
-    "at": [
-     14900,
-     800,
-     5500
-    ],
-    "mount": "on",
-    "params": {
-     "form": 2,
-     "w": 240,
-     "h": 180,
-     "tilt": 14,
-     "seed": 29
-    },
     "group": "sheet:row3",
     "area": "sheet"
    },
@@ -641,24 +263,57 @@
     "area": "sheet"
    },
    {
-    "id": "sheet-wseat",
-    "asset": "windowSeat",
+    "id": "sheet-tt-clk",
+    "asset": "table",
     "at": [
-     10000,
+     4000,
      0,
-     7800
+     1500
     ],
     "mount": "floor",
     "params": {
      "w": 1100,
-     "d": 570,
-     "h": 415,
-     "form": "storage",
-     "cushion": "striped",
-     "pillows": 1,
-     "seed": 73
+     "d": 700,
+     "h": 750,
+     "form": "legs"
     },
-    "group": "sheet:row4",
+    "group": "sheet:row5",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-tt-bks",
+    "asset": "table",
+    "at": [
+     5500,
+     0,
+     1500
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 1100,
+     "d": 700,
+     "h": 750,
+     "form": "legs"
+    },
+    "group": "sheet:row5",
+    "area": "sheet"
+   },
+   {
+    "id": "sheet-tt-run",
+    "asset": "table",
+    "at": [
+     10000,
+     0,
+     1500
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 1600,
+     "d": 900,
+     "h": 750,
+     "form": "legs"
+    },
+    "group": "sheet:row5",
     "area": "sheet"
    }
   ]

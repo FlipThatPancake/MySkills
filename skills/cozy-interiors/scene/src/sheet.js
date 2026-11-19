@@ -25,7 +25,7 @@ export function sheetTex(kit, t, w, h, vis = null, gain = null, first = false) {
   m.renderOrder = first ? -10 : 1;
   m.onBeforeRender = () => {
     let f = 1;
-    if (VIEW.c) { m.getWorldPosition(mid); mid.sub(VIEW.c); mid.set(Math.max(Math.abs(mid.x) - VIEW.h.x, 0), Math.max(Math.abs(mid.y) - VIEW.h.y, 0), Math.max(Math.abs(mid.z) - VIEW.h.z, 0)); f = 1 - sm(VIEW.r0, VIEW.r1, mid.length()); }
+    if (VIEW.c) { (m.fadeRef || m).getWorldPosition(mid); mid.sub(VIEW.c); mid.set(Math.max(Math.abs(mid.x) - VIEW.h.x, 0), Math.max(Math.abs(mid.y) - VIEW.h.y, 0), Math.max(Math.abs(mid.z) - VIEW.h.z, 0)); f = 1 - sm(VIEW.r0, VIEW.r1, mid.length()); }
     mat.opacity = kit.fill.uniforms.uOpacity.value * f * (vis ? vis.value : 1) * (gain ? gain.value : 1);
   };
   return m;

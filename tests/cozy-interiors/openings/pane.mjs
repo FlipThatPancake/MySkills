@@ -26,5 +26,8 @@ const angles = Object.fromEntries([[-60, 10], [-30, 25], [0, 40], [20, 15], [45,
 let bad = 0;
 const good = await windowIssues(page, { t: angles }, { frames: process.env.FRAMES }); if (good.length) { bad++; for (const i of good) log('FAIL as built: ' + i.what); } else log('ok: as built, no blank pane');
 const old = await windowIssues(page, { t: angles }, { unclipped: true }); if (!old.length) { bad++; log('FAIL: drawn the old way the check found no blank pane (it cannot fail)'); } else log(`ok: drawn the old way, ${old.length} blank pane(s) found, e.g. ${old[0].what}`);
+// Red fixture 2: the pictures fade by their own position again (the bay's stands 660 mm out and thinned to 18%, which this check once skipped as "faded"): the check must report a faded picture.
+await page.evaluate(() => window.cozyScene.home.group.traverse((m) => { if (m.name === 'outside-backdrop') m.fadeRef = null; }));
+const fade = await windowIssues(page, { t: angles }, {}); if (!fade.some((i) => /drawn at/.test(i.what))) { bad++; log('FAIL: pictures thinned by the view fade went unreported (it cannot fail)'); } else log(`ok: pictures faded by the view fade, ${fade.length} problem(s), e.g. ${fade.find((i) => /drawn at/.test(i.what)).what.slice(0, 110)}`);
 await browser.close(); fs.rmSync(tmp, { recursive: true, force: true });
 process.exit(bad ? 1 : 0);

@@ -130,7 +130,7 @@ fixtures.push(
     { name: 'wall-art-too-low-over-a-sideboard', from: 'round 4 U8: a picture 50 mm above the sideboard top is half hidden behind it in angled views', kind: 'bug', expect: { rules: ['artbehind'], ids: ['t-pic'] },
       build({ Home }) { const { H, back } = room(Home); back.place('sb', 'sideboard', 3000, { group: 'g', params: { w: 1400 } }); back.place('pic', 'picture', 3000, { group: 'g', y: 850, params: { w: 900, h: 500 } }); return H; } },
     { name: 'good-art-without-y-hangs-above-the-piece-below', from: 'round 4 U8: compose hangs art given no y 200 mm above the piece under it', kind: 'good', counts: ['artbehind'],
-      build({ Home }) { const { H, back } = room(Home); back.place('sb', 'sideboard', 3000, { group: 'g', params: { w: 1400 } }); back.place('pic', 'picture', 3000, { group: 'g', params: { w: 900, h: 500 } }); return H; } },
+      build({ Home }) { const { H, back } = room(Home); back.place('sb', 'sideboard', 3000, { group: 'g', params: { w: 1400 } }); back.place('pic', 'picture', 3000, { group: 'g', params: { w: 900, h: 650 } }); return H; } },
     { name: 'plant-in-front-of-a-chest-of-drawers', from: 'round 4 U9: a floor plant stands in the front zone of the bedroom chest, so a drawer cannot open', kind: 'bug', expect: { rules: ['path'], ids: ['t-fp'] },
       build({ Home }) { const { H, a, back } = room(Home); back.place('ch', 'chestOfDrawers', 3000, { group: 'g', hero: true }); a.put('fp', 'floorPlant', [3000, 750], 0, { group: 'g' }); return H; } },
   );

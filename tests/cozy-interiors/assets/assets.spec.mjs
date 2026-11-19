@@ -18,5 +18,13 @@ for (let f = 0; f < 3; f++) { const x = 1000 + (7 + f) * D + 400; a.put(`ch-${f}
 a.put('hpend', 'pendantLamp', [1000, 7800], 0, { mount: 'ceiling', group: 'row4', params: { rim: 1650 } });
 for (const f of ['dome', 'globe', 'cone', 'rattan']) a.put(`pf-${f}`, 'pendantForm', [1000 + (1 + ['dome', 'globe', 'cone', 'rattan'].indexOf(f)) * D, 7800], 0, { mount: 'ceiling', group: 'row4', params: { form: f, rim: 1650 } });
 a.put('wseat', 'windowSeat', [1000 + 6 * D, 7800], 0, { group: 'row4', params: { w: 1100 } });
+// E-items: one close-up row each (floor and table things, hung and wall things)
+a.put('logs', 'logBasket', [1000, 1500], 0, { mount: 'floor', group: 'row5', params: { seed: 3 } });
+a.put('jug', 'jug', [1000 + D, 1500], 0, { mount: 'floor', group: 'row5' });
+a.put('tt-clk', 'table', [1000 + 2 * D, 1500], 0, { group: 'row5', params: { w: 1100, d: 700, h: 750, form: 'legs' } }); a.put('clock-d', 'alarmClock', [1000 + 2 * D, 1500], 0, { mount: 'on', y: 750, group: 'row5', params: { kind: 'digital' } });
+a.put('tt-bks', 'table', [1000 + 3 * D, 1500], 0, { group: 'row5', params: { w: 1100, d: 700, h: 750, form: 'legs' } }); a.put('bookS', 'bookStack', [1000 + 3 * D, 1500], 0, { mount: 'on', y: 750, group: 'row5', params: { n: 4, seed: 11 } });
+a.put('hat', 'hungHat', [1000 + 4 * D, 40], 0, { mount: 'wall', y: 1650, group: 'row5' });
+a.put('hang', 'hangingPlant', [1000 + 5 * D, 40], 0, { mount: 'wall', y: 950, group: 'row5' });
+a.put('tt-run', 'table', [1000 + 6 * D, 1500], 0, { group: 'row5', params: { w: 1600, d: 900, h: 750, form: 'legs' } }); a.put('tableRunner', 'tableRunner', [1000 + 6 * D, 1500], 0, { mount: 'on', y: 750, group: 'row5' });
 a.view({ target: [7000, 600, 4000], az: 0, el: 10, dist: 14000 });
 H.write(new URL('./assets.json', import.meta.url).pathname, fs);

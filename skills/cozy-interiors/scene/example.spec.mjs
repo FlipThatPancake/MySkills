@@ -21,7 +21,7 @@ a.put('runner', 'runner', [1900, 1250], 90, { group: 'cook', params: { w: 700, l
 left.place('dresser', 'sideboard', 3000, { group: 'dresser', params: { w: 1000 } }); left.place('dpic', 'picture', 3000, { group: 'dresser', y: 1000, params: { w: 600, h: 450 } }); a.onTop('dresser', [{ id: 'dplant', asset: 'plant' }, { id: 'djug', asset: 'bookStack' }], { group: 'dresser' });   // the roll's dresser group: a sideboard with a still life under a picture
 left.place('shelves', 'openShelf', 600, { group: 'shelves', params: { w: 900 } }); // the roll's shelves group: open shelves with jars and a plant
 a.put('bsk', 'basket', [1000, 4500], 0, { group: 'shelves' });
-a.put('bench', 'bench', [330, 3750], 90, { group: 'bench', params: { w: 1000 } }); left.place('bpic', 'picture', 1500, { group: 'bench', y: 650, params: { w: 500, h: 400 } });   // a bench on the left wall
+a.put('bench', 'bench', [330, 3750], 90, { group: 'bench', params: { w: 1000 } }); left.place('bpic', 'picture', 1500, { group: 'bench', y: 650, params: { w: 720, h: 500 } });   // a bench on the left wall
 // A table set: a round table with two chairs and a rug, standing in open floor within reach of the cooking.
 const T = a.table('bt', { at: [3300, 3200], r: 520, chairs: 2, group: 'breakfast', cloth: true });   // a cloth on the table
 T.on('mug', { y: 757, dx: -180 }); T.on('saltPepper', { y: 757, dx: 260 });   // the roll's table still life: a mug and salt and pepper

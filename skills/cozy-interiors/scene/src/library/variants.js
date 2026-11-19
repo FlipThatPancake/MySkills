@@ -7,7 +7,7 @@ import { fridge as fridge0 } from '../kitchen/fridge.js';
 import { stool as stool0 } from './living.js';
 import { basket as basket0 } from './decor.js';
 import { PAINTINGS } from './paintings.js';
-import { PAPER, adapt } from './paintTone.js';
+import { artPlane, fitFrame, FRAME } from './artPlane.js';
 import { potTop } from './pots.js';
 import { fiddle, palm, monstera, snake, fern, pothos, basil, smallFern, vaseStems } from './plants.js';
 const rimTop = (kit, g, r, y) => { const t = potTop(kit, r); t.position.y = y; g.add(t); };
@@ -62,21 +62,11 @@ export function vase(kit, { form = 0, h = 280, stems = 5, seed = 3 } = {}) {   /
 }
 
 // Forms 4+: a classic public-domain painting (paintings.js) on a paper mat inside the frame. colour keep (a little muted, to sit with the scene) | soft (mostly faded to the paper tone) | ink (greyscale, near the line style); every mode first stretches the painting's own tones (paintTone.js); the seed picks one when unset.
-const LOADED = new Map();
 function paintedPicture(kit, { form, w, h, seed, colour }) {
-  const T = kit.THREE, F = 28, D = 24, P = PAINTINGS[(form - 4) % PAINTINGS.length], mode = colour || ['keep', 'soft', 'ink'][seed % 3], iw = w - 2 * F, ih = h - 2 * F;
-  const g = kit.group(); g.add(kit.rbox(-w / 2, 0, D, w, h, D, 4)); g.add(kit.box(-w / 2 + F, F, D + 4, iw, ih, 4, { tone: 'lo' }));
-  const out = kit.merge(g);
-  const cw = 480, ch = Math.max(120, Math.min(720, Math.round(cw * ih / iw))), c = document.createElement('canvas'); c.width = cw; c.height = ch;
-  const q = c.getContext('2d'); q.fillStyle = `rgb(${PAPER})`; q.fillRect(0, 0, cw, ch);
-  const mat = kit.paint(c), m = new T.Mesh(new T.PlaneGeometry(iw, ih), mat); m.position.set(0, F + ih / 2, D + 8); out.add(m);   // 4 mm in front of the mat face (D + 4), the mat 4 mm in front of the frame: closer and the two planes fight in the depth buffer at a distance, which showed as flicker
-  const mm = 0.09, bw = cw * (1 - 2 * mm), bh = ch * (1 - 2 * mm), s = Math.min(bw / P.w, bh / P.h), dw = Math.round(P.w * s), dh = Math.round(P.h * s), dx = Math.round((cw - dw) / 2), dy = Math.round((ch - dh) / 2);   // the painting fitted inside a paper mat, keeping its own proportions
-  if (typeof Image !== 'undefined') {   // the page decodes the JPEG, then draws it (the node checks have no image decoder and keep the blank mat)
-    const draw = (img) => { q.drawImage(img, dx, dy, dw, dh); adapt(q, dx, dy, dw, dh, mode); mat.uniforms.uMap.value.needsUpdate = true; };
-    let img = LOADED.get(P.src); if (!img) { img = new Image(); img.src = P.src; LOADED.set(P.src, img); }
-    if (img.complete && img.naturalWidth) draw(img); else img.addEventListener('load', () => draw(img));
-  }
-  out.userData.painting = P.name;
+  const F = FRAME.F, D = 24, P = PAINTINGS[(form - 4) % PAINTINGS.length], mode = colour || ['keep', 'soft', 'ink'][seed % 3], fr = fitFrame(P, w, h), y0 = (h - fr.H) / 2;   // the frame follows the painting's proportions, centred in the box w x h the spec asked for
+  const g = kit.group(); g.add(kit.rbox(-fr.W / 2, y0, D, fr.W, fr.H, D, 4)); g.add(kit.box(-fr.iw / 2, y0 + F, D + 4, fr.iw, fr.ih, 4, { tone: 'lo' }));
+  const out = kit.merge(g), m = artPlane(kit, P, { w: fr.iw, h: fr.ih, margins: fr.margins, mode }); m.position.set(0, y0 + F + fr.ih / 2, D + 8); out.add(m);   // 4 mm in front of the mat face (D + 4), the mat 4 mm in front of the frame: closer and the two planes fight in the depth buffer at a distance, which showed as flicker
+  out.userData.painting = P.name; out.userData.fit = { margins: fr.margins, frame: [fr.W, fr.H] };
   return out;
 }
 export function picture(kit, { form = 4, w = 600, h = 800, seed = 2, colour } = {}) {

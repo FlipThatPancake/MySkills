@@ -111,46 +111,47 @@ export function floorCushion(kit, { w = 680, thick = 150, tone = 'mid', piping =
   const g = kit.group(), s = softBox(kit, w, w, thick, { r: 60, bulge: 28, piping, tone, dent: 12 }); s.rotation.x = -Math.PI / 2; s.position.y = thick / 2 + 6; g.add(s);
   return kit.merge(g);
 }
-export function logBasket(kit, { r = 270, h = 400, logs = 7, seed = 3, weave = 'grid', lean: leanP = 0.18 } = {}) {
-  const g = kit.group(), R = rnd(seed), pts = [], T = kit.THREE, wall = 26;
-  // an open basket: one turned profile up the outside, over a rolled rim and down the inside to a woven floor
-  const prof = [[r * 0.7, 0], [r * 0.84, 6], [r * 0.9, h * 0.35], [r, h - 14], [r + 5, h - 4], [r + 2, h + 8], [r - wall + 4, h + 8], [r - wall, h - 6], [r * 0.9 - wall, h * 0.35], [r * 0.7, 40], [0, 40]].map(([a, y]) => new T.Vector2(a, y));
-  g.add(kit.solid(new T.LatheGeometry(prof, 40), 0, 0, 0, { smooth: true, ...lo }));
-  if (weave !== 'stave') for (const f of [0.2, 0.4, 0.6, 0.8]) pts.push(...ring(r * (0.86 + 0.14 * f) + 1.5, h * f, 40));
-  if (weave !== 'plain') for (let i = 0; i < 20; i++) { const a = i / 20 * 6.2832, c = Math.cos(a), sn = Math.sin(a); pts.push([c * r * 0.88, h * 0.12, sn * r * 0.88], [c * r * 1.0, h - 22, sn * r * 1.0]); }   // the staves
+export function logBasket(kit, { r = 270, h = 190, logs = 9, seed = 3 } = {}) {   // (h about 190) a woven wicker basket with two side handles, split logs lying across it in three layers, the top layer a little above the rim
+  const g = kit.group(), R = rnd(seed), pts = [], T = kit.THREE, wall = 26, lo2 = { tone: 'lo' };
+  const prof = [[r * 0.82, 0], [r * 0.9, 8], [r * 0.97, h * 0.4], [r, h - 14], [r + 5, h - 4], [r + 2, h + 8], [r - wall + 4, h + 8], [r - wall, h - 6], [r * 0.97 - wall, h * 0.4], [r * 0.82 - wall + 6, 40], [0, 40]].map(([a, y]) => new T.Vector2(a, y));
+  g.add(kit.solid(new T.LatheGeometry(prof, 40), 0, 0, 0, { smooth: true, ...lo2 }));
+  const rOut = (y) => y < h * 0.4 ? r * 0.82 + (r * 0.97 - r * 0.82) * Math.max(0, y / (h * 0.4)) : r * 0.97 + (r - r * 0.97) * Math.min(1, (y - h * 0.4) / (h * 0.6 - 14));
+  const rIn = (y) => { const f = r * 0.82 - wall + 6, m = r * 0.97 - wall; return y <= 40 ? f : y < h * 0.4 ? f + (m - f) * (y - 40) / (h * 0.4 - 40) : m + (r - wall - m) * Math.min(1, (y - h * 0.4) / (h * 0.6 - 6)); };   // the inside radius at height y
+  const bands = 12, N = 28;   // woven look: rings at every band, and short staves between two rings, shifted half a stave on every other band like bricks
+  for (let j = 0; j <= bands; j++) { const y = 10 + (h - 30) * j / bands; pts.push(...ringPts(rOut(y) + 1.5, y, 40)); }
+  for (let j = 0; j < bands; j++) { const y0 = 10 + (h - 30) * j / bands, y1 = 10 + (h - 30) * (j + 1) / bands; for (let i = 0; i < N; i++) { const a = (i + (j % 2) * 0.5) / N * 6.2832; pts.push([Math.cos(a) * (rOut(y0) + 1.5), y0, Math.sin(a) * (rOut(y0) + 1.5)], [Math.cos(a) * (rOut(y1) + 1.5), y1, Math.sin(a) * (rOut(y1) + 1.5)]); } }
   g.add(kit.lines(pts, 'mid'));
+  for (const sx of [-1, 1]) { const hd = kit.solid(new T.TorusGeometry(52, 8, 8, 24, Math.PI), sx * (r + 3), h - 50, 0, { smooth: true, ...lo2 }); hd.rotation.z = -sx * Math.PI / 2; g.add(hd); }   // a loop handle on each side, from the wall up to the rim
   const logRod = (A, B, lr) => {
-    const lg = kit.group();
-    lg.add(rod(kit, A, B, lr, lr, 'lo'));
+    const lg = kit.group(); lg.add(rod(kit, A, B, lr, lr, 'lo'));
     let u = [B[0] - A[0], B[1] - A[1], B[2] - A[2]]; const um = Math.hypot(...u); u = u.map((q) => q / um);
     const e1 = Math.abs(u[1]) > 0.9 ? [1, 0, 0] : [0, 1, 0]; let v = [u[1] * e1[2] - u[2] * e1[1], u[2] * e1[0] - u[0] * e1[2], u[0] * e1[1] - u[1] * e1[0]]; const vm = Math.hypot(...v); v = v.map((q) => q / vm);
-    const wv = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
-    const disc = (rf, n = 18) => { const q = []; for (let i = 0; i < n; i++) { const a0 = i / n * 6.2832, a1 = (i + 1) / n * 6.2832; for (const a of [a0, a1]) q.push([B[0] + (v[0] * Math.cos(a) + wv[0] * Math.sin(a)) * lr * rf + u[0] * 2, B[1] + (v[1] * Math.cos(a) + wv[1] * Math.sin(a)) * lr * rf + u[1] * 2, B[2] + (v[2] * Math.cos(a) + wv[2] * Math.sin(a)) * lr * rf + u[2] * 2]); } return q; };
-    lg.add(kit.lines([...disc(0.96), ...disc(0.62), ...disc(0.3), [B[0] + v[0] * lr * 0.2 + u[0] * 2, B[1] + v[1] * lr * 0.2 + u[1] * 2, B[2] + v[2] * lr * 0.2 + u[2] * 2], [B[0] + v[0] * lr * 0.9 + u[0] * 2, B[1] + v[1] * lr * 0.9 + u[1] * 2, B[2] + v[2] * lr * 0.9 + u[2] * 2]], 'mid'));   // the end: rings and a split
-    g.add(kit.content(lg));
-  };
-  const placed = [], sub = (p, q) => [p[0] - q[0], p[1] - q[1], p[2] - q[2]], dot = (p, q) => p[0] * q[0] + p[1] * q[1] + p[2] * q[2];
-  const segDist = (A, B, C, D) => {   // the shortest distance between two segments (sampled finely: logs are fat, so a 20 mm step is exact enough)
-    let m = 1e9; const nA = 24, nC = 24; for (let i = 0; i <= nA; i++) { const p = [A[0] + (B[0] - A[0]) * i / nA, A[1] + (B[1] - A[1]) * i / nA, A[2] + (B[2] - A[2]) * i / nA]; for (let j = 0; j <= nC; j++) { const q = [C[0] + (D[0] - C[0]) * j / nC, C[1] + (D[1] - C[1]) * j / nC, C[2] + (D[2] - C[2]) * j / nC], d = Math.hypot(...sub(p, q)); if (d < m) m = d; } } return m;
-  };
-  const innerR = (y) => y < 40 ? r * 0.7 - wall : y < h * 0.35 ? (r * 0.7 + (r * 0.9 - wall - r * 0.7) * (y - 40) / (h * 0.35 - 40)) : (r * 0.9 - wall) + (r - wall - r * 0.9 + wall) * Math.min(1, (y - h * 0.35) / (h * 0.65 - 6));   // the inside wall radius at height y
-  const fits = (A, B, lr) => { for (let i = 0; i <= 20; i++) { const t = i / 20, y = A[1] + (B[1] - A[1]) * t; if (y > h + 8) break; if (Math.hypot(A[0] + (B[0] - A[0]) * t, A[2] + (B[2] - A[2]) * t) > innerR(y) - lr * 1.04 - 4) return false; } return placed.every((q) => segDist(A, B, q.A, q.B) > lr + q.lr + 6); };
-  for (let k = 0; k < Math.max(5, Math.min(8, logs)); k++) {
-    for (let tries = 0; tries < 80; tries++) {
-      const a = R() * 6.2832, rd = Math.sqrt(R()) * (r - wall - 70), x = Math.cos(a) * rd, z = Math.sin(a) * rd, lr = 40 + R() * 22, len = h * 0.9 + 80 + R() * 160;
-      const la = R() * 6.2832, lean = leanP * (0.3 + R() * 1.4) * (k % 3 === 0 ? 2.3 : 1); let u = [Math.cos(la) * lean, 1, Math.sin(la) * lean]; const m = Math.hypot(...u); u = u.map((q) => q / m);
-      const y0 = 44 + lr * Math.hypot(u[0], u[2]) + 1, A = [x, y0, z], B = [x + u[0] * len, y0 + u[1] * len, z + u[2] * len];   // a leaning log's end disc dips lr * sin(tilt) below its axis: lift it onto the basket floor
-      if (!fits(A, B, lr)) continue;
-      placed.push({ A, B, lr }); logRod(A, B, lr); break;
+    const wv = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]], bk = [];
+    const ring2 = (E, d, rf, n = 18) => { const q = []; for (let i = 0; i < n; i++) for (const a of [i / n * 6.2832, (i + 1) / n * 6.2832]) q.push([0, 1, 2].map((k) => E[k] + (v[k] * Math.cos(a) + wv[k] * Math.sin(a)) * lr * rf + u[k] * d)); return q; };
+    const at = (E, d, a, f) => [0, 1, 2].map((k) => E[k] + (v[k] * Math.cos(a) + wv[k] * Math.sin(a)) * lr * f + u[k] * d);
+    for (const [E, d] of [[B, 2], [A, -2]]) {   // both cut ends: growth rings, a split through the middle, two shorter cracks
+      bk.push(...ring2(E, d, 0.96), ...ring2(E, d, 0.62), ...ring2(E, d, 0.3));
+      const a0 = R() * 6.2832; bk.push(at(E, d, a0, 0.05), at(E, d, a0, 0.97), at(E, d, a0 + 3.14, 0.05), at(E, d, a0 + 3.14, 0.97));
+      for (let i = 0; i < 2; i++) { const a = R() * 6.2832; bk.push(at(E, d, a, 0.35), at(E, d, a, 0.9)); }
     }
-  }
-  for (let tries = 0; tries < 60; tries++) {   // one log laid across the rim, resting on it
-    const la = R() * 3.1416, lr = 46 + R() * 14, cx = Math.cos(la), cz = Math.sin(la), L = r * 1.5, y = h + 8 + lr, A = [-cx * L / 2, y, -cz * L / 2], B = [cx * L / 2, y + 20, cz * L / 2];
-    if (!placed.every((q) => segDist(A, B, q.A, q.B) > lr + q.lr + 6)) continue;
-    logRod(A, B, lr); break;
+    const P = (t, a, k) => [0, 1, 2].map((q) => A[q] + (B[q] - A[q]) * t + (v[q] * Math.cos(a) + wv[q] * Math.sin(a)) * lr * k);
+    for (let i = 0; i < 8; i++) { const a = i / 8 * 6.2832 + lr * 0.1, t0 = 0.05 + R() * 0.25, t1 = 0.6 + R() * 0.35; for (let q = 0; q < 3; q++) bk.push(P(t0 + (t1 - t0) * q / 3, a + 0.05 * q, 1.015), P(t0 + (t1 - t0) * (q + 0.85) / 3, a + 0.05 * q, 1.015)); }   // bark: long broken lines
+    lg.add(kit.lines(bk, 'mid')); g.add(kit.content(lg));
+  };
+  const lrs = [0, 1, 2].map(() => 50 + R() * 6), counts = [3, 2, 1], gap = 4;
+  let yPrev = 0, zsPrev = [];
+  for (let layer = 0; layer < 3; layer++) {
+    const lr = lrs[layer], n = counts[layer], zs = Array.from({ length: n }, (_, i) => (i - (n - 1) / 2) * (2 * lr + gap));
+    const y = layer === 0 ? 40 + lr + 1 : yPrev + Math.sqrt(Math.max(1, (lrs[layer - 1] + lr + gap) ** 2 - ((2 * lr + gap) / 2) ** 2));
+    zs.forEach((z, i) => {
+      const half = Math.sqrt(Math.max(0, (rIn(y - lr * 0.6) - 12) ** 2 - (Math.abs(z) + lr) ** 2)), L2 = Math.min(half, (layer === 2 ? 150 : 190) + R() * (layer === 2 ? 70 : 90)), dx = (R() - 0.5) * 50, yaw = (R() - 0.5) * 0.14;
+      const c = Math.cos(yaw), sn = Math.sin(yaw); logRod([dx - L2 * c, y, z + L2 * sn], [dx + L2 * c, y, z - L2 * sn], lr);
+    });
+    yPrev = y; zsPrev = zs;
   }
   return kit.merge(g);
 }
+function ringPts(rr, y, n) { const q = []; for (let i = 0; i < n; i++) { const a0 = i / n * 6.2832, a1 = (i + 1) / n * 6.2832; q.push([Math.cos(a0) * rr, y, Math.sin(a0) * rr], [Math.cos(a1) * rr, y, Math.sin(a1) * rr]); } return q; }
 export function woodStove(kit, { w = 520, d = 430, h = 600, flueH = 1700, ceil, seed = 2, door = 'glass', legs: lg = 'feet', flue = 'up' } = {}) {   // flue up (the pipe rises and its top edges fade out toward the ceiling) | wall (the pipe turns through an elbow into the wall behind: back the stove onto a wall); ceil (the home's ceiling height, set by the home) overrides flueH
   const g = kit.group(), B = bx(kit), R = rb(kit), legH = 110; if (ceil) flueH = ceil;
   const hw = w + 220, hd = d + 220, hz = 0;   // a thin stone hearth plate under the stove and out in front of it
