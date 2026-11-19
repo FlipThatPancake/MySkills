@@ -72,13 +72,24 @@ const WINW = { sash: 1500, picture: 2100, pair: 1100 };   // the width the plan 
 const WINVIEW = 1400;   // what stands within this far outside a window shows through its sash
 const WINEDGE = 1000, WINCLEAR = 1200;   // a window keeps 1000 mm from a corner (a way through beside the corner leaves the 1200 mm the openings rule asks for) and 1200 mm of clear wall to a way through or another window (check-home openings)
 const stripPhrase = (g) => g.replace(/ \(the hero group[^)]*\)/, '').replace(/, on the .*$/, '');
-export function roomNeeds(a, kind, links = 0) {
-  const why = [], hero = HERO.find(([re]) => re.test(a.hero || ''))?.[1] || { w: 2200, d: 900 }, back = [], side = [], free = [];
+function needLists(a, kind) {
+  const hero = HERO.find(([re]) => re.test(a.hero || ''))?.[1] || { w: 2200, d: 900 }, back = [], side = [], free = [];
   const add = (name, n, slot) => { const spot = n.free ? free : /^window/.test(slot || '') ? side : back; spot.push({ name, ...n }); };
   const heroSlot = (a.groupSlots || [])[0] || 'back:left'; let hd = hero;
   if (kind === 'kitchen') { const [dw, dd] = KITCHEN_SHAPE[a.shape || 'straight'] || [0, 0]; hd = { ...hero, w: hero.w + dw, d: hero.d + dd, free: false }; }
   if (hd.free) free.push({ name: `hero (${a.hero})`, ...hd }); else add(`hero (${a.hero})`, hd, heroSlot);
   (a.groups || []).forEach((g, i) => { if (i === 0) return; const n = groupNeeds(stripPhrase(g)) || { w: 1200, d: 500 }; add(stripPhrase(g).split(/[,:]/)[0], n, (a.groupSlots || [])[i]); });
+  return { back, side, free };
+}
+const GAPW_RUN = (L) => L.reduce((t, q) => t + q.w, 0) + Math.max(0, L.length - 1) * GAPW + 2 * MARGIN;
+// what a wall must be long enough for: the groups dealt to it, the zone each dealt window or outside door cuts out of it (window 300 mm each side, door 450), and n ways through (door zone 450 each side), as a.slots() counts bare wall
+export function wallLoad(a, kind, wall, n = 0) {
+  const b = T.backing.find((x) => x.id === a.backing), name = { first: 'back', second: b.second }, { back, side } = needLists(a, kind), list = wall === 'back' ? back : wall === b.second ? side : [];
+  const cuts = (a.openings || []).filter((o) => name[o.on] === wall).reduce((t, o) => t + (o.kind === 'window' && o.style !== 'wall' && o.style !== 'bay' ? (WINW[o.style] || 1500) + 600 : o.kind === 'door' && o.style ? 1800 + 900 : 0), 0);
+  return GAPW_RUN(list) + cuts + n * (LINK_WIDTH.round + 900);
+}
+export function roomNeeds(a, kind, links = 0) {
+  const why = [], { back, side, free } = needLists(a, kind);
   const run = (L) => L.reduce((t, q) => t + q.w, 0) + Math.max(0, L.length - 1) * GAPW + 2 * MARGIN;
   const backD = Math.max(0, ...back.map((q) => q.d)), sideRun = side.length ? run(side) + backD * 0.5 : 0, freeD = Math.max(0, ...free.map((q) => q.d)), freeW = Math.max(0, ...free.map((q) => q.w));
   let w = Math.max(run(back), freeW + 2 * 1100), d = Math.max(sideRun, backD + (free.length ? BACKCLEAR + freeD + FRONT : FRONT + 600));
@@ -87,10 +98,12 @@ export function roomNeeds(a, kind, links = 0) {
   { const [mw, md] = MINSIZE[kind] || MINDEF; w = Math.max(w, mw); d = Math.max(d, md); }
   // the ways through need wall beside the walls' own windows: each way goes to the wall that must grow least, one after the other
   { const b = T.backing.find((x) => x.id === a.backing), name = { first: 'back', second: b.second }, lw = Object.entries(linkWalls(a)).filter(([, q]) => !q.blocked).map(([wall]) => wall), want = Math.max(links, 2), cnt = Object.fromEntries(lw.map((q) => [q, 0])), dim = { back: w, left: d, right: d };
-    const req = (wall, n) => { const ws = (a.openings || []).filter((o) => o.kind === 'window' && name[o.on] === wall).map((o) => (o.style === 'wall' || o.style === 'bay' ? 0 : WINW[o.style] || 1500)), sum = ws.reduce((t, v) => t + v, 0); return sum + (sum ? 2 * WINCLEAR : 0) + n * LINK_WIDTH.round + (n - 1) * SPACE + 2 * EDGE; };
+    const cap = SIZES[kind] || SIZES.living, capOf = (wall) => (wall === 'back' ? cap[0] : cap[1]) * 1.6;   // a deal that wants more wall than the kind's largest cell (+15%) is left to the roll: the groups that do not fit are left out
+    const req = (wall, n) => Math.max(Math.min(wallLoad(a, kind, wall, n), capOf(wall)), 2 * EDGE + n * LINK_WIDTH.round + (n - 1) * SPACE);
     const grow = (wall, n) => Math.max(0, req(wall, n) - dim[wall]);
     if (lw.length) { for (let k = 0; k < want; k++) { const pick = lw.map((q) => ({ q, inc: grow(q, cnt[q] + 1) - (cnt[q] ? grow(q, cnt[q]) : 0) })).sort((p, q) => p.inc - q.inc)[0]; cnt[pick.q]++; }
       for (const wall of lw) if (cnt[wall] && grow(wall, cnt[wall]) > 0) { const v = req(wall, cnt[wall]); if (wall === 'back') w = v; else d = v; why.push(`${wall} wall grown to ${v} for its window(s) and ${cnt[wall]} way(s) through`); } } }
+  { const b = T.backing.find((x) => x.id === a.backing), cap = SIZES[kind] || SIZES.living, lb = Math.min(wallLoad(a, kind, 'back', 0), cap[0] * 1.6), ls = b.walls === 2 ? Math.min(wallLoad(a, kind, b.second, 0), cap[1] * 1.6) : 0; if (lb > w) { w = lb; why.push(`back wall grown to ${Math.round(lb)} for its groups and openings`); } if (ls > d) { d = ls; why.push(`${b.second} wall grown to ${Math.round(ls)} for its groups and openings`); } }
   return { w: Math.round(w / 100) * 100, d: Math.round(d / 100) * 100, why: why.join('; ') };
 }
 
