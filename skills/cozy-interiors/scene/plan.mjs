@@ -39,6 +39,19 @@ export function linkWalls(roll) {
   return out;
 }
 
+// ---- which rooms touch: a small table, not random links (verdict item 5). Depth from the front door runs hallway (entry), then the shared rooms, then the private ones.
+export const ZONE = { hallway: 'entry', kitchen: 'shared', dining: 'shared', living: 'shared', 'reading-corner': 'shared', bedroom: 'private', 'home-office': 'private' };
+export const LIKES = [['kitchen', 'dining'], ['dining', 'living'], ['hallway', 'living'], ['hallway', 'bedroom'], ['reading-corner', 'living']];   // pairs of kinds that are glad to touch
+export const DISLIKES = [['bedroom', 'kitchen'], ['home-office', 'kitchen']];   // pairs that are not given a way through unless asked for
+const KIND = (id) => id.replace(/\d+$/, ''), inPairs = (list, a, b) => list.some(([x, y]) => (x === KIND(a) && y === KIND(b)) || (x === KIND(b) && y === KIND(a)));
+export const likes = (a, b) => inPairs(LIKES, a, b), dislikes = (a, b) => inPairs(DISLIKES, a, b);
+// the shared rooms that can be reached from the front door only through a private room (ids: area ids, pairs: [[a, b], ...] ways, entry: the front door's area)
+export function privateGate(ids, pairs, entry) {
+  const adj = Object.fromEntries(ids.map((i) => [i, []])); for (const [a, b] of pairs) { adj[a]?.push(b); adj[b]?.push(a); }
+  const seen = new Set([entry]), todo = [entry]; while (todo.length) { const n = todo.pop(); for (const m of adj[n] || []) if (!seen.has(m) && ZONE[KIND(m)] !== 'private') { seen.add(m); todo.push(m); } }   // walks through entry and shared rooms only
+  return ids.filter((i) => ZONE[KIND(i)] === 'shared' && !seen.has(i));
+}
+
 // ---- room size from the deal: the smallest rect that holds what the roll dealt to an area (its hero, its groups, the way in), so the plan cuts each cell from the deal and not from a table of sizes
 // back wall = the hero and the groups dealt to 'back:left' / 'back:right', side wall = the groups dealt to 'window:middle'; free-standing pieces (tables, an island) need floor: their depth, clearance behind and a strip in front.
 const GAPW = 300, MARGIN = 250, FRONT = 700, BACKCLEAR = 900;   // between two pieces on a wall, from a corner, the near strip kept clear, between a wall and a free-standing table
@@ -75,7 +88,7 @@ export function planHome(out, seed, kinds, opts = {}) {
   const rooms = []; { const seen = new Set(); if (chain.length) { rooms.push(chain.slice()); chain.forEach((c) => seen.add(c)); } for (const id of ids) if (!seen.has(id)) rooms.push([id]); }
   const roomOf = Object.fromEntries(rooms.flatMap((r, i) => r.map((id) => [id, i])));
   const required = (opts.touch || []).map(([a, b]) => { for (const x of [a, b]) if (!ids.includes(x)) throw new Error(`plan: --touch names "${x}", which is not one of the areas (${ids.join(', ')})`); if (a === b) throw new Error(`plan: --touch ${a}:${b} joins an area to itself`); return [a, b]; });
-  const rootId = chain[0] || ids[0];
+  const rootId = chain[0] || ids.find((id) => KIND(id) === 'hallway') || ids[0];   // the front door's area first (a hallway), unless an open room comes first
   const needBacking = ids.filter((id) => roomOf[id] !== roomOf[rootId] || !chain.includes(id)).filter((id) => !Object.keys(linkWalls(roll[id])).some((w) => !linkWalls(roll[id])[w].blocked) && !chain.includes(id));
   if (needBacking.length && !opts.noRebacking) { const e = new Error(`plan: ${needBacking.join(', ')} have no wall free of outside doors`); e.needBacking = needBacking; throw e; }
   const cap = (id) => { const [w, d] = (SIZES[id.replace(/\d+$/, '')] || SIZES.living).map((v) => v * 0.85); return Object.entries(linkWalls(roll[id])).filter(([, q]) => !q.blocked).reduce((n, [k]) => n + Math.max(0, Math.floor(((k === 'back' ? w : d) - 2 * EDGE + SPACE) / (1100 + SPACE))), 0); };
@@ -86,6 +99,13 @@ export function planHome(out, seed, kinds, opts = {}) {
   const degree = {}; for (const [a, b] of required) { degree[a] = (degree[a] || 0) + 1; degree[b] = (degree[b] || 0) + 1; }
   const need = Object.fromEntries(ids.map((id) => [id, roomNeeds(roll[id], id.replace(/\d+$/, ''), degree[id] || 0)]));   // the smallest rect each area's deal fits in
   const best = { tries: 0 };
+  const entryId = ids.find((id) => KIND(id) === 'hallway') || rootId, asked = (a, b) => required.some(([x, y]) => (x === a && y === b) || (x === b && y === a));
+  const validWays = (links, attempt) => {
+    if (opts.noLikes) return true;   // a regression fixture only: the likes table switched off, so a home that breaks it can be built and the checks shown to catch it
+    if (privateGate(ids, links.map((l) => [l.a, l.b]), entryId).length) return false;   // a private room is the only way to a shared one
+    if (ids.length > 2 && attempt < 300) for (const l of links) if (dislikes(l.a, l.b) && !asked(l.a, l.b)) return false;   // bedroom-kitchen, office-kitchen: not unless asked (a home whose walls leave no other way lets it through after 300 tries)
+    return true;
+  };
   for (let attempt = 0; attempt < 2400; attempt++) {   // the first 600 tries at the sizes dealt; a crowded home then shrinks its cells a little (to 85%, then 70%) before it gives up
     const res = tryPlan(attempt); best.tries = attempt + 1; if (res) return finish(res);
   }
@@ -141,11 +161,13 @@ export function planHome(out, seed, kinds, opts = {}) {
     while (todo.size) {
       const e = pend.find(([a, b]) => (a in placed) !== (b in placed));
       if (e) { const [u, v] = e[0] in placed ? e : [e[1], e[0]]; if (!attach(u, v)) return null; todo.delete(v); pend.splice(pend.indexOf(e), 1); continue; }
-      const v = [...todo][Math.floor(rnd() * todo.size)], cands = Object.keys(placed).flatMap((q) => Array(wt(q)).fill(q)), tryOrder = shuffled(cands, rnd); let ok = false;
-      for (const u of [...new Set(tryOrder)]) if (attach(u, v)) { ok = true; break; } if (!ok) return null; todo.delete(v);
+      const rank = (id) => ({ entry: 0, shared: 1, private: 2 })[ZONE[KIND(id)]] ?? 1, first = Math.min(...[...todo].map(rank)), pool = [...todo].filter((id) => rank(id) === first), v = pool[Math.floor(rnd() * pool.length)];   // the entry, then the shared rooms, then the private ones are joined to the house
+      const open = Object.keys(placed).filter((q) => rank(v) === 2 || rank(q) < 2 || q === entryId), base = open.length ? open : Object.keys(placed), cands = base.flatMap((q) => Array(wt(q) * (likes(q, v) ? 8 : dislikes(q, v) ? 1 : 2)).fill(q)), tryOrder = shuffled(cands, rnd); let ok = false;   // a shared room is not hung off a private one
+      for (const u of [...new Set([...tryOrder, ...shuffled(Object.keys(placed), rnd)])]) if (attach(u, v)) { ok = true; break; } if (!ok) return null; todo.delete(v);   // the liked and non-private parents first, then any
     }
     for (const [a, b] of pend) if (!linkedPair(a, b) && !touch(a, b)) return null;   // a touch asked for between two areas that already stand: their walls must meet
-    let extra = 0; for (const [a, b] of shuffled(ids.flatMap((a, i) => ids.slice(i + 1).map((b) => [a, b])), rnd)) { if (extra >= (loopHome ? 2 : 1) || roomOf[a] === roomOf[b] || linkedPair(a, b)) continue; if (rnd() < (loopHome ? 0.9 : 0.3) && touch(a, b)) extra++; }   // walls that meet by chance may give a second way round
+    let extra = 0; for (const [a, b] of shuffled(ids.flatMap((a, i) => ids.slice(i + 1).map((b) => [a, b])), rnd)) { if (extra >= (loopHome ? 2 : 1) || roomOf[a] === roomOf[b] || linkedPair(a, b) || (dislikes(a, b) && ids.length > 2)) continue; if (rnd() < (loopHome ? 0.9 : 0.3) && touch(a, b)) extra++; }   // walls that meet by chance may give a second way round
+    if (!validWays(links, attempt)) return null;   // the likes table: nothing but the front door's shared rooms stand between it and the shared rooms, and no unwanted pair is joined
     return { placed, links, order, size };
   }
 
@@ -169,7 +191,7 @@ export function planHome(out, seed, kinds, opts = {}) {
     const bk = (id) => T.backing.find((x) => x.id === roll[id].backing), nameOf = (id, w) => (w === 'back' ? 'first' : 'second');
     for (const l of links) for (const [id, u] of [[l.a, l.useA], [l.b, l.useB]]) { if (!u) continue; const a = roll[id], [w, kind0] = u, on = nameOf(id, w); let kind = kind0, i = (a.openings || []).findIndex((o) => kind === 'drop' ? o.on === on && o.kind !== 'window' && (o.kind === 'arch' || o.style) : o.kind === kind && o.on === on && !o.style); if (i < 0) continue; const was = kind === 'drop' ? a.openings[i].kind : kind, dropped = kind === 'drop'; kind = was;
       if (kind === 'arch') { const k = a.openings.slice(0, i).filter((o) => o.kind === 'arch').length; (a.passages || []).splice(k, 1); } a.openings.splice(i, 1); (a.consumed ||= []).push(`${dropped ? 'the dealt ' + kind + ' (outside door or hatch) on the ' + w + ' wall was dropped: the plan needs the wall for the way to ' + (id === l.a ? l.b : l.a) : kind + ' on the ' + w + ' wall (now the way to ' + (id === l.a ? l.b : l.a) + ')'}`); }
-    const plan = { root: order[0], order, walk, areas, links, rooms: rooms.map((r) => r.slice()), tries: best.tries };
+    const plan = { root: order[0], order, walk, areas, links, rooms: rooms.map((r) => r.slice()), tries: best.tries, entry: entryId, likesMet: links.filter((l) => likes(l.a, l.b)).map((l) => `${l.a}|${l.b}`), dislikesMet: links.filter((l) => dislikes(l.a, l.b)).map((l) => `${l.a}|${l.b}`) };
     plan.map = mapText(placed, links, size);
     plan.say = sayOf(plan, size); { const drops = ids.flatMap((id) => (roll[id].consumed || []).filter((c) => /was dropped/.test(c)).map((c) => `${id}: ${c}`)); if (drops.length) plan.say += `\nDropped to make room (this home was too crowded for its walls): ${drops.join('; ')}.`; }
     plan.world = Object.fromEntries(order.map((id) => [id, { pose: placed[id].pose, foot: placed[id].foot }]));   // the planned poses (compose works from its own, with the real rects)
