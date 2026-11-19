@@ -112,7 +112,7 @@ export const ASSETS = {
   crate: A('centre', [520, 340, 260], 'floor', 'w 520, d 340, h 260', { note: 'a crate of fruit; kitchen foreground' }),
   wateringCan: A('centre', [330, 180, 260], 'on', 'h 260', { y: 'top', note: 'on a worktop or a window sill' }),
   umbrellaStand: A('centre', [250, 250, 1300], 'floor', 'h 520', { note: 'hallway, by the door' }),
-  shoes: A('centre', [660, 300, 170], 'floor', 'arrange neat|dropped|mixed, pairs 1-2 (neat only), kind sneaker|boot', { note: 'by an outside door, a front door or a hallway bench; neat = pairs side by side, dropped = one pair kicked off (one shoe standing, one on its side), mixed = a neat pair beside a dropped pair' }),
+  shoes: A('centre', [660, 300, 170], 'floor', 'arrange neat|dropped|mixed, pairs 1-2 (neat only), kind sneaker|boot', { pieces: 4, note: 'by an outside door, a front door or a hallway bench; neat = pairs side by side, dropped = one pair kicked off (one shoe standing, one on its side), mixed = a neat pair beside a dropped pair' }),
   wasteBin: A('centre', [260, 260, 340], 'floor', 'h 340', { note: 'office foreground' }),
   fileBox: A('centre', [300, 380, 290], 'floor', 'w 300, h 290, d 380', { note: 'office foreground' }),
   laptop: A('centre', [330, 300, 230], 'on', 'w 330, d 230', { y: 'top', note: 'open, on a desk or table; screen toward -z' }),
