@@ -3,6 +3,7 @@
 if (process.argv.includes('--build')) { await import('./groupbuild.mjs'); await new Promise(() => {}); }   // stage 1 proof by building: pass rate per group phrase (groupbuild.mjs)
 import { roll, phraseAssets, ONE_AREA, STAMP_SKIP, SMALL_ON } from '../../../skills/cozy-interiors/scene/roll.mjs';
 import { phraseOf } from '../../../skills/cozy-interiors/scene/rollstages.mjs';
+import { wallLoad } from '../../../skills/cozy-interiors/scene/plan.mjs';
 import { groupNeeds, groupPhrases } from '../../../skills/cozy-interiors/scene/groups.mjs';
 import fs from 'node:fs';
 const TT = JSON.parse(fs.readFileSync(new URL('../../../skills/cozy-interiors/scene/tables.json', import.meta.url), 'utf8')), BK = (a) => (TT.backing || []).find((x) => x.id === a.backing) || {};
@@ -33,6 +34,9 @@ for (let seed = 1; seed <= N; seed++) for (const kinds of sets) {
       if (/on a side wall|on the second wall/.test(a.hero || '') && !two) bad('group-slot-no-wall', seed, kinds, id, `"${a.hero}" needs a second wall and the backing "${a.backing}" has one`);
       const prov = { worktop: /./, table: /table|island/, sideboard: /sideboard|dresser/, 'coffee table': /coffee table/, 'side table': /side table/, 'bedside table': /^bed /, 'chest of drawers': /chest of drawers/, shelf: /shelf|bookcase|window seat|bookshelf/, console: /console/, desk: /desk/ };
       for (const st of a.still || []) if (!(a.groups || []).some((g) => (prov[st.top] || /./).test(g.replace(/ \(the hero group.*\)$/, '').replace(/, on the .*$/, '')))) bad('still-top-without-furniture', seed, kinds, id, `the roll deals a still life for "${st.top}" and no group of the area stands one`); }
+    { const bk = BK(a), PA = R.plan?.areas?.[id], k = id.replace(/\d+$/, '');   // round 6 (plan thread rollstats case, "a wall holds its groups, windows and ways through"): a wall too short for what stands on it while another group stands there too is a deal the roll should have moved or left out; a wall short for the hero and its openings alone is the plan's to size
+      if (PA && a.groups) for (const [wall, len] of [['back', PA.fit[0]], ...(bk.walls === 2 ? [[bk.second, PA.fit[1]]] : [])]) { const ways = R.plan.links.filter((l) => l.kind !== 'open' && ((l.a === id && l.aWall === wall) || (l.b === id && l.bWall === wall))).length, load = wallLoad(a, k, wall, ways), onWall = (a.groupSlots || []).filter((sl, i) => i > 0 && !/^floor:/.test(sl) && ((/^window:/.test(sl) && bk.walls === 2 ? bk.second : 'back') === wall)).length;
+        if (load > len + 1 && onWall) bad('wall-over-stuffed', seed, kinds, id, `the ${wall} wall is ${Math.round(load - len)} mm short and ${onWall} dealt group(s) besides the hero stand on it`); } }
     const seen = new Set();
     for (const st of a.still || []) { if (st.things.length > 2) bad('top>2', seed, kinds, id, st.top); for (const x of st.things) { const n = asset(x); if (n && !ASSETS[n]) bad('missing-asset', seed, kinds, id, n); if (n && seen.has(n)) bad('same-thing-twice', seed, kinds, id, n); seen.add(n); } }
     const txt = JSON.stringify(a), lamps = (a.light && /pendant|floor lamp|table lamp|desk lamp/.test(a.light) ? 1 : 0) + (seen.has('readingLamp') ? 1 : 0) + ((a.groups || []).filter((g) => /\blamp\b/.test(g)).length);

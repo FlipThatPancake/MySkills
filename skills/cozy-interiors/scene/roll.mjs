@@ -7,7 +7,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { dealOpenPlan } from './openplan.mjs';
 import { dealMotion } from './motion-roll.mjs';
-import { planHome } from './plan.mjs';
+import { planHome, wallLoad } from './plan.mjs';
 import { groupNeeds } from './groups.mjs';
 const T = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'tables.json'), 'utf8'));
 export const KINDS = Object.keys(T).filter((k) => T[k]?.hero && T[k]?.openings);   // an area kind has a hero and openings ('names' has a hero table but is no area)
@@ -48,6 +48,7 @@ export const SLOTS = { 'on the back wall, left third': 'back:left', 'on the back
 // a dealt group text without its place: the phrase a.group takes
 export const groupPhrase = (g) => g.replace(/ \(the hero group[^)]*\)$/, '').replace(/, on the .*$/, '');
 export function groupSlot(g, two = true) { const h = g.match(/the hero group, on the (left|right) of the home view/); if (h) return `${two && (() => { const n = groupNeeds(g.replace(/ \(the hero group.*\)$/, '')); return n?.window || n?.second; })() ? 'window' : 'back'}:${h[1]}`; const at = g.lastIndexOf(', on the '); return at < 0 ? null : SLOTS[g.slice(at + 2)] ?? null; }
+const prov = { worktop: /./, table: /table|island/, sideboard: /sideboard|dresser/, 'coffee table': /coffee table/, 'side table': /side table/, 'bedside table': /^bed /, 'chest of drawers': /chest of drawers/, shelf: /shelf|bookcase|window seat|bookshelf/, console: /console/, desk: /desk/ };   // the furniture a still life stands on -> the dealt group that provides it
 // each group to a slot that suits its needs and exists in the shell its backing builds; a still life only for a top that one of the groups stands
 function dealSlots(out, kinds) {
   for (const id of kinds) { const a = out.areas[id]; if (!a.groups) continue;
@@ -68,8 +69,31 @@ function dealSlots(out, kinds) {
     { const hn = groupNeeds(base(a.groups[0])) || {}, h0 = a.groupSlots[0], wall = h0.split(':')[0], side = h0.split(':')[1];   // the hero keeps its side of the home view; if its third has no room for the recipe it takes the middle third
       if (PA && side !== 'middle' && !bare(h0, hn) && bare(`${wall}:middle`, hn) && !a.groupSlots.slice(1).includes(`${wall}:middle`)) a.groupSlots[0] = `${wall}:middle`; }
     // a still life is dealt only for a top that one of the area's groups stands (round 6 stage harness: "no coffee table placed for the dealt still life")
-    const prov = { worktop: /./, table: /table|island/, sideboard: /sideboard|dresser/, 'coffee table': /coffee table/, 'side table': /side table/, 'bedside table': /^bed /, 'chest of drawers': /chest of drawers/, shelf: /shelf|bookcase|window seat|bookshelf/, console: /console/, desk: /desk/ };
+
     a.still = (a.still || []).filter((st) => a.groups.some((g) => (prov[st.top] || /./).test(base(g)))); }   // item C: the slot of each group in the words of a.slots() (wall:third, see SLOTS below); homeCaps swaps phrases, not places
+}
+// after the plan: a wall holds its groups, its windows and outside doors, and the ways through (plan.mjs wallLoad). A wall that cannot: the group that asks most of it moves to the other wall when that wall has room, else it is left out
+function fitWalls(out, kinds) {
+  for (const id of kinds) { const a = out.areas[id], PA = out.plan?.areas?.[id]; if (!a.groups || !PA) continue;
+    const bk = T.backing.find((x) => x.id === a.backing) || {}, two = bk.walls === 2, walls = ['back', ...(two ? [bk.second] : [])], links = out.plan.links.filter((l) => l.kind !== 'open'), kind = id.replace(/\d+$/, '');
+    const len = (w) => (w === 'back' ? PA.fit[0] : PA.fit[1]), ways = (w) => links.filter((l) => (l.a === id && l.aWall === w) || (l.b === id && l.bWall === w)).length;
+    const short = (w) => wallLoad(a, kind, w, ways(w)) - len(w) > 1, wallOf = (k) => (a.groupSlots[k].startsWith('window:') && two ? bk.second : 'back');
+    const at = (g) => g.lastIndexOf(', on the '), base = (g) => (at(g) < 0 ? g : g.slice(0, at(g))), say = (sl) => Object.entries(SLOTS).find(([, v]) => v === sl)[0];
+    const sync = () => { a.groupSlots = a.groups.map((g) => groupSlot(g, two)); };
+    sync();
+    for (let guard = 0; guard < 8; guard++) { const wall = walls.find((w) => short(w) && a.groups.some((g, k) => k > 0 && wallOf(k) === w && !(groupNeeds(base(g)) || {}).free)); if (!wall) break;   // a wall short for the hero and its openings alone is the plan's to size
+      const cand = a.groups.map((g, k) => k).filter((k) => k > 0 && wallOf(k) === wall && !(groupNeeds(base(a.groups[k])) || {}).free).sort((x, y) => (groupNeeds(base(a.groups[y])).w || 0) - (groupNeeds(base(a.groups[x])).w || 0));
+      if (!cand.length) break; const k = cand[0], n = groupNeeds(base(a.groups[k])) || {}, was = a.groups[k], other = walls.find((w) => w !== wall);
+      let moved = false;
+      if (other && !n.window && !n.second && n.wall !== 'solid' || (other && wall !== 'back' && !n.window && !n.second)) {   // a group that wants the window wall or a solid wall stays where its need is met
+        const free = Object.values(SLOTS).filter((v) => !v.startsWith('floor:') && (other === 'back' ? v.startsWith('back:') : v.startsWith('window:')) && !a.groupSlots.includes(v));
+        for (const v of free) { a.groups[k] = base(was) + ', ' + say(v); sync(); if (!short(other) && !short(wall)) { moved = true; break; } }
+        if (!moved) { a.groups[k] = was; sync(); } }
+      if (!moved) { a.groups.splice(k, 1); sync(); }
+    }
+
+    a.still = (a.still || []).filter((st) => a.groups.some((g) => (prov[st.top] || /./).test(base(g))));
+  }
 }
 function homeCaps(out, kinds, describe) {
   const count = {}, areasOf = {};   // asset -> number of slots, asset -> areas that hold it
@@ -166,6 +190,7 @@ export function roll(seed, kinds = ['kitchen', 'dining', 'living'], opts = {}) {
     catch (e) { if (!e.needBacking || k > 2) throw e; for (const id of e.needBacking) { const a = out.areas[id], b = pick3(T.backing.filter((x) => x.walls === 2 && x.angle === 90)); a.backing = b.id; a.openings = a.openings.map((o) => ({ ...o })); if (id === 'bedroom' && a.openings.some((o) => o.kind === 'window' && o.on === 'first')) a.hero = 'bed with its headboard on the second wall (the back wall holds the window)'; a.say = describe(id, a); } }
   }
   dealSlots(out, kinds);
+  fitWalls(out, kinds);
   if (out.openPlan) out.openPlan.behind = [];   // every area outside the open room is linked by the plan
   for (const id of kinds) { out.areas[id].say = describe(id, out.areas[id]); }
   for (const id of kinds) out.areas[id].say += ` | plan: view az ${out.plan.areas[id].az}, cell ${out.plan.areas[id].fit.join(' x ')} (the deal needs ${out.plan.areas[id].need.w} x ${out.plan.areas[id].need.d})`;
