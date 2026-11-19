@@ -32,7 +32,7 @@ import { SOFT, OVERHANG_TOL, BAND } from './geom/kinds.mjs';
 import { REGISTRY } from './src/library/index.js';
 import { joinAreas, seamLine, zoneList } from './openplan.mjs';
 import { checkAlive, pickVia, MOTION } from './motion-roll.mjs';
-import { sliderClear } from './src/motion/rules.js';
+import { sliderClear, ventZone, VENT_STYLES } from './src/motion/rules.js';
 import { installDocument } from './geom/load.mjs';
 installDocument();   // the Node canvas stand-in (geom/load.mjs), so a.onTop and the textures work in a plain Node spec
 const rad = (d) => d * Math.PI / 180, deg = (r) => r * 180 / Math.PI, r0 = (v) => Math.round(v * 10) / 10;
@@ -55,7 +55,7 @@ export class Home {
   // the whole roll: H.roll(rollJson) keeps what roll.mjs dealt (still-life assets, groups, plant places, passages), so the check 'rolled' can compare every dealt thing with the scene; a.skip(what, 'why') leaves one out: an asset name, 'groups', 'passage', or a plant place (sill, shelf, worktop, hanging, floor)
   roll(json) {
     const R = typeof json === 'string' ? JSON.parse(json) : json, home = this.S.home, asset = (x) => (x.match(/\(([A-Za-z]+)\)\s*$/) || [])[1], areas = {};
-    for (const [id, a] of Object.entries(R.areas || {})) areas[id] = { still: (a.still || []).flatMap((st) => st.things.map(asset).filter(Boolean)), groups: (a.groups || []).length, plantAt: a.plantAt || [], passages: (a.passages || []).length, heroWindow: /\bwindow\b/.test(a.hero || ''), hero: a.hero || '', side: a.side || null, accents: a.accents || [], foreground: a.foreground || null, signs: a.signs || [], pieces: a.pieces || [], named: [a.above, a.wallArr, a.produce, ...(a.more || [])].filter(Boolean), groupTexts: (a.groups || []).map((g) => g.replace(/ \(the hero group.*\)$/, '').replace(/, on the [^,]*(, [a-z ]*third)?$/, '')) };
+    for (const [id, a] of Object.entries(R.areas || {})) areas[id] = { doorOpen: Math.max(0, ...(a.openings || []).filter((o) => o.kind === 'door' && !o.style).map((o) => o.open || 0)), still: (a.still || []).flatMap((st) => st.things.map(asset).filter(Boolean)), groups: (a.groups || []).length, plantAt: a.plantAt || [], passages: (a.passages || []).length, heroWindow: /\bwindow\b/.test(a.hero || ''), hero: a.hero || '', side: a.side || null, accents: a.accents || [], foreground: a.foreground || null, signs: a.signs || [], pieces: a.pieces || [], named: [a.above, a.wallArr, a.produce, ...(a.more || [])].filter(Boolean), groupTexts: (a.groups || []).map((g) => g.replace(/ \(the hero group.*\)$/, '').replace(/, on the [^,]*(, [a-z ]*third)?$/, '')) };
     home.roll = { seed: R.seed, behind: R.openPlan?.behind || [], areas };
     return this;
   }
@@ -120,6 +120,8 @@ class Area {
       onSill(oid, asset, xc, o = {}) {   // a pot or small thing on a window's sill: xc is its middle along the wall (it must lie within a window of this wall); stands at the sill's height + 30 mm
         const W = openings.find((q) => q.kind === 'window' && Math.abs(q.x - xc) <= q.width / 2 - 40); if (!W) throw new Error(`onSill('${oid}'): xc ${xc} is not over a window of this wall`);
         if (W.sash === undefined && !['picture', 'wall', 'bay'].includes(W.style)) { W.sash = 'out'; const wo = p.h.S.home.walls.find((w) => w.id === `${p.id}-${id}`)?.openings.find((q) => Math.abs(q.at - (len - W.x)) < 1); if (wo) wo.sash = 'out'; console.log(`onSill('${oid}'): the window on ${p.id}-${id} at ${W.x} opened inward and would sweep the pot: it now opens outward (sash: 'out'); say sash: 'fixed' to keep it shut`); }   // a pot on an inward window's sill: the window opens outward instead of being fixed
+        if (VENT_STYLES.includes(W.style) && W.sash !== 'fixed' && W.sash !== 'out') { const [z0, z1] = ventZone(W), lo = W.x - z1 - 110, hi = W.x - z0 + 110;   // the vent leaf swings inward over its own width: nothing stands under it (a pot 220 mm wide)
+          if (xc > lo && xc < hi) throw new Error(`onSill('${oid}'): the window's vent leaf swings into the room over x ${Math.round(lo + 110)} to ${Math.round(hi - 110)} and would sweep a pot at ${xc}; stand it beside the vent (x below ${Math.round(lo)} or above ${Math.round(hi)}), or give the window sash: 'out' or 'fixed'`); }
         const prm = vary(p.h, asset, o.params, p.id), pd = Math.min(sizeOf(asset, prm).d, o.potD ?? 100);   // the pot, not the leaves: a plant's footprint counts its spread, the sill carries only the pot (potD, 100 mm unless said)
         return F.place(oid, asset, xc, { ...o, params: prm, y: (W.sill ?? 1000) + 30, mount: 'on', onSill: true, off: o.off ?? 110 - pd / 2 + 15 });   // the pot's front stands 15 mm past the sill's front lip so its leaves clear the sash (the sill reaches 110 mm into the room): centred on the free depth, not on the lip
       },
@@ -351,6 +353,8 @@ class Area {
     }
   }
   alive(list) { if (list.some((e) => e.kind === 'paw')) for (const c of this.h.S.home.objects.filter((o) => o.area === this.id && o.asset === 'curtain')) if ((c.params?.w ?? 1500) < 1370) c.params = { ...c.params, w: 1370 };   // a paw needs a panel (22% of w) of 300 mm or more to hide a cat
+    { const asked = this.h.S.home.roll?.areas[this.id]?.doorOpen || 0, got = Math.max(0, ...this.h.S.home.walls.filter((w) => w.id.startsWith(this.id + '-')).flatMap((w) => w.openings || []).filter((o) => o.kind === 'door' && !o.style).map((o) => o.open ?? 0));   // the roll made a plain door the way in ("door standing open N degrees (open: N)"): the spec must hang it that far open
+      if (asked && got < asked) throw new Error(`alive('${this.id}'): the roll's way in is a door standing open ${asked} degrees, and the door here is open ${got}: give the door open: ${asked} (or the window or arch the roll did not ask for)`); }
   checkAlive(this.id, this.h.S.home.walls.filter((w) => w.id.startsWith(this.id + '-')), list); const ws = this.h.S.home.walls.filter((w) => w.id.startsWith(this.id + '-')); this.motion = list.map(({ kind }) => { const k = MOTION.kinds[kind]; return { kind, needs: k.needs, ...(k.needs.includes('openWindow') || k.needs.includes('openWay') ? { via: pickVia(ws, k.flies) } : {}) }; });
     for (const e of this.motion) if (e.via && MOTION.kinds[e.kind].flies) {   // a curtain panel across the way in blocks a flier: the middle 500 mm of the opening stays clear (a curtain hangs beside it)
       const W = ws.find((w) => w.id === e.via[0]), op = W?.openings[e.via[1]]; if (!W || !op) continue;

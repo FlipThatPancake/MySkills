@@ -135,7 +135,6 @@
    "wall clock (wallClock)",
    "cookbook on a stand (cookbookStand)",
    "watering can (wateringCan)",
-   "step stool by the larder (stepStool)",
    "crate of fruit (crate)"
   ],
   "shapeNotes": {
@@ -148,8 +147,7 @@
   },
   "foreground": [
    "basket of vegetables",
-   "trolley",
-   "step stool"
+   "trolley"
   ],
   "above": [
    "wall units over the run (wallRun)",
@@ -1116,7 +1114,7 @@
      "book stack (bookStack)",
      "bowl (fruitBowl)",
      "candlesticks (candlesticks)",
-     "framed photo (picture)"
+     "framed photo (photoFrame)"
     ]
    }
   ],
@@ -1180,7 +1178,7 @@
     "things": [
      "tray with a jewellery dish (letterTray)",
      "vase (vase)",
-     "framed photo (picture)",
+     "framed photo (photoFrame)",
      "book stack (bookStack)",
      "lamp (readingLamp)"
     ]
@@ -1211,7 +1209,7 @@
     "things": [
      "small plant (herbs)",
      "candle (candlesticks)",
-     "framed photo (picture)",
+     "framed photo (photoFrame)",
      "book stack (bookStack)"
     ]
    }
@@ -1233,7 +1231,7 @@
      "letter tray (letterTray)",
      "lamp (readingLamp)",
      "vase (vase)",
-     "framed photo (picture)"
+     "framed photo (photoFrame)"
     ]
    }
   ],

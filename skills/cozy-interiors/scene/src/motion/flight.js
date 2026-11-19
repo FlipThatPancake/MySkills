@@ -32,7 +32,7 @@ export function createFlight(ctx, g, cfg = {}) {
     if (yIn === undefined) return { error: `${cfg.name || 'flier'}: the air in front of the opening is blocked (a tall thing stands in line with it)`, update() {} };
     const OUT = at(-450, yIn), GATE = at(380, yIn);
     const sites = cfg.sites ? cfg.sites({ at, free, room, objects, rnd, T, solids, via }) : objects.filter((o) => o.landing && o.landing[1] + preUp >= room.ymin - 100).map((o) => ({ name: o.id, perch: o.id, spot: new T.Vector3(...o.landing), pre: new T.Vector3(o.landing[0], o.landing[1] + preUp, o.landing[2]) })).filter((q) => camOk(q.spot) && camOk(q.pre));
-    if (sillCfg && via.op.kind === 'window') {   // a sill perch faces the window (face): wings spread along the wall, and the take-off keeps that heading until it is clear of the wall
+    if (sillCfg && via.op.kind === 'window' && !via.vent) {   // a sill perch faces the window (face): wings spread along the wall, and the take-off keeps that heading until it is clear of the wall
        // sDn: the perch stands at least 30 mm off the wall plane (measured from it, not from the opening's middle line, which sits about 10 mm behind it)
        const wall0 = dnOf(new T.Vector3(c[0], 0, c[1])), sDn = Math.max(sillCfg.dn, 30 + 0.3 * (cfg.perchR ?? R)), spot = at(sDn - wall0, via.sill + sillCfg.up), pre = at(sillCfg.preDn, via.sill + sillCfg.preUp); if (pre.y >= room.ymin - 100 && free(pre, pad) && free(spot, 8)) sites.push({ name: 'sill', perch: null, spot, pre, dn: sDn, face: [-n[0], -n[1]] }); }
     const flyZone = { lat: 1800, dn0: 350, dn1: 2600 };

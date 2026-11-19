@@ -127,6 +127,10 @@ export function logBasket(kit, { r = 270, h = 400, logs = 7, seed = 3, weave = '
     const wv = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
     const disc = (rf, n = 18) => { const q = []; for (let i = 0; i < n; i++) { const a0 = i / n * 6.2832, a1 = (i + 1) / n * 6.2832; for (const a of [a0, a1]) q.push([B[0] + (v[0] * Math.cos(a) + wv[0] * Math.sin(a)) * lr * rf + u[0] * 2, B[1] + (v[1] * Math.cos(a) + wv[1] * Math.sin(a)) * lr * rf + u[1] * 2, B[2] + (v[2] * Math.cos(a) + wv[2] * Math.sin(a)) * lr * rf + u[2] * 2]); } return q; };
     lg.add(kit.lines([...disc(0.96), ...disc(0.62), ...disc(0.3), [B[0] + v[0] * lr * 0.2 + u[0] * 2, B[1] + v[1] * lr * 0.2 + u[1] * 2, B[2] + v[2] * lr * 0.2 + u[2] * 2], [B[0] + v[0] * lr * 0.9 + u[0] * 2, B[1] + v[1] * lr * 0.9 + u[1] * 2, B[2] + v[2] * lr * 0.9 + u[2] * 2]], 'mid'));   // the end: rings and a split
+    const bk = [], P = (t, a, k) => [A[0] + (B[0] - A[0]) * t + (v[0] * Math.cos(a) + wv[0] * Math.sin(a)) * lr * k, A[1] + (B[1] - A[1]) * t + (v[1] * Math.cos(a) + wv[1] * Math.sin(a)) * lr * k, A[2] + (B[2] - A[2]) * t + (v[2] * Math.cos(a) + wv[2] * Math.sin(a)) * lr * k];
+    for (let i = 0; i < 7; i++) { const a = i / 7 * 6.2832 + lr * 0.1, t0 = 0.04 + R() * 0.3, t1 = 0.55 + R() * 0.4; for (let q = 0; q < 3; q++) bk.push(P(t0 + (t1 - t0) * q / 3, a + 0.05 * q, 1.015), P(t0 + (t1 - t0) * (q + 0.85) / 3, a + 0.05 * q, 1.015)); }   // bark: long broken lines along the log
+    for (let i = 0; i < 3; i++) { const a = R() * 6.2832, f = (j) => [B[0] + (v[0] * Math.cos(a) + wv[0] * Math.sin(a)) * lr * j + u[0] * 2.5, B[1] + (v[1] * Math.cos(a) + wv[1] * Math.sin(a)) * lr * j + u[1] * 2.5, B[2] + (v[2] * Math.cos(a) + wv[2] * Math.sin(a)) * lr * j + u[2] * 2.5]; bk.push(f(0.1), f(0.95)); }   // cracks radiating over the cut face
+    lg.add(kit.lines(bk, 'mid'));
     g.add(kit.content(lg));
   };
   const placed = [], sub = (p, q) => [p[0] - q[0], p[1] - q[1], p[2] - q[2]], dot = (p, q) => p[0] * q[0] + p[1] * q[1] + p[2] * q[2];
@@ -137,7 +141,7 @@ export function logBasket(kit, { r = 270, h = 400, logs = 7, seed = 3, weave = '
   const fits = (A, B, lr) => { for (let i = 0; i <= 20; i++) { const t = i / 20, y = A[1] + (B[1] - A[1]) * t; if (y > h + 8) break; if (Math.hypot(A[0] + (B[0] - A[0]) * t, A[2] + (B[2] - A[2]) * t) > innerR(y) - lr * 1.04 - 4) return false; } return placed.every((q) => segDist(A, B, q.A, q.B) > lr + q.lr + 6); };
   for (let k = 0; k < Math.max(5, Math.min(8, logs)); k++) {
     for (let tries = 0; tries < 80; tries++) {
-      const a = R() * 6.2832, rd = Math.sqrt(R()) * (r - wall - 70), x = Math.cos(a) * rd, z = Math.sin(a) * rd, lr = 40 + R() * 22, len = h * 0.9 + 80 + R() * 160;
+      const a = R() * 6.2832, rd = Math.sqrt(R()) * (r - wall - 70), x = Math.cos(a) * rd, z = Math.sin(a) * rd, lr = 40 + R() * 22, len = h * 0.55 + 100 + R() * 330;
       const la = R() * 6.2832, lean = leanP * (0.3 + R() * 1.4) * (k % 3 === 0 ? 2.3 : 1); let u = [Math.cos(la) * lean, 1, Math.sin(la) * lean]; const m = Math.hypot(...u); u = u.map((q) => q / m);
       const y0 = 44 + lr * Math.hypot(u[0], u[2]) + 1, A = [x, y0, z], B = [x + u[0] * len, y0 + u[1] * len, z + u[2] * len];   // a leaning log's end disc dips lr * sin(tilt) below its axis: lift it onto the basket floor
       if (!fits(A, B, lr)) continue;

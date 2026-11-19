@@ -51,7 +51,12 @@ export function bedsideLamp(kit, { h = 430, shade = 'drum', base = 'gourd', seed
 export function alarmClock(kit, { r = 55, kind = 'analog' } = {}) {
   const g = kit.group(), pts = [];
   if (kind === 'digital') {
-    g.add(kit.rbox(-70, 0, 36, 140, 70, 60, 10)); const z = 37, ys = 34; pts.push(...[[-48, 22], [-18, 22], [4, 22], [34, 22]].flatMap(([x, y]) => [[x, ys + 8, z + 0.1], [x + 24, ys + 8, z + 0.1]]));
+    g.add(kit.rbox(-70, 0, 36, 140, 70, 60, 10)); const z = 37;
+    g.add(kit.box(-58, 12, z + 4, 116, 46, 4, lo));   // dark display window, 4 mm proud of the face
+    const SEG = { 0: 'abcdef', 1: 'bc', 2: 'abdeg', 3: 'abcdg', 4: 'bcfg', 5: 'acdfg', 6: 'acdefg', 7: 'abc', 8: 'abcdefg', 9: 'abcdfg' }, dw = 16, dh = 30, y0 = 20, zz = z + 8.5;
+    const seg = (x, c) => ({ a: [[x, y0 + dh], [x + dw, y0 + dh]], b: [[x + dw, y0 + dh], [x + dw, y0 + dh / 2]], c: [[x + dw, y0 + dh / 2], [x + dw, y0]], d: [[x, y0], [x + dw, y0]], e: [[x, y0], [x, y0 + dh / 2]], f: [[x, y0 + dh / 2], [x, y0 + dh]], g: [[x, y0 + dh / 2], [x + dw, y0 + dh / 2]] }[c]);
+    [[-47, 0], [-25, 7], [8, 3], [30, 5]].forEach(([x, dg]) => { for (const c of SEG[dg]) { const [a, b] = seg(x, c); pts.push([a[0], a[1], zz], [b[0], b[1], zz]); } });
+    pts.push([-2, y0 + 9, zz], [2, y0 + 9, zz], [-2, y0 + 21, zz], [2, y0 + 21, zz]);
   } else {
     const cy = r + 6, z = 46; g.add(kit.cyl(0, cy, 44, r, 44, { axis: 'z', seg: 32 }));
     pts.push(...ring(r * 0.78, 28, (x, y) => [x, cy + y, z]), [0, cy, z], [0, cy + r * 0.5, z], [0, cy, z], [r * 0.34, cy - r * 0.1, z]);

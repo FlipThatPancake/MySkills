@@ -15,11 +15,11 @@ export default {
     if (pw < 300) return { error: `paw: the curtain panel is ${Math.round(pw)} mm wide: too narrow to hide a cat (a panel at least 300 mm wide: curtain w 1370 or more)`, update() {} };
     const pc = new T.Vector3(ex - side * pw / 2, 0, 0).applyMatrix4(M); let sillY = 0;
     for (const o of ctx.openings) {
-      const lat = (pc.x - o.centre[0]) * o.u[0] + (pc.z - o.centre[1]) * o.u[1], dn = (pc.x - o.W.to[0]) * o.W.n[0] + (pc.z - o.W.to[1]) * o.W.n[1];
-      if (Math.abs(dn) > 500 || Math.abs(lat) > o.width / 2 + pw / 2) continue;   // not this wall, or beside this opening
-      const glass = o.op.style === 'wall' || o.op.style === 'slider' || o.op.style === 'french' || (o.op.kind === 'window' && o.sill < 150);
+      const lat = (pc.x - o.real.centre[0]) * o.u[0] + (pc.z - o.real.centre[1]) * o.u[1], dn = (pc.x - o.W.to[0]) * o.W.n[0] + (pc.z - o.W.to[1]) * o.W.n[1];
+      if (Math.abs(dn) > 500 || Math.abs(lat) > o.real.width / 2 + pw / 2) continue;   // not this wall, or beside this opening
+      const glass = o.op.style === 'wall' || o.op.style === 'slider' || o.op.style === 'french' || (o.op.kind === 'window' && o.real.sill < 150);
       if (glass) return { error: `paw: this curtain panel hangs on a glass wall or glass door (${o.id}): no wall for a cat to stand behind (hang it by a solid wall, or at a window with a sill)`, update() {} };
-      if (o.op.kind === 'window') sillY = Math.max(sillY, o.sill);   // the cat stands on the sill
+      if (o.op.kind === 'window') sillY = Math.max(sillY, o.real.sill);   // the cat stands on the sill
     }
     const shoulder = new T.Vector3(px, sillY + 150, 44).applyMatrix4(M);
     const ax = new T.Vector3(1, 0, 0).transformDirection(M), az = new T.Vector3(0, 0, 1).transformDirection(M);   // world directions of the curtain's x and z

@@ -27,8 +27,8 @@ export function vase(kit, { h = 280, stems = 5, seed = 3 } = {}) {   // a bottle
 export function bookStack(kit, { n = 4, seed = 5 } = {}) {   // books lying on each other, each turned a little; the top one a thin paperback
   const g = kit.group(), R = rnd(seed); let y = 0;
   for (let i = 0; i < n; i++) {
-    const w = 240 - i * 14 + R() * 20, d = 170 - i * 8, th = i === n - 1 ? 18 : 28 + R() * 20, m = kit.box(-w / 2, y, d / 2, w, th, d, i % 2 ? lo : {});
-    m.rotation.y = (R() - 0.5) * 0.34; g.add(m); y += th;
+    const w = 210 + R() * 50 - i * 8, d = 155 + R() * 30 - i * 4, th = i === n - 1 && R() < 0.6 ? 18 : 22 + R() * 34, m = kit.box(-w / 2, y, d / 2, w, th, d, i % 2 ? lo : {});
+    m.rotation.y = (R() - 0.5) * 0.3; g.add(m); y += th;
   }
   return kit.merge(g);
 }
@@ -106,21 +106,19 @@ export function pouf(kit, { r = 280, h = 380 } = {}) {
 }
 
 // A photo standing on a shelf, chest or desk: a thin frame leaning back about 10-15 degrees on a stand-leg hinged to its back, so it stands by itself (a wall `picture` has no stand and never stands on a surface). Origin: the middle of its footprint on the surface, the photo facing +z.
-// form 0 hills and a sun | 1 head and shoulders | 2 sea with a sail. w 130-260, h 160-300; tilt in degrees.
+// form 0 the great wave in ink | 1 the starry night in sepia | 2 the sunrise harbour in a soft tone (crops of the paintings in paintings.js, toned like old photographs). w 130-260, h 160-300; tilt in degrees.
 import { rod } from './parts.js';
+import { PAINTINGS } from './paintings.js';
+import { artPlane } from './artPlane.js';
+const PHOTO = [{ p: 0, crop: { x: 0.04, y: 0.1, w: 0.55 }, mode: 'ink' }, { p: 1, crop: { x: 0.0, y: 0.12, w: 0.5 }, mode: 'sepia' }, { p: 2, crop: { x: 0.45, y: 0.3, w: 0.5 }, mode: 'soft' }];   // a crop of each painting and the tone that makes it an old photograph
 const tag = (o, name) => { o.userData.part = name; return o; };   // names a part so selftest can check the asset has the parts that make it recognisable
 export function photoFrame(kit, { form = 0, w = 180, h = 230, tilt = 12, seed = 1 } = {}) {
   const T = kit.THREE, R = rnd(seed), F = 14, D = 16, t = tilt * Math.PI / 180, g = kit.group(), fr = kit.group();
   fr.add(tag(kit.rbox(-w / 2, 0, 0, w, h, D, 3), 'frame'));   // the frame: front face at z 0, reaching back
   fr.add(kit.box(-w / 2 + F, F, 4, w - 2 * F, h - 2 * F, 4, lo));   // the mat, 4 mm proud of the frame's face
   fr.add(tag(kit.box(-w / 2 + F + 12, F + 12, 7, w - 2 * F - 24, h - 2 * F - 24, 3, lo), 'print'));   // the print, 3 mm proud of the mat
-  const x0 = -w / 2 + F + 12, x1 = w / 2 - F - 12, y0 = F + 12, y1 = h - F - 12, z = 11, pts = [], cx = (x0 + x1) / 2, ln = (a, b) => pts.push([a[0], a[1], z], [b[0], b[1], z]);
-  const ring = (x, y, r, n = 20) => { for (let i = 0; i < n; i++) { const a = i / n * 6.2832, b = (i + 1) / n * 6.2832; ln([x + r * Math.cos(a), y + r * Math.sin(a)], [x + r * Math.cos(b), y + r * Math.sin(b)]); } };
-  const wave = (ya, amp, ph, xs0 = x0, xs1 = x1) => { let px = xs0, py = ya; for (let i = 1; i <= 10; i++) { const nx = xs0 + (xs1 - xs0) * i / 10, ny = ya + Math.sin(i * 0.9 + ph) * amp; ln([px, py], [nx, ny]); px = nx; py = ny; } };
-  if (form === 1) { const hr = Math.min((x1 - x0) * 0.2, (y1 - y0) * 0.14), hy = y0 + (y1 - y0) * 0.58; ring(cx, hy, hr); for (let i = 0; i < 14; i++) { const a = Math.PI * (0.05 + 0.9 * i / 14), b = Math.PI * (0.05 + 0.9 * (i + 1) / 14), sr = (x1 - x0) * 0.36; ln([cx + sr * Math.cos(a), y0 + sr * 0.7 * Math.sin(a) * 0.9 + 0], [cx + sr * Math.cos(b), y0 + sr * 0.7 * Math.sin(b) * 0.9 + 0]); } }
-  else if (form === 2) { const hz = y0 + (y1 - y0) * 0.45; ln([x0, hz], [x1, hz]); wave(y0 + (y1 - y0) * 0.2, (y1 - y0) * 0.03, R() * 3); const sx = cx + (R() - 0.5) * (x1 - x0) * 0.3, sy = hz + 4, sh = (y1 - y0) * 0.28; ln([sx, sy], [sx, sy + sh]); ln([sx, sy + sh], [sx + sh * 0.5, sy + 8]); ln([sx + sh * 0.5, sy + 8], [sx, sy + 8]); ln([sx - 20, sy], [sx + sh * 0.5 + 12, sy]); }
-  else { wave(y0 + (y1 - y0) * 0.28, (y1 - y0) * 0.05, R() * 3); wave(y0 + (y1 - y0) * 0.46, (y1 - y0) * 0.05, 1 + R() * 3); ring(x1 - (x1 - x0) * 0.22, y1 - (y1 - y0) * 0.2, Math.min((x1 - x0) * 0.09, (y1 - y0) * 0.09)); }
-  fr.add(kit.lines(pts, 'mid'));
+  const pw = w - 2 * F - 24, ph = h - 2 * F - 24, ph0 = PHOTO[form % PHOTO.length], art = artPlane(kit, PAINTINGS[ph0.p % PAINTINGS.length], { w: pw, h: ph, fit: 'cover', crop: ph0.crop, mode: ph0.mode, px: 256 });   // a photograph: a crop of a classic painting in a sepia, ink or soft tone
+  art.position.set(0, F + 12 + ph / 2, 10.5); art.userData.part = 'photo';   // 3.5 mm in front of the print's face; added after the merge (a painted plane keeps its own material)
   tag(fr, 'tilted');   // selftest reads this group's lean
   fr.rotation.x = -t; fr.position.set(0, D * Math.sin(t), 0);   // leaning back about its lowest edge (the back-bottom edge); that edge is lifted to rest on the surface
   g.add(fr);
@@ -129,5 +127,5 @@ export function photoFrame(kit, { form = 0, w = 180, h = 230, tilt = 12, seed = 
   const top = [lift + s * up[0] - (D - 2) * nrm[0], s * up[1] - (D - 2) * nrm[1]], r = 3, foot = [r, top[1] - h * 0.32];
   g.add(tag(rod(kit, [0, top[0], top[1]], [0, foot[0], foot[1]], r, r, 'lo'), 'leg'));
   const zmin = Math.min(foot[1] - r, -h * Math.sin(t) - D * Math.cos(t)), root = kit.group(); g.position.z = -zmin / 2; root.add(g);   // the footprint's middle is the origin
-  return kit.merge(root);
+  const out = kit.merge(root), hold = kit.group(); hold.position.set(0, lift, g.position.z); hold.rotation.x = -t; hold.add(art); out.add(hold); return out;
 }

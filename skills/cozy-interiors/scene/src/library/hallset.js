@@ -74,11 +74,13 @@ function peg(kit, len = 62) { const g = kit.group(); g.add(kit.cyl(0, 0, len / 2
 // a peg centred on the wall face at y 0; axis z: cyl(x,y,z,...,{axis:'z'}) takes the centre z; keep pegs simple: a short post and a round cap
 function pegAt(kit, x, y, len) { const g = kit.group(); g.add(kit.cyl(x, y, len, 9, len, { axis: 'z', seg: 10 })); g.add(kit.cyl(x, y, len, 14, 18, { axis: 'z', seg: 12, ...lo })); return g; }   // cyl on the z axis: z is its front face, it reaches back by its height, so the post spans 0 to len
 
-export function hungHat(kit, { form = 'brim', tone = 'lo', seed = 1 } = {}) {   // a hat hung on a peg: a brimmed hat with its crown out, or a knitted beanie with a bobble
+export function hungHat(kit, { form = 'brim', tone = 'lo', seed = 1 } = {}) {   // E7: the beanie is retired (it read as a sack); every form draws the brimmed hat
+  form = 'brim';
+  void 0;   // a hat hung on a peg: a brimmed hat with its crown out, or a knitted beanie with a bobble
   const g = kit.group(), R = rnd(seed), T = kit.THREE;
   g.add(pegAt(kit, 0, 0, 96));
   if (form === 'brim') {
-    const br = 135 + R() * 30, h = brimHat(kit, { br, cr: 76, ch: 100, tone, seed }), pv = kit.group(); pv.add(h); pv.rotation.x = Math.PI / 2 - 0.52; pv.position.set(0, -(br - 14), 100); g.add(pv);
+    const br = 150 + R() * 35, h = brimHat(kit, { br, cr: 72, ch: 100, tone, seed }), pv = kit.group(); pv.add(h); pv.rotation.x = Math.PI / 2 - 0.52; pv.position.set(0, -(br - 14), 100); g.add(pv);
   } else {
     const r = 88, pr = [[0.01, -250], [r * 0.9, -246], [r, -226], [r * 1.0, -190], [r * 1.04, -120], [r * 0.9, -60], [r * 0.5, -22], [0.01, -8]].map(([x, y]) => new T.Vector2(x, y)), sack = kit.solid(new T.LatheGeometry(pr, 30), 0, 0, 0, { smooth: true, tone }); sack.scale.z = 0.42; sack.position.set(0, 0, 70); g.add(sack);
     const rb2 = []; for (let k = 0; k < 5; k++) { const y = -232 + k * 8 + (k ? 0 : 0), rr = r * (0.9 + 0.1 * Math.min(1, k / 2)) + 1; for (let q = 0; q < 24; q++) { const a1 = q / 24 * 6.2832, a2 = (q + 1) / 24 * 6.2832; rb2.push([Math.cos(a1) * rr, y, 70 + Math.sin(a1) * rr * 0.42], [Math.cos(a2) * rr, y, 70 + Math.sin(a2) * rr * 0.42]); } } g.add(kit.lines(rb2, 'mid'));
