@@ -185,3 +185,30 @@ function cross(p, q, a, b) {   // segment p-q crosses segment a-b strictly insid
   const d = (u, v, w) => (v[0] - u[0]) * (w[1] - u[1]) - (v[1] - u[1]) * (w[0] - u[0]), d1 = d(a, b, p), d2 = d(a, b, q), d3 = d(p, q, a), d4 = d(p, q, b);
   return d1 * d2 < -1e-6 && d3 * d4 < -1e-6;
 }
+
+// ---- the glide through the house plan, for every move the arrow keys and the area buttons make (rule 'glide'): sampled at k = 0.1 to 0.9, the camera never stands inside a solid wall, the view centre is never behind a wall that is not fading, and the move turns the view and leaves the straight line (a pure sideways slide fails)
+const OPEN_TOP = { arch: 2250, door: 2100 };
+const segDist = (p, a, b) => { const l2 = (b[0] - a[0]) ** 2 + (b[1] - a[1]) ** 2, t = l2 ? Math.max(0, Math.min(1, ((p[0] - a[0]) * (b[0] - a[0]) + (p[1] - a[1]) * (b[1] - a[1])) / l2)) : 0; return Math.hypot(p[0] - a[0] - t * (b[0] - a[0]), p[1] - a[1] - t * (b[1] - a[1])); };
+export async function glideIssues(page, sceneFile) {
+  const S = JSON.parse(readFileSync(sceneFile, 'utf8')), out = [], P = S.home.plan; if (!P?.links?.length) return out;
+  const H = S.home.height || 2700, walls = S.home.walls.map((w) => { const len = Math.hypot(w.to[0] - w.from[0], w.to[1] - w.from[1]), u = [(w.to[0] - w.from[0]) / len, (w.to[1] - w.from[1]) / len]; return { id: w.id, from: w.from, to: w.to, len, u, n: [u[1], -u[0]], gaps: (w.openings || []).filter((o) => OPEN_TOP[o.kind]).map((o) => ({ lo: o.at - (o.width || 1000) / 2, hi: o.at + (o.width || 1000) / 2, top: OPEN_TOP[o.kind] })) }; });
+  const gapAt = (W, p, y) => { const at = (p[0] - W.from[0]) * W.u[0] + (p[1] - W.from[1]) * W.u[1]; return W.gaps.some((g) => at >= g.lo && at <= g.hi && y < g.top); };
+  const moves = []; const seen = new Set(); for (const l of P.links) { for (const [a, b] of [[l.a, l.b], [l.b, l.a]]) if (!seen.has(a + b)) { seen.add(a + b); moves.push([a, b]); } }
+  for (let i = 0; i + 1 < (P.walk || []).length; i++) { const k = P.walk[i] + P.walk[i + 1]; if (!seen.has(k)) { seen.add(k); moves.push([P.walk[i], P.walk[i + 1]]); } }
+  for (const [a, b] of moves) {
+    const s = await page.evaluate(([a, b]) => { const c = window.cozyScene; c.setArea(a, true); c.startGlide(b, true); const r = []; for (const k of [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]) { c.glideAt(k); c.home.update(c.camera, c.controls.target); r.push({ k, p: c.camera.position.toArray(), t: c.controls.target.toArray(), fade: c.home.walls.map((w) => w.vis.value) }); if (k === 1) break; } return r; }, [a, b]);
+    const bad = [], tag = `${a} -> ${b}`;
+    for (const q of s.slice(1, -1)) {
+      for (const W of walls) {
+        if (q.p[1] < H && segDist([q.p[0], q.p[2]], W.from, W.to) < 60 && !gapAt(W, [q.p[0], q.p[2]], q.p[1])) { bad.push(`the camera stands inside ${W.id} at k ${q.k}`); break; }
+        const side = (p) => (p[0] - W.from[0]) * W.n[0] + (p[2] - W.from[1]) * W.n[1];   // the room is on the +n side; a wall fades once the camera is past it
+        if (side(q.p) > 150 && side(q.t) < -150) { const t = side(q.p) / (side(q.p) - side(q.t)), x = [q.p[0] + (q.t[0] - q.p[0]) * t, q.p[2] + (q.t[2] - q.p[2]) * t], y = q.p[1] + (q.t[1] - q.p[1]) * t, along = (x[0] - W.from[0]) * W.u[0] + (x[1] - W.from[1]) * W.u[1]; if (along > 0 && along < W.len && y < H && !gapAt(W, x, y) && q.fade[walls.indexOf(W)] > 0.5) { bad.push(`${W.id} stands between the camera and the view centre at k ${q.k} and is not fading`); break; } }
+      }
+      if (bad.length) break;
+    }
+    if (bad.length) out.push({ rule: 'glide', what: `${tag}: ${bad[0]}` });
+    const head = (q) => Math.atan2(q.t[0] - q.p[0], q.t[2] - q.p[2]) * 180 / Math.PI, h0 = head(s[0]), turn = Math.max(...s.map((q) => Math.abs((((head(q) - h0) % 360) + 540) % 360 - 180))), A = s[0].p, B = s[s.length - 1].p, chord = Math.hypot(B[0] - A[0], B[2] - A[2]) || 1, dev = Math.max(...s.map((q) => Math.abs((q.p[0] - A[0]) * (B[2] - A[2]) - (q.p[2] - A[2]) * (B[0] - A[0])) / chord));
+    if (turn < 20 && dev < 0.08 * chord) out.push({ rule: 'glide', what: `${tag}: a pure sideways slide (the view turns ${Math.round(turn)} degrees and the camera keeps to one line): the plan should turn the neighbours apart (different walls back them, or a different entry)` });
+  }
+  return out;
+}

@@ -69,7 +69,7 @@ export function buildHome(kit, home, registry, areas = []) {
       b.group.rotation.y = -Math.PI / 2; b.group.position.set(xc, 0, 0);
       W.frames.add(b.group); W.built.push({ op, group: b.group, openables: b.openables }); openables.push(...b.openables); 
       W.holes.push(b.hole.map(([z, y]) => [xc - z, y]));
-      if (op.kind !== 'window' && !(op.sill > 0 || /pass$/.test(op.style || ''))) W.through.push([xc - b.width / 2, xc + b.width / 2]);
+      if (op.kind !== 'window' && !(op.sill > 0 || /pass$/.test(op.style || ''))) W.through.push([xc - b.width / 2, xc + b.width / 2, b.height]);
       if (op.kind === 'arch' && !(op.sill > 0 || /pass$/.test(op.style || ''))) W.walk.push([xc - b.width / 2, xc + b.width / 2]);   // a way through: the floor runs on beyond it
     }
     const square = (o) => Math.abs(o.d[0] * W.d[0] + o.d[1] * W.d[1]) < 0.9;   // a corner, square or wide (120 degrees); two walls in a line are no corner
@@ -152,11 +152,21 @@ export function buildHome(kit, home, registry, areas = []) {
       floorDraw?.update(camera);
       const dist = camera.position.distanceTo(target), span = Math.max(1, dist * Math.sin(w3));
       for (const W of walls) {
-        const d = (camera.position.x - W.to[0]) * W.n[0] + (camera.position.z - W.to[1]) * W.n[1], s = step((d + span / 2) / span);
+        const d = (camera.position.x - W.to[0]) * W.n[0] + (camera.position.z - W.to[1]) * W.n[1];
+        let s = step((d + span / 2) / span);
+        if (s > 0 && blocksView(W, camera.position, target, home.height || 2700)) s = 0;   // a wall that stands between the camera and the view centre (not through one of its openings) fades too, so a glide through the house never looks at the back of a wall
         if (s !== W.last) { W.last = s; W.vis.value = s; W.fa.set(s); }
       }
     },
   };
+}
+
+// does the wall W (a plan segment from `to` to `from`, with its ways through) stand between the camera and the view centre, below its top?
+export function blocksView(W, cam, tgt, top) {
+  const side = (p) => (p.x - W.to[0]) * W.n[0] + (p.z - W.to[1]) * W.n[1], a = side(cam), b = side(tgt);
+  if (!(a > 150 && b < -150)) return false;
+  const t = a / (a - b), x = cam.x + (tgt.x - cam.x) * t, y = cam.y + (tgt.y - cam.y) * t, z = cam.z + (tgt.z - cam.z) * t, s = -((x - W.to[0]) * W.d[0] + (z - W.to[1]) * W.d[1]);
+  return s > 0 && s < W.len && y < top && !W.through.some(([lo, hi, h]) => s >= lo && s <= hi && y < (h || top));
 }
 
 // An area's fade numbers, from its bounds { x0, x1, z0, z1, top }: the planes' box and the view fade's sphere, all in world mm.

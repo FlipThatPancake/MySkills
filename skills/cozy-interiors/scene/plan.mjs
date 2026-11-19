@@ -85,9 +85,10 @@ export function planHome(out, seed, kinds, opts = {}) {
         const kd = forceKind(qU, qV); if (!kd) continue; const wd = LINK_WIDTH[kd.style || 'door'], xu = spot(u, wU, wd), xv = spot(v, wV, wd); if (xu === null || xv === null) continue;
         const gU = wallGeo(wU, ...size[u]), pw = toWorld(placed[u].pose, [gU.at(xu)[0] + placed[u].rect[0] * 0, gU.at(xu)[1]]), nU = dirWorld(placed[u].pose, gU.inward);
         const pose = matePose([0, 0, ...size[v]], { wall: wV, x: xv }, pw, nU); if (!clear(v, pose, [0, 0, ...size[v]])) continue;
+        if (loopHome && k < 34) { placed[v] = { id: v, pose, rect: [0, 0, ...size[v]], foot: foot(pose, [0, 0, ...size[v]]) }; const hit = Object.keys(placed).some((w) => w !== v && w !== u && roomOf[w] !== roomOf[v] && touch(v, w, true)); delete placed[v]; if (!hit) continue; }   // a home that wants a loop: this spot is one where the new area's wall also meets another
         take(u, wU, xu, wd); take(v, wV, xv, wd); const cu = qU.door ? 'door' : qU.arch ? 'arch' : null, cv = qV.door ? 'door' : qV.arch ? 'arch' : null; qU.door = qV.door = false; qU.arch = qV.arch = null; putArea(v, pose); links.push({ a: u, b: v, ...kd, useA: cu && [wU, cu], useB: cv && [wV, cv], width: wd, aWall: wU, aX: xu, bWall: wV, bX: xv, tree: true }); return true; }
       return false; };
-    const touch = (u, v) => {   // two areas already placed whose walls happen to stand back to back: a link between them
+    const touch = (u, v, dry = false) => {   // two areas already placed whose walls happen to stand back to back: a link between them
       const cand = [];
       for (const [wU, qU] of Object.entries(walls(u))) for (const [wV, qV] of Object.entries(walls(v))) { if (qU.blocked || qV.blocked) continue;
         const gU = wallGeo(wU, ...size[u]), gV = wallGeo(wV, ...size[v]), U = placed[u], V = placed[v], a0 = toWorld(U.pose, gU.at(0)), a1 = toWorld(U.pose, gU.at(gU.len)), b0 = toWorld(V.pose, gV.at(0)), b1 = toWorld(V.pose, gV.at(gV.len)), nU = dirWorld(U.pose, gU.inward), nV = dirWorld(V.pose, gV.inward);
@@ -96,8 +97,9 @@ export function planHome(out, seed, kinds, opts = {}) {
         const along = (p) => (p[0] - a0[0]) * t[0] + (p[1] - a0[1]) * t[1], uLo = 0, uHi = Math.abs(along(a1)), [vLo, vHi] = [along(b0), along(b1)].sort((x, y) => x - y), lo = Math.max(uLo, vLo), hi = Math.min(uHi, vHi); if (hi - lo < TOUCH) continue;
         for (let k = 0; k < 8; k++) { const s = lo + EDGE + rnd() * (hi - lo - 2 * EDGE), p = [a0[0] + t[0] * s * Math.sign(along(a1) || 1), a0[1] + t[1] * s * Math.sign(along(a1) || 1)], xu = Math.round(Math.hypot(p[0] - a0[0], p[1] - a0[1]) / 50) * 50, xv = Math.round(Math.hypot(p[0] - b0[0], p[1] - b0[1]) / 50) * 50, kd = forceKind(qU, qV); if (!kd) continue; const wd = LINK_WIDTH[kd.style || 'door'];
           if (free(u, wU, xu, wd) && free(v, wV, xv, wd)) { cand.push({ wU, wV, xu, xv, kd, wd, cu: qU.door ? [wU, 'door'] : qU.arch ? [wU, 'arch'] : null, cv: qV.door ? [wV, 'door'] : qV.arch ? [wV, 'arch'] : null }); break; } } }
-      if (!cand.length) return false; const c = cand[Math.floor(rnd() * cand.length)]; for (const q of [walls(u)[c.wU], walls(v)[c.wV]]) { q.door = false; q.arch = null; } take(u, c.wU, c.xu, c.wd); take(v, c.wV, c.xv, c.wd); links.push({ a: u, b: v, ...c.kd, useA: c.cu, useB: c.cv, width: c.wd, aWall: c.wU, aX: c.xu, bWall: c.wV, bX: c.xv, tree: false }); return true; };
+      if (!cand.length) return false; if (dry) return true; const c = cand[Math.floor(rnd() * cand.length)]; for (const q of [walls(u)[c.wU], walls(v)[c.wV]]) { q.door = false; q.arch = null; } take(u, c.wU, c.xu, c.wd); take(v, c.wV, c.xv, c.wd); links.push({ a: u, b: v, ...c.kd, useA: c.cu, useB: c.cv, width: c.wd, aWall: c.wU, aX: c.xu, bWall: c.wV, bX: c.xv, tree: false }); return true; };
     // the roots first: every area of the open room is placed; then the rest, one at a time, joined to what stands (the touches asked for first)
+    const loopHome = rnd() < 0.6;   // some homes get a second way round
     const todo = new Set(ids.filter((id) => !placed[id])), pend = required.slice();
     const wt = (id) => (/hallway/.test(id) ? 3 : 1);
     while (todo.size) {
@@ -107,7 +109,7 @@ export function planHome(out, seed, kinds, opts = {}) {
       for (const u of [...new Set(tryOrder)]) if (attach(u, v)) { ok = true; break; } if (!ok) return null; todo.delete(v);
     }
     for (const [a, b] of pend) if (!linkedPair(a, b) && !touch(a, b)) return null;   // a touch asked for between two areas that already stand: their walls must meet
-    let extra = 0; for (const [a, b] of shuffled(ids.flatMap((a, i) => ids.slice(i + 1).map((b) => [a, b])), rnd)) { if (extra >= 2 || roomOf[a] === roomOf[b] || linkedPair(a, b)) continue; if (rnd() < 0.5 && touch(a, b)) extra++; }   // walls that meet by chance may give a second way round
+    let extra = 0; for (const [a, b] of shuffled(ids.flatMap((a, i) => ids.slice(i + 1).map((b) => [a, b])), rnd)) { if (extra >= (loopHome ? 2 : 1) || roomOf[a] === roomOf[b] || linkedPair(a, b)) continue; if (rnd() < (loopHome ? 0.9 : 0.3) && touch(a, b)) extra++; }   // walls that meet by chance may give a second way round
     return { placed, links, order, size };
   }
 
@@ -115,7 +117,7 @@ export function planHome(out, seed, kinds, opts = {}) {
     const rnd = mkRnd((seed ^ 0x2545f491) >>> 0), areas = {}, linkId = (l) => `${l.a}-${l.b}`;
     links.forEach((l) => { l.id = linkId(l); if (l.kind !== 'open') { l.aF = Math.round(l.aX / wallGeo(l.aWall, ...size[l.a]).len * 1e5) / 1e5; l.bF = Math.round(l.bX / wallGeo(l.bWall, ...size[l.b]).len * 1e5) / 1e5; } });
     for (const id of order) areas[id] = { room: roomOf[id], fit: size[id], parent: null, via: null, entry: null };
-    for (const l of links) { const c = areas[l.b]; c.parent = l.a; c.via = l.id; c.entry = l.kind === 'open' ? { kind: 'open', share: l.share } : { wall: l.bWall, x: l.bX, f: l.bF }; if (l.tree && l.kind !== 'open') c.mate = { from: l.a, wall: l.aWall, aF: l.aF, via: { wall: l.bWall, f: l.bF } }; }
+    for (const l of links) { if (!l.tree) continue; const c = areas[l.b]; c.parent = l.a; c.via = l.id; c.entry = l.kind === 'open' ? { kind: 'open', share: l.share } : { wall: l.bWall, x: l.bX, f: l.bF }; if (l.tree && l.kind !== 'open') c.mate = { from: l.a, wall: l.aWall, aF: l.aF, via: { wall: l.bWall, f: l.bF } }; }
     // each area looks away from where it is entered: the view azimuth (in the area's own frame; 0 is the front, positive toward its right) comes from the entry point
     const az = {}, clamp = (v, m) => Math.max(-m, Math.min(m, v));
     for (const id of order) { const [w, d] = size[id], e = areas[id].entry, c = [w * 0.5, d * 0.4];
