@@ -30,6 +30,39 @@ function consistent(a, id, home) {   // home: the assets of this home already de
     for (const k of lampAt.slice(1)) { const at = a.groups[k].lastIndexOf(', on the '), place = at < 0 ? '' : a.groups[k].slice(at + 2), pick = L.find((q) => !/\blamp\b/.test(q) && !a.groups.some((g) => g.startsWith(q))); if (pick) a.groups[k] = place ? `${pick}, ${place}` : pick; } }
   if ((a.groups || []).some((g) => /floor plant/.test(g)) && !a.plantAt.includes('floor')) { a.plantAt = [...a.plantAt, 'floor']; a.plants = a.plantAt.length; }
 }
+
+// round 6 item 12: the checks' variety rules are about the whole home, so the roll applies them to the whole home too. A basket, pouf, trolley, crate, stool or footstool stays in one area (three at most); any other small piece that stands on a surface (a mug, a jug, a fruit bowl) comes twice at most. A slot over the cap takes the next phrase of its own pool that keeps every cap. rollstats.mjs proves it over many seeds.
+export const ONE_AREA = new Set(['basket', 'pouf', 'trolley', 'crate', 'stepStool', 'footstool', 'stool']);
+export const STAMP_SKIP = /^(tablecloth|tableRunner|cloth|cushion|benchCushion|floorCushion|bookStack|books|openBook|scuff|leaf|pendantLamp|pan|hob|hood|plate|cup|saltPepper|foldedThrow|teaTowel|curtain|heightChart|cuttingBoard|cat|picture|mirror)$/;
+export const SMALL_ON = new Set(['jug', 'mug', 'vase', 'candlesticks', 'fruitBowl', 'jars', 'herbs', 'mokaPot', 'keyBowl', 'breadBasket', 'glassesBook', 'kettle', 'teaSet', 'globe']);
+export function phraseAssets(t) {   // the assets a phrase names for certain (one choice only): its bracket name, or the single-choice parts of its tables.json names entry
+  const br = (t.match(/\(([A-Za-z, ]+)\)\s*$/) || [])[1];
+  if (br) return br.split(',').map((x) => x.trim());
+  const m = T.names.things[t] ?? T.names.groups[t] ?? T.names.hero[t];
+  return m ? m.split('+').filter((p) => !p.includes('|')) : [];
+}
+function homeCaps(out, kinds, describe) {
+  const count = {}, areasOf = {};   // asset -> number of slots, asset -> areas that hold it
+  const stampable = (as) => ONE_AREA.has(as) || (!STAMP_SKIP.test(as) && SMALL_ON.has(as));
+  const over = (as, id, extra = 0) => { if (!stampable(as)) return false; const n = (count[as] || 0) + 1 + extra, ar = new Set(areasOf[as] || []); ar.add(id); return ONE_AREA.has(as) ? (ar.size > 1 && n > 1) || n > 3 : n > 2; };
+  const add = (as, id) => { if (!stampable(as)) return; count[as] = (count[as] || 0) + 1; (areasOf[as] ||= new Set()).add(id); };
+  const bad = (t, id) => { const l = phraseAssets(t); return l.some((as) => over(as, id, l.filter((q) => q === as).length - 1)); };
+  const same = (x, y) => phraseAssets(x).join() === phraseAssets(y).join();
+  const onceElsewhere = (as, id) => ONCE.test(as) && kinds.some((q) => q !== id && (out.areas[q].still || []).some((st) => st.things.some((w) => phraseAssets(w).includes(as))));
+  for (const id of kinds) {
+    const a = out.areas[id], t = T[id], hasSconce = () => /wallSconce/.test(JSON.stringify([a.wallArr, a.more, a.accents])), hasBedside = () => (a.still || []).some((st) => st.things.some((w) => /\(bedsideLamp\)/.test(w)));
+    const mineAs = new Set(), slot = (get, set, pool, keep = () => true) => { const cur = get(); if (phraseAssets(cur).length && phraseAssets(cur).every((x) => mineAs.has(x))) return;   /* the area already holds that asset: one object satisfies both phrases (a mug sign and a mug on a table) */ if (bad(cur, id)) { const alt = pool.find((q) => keep(q) && !bad(q, id)); if (alt) set(alt); } phraseAssets(get()).forEach((as) => { add(as, id); mineAs.add(as); }); };
+    for (const st of a.still || []) { const pool = (T.stillLife[id].tops.find((q) => q.id === st.top) || { things: [] }).things; for (let k = 0; k < st.things.length; k++) slot(() => st.things[k], (v) => { st.things[k] = v; }, pool, (q) => { const as = phraseAssets(q); return !(a.still || []).some((o) => o.things.some((r) => same(r, q))) && !as.some((x) => onceElsewhere(x, id)) && !(as.includes('readingLamp') && a.light) && !(as.includes('cuttingBoard') && a.board) && !(as.includes('bedsideLamp') && hasSconce()); }); }
+    for (let k = 0; k < a.accents.length; k++) slot(() => a.accents[k], (v) => { a.accents[k] = v; }, t.accents, (q) => !a.accents.includes(q));
+    if (a.foreground) slot(() => a.foreground, (v) => { a.foreground = v; }, t.foreground);
+    for (let k = 0; k < (a.more || []).length; k++) slot(() => a.more[k], (v) => { a.more[k] = v; }, t.more || [], (q) => !a.more.includes(q) && !a.accents.includes(q) && !(/\(wallSconce\)/.test(q) && hasBedside()));
+    { const taken = new Set(kinds.flatMap((q) => out.areas[q].signs || [])); for (let k = 0; k < (a.signs || []).length; k++) slot(() => a.signs[k], (v) => { taken.delete(a.signs[k]); a.signs[k] = v; taken.add(v); }, T.signs.filter((x) => x.in.includes(id)).map((x) => x.id), (q) => !taken.has(q));
+      for (let k = a.signs.length - 1; k >= 0 && a.signs.length > 2; k--) if (!phraseAssets(a.signs[k]).every((x) => mineAs.has(x) && count[x] <= 2) && bad(a.signs[k], id)) a.signs.splice(k, 1); }   /* no sign is left to swap in: the area keeps two */
+    for (let k = 1; k < (a.groups || []).length; k++) { const g = a.groups[k], at = g.lastIndexOf(', on the '), place = at < 0 ? '' : g.slice(at), base = at < 0 ? g : g.slice(0, at), lampy = /\blamp\b/.test(base); slot(() => base, (v) => { a.groups[k] = v + place; }, T.groups.list[id] || [], (q) => !a.groups.some((o) => o.startsWith(q)) && /\blamp\b/.test(q) === lampy); }
+    if ((a.groups || []).some((g) => /floor plant/.test(g)) && !a.plantAt.includes('floor')) { a.plantAt = [...a.plantAt, 'floor']; a.plants = a.plantAt.length; }
+  }
+  for (const id of kinds) out.areas[id].say = describe(id, out.areas[id]);
+}
 export function roll(seed, kinds = ['kitchen', 'dining', 'living']) {
   let s = seed >>> 0;
   const rnd = () => { s = (s + 0x6d2b79f5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
@@ -87,6 +120,7 @@ export function roll(seed, kinds = ['kitchen', 'dining', 'living']) {
     a.say = describe(id, a);
     out.areas[id] = a;
   }
+  homeCaps(out, kinds, describe);   // round 6 item 12: what the checks allow across the whole home (variety: one area per basket, pouf, trolley, stool..., two of any small piece)
   dealMotion(out, seed);   // living things (motion-roll.mjs): 2 or 3 kinds per area, from tables.json motion; its own random stream, so no older pick moves
   dealOpenPlan(out, seed, kinds, describe);   // open plan (openplan.mjs): about 2 homes in 5 with two joinable areas; its own random stream, so no older pick moves
   for (const b of out.openPlan?.behind || []) { const a = out.areas[b]; if (a && !(a.passages || []).length) { a.openings = [...a.openings, { kind: 'arch', on: 'first' }]; a.passages = [T.passages[0].style]; a.say += `; arch ${a.passages[0]} on the ${a.side} wall (the passage this area is behind)`; } }   // an area behind a passage has the arch of its own (it is the way through)

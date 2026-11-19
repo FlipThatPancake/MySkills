@@ -33,7 +33,7 @@ export function placementRules(L, S = {}) {
   for (const w of O.filter((o) => o.wall && !/^(wallRun|hood|curtain|blind|curtainRail|pelmet|windowSeat|coatHooks)$/.test(o.asset))) {   // round 4 G3/U8: a wall piece hides behind the piece in front of it: its bottom stays 150 mm above that piece's top
     const ax = along(w); for (const f of under(w)) { const gap = w.bb.y0 - f.bb.y1, ov = Math.min(w.bb[ax + '1'], f.bb[ax + '1']) - Math.max(w.bb[ax + '0'], f.bb[ax + '0']); if (gap < 150 && ov > 50 && (/^bed$/.test(f.asset) || gap < 0 || ART.test(w.asset))) pushC('artbehind', w, `its bottom is ${Math.round(gap)} mm above the top of ${f.id} (${f.asset}) in front of it (150 at least): hang it higher, so the piece does not hide it`); }
   }
-  for (const w of O.filter((o) => ART.test(o.asset))) {
+  for (const w of O.filter((o) => ART.test(o.asset) && o.wall)) {   /* round 6 item 12: only wall art hangs over furniture; a framed photo stood on a chest is not wall art */
     const U = under(w).filter((f) => w.bb.y0 - f.bb.y1 < 400);
     if (/mirror/.test(w.asset)) { const bad = U.find((f) => UNDER_MIRROR_BAD.test(f.asset)) || under(w).find((f) => UNDER_MIRROR_BAD.test(f.asset)); if (bad) push(3, w, `a mirror over a ${bad.asset} (put it over a console, chest, sideboard or basin, in a hallway or beside a window, or lean one on the floor)`, bad); }
     if (U.length) {

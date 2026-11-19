@@ -140,6 +140,7 @@ class Area {
   }
   put(id, asset, [x, z], turn = 0, { y = 0, mount, group, hero, params, ...rest } = {}) {
     if (!ASSETS[asset]) throw new Error(`unknown asset "${asset}"; node assets.mjs lists them`);
+    if (asset === 'picture' && (mount || ASSETS[asset].mount) !== 'wall') throw new Error(`object "${id}": a picture hangs on a wall; a photo that stands on a chest or shelf is the photoFrame asset (it has a stand-leg)`);   // round 6 item 10
     if (!group) throw new Error(`object "${id}" needs a group (its run, table set, seating group ...)`);
     params = vary(this.h, asset, params, this.id);
     const SIGN = { mug: 'mug', openBook: 'book face down', scuff: 'scuffed floor', leaf: 'fallen leaf', heightChart: 'height chart', foldedThrow: 'folded throw', cloth: 'cloth dropped', shoes: 'shoes askew', tablecloth: 'tablecloth', tableRunner: 'table runner', scratches: 'sofa scratches', glassesBook: 'glasses on book', clothesChair: 'clothes on chair' };

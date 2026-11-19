@@ -16,8 +16,7 @@
    "accents": [
     "fruit bowl",
     "wall shelf with jars",
-    "herbs on the worktop",
-    "stool"
+    "herbs on the worktop"
    ],
    "plants": 3,
    "more": [
@@ -54,7 +53,7 @@
    "side": "left",
    "groups": [
     "range hood over the hob (the hero group, on the left of the home view)",
-    "open shelves with jars and a plant, a stool below, on the window wall or the second wall",
+    "open shelves with jars and a plant, on the window wall or the second wall",
     "sideboard or dresser with a still life and a picture, on the back wall, left third"
    ],
    "light": "pendant",
@@ -65,7 +64,7 @@
    ],
    "shape": "galley",
    "shapeNote": "two facing runs with a 1200 mm aisle: a run on the wall and a freestanding run opposite it with a finished back and closed ends (no stools)",
-   "say": "kitchen: range hood over the hob; one backing wall; window on the back wall; accents: fruit bowl, wall shelf with jars, herbs on the worktop, stool, utensil crock beside the hob (utensilCrock); plants: herbs or a pot on the worktop; a hanging plant from a rail or hook; a pot on a window sill; still life: the worktop beside the hob holds utensil crock beside the hob (utensilCrock) and moka pot (mokaPot); the breakfast table holds mug (mug) and salt and pepper (saltPepper); wall arrangement: open shelf with plates and jars (openShelf); hero group on the left of the home view; foreground piece: step stool; light: pendant; cutting board: flat on the worktop with a loaf, knife and a few vegetables on it; above the run: wall units over the run (wallRun); accent (rust) on the runner; pieces: as the hero needs; signs of life: table runner, tablecloth",
+   "say": "kitchen: range hood over the hob; one backing wall; window on the back wall; accents: fruit bowl, wall shelf with jars, herbs on the worktop, utensil crock beside the hob (utensilCrock); plants: herbs or a pot on the worktop; a hanging plant from a rail or hook; a pot on a window sill; still life: the worktop beside the hob holds utensil crock beside the hob (utensilCrock) and moka pot (mokaPot); the breakfast table holds mug (mug) and salt and pepper (saltPepper); wall arrangement: open shelf with plates and jars (openShelf); hero group on the left of the home view; foreground piece: step stool; light: pendant; cutting board: flat on the worktop with a loaf, knife and a few vegetables on it; above the run: wall units over the run (wallRun); accent (rust) on the runner; pieces: as the hero needs; signs of life: table runner, tablecloth",
    "motion": []
   }
  }
