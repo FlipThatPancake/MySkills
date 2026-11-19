@@ -75,7 +75,7 @@ export class Home {
   // the whole roll: H.roll(rollJson) keeps what roll.mjs dealt (still-life assets, groups, plant places, passages), so the check 'rolled' can compare every dealt thing with the scene; a.skip(what, 'why') leaves one out: an asset name, 'groups', 'passage', or a plant place (sill, shelf, worktop, hanging, floor)
   roll(json) {
     const R = typeof json === 'string' ? JSON.parse(json) : json, home = this.S.home, asset = (x) => (x.match(/\(([A-Za-z]+)\)\s*$/) || [])[1], areas = {};
-    for (const [id, a] of Object.entries(R.areas || {})) areas[id] = { doorOpen: Math.max(0, ...(a.openings || []).filter((o) => o.kind === 'door' && !o.style).map((o) => o.open || 0)), still: (a.still || []).flatMap((st) => st.things.map(asset).filter(Boolean)), groups: (a.groups || []).length, plantAt: a.plantAt || [], passages: (a.passages || []).length, heroWindow: /\bwindow\b/.test(a.hero || ''), hero: a.hero || '', side: a.side || null, accents: a.accents || [], foreground: a.foreground || null, signs: a.signs || [], pieces: a.pieces || [], named: [a.above, a.wallArr, a.produce, ...(a.more || [])].filter(Boolean), groupTexts: (a.groups || []).map((g) => g.replace(/ \(the hero group.*\)$/, '').replace(/, on the [^,]*(, [a-z ]*third)?$/, '')) };
+    for (const [id, a] of Object.entries(R.areas || {})) areas[id] = { doorOpen: Math.max(0, ...(a.openings || []).filter((o) => o.kind === 'door' && !o.style).map((o) => o.open || 0)), still: (a.still || []).flatMap((st) => st.things.map(asset).filter(Boolean)), groups: (a.groups || []).length, plantAt: a.plantAt || [], passages: (a.passages || []).length, heroWindow: !!groupNeeds(a.hero || '')?.window, hero: a.hero || '', side: a.side || null, accents: a.accents || [], foreground: a.foreground || null, signs: a.signs || [], pieces: a.pieces || [], named: [a.above, a.wallArr, a.produce, ...(a.more || [])].filter(Boolean), groupTexts: (a.groups || []).map((g) => g.replace(/ \(the hero group.*\)$/, '').replace(/, on the [^,]*(, [a-z ]*third)?$/, '')) };
     home.roll = { seed: R.seed, behind: R.openPlan?.behind || [], areas };
     if (R.openPlan?.floor) this.floorZones(R.openPlan.floor);   // one floor across the open room; its kitchen part may be tiles
     if (R.plan) { this.plan = R.plan; home.roll.plan = { entry: R.plan.entry, links: R.plan.links.map((l) => ({ id: l.id, a: l.a, b: l.b, kind: l.kind, tree: l.tree })), areas: Object.fromEntries(Object.entries(R.plan.areas || {}).map(([id, a]) => [id, { fit: a.fit, need: a.need }])) }; }   // the house plan (plan.mjs): compose places each area from it
@@ -167,11 +167,14 @@ class Area {
   back(len, openings = [], at = [0, 0]) { this.backLen = len; this.backAt = at; return this.wall('back', at, 0, len, openings); }
   left(len, openings = [], angle = 90) { const k = 180 - angle, to = this.backAt || [0, 0]; return this.wall('left', [to[0] - Math.cos(rad(-k)) * len, to[1] - Math.sin(rad(-k)) * len], -k, len, openings); }
   right(len, openings = [], angle = 90) { const k = 180 - angle, b = this.backAt || [0, 0]; return this.wall('right', [b[0] + this.backLen, b[1]], k, len, openings); }
-  wall(id, [x, z], phi, len, openings = []) {
+  floorWall(at, len, depth) {   // a line on the open floor that a wall group can stand along: a group floating in the room is the same recipe against a wall that is not there (nothing is built for it)
+    const [x0, z0] = this.rect, z = Math.max(at[1] - depth / 2, z0 + 900); return this.wall(`float${this._float = (this._float || 0) + 1}`, [at[0] - len / 2, z], 0, len, [], true);
+  }
+  wall(id, [x, z], phi, len, openings = [], virtual = false) {
     const p = this, to = p.P([x, z]), ph = rad(phi + p.psi), r = [Math.cos(ph), Math.sin(ph)];
     const from = [r0(to[0] + r[0] * len), r0(to[1] + r[1] * len)];
-    openings = [...openings, ...p.h.planOpenings(p, id, len, openings, from, to)];
-    p.h.S.home.walls.push({ id: `${p.id}-${id}`, from, to, openings: openings.map(({ x: ox, ...o }) => ({ ...headLine(o, p.h.head), at: len - ox })) });
+    if (!virtual) openings = [...openings, ...p.h.planOpenings(p, id, len, openings, from, to)];
+    if (!virtual) p.h.S.home.walls.push({ id: `${p.id}-${id}`, from, to, openings: openings.map(({ x: ox, ...o }) => ({ ...headLine(o, p.h.head), at: len - ox })) });
     let taken = [];
     const F = {
       id, len, phi, openings, get taken() { return taken; },
@@ -203,7 +206,7 @@ class Area {
         return res;
       },
     };
-    (p.walls ||= {})[id] = F;
+    if (!virtual) (p.walls ||= {})[id] = F;
     return F;
   }
   put(id, asset, [x, z], turn = 0, { y = 0, mount, group, hero, params, ...rest } = {}) {

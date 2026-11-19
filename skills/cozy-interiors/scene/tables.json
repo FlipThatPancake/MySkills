@@ -1414,13 +1414,15 @@
     "bookcase with books and objects",
     "side table with a lamp and a cup, a pouf beside it",
     "plant corner: a floor plant with a basket",
-    "window seat or bench with cushions"
+    "window seat or bench with cushions",
+    "armchair on a round rug, with a side table"
    ],
    "hallway": [
     "console with a mirror, a key bowl and a plant",
     "coat hooks with a bench, shoes and an umbrella stand",
     "shelf with baskets above a bench",
-    "plant corner: a floor plant on a plant stand"
+    "plant corner: a floor plant on a plant stand",
+    "runner rug down the hall"
    ],
    "home-office": [
     "bookshelf with files and objects",
@@ -1580,6 +1582,8 @@
       "plant corner: a floor plant with a basket or pouf": "floorPlant+basket|pouf",
       "console or sideboard with a still life under a picture": "console|sideboard+picture",
       "reading corner: armchair, floor lamp and a book stack": "armchair|readingChair+floorLamp+bookStack",
+      "runner rug down the hall": "runner+floorPlant",
+      "armchair on a round rug, with a side table": "armchair+rug+sideTable",
       "bench or window seat with cushions": "bench|windowSeat+cushion",
       "wardrobe or chest of drawers with a still life and a mirror": "wardrobe|chestOfDrawers+mirror|leaningMirror",
       "bench at a wall with a blanket and a basket": "bench+basket",
