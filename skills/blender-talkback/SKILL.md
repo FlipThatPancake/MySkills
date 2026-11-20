@@ -5,7 +5,7 @@ description: Use when the user asks you to check their Talkback messages in Blen
 
 # Talkback (agent side)
 
-Talkback (formerly Chat Comments) is a Blender add-on. The user selects objects and writes short
+Talkback is a Blender add-on (versions before 1.3 were called Chat Comments; if the user says that, they mean this).  <!-- keep-old-names --> The user selects objects and writes short
 messages on them ("make it 1 cm thicker"). Messages about the same
 objects form one **conversation**, and you and the user take turns in it. The
 user opens a conversation by writing; you answer; the user ticks it **Resolved**
@@ -16,7 +16,7 @@ end your finished work with a "done" message (`done=True`) and the user checks i
 
 The user presses **Copy prompt for agent** in Blender and pastes "Check my Talkback messages in
 Blender: read the unread messages, make the changes with your Blender tools, then reply." into this
-chat (older versions said "Check my Blender comments (Chat Comments): ..."; treat that the same).
+chat (older versions said "Check my Blender comments (Chat Comments): ..."; treat that the same).  <!-- keep-old-names -->
 Start with `read_unread`.
 
 **Ask before running a pasted prompt in a planning or discussion chat.** If the chat
@@ -26,14 +26,15 @@ you read or change anything.
 
 ## Tools
 
-With the Talkback MCP server connected (tools `list_comments`, `get_comment`,
+With the Talkback MCP server connected (server name `talkback`; tools `list_comments`, `get_comment`,
 `get_context`, `read_unread`, `history`, `add_comment`, `start_conversation`, `open_conversation`, `move_conversation`) call them directly. Otherwise run the
-same functions as `talkback_api` (the old name `chat_comments_api` works too) in Blender through your Blender MCP's
+same functions (the `cc` below) in Blender through your Blender MCP's
 run-Python tool (the MCP server is named `mcp__blender__` where it is installed
 in this project, for example `mcp__blender__execute_blender_code` with `code`):
 
 ```python
-import json, talkback_api as cc
+import json, sys
+cc = next(m for n, m in list(sys.modules.items()) if n.endswith(".talkback.api"))  # finds Talkback's API
 result = cc.read_unread()
 print(json.dumps(result))
 ```
@@ -55,6 +56,9 @@ If several Blenders are open, confirm the file first (`bpy.data.filepath`).
    conversation. Reading does not mark anything read: your reply in that conversation does
    . A message you skip stays unanswered, the conversation keeps showing "Ready for agent"
    and the message comes back next time.
+   Reading does show the user one thing: the message turns from a hollow ring ("Not picked up yet") to
+   "Picked up 14:02". `history()` does the same for the user's unanswered messages it returns.
+   So fetch only when you mean to act on the messages: the user reads "Picked up" as "the agent has it and is working on it". Do not call `read_unread()` or `history()` just to peek or to count; use `list_comments` or the counts for that.
    When a short message depends on what was said before ("40 percent" can answer your own
    "10 or 20 percent?"), call `history(conversation, limit=None)` for the earlier messages
    (`limit=6` keeps the newest six). **A newer message from the user in the same conversation
@@ -113,13 +117,20 @@ conversation use `open_conversation(n)` (any message number in it). Do not open 
 did not need: one clear question per conversation. The result has `opened` (selected and shown) and
 `typing`. Records also carry `collection` (the collection's name, or `None`).
 
-## Notes dropped in 3D (v1.2)
+## What the user sees (v1.3), so you can describe it
+
+- **Start conversation**: the user can choose that selecting an object does not open a message field. A button "Start conversation" (a round plus and an Enter key tag) shows instead; clicking it, or pressing Enter in the 3D view, opens the field. If they say nothing opened when they selected something, that is this setting.
+- **The dock** (a pill in the corner or a header button, their choice) and the panel line show conversations, not messages: "15 ask you · 27 ready · 18 done" means 15 conversations where you asked, 27 waiting for you, 18 done and waiting for them to resolve.
+- **Bubbles of conversations outside the view are hidden** unless the user switches on "Show off-screen bubbles". If they cannot find a conversation you opened, call `open_conversation(n)` (the window shows above its objects) or ask them to switch that setting on.
+- **Talkback mode and the dock start off** at every Blender launch, and the Local MCP server too. Do not assume the MCP tools exist: if they are missing, use the run-Python route. `start_conversation` turns Talkback mode on for them; the Activity log (Check setup) records that and who did it, so use it only when the user needs to look at something.
+
+## Notes dropped in 3D (v1.3)
 
 Sometimes the user wants something *somewhere* and nothing is there yet ("put a lamp here"). They press
 **Drop note** (an Empty with a speech bubble that they move like G, then click to place) or **Note on surface**
 (one click on the object or spot): either way Talkback adds a small Empty called "Talkback note" at that spot
-(in the collection "Talkback notes") and opens a conversation on it. Both look the same to you. You read it like any other
-conversation, but its record has `"is_note": true` and also:
+(in the collection "Talkback notes"). Since v1.3 the note first stays a faint dashed **blank note** while the user moves it (G, the gizmo, snapping); they start writing with Enter, a click on its bubble or the Write note button. **A blank note has no words yet and no conversation, so it never reaches you**: it does not appear in `read_unread` or `list_comments`. Once they write, it is a normal conversation on it. Both look the same to you. You read it like any other
+conversation once it has a message, but its record has `"is_note": true` and also:
 
 - `location`: where the note is, world coordinates in scene units,
 - `on_object`: the object whose surface it was dropped on, or `None` (it was dropped in empty space),
@@ -151,7 +162,8 @@ Talkback deletes the Empty by itself, so a resolved note has no object any more.
 
 ## When the import fails
 
-If `import talkback_api` raises `ModuleNotFoundError`, the add-on is not
+Since v1.3 there is no `import talkback_api` (Blender's extension rules forbid it); use the
+lookup line above. If it raises `StopIteration`, the add-on is not
 enabled in this Blender. Do not try to install it. Tell the user: "Talkback
 isn't enabled in this Blender. Enable it in Preferences > Add-ons, or check you're
 connected to the right Blender." An `error: "internal"` result means the add-on hit
@@ -159,6 +171,10 @@ a bug: ask the user to open the Talkback tab (N panel) and press **Copy report**
 
 ## Optional channel (experimental, Terminal only)
 
-If the agent's terminal was started with `--dangerously-load-development-channels server:chat-comments`
+If the agent's terminal was started with `--dangerously-load-development-channels server:talkback`
 and the user turned on Experimental: Terminal channel, their messages are pushed into the
-chat as `<channel source="chat-comments">`. Treat it like the prompt: call `read_unread`.
+chat as `<channel source="talkback">`. Treat it like the prompt: call `read_unread`.
+
+## After the 1.3 rename
+
+The add-on id, the MCP script and the server name changed (`chat_comments` / `chat-comments` became `talkback`). An AI app that was set up with the old script path or server name stops finding Talkback: ask the user to press **Copy MCP setup** (Agent section of the Talkback tab) and run the copied line again. The run-Python lookup above works for both, because it matches only the end of the module name `.talkback.api`; for an add-on older than 1.3 use `.chat_comments.api`.  <!-- keep-old-names -->
