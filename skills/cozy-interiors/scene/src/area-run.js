@@ -11,13 +11,15 @@ import { buildHome, FADE } from './home.js';
 import { bakeLight } from './lightbake.js';
 import { VIEW } from './sheet.js';
 import { createTour } from './tour.js';
+import { route, glidePath } from './glidepath.js';
+import { createMotion } from './motion/index.js';
 
 const rad = THREE.MathUtils.degToRad, deg = THREE.MathUtils.radToDeg, FOV = 30, GLIDE_S = 1.6, SPAN = 80;
 const smooth = (k) => k * k * (3 - 2 * k);
 
 export function createAreaScene(canvas, S) {
   const q = new URLSearchParams(location.search);
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, stencil: true });
   renderer.setClearColor(0xf4f4f1);
   renderer.toneMapping = THREE.NeutralToneMapping;
   const scene = new THREE.Scene(), kit = createKit();
@@ -25,6 +27,7 @@ export function createAreaScene(canvas, S) {
   kit.keepParts = q.has('check');
   const camera = new THREE.PerspectiveCamera(FOV, 1, 10, 400000);
   const home = buildHome(kit, S.home, REGISTRY, S.areas);
+  kit.setTopFade((S.home.height || 2700) - 400, S.home.height || 2700);   // the shared top rule: anything that reaches the home's top melts out over its last 400 mm (a chimney, a flue, a cord)
   scene.add(home.group);
   kit.setOpacity(1, 1);
   const controls = new OrbitControls(camera, canvas);
@@ -34,6 +37,7 @@ export function createAreaScene(canvas, S) {
   const sph = (d, az, el) => new THREE.Vector3().setFromSphericalCoords(d, rad(90 - el), rad(az));
   const areas = Object.fromEntries(S.areas.map((a) => [a.id, a]));
   const order = S.areas.map((a) => a.id);
+  const links = S.home.plan?.links, walk = S.home.plan?.walk;   // the house plan: the glide walks its ways through
   let cur = null, tour = null, glide = null, lastInput = performance.now(), aspect = 1;
 
   // An area's numbers: the camera's home and the fade, all in world mm.
@@ -70,10 +74,15 @@ export function createAreaScene(canvas, S) {
     const h = A.camera?.home || {}, b = A.bounds, top = b.top || 2500;
     const target = h.target || [(b.x0 + b.x1) / 2, top / 2 - 150, (b.z0 + b.z1) / 2];
     const v = { target, az: h.az ?? 20, el: h.el ?? 15, dist: h.dist || fit(b) };
-    return h.fit === 'objects' ? fitView(A, v) : v;
+    if (h.fit !== 'objects') return v; const f = fitView(A, v); return [...f.target, f.dist].every(Number.isFinite) ? f : v;   // an area with nothing in it keeps its plain view
   };
+  // open plan: areas of one group share a floor and are drawn together, and the fade box is the group's bounds, so nothing thins out at a seam
+  const groupOf = (id) => areas[id].group || id, together = (a, b) => !!a && !!b && groupOf(a) === groupOf(b);
+  const boundsOf = (A) => { if (!A.group) return A.bounds; const m = S.areas.filter((x) => x.group === A.group).map((x) => x.bounds); return { x0: Math.min(...m.map((b) => b.x0)), x1: Math.max(...m.map((b) => b.x1)), z0: Math.min(...m.map((b) => b.z0)), z1: Math.max(...m.map((b) => b.z1)), top: A.bounds.top }; };
   const fadeOf = (A) => {
-    const b = A.bounds, top = b.top || 2500, bx = b.x1 - b.x0, bz = b.z1 - b.z0, w = Math.max(bx, bz), r0 = 0;   // objects past the bounds thin from the edge: about 35% gone at 1 m, all gone at 2 m
+    let b = boundsOf(A); const top = b.top || 2500, w = Math.max(b.x1 - b.x0, b.z1 - b.z0), r0 = 0;
+    for (const W of home.walls) if (W.walk.length && W.id && together(order.find((q) => W.id.startsWith(q + '-')), A.id)) b = { ...b, ...[W.from, W.to].reduce((e, q) => { const x = q[0] - W.n[0] * 1600, z = q[1] - W.n[1] * 1600; return { x0: Math.min(e.x0, x), x1: Math.max(e.x1, x), z0: Math.min(e.z0, z), z1: Math.max(e.z1, z) }; }, { x0: b.x0, x1: b.x1, z0: b.z0, z1: b.z1 }) };   // the floor beyond a way through stays in view
+    const bx = b.x1 - b.x0, bz = b.z1 - b.z0;   // objects past the bounds thin from the edge: about 35% gone at 1 m, all gone at 2 m
     return [(b.x0 + b.x1) / 2, top / 2 - 150, (b.z0 + b.z1) / 2, bx / 2, top / 2 + 300, bz / 2, FADE[0] * w, FADE[1] * w, r0, 900];
   };
   const applyFade = (f) => {
@@ -96,11 +105,12 @@ export function createAreaScene(canvas, S) {
 
   function makeTour(id) {
     const A = areas[id], cam = A.camera || {}, quick = Number(q.get('cuts')) || 0;
-    tour = createTour({ THREE, camera, controls, room: home.group, home: { pos: camera.position.clone(), target: controls.target.clone() }, cfg: { ...Object.fromEntries(['after', 'cutsAfter', 'cutEvery'].filter((k) => cam[k] != null).map((k) => [k, cam[k]])), shots: cam.shots, ...(quick ? { after: quick, cutsAfter: quick } : {}) } });
+    tour = createTour({ THREE, camera, controls, room: home.group, home: { pos: camera.position.clone(), target: controls.target.clone() }, cfg: { ...Object.fromEntries(['after', 'cutsAfter', 'cutEvery'].filter((k) => cam[k] != null).map((k) => [k, cam[k]])), shots: cam.shots, swayFit: (maxDeg) => api.swayFit(maxDeg), ...(quick ? { after: quick, cutsAfter: quick } : {}) } });
     api.tour = tour;
   }
   // at rest only the current area exists: other areas' walls (frames, seams, shadows) and objects are hidden outright, so no half-faded ghost of a neighbour shows in any view or tour shot; a glide shows everything
-  const only = (id) => { for (const W of home.walls) W.node.visible = id === null || (W.id || '').startsWith(id + '-'); for (const o of Object.values(home.objects)) o.visible = id === null || o.userData.scene.area === id; };
+  const shown = (id, area) => id === null || (area ? area === id || groupOf(area) === groupOf(id) : false);
+  const only = (id) => { for (const W of home.walls) W.node.visible = id === null || shown(id, order.find((a) => (W.id || '').startsWith(a + '-'))); for (const o of Object.values(home.objects)) o.visible = shown(id, o.userData.scene.area); for (const b of home.blockers) b.fh = false; };   // an area's whole open-plan group is drawn at rest
   function arrive(id) {
     cur = id; api.area = id; only(id);
     const v = viewOf(areas[id]);
@@ -115,21 +125,31 @@ export function createAreaScene(canvas, S) {
     if (id === cur && !glide) return;
     const from = stance(), to = viewOf(areas[id]);
     let daz = ((to.az - from.az + 540) % 360) - 180;   // the short way round
-    glide = { id, from, to, daz, fade0: cur ? fadeOf(areas[cur]) : fadeOf(areas[id]), fade1: fadeOf(areas[id]), t0: performance.now(), hold, k: 0 };
-    controls.enabled = false; markLabels(id); only(null);
+    const ways = cur && links ? route(links, cur, id) : [], path = ways.length || (cur && links && !together(cur, id)) ? glidePath(from, to, ways, { height: S.home.height || 2700 }) : null;
+    glide = { id, from, to, daz, path, fade0: cur ? fadeOf(areas[cur]) : fadeOf(areas[id]), fade1: fadeOf(areas[id]), t0: performance.now(), hold, k: 0 };
+    glide.apart = !together(cur, id); controls.enabled = false; markLabels(id); if (glide.apart) only(cur);   // the first frame is the start view itself; the other areas are drawn from the first step on (glideAt)   // between areas of one group nothing switches on or off
   }
   function glideAt(k) {
     const g = glide, e = smooth(Math.min(1, Math.max(0, k))); g.k = k;
-    const tg = g.from.target.map((a, i) => a + (g.to.target[i] - a) * e);
-    controls.target.set(...tg);
-    camera.position.copy(controls.target).add(sph(g.from.dist + (g.to.dist - g.from.dist) * e, g.from.az + g.daz * e, g.from.el + (g.to.el - g.from.el) * e));
-    camera.lookAt(controls.target);
-    applyFade(g.fade0.map((a, i) => a + (g.fade1[i] - a) * e));
+    if (g.path) { controls.target.set(...g.path.tgt(e)); camera.position.set(...g.path.pos(e)); }   // walk the plan: position and aim follow the curve through the ways, so the view turns as it goes
+    else {
+      const tg = g.from.target.map((a, i) => a + (g.to.target[i] - a) * e);
+      controls.target.set(...tg);
+      camera.position.copy(controls.target).add(sph(g.from.dist + (g.to.dist - g.from.dist) * e, g.from.az + g.daz * e, g.from.el + (g.to.el - g.from.el) * e));
+    }
+    camera.lookAt(controls.target); if (k > 0 && !g.shown && g.apart) { g.shown = true; only(null); }
+    let f = g.fade0.map((a, i) => a + (g.fade1[i] - a) * e);
+    if (g.apart && g.path) {   // on the way the fade box (what is drawn solid) grows to hold both areas and the walk between them, so nothing along the route thins into a milky veil; it is the start's box at k = 0 and the destination's at k = 1
+      const U = g.union ||= (() => { const lo = [1e9, 1e9, 1e9], hi = [-1e9, -1e9, -1e9]; const add = (p, m) => { for (let i = 0; i < 3; i++) { lo[i] = Math.min(lo[i], p[i] - m[i]); hi[i] = Math.max(hi[i], p[i] + m[i]); } }; for (const F of [g.fade0, g.fade1]) add(F.slice(0, 3), F.slice(3, 6)); for (let j = 0; j <= 20; j++) add(g.path.pos(j / 20), [2500, 0, 2500]); return [...lo.map((l, i) => (l + hi[i]) / 2), ...lo.map((l, i) => (hi[i] - l) / 2), Math.max(g.fade0[6], g.fade1[6]), Math.max(g.fade0[7], g.fade1[7]), g.fade0[8], Math.max(g.fade0[9], g.fade1[9])]; })(), a = smooth(Math.min(1, Math.min(e, 1 - e) / 0.15));
+      f = f.map((v, i) => v + (U[i] - v) * a); }
+    applyFade(f);
     if (k >= 1) { const id = g.id; glide = null; arrive(id); }
   }
   function setArea(id, snap = false) { if (snap || !cur) { glide = null; arrive(id); } else startGlide(id); }
 
   // ---- ways to shift: the area names at the bottom, the arrow keys, a click on a door or arch with `to`
+  // the light bake treats an open-plan group as one area: one floor sheet, so daylight shows no step at a seam
+  const bakeAreas = () => { const seen = {}, list = []; for (const A of S.areas) { if (!A.group) { list.push({ id: A.id, bounds: A.bounds }); continue; } if (seen[A.group]) continue; seen[A.group] = 1; const m = S.areas.filter((x) => x.group === A.group); list.push({ id: A.group, ids: m.map((x) => x.id), bounds: boundsOf(A) }); } return list; };
   const bar = document.createElement('div');
   bar.style.cssText = 'position:fixed;left:0;right:0;bottom:14px;display:flex;justify-content:center;gap:6px;font:13px/1 system-ui,-apple-system,sans-serif;pointer-events:none';
   const btns = Object.fromEntries(S.areas.map((a) => {
@@ -143,8 +163,8 @@ export function createAreaScene(canvas, S) {
   function markLabels(id = cur) { for (const [k, b] of Object.entries(btns)) { b.style.color = k === id ? '#222' : '#8a8a85'; b.style.background = k === id ? 'rgba(0,0,0,.06)' : 'none'; } }
   addEventListener('keydown', (e) => {
     if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
-    const i = order.indexOf(glide ? glide.id : cur), j = i + (e.key === 'ArrowRight' ? 1 : -1);
-    if (j >= 0 && j < order.length) setArea(order[j]);
+    const seq = walk?.length ? walk : order, i = seq.indexOf(glide ? glide.id : cur), j = i + (e.key === 'ArrowRight' ? 1 : -1);   // the arrow keys follow the plan's walk
+    if (j >= 0 && j < seq.length) setArea(seq[j]);
   });
   addEventListener('resize', resize);
   if (window.ResizeObserver) new ResizeObserver(resize).observe(canvas);
@@ -160,17 +180,24 @@ export function createAreaScene(canvas, S) {
     for (let o = hit && hit.object; o; o = o.parent) if (o.userData.open || o.userData.go) return o;
     return null;
   };
+  const neighbourAt = (e) => {   // the open-plan neighbour a click lands on: the area of the object hit, when it is not the current area but shares its group
+    if (!cur || !areas[cur].group) return null;
+    const r = canvas.getBoundingClientRect(); ndc.set((e.clientX - r.left) / r.width * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1); ray.setFromCamera(ndc, camera);
+    const hit = ray.intersectObjects(home.group.children, true).find((h) => h.object.isMesh && !h.object.isLineSegments2 && h.object.visible && !h.object.material.isMeshBasicMaterial);
+    for (let o = hit && hit.object; o; o = o.parent) { const a = o.userData.scene?.area; if (a) return a !== cur && together(a, cur) ? a : null; }
+    return null;
+  };
   let downAt = null;
   canvas.addEventListener('pointerdown', (e) => { downAt = [e.clientX, e.clientY]; });
   canvas.addEventListener('pointerup', (e) => {
     if (!downAt || glide || Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 5) return;
-    const f = targetAt(e); if (!f) return;
+    const f = targetAt(e); if (!f) { const n = neighbourAt(e); if (n) setArea(n); return; }   // a click on a piece of an open-plan neighbour glides there
     if (f.userData.go) { setArea(f.userData.go); return; }
     const o = f.userData.open;
     if (o.states) { o.i = (o.i + 1) % o.states.length; for (const m of (o.pair || [f])) { const mo = m.userData.open; mo.i = o.i; mo.target = mo.states[o.i]; } }
     else o.target = 1 - o.target;
   });
-  canvas.addEventListener('pointermove', (e) => { if (!e.buttons) canvas.style.cursor = !glide && targetAt(e) ? 'pointer' : ''; });
+  canvas.addEventListener('pointermove', (e) => { if (!e.buttons) canvas.style.cursor = !glide && (targetAt(e) || neighbourAt(e)) ? 'pointer' : ''; });
   const moveFronts = (dt, snap) => {
     for (const f of home.openables) {
       const o = f.userData.open; o.v = snap ? o.target : o.v + (o.target - o.v) * (1 - Math.exp(-dt * 7));
@@ -180,21 +207,50 @@ export function createAreaScene(canvas, S) {
 
   let last = performance.now();
   const api = {
-    scene, camera, controls, kit, home, areas, areaIds: order, area: null, setArea, startGlide, glideAt, look, at, S, tour: null,
+    groupOf, groupBounds: (id) => boundsOf(areas[id]), scene, camera, controls, kit, home, areas, areaIds: order, area: null, setArea, startGlide, glideAt, look, at, S, tour: null,
     get glide() { return glide; }, objects: home.objects, openables: home.openables,
     openAll(on) { home.openables.forEach((f) => { f.userData.open.target = on ? 1 : 0; }); moveFronts(1, true); },
   };
+  api.motion = createMotion(kit, home, S);   // living things (motion/index.js): what the roll dealt each area
+  {   // the cameras fliers keep away from: an area's home view (its fitted view is known once the area is on show) and its tour shot cameras; the live camera too on the page (not in ?check)
+    const home0 = {}, shotsOf = (id) => (areas[id].camera?.shots || []).map((x) => new THREE.Vector3(...x.from)), plain = /[?&]check\b/.test(location.search);
+    api.motion.cameraOf = (id) => {
+      if (api.area !== id) return shotsOf(id);
+      if (!home0[id]) { const v = viewOf(areas[id]); home0[id] = [new THREE.Vector3(...v.target).add(sph(v.dist, v.az, v.el)), ...shotsOf(id)]; }
+      return plain ? home0[id] : [...home0[id], camera.position];
+    };
+  }
   resize();
   arrive(q.get('area') || order[0]);
-  renderer.setAnimationLoop((now) => {
+  const loopFn = (now) => {
     const dt = Math.max(0, Math.min(0.1, (now - last) / 1000)); last = now;
     if (glide) { lastInput = now; if (!glide.hold) glideAt((now - glide.t0) / 1000 / GLIDE_S); }
     else if (!tour.update(now, now - lastInput)) controls.update();
     for (const g of Object.values(home.objects)) { g.userData.tick?.(dt); g.userData.update?.(dt); }
+    api.motion.update(dt, api.area);
     moveFronts(dt);
-    home.update(camera, tour.look || controls.target);
+    home.update(camera, tour.look || controls.target, !glide);
     renderer.render(scene, camera);
-  });
+  };
+  renderer.setAnimationLoop(loopFn);
+  // for the checks (check-home ghosts): stop the live loop (one software-GL frame takes over half a second), settle the fades without drawing, then draw one frame on demand
+  api.loop = (on) => renderer.setAnimationLoop(on ? loopFn : null);
+  api.advance = (sec, live) => { const dt = live ? 0.05 : 0.1; for (let t = 0; t < sec - 1e-9; t += dt) { for (const g of Object.values(home.objects)) { g.userData.tick?.(dt); g.userData.update?.(dt); } if (live) api.motion.update(dt, api.area); moveFronts(dt); home.update(camera, tour.look || controls.target, !glide); } };   // live: the living things move too (watch.mjs)
+  api.swayFit = (maxDeg = 25) => {   // the idle sway turns the camera round the home view's target: objects of the area that are inside the frame now stay inside, by pulling the camera back (up to 35%) as it turns; where that is not enough the swing is cut short
+    const T = THREE, Y = new T.Vector3(0, 1, 0), id = api.area, tgt = controls.target, off0 = camera.position.clone().sub(tgt), pos = camera.position.clone(), quat = camera.quaternion.clone();
+    home.group.updateMatrixWorld(true);
+    const boxes = Object.values(home.objects).filter((g) => { const sc = g.userData.scene; return sc && sc.area === id && !['rug', 'scratches', 'socket', 'lightSwitch', 'scuff', 'leaf', 'heightChart'].includes(sc.asset); }).map((g) => new T.Box3().setFromObject(g));
+    const pt = new T.Vector3(), put = (deg, s) => { camera.position.copy(tgt).add(off0.clone().applyAxisAngle(Y, deg * Math.PI / 180).multiplyScalar(s)); camera.lookAt(tgt); camera.updateMatrixWorld(true); camera.matrixWorldInverse.copy(camera.matrixWorld).invert(); };
+    const out = (b) => { let o = 0; for (const x of [b.min.x, b.max.x]) for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) { pt.set(x, y, z).project(camera); o = Math.max(o, Math.abs(pt.x), Math.abs(pt.y)); } return o; };
+    put(0, 1); const keep = boxes.filter((b) => out(b) <= 1);   // the ones in the frame now (a dealt foreground piece already cut by the edge may stay cut)
+    const ok = (deg, s) => { put(deg, s); return keep.every((b) => out(b) <= 1); };
+    const table = {}; let max = maxDeg;
+    for (let d = 0; d <= maxDeg; d++) for (const sg of [1, -1]) { const deg = d * sg; let s = 1; while (s < 1.35 && !ok(deg, s)) s += 0.025; if (s >= 1.35 && !ok(deg, 1.35)) { max = Math.min(max, Math.max(0, d - 1)); } else table[deg] = s; }
+    camera.position.copy(pos); camera.quaternion.copy(quat); camera.updateMatrixWorld(true);
+    const scale = (deg) => { const lo = Math.floor(deg), hi = Math.ceil(deg), a = table[lo] ?? 1.35, b = table[hi] ?? 1.35; return a + (b - a) * (deg - lo); };
+    return { max, scale };
+  };
+  api.draw = () => { home.update(camera, tour.look || controls.target, !glide); renderer.render(scene, camera); return renderer.domElement; };
   window.cozyScene = api;
   // the light is baked after the page is up (the passes are spread over frames) and fades in; until then, and if the bake is not possible, the old halos stand in
   window.cozyBaked = q.has('nobake') || q.has('check');
@@ -202,7 +258,7 @@ export function createAreaScene(canvas, S) {
     const withAll = (fn) => { const ws = home.walls.map((W) => W.node.visible), os = Object.values(home.objects).map((o) => o.visible); only(null); try { fn(); } finally { home.walls.forEach((W, i) => { W.node.visible = ws[i]; }); Object.values(home.objects).forEach((o, i) => { o.visible = os[i]; }); } };   // every area's pieces must stand in the light passes, though only one is shown
     const gain = { value: 0 }, tune = (q.get('baket') || '').split(',').map(Number);   // ?baket=strength,contact,wWin,wSky
     home.useBake(true);   // no halos while the light is baking: the page shows plain, then the soft light fades in
-    bakeLight({ THREE, renderer, scene, kit, walls: home.walls, areas: home.areas || S.areas.map((A) => ({ id: A.id, bounds: A.bounds })), group: home.group, quality: Number(q.get('bake')) || 1, debug: q.has('bakedebug'), gain, withAll, ...(tune[0] ? { strength: tune[0], contact: tune[1], wWin: tune[2], wSky: tune[3] } : {}) }).then((bake) => {
+    bakeLight({ THREE, renderer, scene, kit, walls: home.walls, areas: bakeAreas(), group: home.group, quality: Number(q.get('bake')) || 1, debug: q.has('bakedebug'), gain, withAll, masks: home.shadowMasks, ...(tune[0] ? { strength: tune[0], contact: tune[1], wWin: tune[2], wSky: tune[3] } : {}) }).then((bake) => {
       if (!bake) { home.useBake(false); window.cozyBaked = true; return; }
       window.cozyBake = bake; const t0 = performance.now(), fade = (now) => { gain.value = Math.min(1, (now - t0) / 1200); if (gain.value < 1) requestAnimationFrame(fade); else window.cozyBaked = true; }; requestAnimationFrame(fade);
     });

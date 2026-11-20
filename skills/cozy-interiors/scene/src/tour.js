@@ -26,10 +26,11 @@ export function createTour({ THREE, camera, controls, room, home, cfg }) {
     return look;
   };
 
-  let state = 'idle', t0 = 0, swayLast = 0, shot = null, shotN = 0, back = null, lookAt = null;
+  let state = 'idle', t0 = 0, swayLast = 0, shot = null, shotN = 0, back = null, lookAt = null, swayBase = null, swayCfg = null;
+  // the sway orbits the home view by up to swayDeg and pulls the camera back as it turns (C.swayFit(maxDeg) -> { max, scale(deg) }, from the page: the objects that start inside the frame stay inside), so its first swing never cuts a corner piece
   const swayStep = (t) => {
-    const k = Math.min(1, t / C.swayEase), ang = rad(C.swayDeg) * smooth(k) * Math.sin(2 * Math.PI * t / C.swayPeriod);
-    const off = camera.position.clone().sub(controls.target).applyAxisAngle(new THREE.Vector3(0, 1, 0), ang - swayLast);
+    const k = Math.min(1, t / C.swayEase), a = swayCfg.max * smooth(k) * Math.sin(2 * Math.PI * t / C.swayPeriod), ang = rad(a);
+    const off = swayBase.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), ang).multiplyScalar(swayCfg.scale(a));
     camera.position.copy(controls.target).add(off); swayLast = ang;
   };
   const api = {
@@ -55,7 +56,7 @@ export function createTour({ THREE, camera, controls, room, home, cfg }) {
         if (k >= 1) { state = 'idle'; shot = null; controls.enabled = true; controls.update(); }
         return state === 'back';
       }
-      if (state === 'idle' && idleMs >= C.after * 1000) { state = 'sway'; t0 = now; swayLast = 0; }
+      if (state === 'idle' && idleMs >= C.after * 1000) { state = 'sway'; t0 = now; swayLast = 0; swayBase = camera.position.clone().sub(controls.target); swayCfg = C.swayFit ? C.swayFit(C.swayDeg) : { max: C.swayDeg, scale: () => 1 }; }
       if (state === 'sway') {
         const t = (now - t0) / 1000;
         if (shots.length && t >= C.cutsAfter) { state = 'cuts'; t0 = now; shot = null; controls.enabled = false; }

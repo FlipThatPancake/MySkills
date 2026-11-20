@@ -16,7 +16,7 @@ function book(kit, x, y, z, w, h, d, ang, tone) {
   g.position.set(x, y, z); g.rotation.y = ang; return g;
 }
 
-export function windowSeat(kit, { w = 1500, d = 520, h = 440, form = 'storage', cushion = 'plain', pillows = 2, throwOn = 'yes', seed = 1 } = {}) {   // a built-in seat under a window: a box with drawers, a frame with open cubbies, or a slatted bench on legs; a long cushion, pillows leaning on the wall, a folded throw. Back at -z.
+export function windowSeat(kit, { w = 1500, d = 520, h = 440, form = 'storage', cushion = 'plain', pillows = 2, pillowMax = 400, seed = 1 } = {}) {   // a built-in seat under a window: a box with drawers, a frame with open cubbies, or a slatted bench on legs; a long cushion, pillows leaning on the wall. Back at -z.
   const g = kit.group(), R = rnd(seed), B = bx(kit), Rb = rb(kit), pts = [], z = d / 2 + 0.6, cuH = 70;
   if (form === 'storage') {
     g.add(Rb(0, 70, 0, w, h - 70 - 20, d, 5)); g.add(B(0, 0, 14, w - 40, 70, d - 40, lo)); g.add(Rb(0, h - 20, 10, w + 20, 20, d + 20, 4));
@@ -32,26 +32,25 @@ export function windowSeat(kit, { w = 1500, d = 520, h = 440, form = 'storage', 
   if (pts.length) g.add(kit.lines(pts, 'lo'));
   const cw2 = w - 50, cd = d - 60, cy = h, cs = softBox(kit, cw2, cuH, cd, { r: 24, bulge: 8, piping: cushion === 'tufted' ? 'none' : 'edge', tone: 'mid', tufts: cushion === 'tufted' ? Array.from({ length: Math.max(2, Math.round(cw2 / 260)) }, (_, i) => [-cw2 / 2 + (i + 0.5) * cw2 / Math.max(2, Math.round(cw2 / 260)), 0]) : undefined }); cs.position.set(0, cy + cuH / 2, 14); g.add(cs);
   if (cushion === 'striped') { const ln = []; for (let x = -cw2 / 2 + 60; x < cw2 / 2 - 40; x += 90) ln.push([x, cy + cuH * 0.6, 14 + cd / 2 + 8], [x, cy + cuH * 0.1, 14 + cd / 2 + 8]); g.add(kit.lines(ln, 'mid')); }
-  const pw = [-1, 1, 0].slice(0, Math.max(0, Math.min(3, pillows)));
-  pw.forEach((s, i) => { const p = softBox(kit, 340 - i * 20, 330 - i * 20, 110, { r: 50, bulge: 22, dent: 12, piping: 'edge', tone: i % 2 ? 'lo' : 'mid' }); p.position.set(s * (cw2 / 2 - 260) + (R() - 0.5) * 60, cy + cuH + 130, -d / 2 + 90 + 70); p.rotation.x = -(0.30 + R() * 0.16); p.rotation.z = (R() - 0.5) * 0.35; g.add(p); });
-  if (throwOn === 'yes') { const t = foldedThrow(kit, { w: 700, d: 360, layers: 3, tone: 'lo' }); t.position.set(cw2 / 2 - 480, cy + cuH, 50); t.rotation.y = 0.08; g.add(t); }
+  const ph = Math.min(340, Math.max(280, pillowMax + 270)), ends = pillows >= 2 ? [-1, 1] : pillows === 1 ? [R() < 0.5 ? -1 : 1] : [];   // end cushions: small, upright against the side cheek or the reveal, sized to the gap under the sill (a low sill gets the smaller ones, never none)
+  ends.forEach((s, i) => { const p = softBox(kit, 100, ph - i * 20, ph + 10 - i * 20, { r: 40, bulge: 18, dent: 8, piping: 'edge', tone: i % 2 ? 'lo' : 'mid' }); p.position.set(s * (cw2 / 2 - 62), cy + cuH + (ph - i * 20) / 2 - 8, -d / 2 + 125 + (ph + 10) / 2); p.rotation.z = -s * (0.2 + R() * 0.06); p.rotation.x = (R() - 0.5) * 0.12; g.add(p); });
   return kit.merge(g);
 }
 
 export function readingLamp(kit, { form = 'arc', h = 1700, shade = 'drum', seed = 1 } = {}) {   // a floor lamp for the reading chair: a long arc from a stone base, a tripod under a drum, or a pharmacy lamp with a swing arm
   const T = kit.THREE, g = kit.group(), R = rnd(seed), Rb = rb(kit);
-  const sh = (r, hh) => { const s = kit.group(); if (shade === 'cone') s.add(kit.cyl(0, -hh, 0, r, hh, { rTop: r * 0.45, seg: 30 })); else if (shade === 'dome') s.add(kit.solid(new T.LatheGeometry([[r * 0.96, -hh + 3], [r, -hh], [r * 0.9, -hh * 0.55], [r * 0.6, -hh * 0.2], [r * 0.3, 0]].map(([a, b]) => new T.Vector2(a, b)), 30), 0, 0, 0, { smooth: true })); else s.add(kit.cyl(0, -hh, 0, r, hh, { seg: 30 })); s.add(kit.cyl(0, -hh - 2, 0, r * 0.35, 4, { seg: 12, ...lo })); return s; };
+  const sh = (r, hh) => { const s = kit.group(); if (shade === 'cone') s.add(kit.cyl(0, -hh, 0, r, hh, { rTop: r * 0.45, seg: 30 })); else if (shade === 'dome') s.add(kit.solid(new T.LatheGeometry([[r * 0.96, -hh + 3], [r, -hh], [r * 0.9, -hh * 0.55], [r * 0.6, -hh * 0.2], [r * 0.3, 0]].map(([a, b]) => new T.Vector2(a, b)), 30), 0, 0, 0, { smooth: true })), s.add(kit.solid(new T.CircleGeometry(r * 0.94, 30).rotateX(Math.PI / 2), 0, -hh + 2, 0, { linen: true })); else s.add(kit.cyl(0, -hh, 0, r, hh, { seg: 30 })); s.add(kit.cyl(0, -hh - 2, 0, r * 0.35, 4, { seg: 12, ...lo })); return s; };
   if (form === 'arc') {
     g.add(Rb(0, 0, 0, 300, 60, 220, 14, lo)); g.add(kit.cyl(-60, 60, 0, 16, h * 0.6, { seg: 12, ...lo }));
     const n = 16, p0 = [-60, 60 + h * 0.6]; let prev = [p0[0], p0[1], 0]; for (let i = 1; i <= n; i++) { const t = i / n, a = t * Math.PI * 0.55, cx2 = -60 + Math.sin(a) * 620, cy2 = p0[1] + (1 - Math.cos(a)) * 260 + t * 90; const cur = [cx2, cy2 - (t > 0.8 ? (t - 0.8) * 120 : 0), 0]; g.add(rod(kit, prev, cur, 9, 9, 'lo')); prev = cur; }
-    const s = sh(180, 190); s.position.set(prev[0], prev[1] - 30, 0); g.add(s); g.add(rod(kit, prev, [prev[0], prev[1] - 28, 0], 4, 4, 'lo'));
+    const s = sh(180, 190); s.position.set(prev[0], prev[1] - 30, 0); g.add(kit.through(s)); g.add(rod(kit, prev, [prev[0], prev[1] - 28, 0], 4, 4, 'lo'));
   } else if (form === 'tripod') {
     for (let i = 0; i < 3; i++) { const a = i / 3 * 6.2832 + 0.5; g.add(rod(kit, [Math.cos(a) * 30, h * 0.55, Math.sin(a) * 30], [Math.cos(a) * 250, 0, Math.sin(a) * 250], 14, 10, 'lo')); }
-    g.add(kit.cyl(0, h * 0.5, 0, 12, h * 0.25, { seg: 10, ...lo })); const s = sh(190, 240); s.position.set(0, h * 0.75 + 240, 0); g.add(s); g.add(kit.cyl(0, h * 0.75, 0, 8, 230, { seg: 8, ...lo }));
+    g.add(kit.cyl(0, h * 0.5, 0, 12, h * 0.25, { seg: 10, ...lo })); const s = sh(190, 240); s.position.set(0, h * 0.75 + 240, 0); g.add(kit.through(s)); g.add(kit.cyl(0, h * 0.75, 0, 8, 230, { seg: 8, ...lo }));
   } else {   // pharmacy
     g.add(kit.cyl(0, 0, 0, 140, 22, { rTop: 130, seg: 32, ...lo })); g.add(kit.cyl(0, 22, 0, 13, h - 400, { seg: 12 })); const top = [0, h - 380, 0];
     g.add(rod(kit, top, [260, h - 250, 0], 8, 8, 'lo')); g.add(rod(kit, [260, h - 250, 0], [380, h - 330, 0], 8, 8, 'lo')); g.add(kit.solid(new T.SphereGeometry(14, 10, 8), 260, h - 250, 0, { smooth: true, ...lo }));
-    const s = sh(105, 140); s.position.set(380, h - 330 + 10, 0); s.rotation.z = 0.3; g.add(s);
+    const s = sh(105, 140); s.position.set(380, h - 330 + 10, 0); s.rotation.z = 0.3; g.add(kit.through(s));
   }
   return kit.merge(g);
 }
@@ -61,7 +60,7 @@ export function floorBooks(kit, { n = 6, form = 'stack', topper = 'none', seed =
   const pile = (cx, cz, k, wob) => { let y = 0; for (let i = 0; i < k; i++) { const w = 190 + R() * 110, d = 130 + R() * 90, hh = 24 + R() * 30; g.add(book(kit, cx + (R() - 0.5) * wob, y, cz + (R() - 0.5) * wob * 0.5, w, hh, d, (R() - 0.5) * 0.4, tones[i % 2])); y += hh; } return y; };
   let top;
   if (form === 'pair') { top = Math.max(pile(-130, 0, Math.ceil(n / 2), 24), 0); pile(150, 20, Math.floor(n / 2), 28); }
-  else if (form === 'tower') { top = pile(0, 0, n, 50); const lb = book(kit, 150, 0, 0, 230, 34, 160, 0, 'mid'); lb.rotation.z = 0.5; lb.position.set(190, 40, 0); g.add(lb); }
+  else if (form === 'tower') { top = pile(0, 0, n, 50); const lb = book(kit, 150, 0, 0, 230, 34, 160, 0, 'mid'); lb.rotation.z = 0.5; lb.position.set(190, 56, 0); kit.through(lb); g.add(lb); }
   else top = pile(0, 0, n, 26);
   if (topper === 'cup') { const T = kit.THREE; g.add(kit.cyl(10, top, 0, 38, 82, { rTop: 42, seg: 20, ...lo })); g.add(kit.cyl(10, top + 80, 0, 32, 3, { seg: 18, linen: true })); g.add(rod(kit, [48, top + 62, 0], [72, top + 40, 0], 5, 5, 'lo')); }
   else if (topper === 'glasses') { const T = kit.THREE, gl = kit.group(); for (const s of [-1, 1]) { const rg = kit.solid(new T.TorusGeometry(24, 2.2, 6, 20), s * 32, 0, 0, { smooth: true }); rg.rotation.x = Math.PI / 2; gl.add(rg); } gl.add(rod(kit, [-8, 0, 0], [8, 0, 0], 2, 2, 'lo')); gl.position.set(0, top + 3, 10); gl.rotation.y = 0.5; g.add(gl); }
@@ -87,26 +86,26 @@ export function teaSet(kit, { form = 'cup', saucer = 'yes', biscuit = 'yes', ste
 }
 
 export function readShelf(kit, { form = 'ledge', w = 800, seed = 1 } = {}) {   // a small wall shelf: a picture ledge with leaning books and a small frame, a thick floating board with a book pile and a candle, or a board on two brackets with a book row and a jar
-  const g = kit.group(), R = rnd(seed), B = bx(kit), Rb = rb(kit), T = kit.THREE, dz = form === 'ledge' ? 46 : form === 'floating' ? 130 : 110;   // the parts are built about the board's middle; the whole is shifted so its back lies on the wall (z 0)
+  const g = kit.group(), R = rnd(seed), B = bx(kit), Rb = rb(kit), T = kit.THREE, dz = form === 'ledge' ? 46 : form === 'floating' ? 130 : form === 'pegs' ? 12 : 110;   // the parts are built about the board's middle; the whole is shifted so its back lies on the wall (z 0)
   if (form === 'ledge') {
     g.add(B(0, 0, 0, w, 24, 90)); g.add(B(0, 24, -45 + 8, w, 40, 16, lo)); let x = -w / 2 + 50;
-    for (let i = 0; i < 3; i++) { const bw = 140 + R() * 40, bh = 190 + R() * 60, b = kit.rbox(-bw / 2, 0, 10, bw, bh, 22, 3, { tone: i % 2 ? 'lo' : 'mid' }); b.position.set(x + bw / 2, 24, 26); b.rotation.x = -0.16; g.add(b); x += bw + 30; }
-    const fw = 200, fh = 260, fr = kit.rbox(0, 0, 10, fw, fh, 18, 3); fr.position.set(w / 2 - 150, 24, 28); fr.rotation.x = -0.14; g.add(fr); g.add(kit.lines([[w / 2 - 150 - fw / 2 + 20, 24 + 20, 50], [w / 2 - 150 + fw / 2 - 20, 24 + 20, 50], [w / 2 - 150 + fw / 2 - 20, 24 + 20, 50], [w / 2 - 150 + fw / 2 - 20, 24 + fh - 24, 50], [w / 2 - 150 + fw / 2 - 20, 24 + fh - 24, 50], [w / 2 - 150 - fw / 2 + 20, 24 + fh - 24, 50], [w / 2 - 150 - fw / 2 + 20, 24 + fh - 24, 50], [w / 2 - 150 - fw / 2 + 20, 24 + 20, 50]], 'mid'));
+    for (let i = 0; i < 3; i++) { const bw = 140 + R() * 40, bh = 190 + R() * 60; if (x + bw > w / 2 - 270) break; const b = kit.rbox(-bw / 2, 0, 10, bw, bh, 22, 3, { tone: i % 2 ? 'lo' : 'mid' }); b.position.set(x + bw / 2, 24, 26); b.rotation.x = -0.16; g.add(kit.content(b)); x += bw + 30; }
+    const fw = 200, fh = 260, fr = kit.rbox(0, 0, 10, fw, fh, 18, 3); fr.position.set(w / 2 - 150, 24, 28); fr.rotation.x = -0.14; g.add(kit.content(fr)); g.add(kit.lines([[w / 2 - 150 - fw / 2 + 20, 24 + 20, 50], [w / 2 - 150 + fw / 2 - 20, 24 + 20, 50], [w / 2 - 150 + fw / 2 - 20, 24 + 20, 50], [w / 2 - 150 + fw / 2 - 20, 24 + fh - 24, 50], [w / 2 - 150 + fw / 2 - 20, 24 + fh - 24, 50], [w / 2 - 150 - fw / 2 + 20, 24 + fh - 24, 50], [w / 2 - 150 - fw / 2 + 20, 24 + fh - 24, 50], [w / 2 - 150 - fw / 2 + 20, 24 + 20, 50]], 'mid'));
   } else if (form === 'floating') {
-    g.add(Rb(0, 0, 0, w, 48, 260, 6)); let y = 48; for (let i = 0; i < 5; i++) { const hh = 24 + R() * 20; g.add(book(kit, -w / 2 + 200 + (R() - 0.5) * 24, y, 120, 210 + R() * 40, hh, 150 + R() * 30, (R() - 0.5) * 0.3, i % 2 ? 'lo' : 'mid')); y += hh; }
+    g.add(Rb(0, 0, 0, w, 48, 260, 6)); let y = 48; for (let i = 0; i < 5; i++) { const hh = 24 + R() * 20; g.add(kit.content(book(kit, -w / 2 + 200 + (R() - 0.5) * 24, y, 120, 210 + R() * 40, hh, 150 + R() * 30, (R() - 0.5) * 0.3, i % 2 ? 'lo' : 'mid'))); y += hh; }
     g.add(kit.cyl(w / 2 - 160, 48, 130, 46, 100, { rTop: 46, seg: 22, ...lo })); g.add(kit.lines([[w / 2 - 160 + 4, 150, 130], [w / 2 - 160 + 8, 172, 130], [w / 2 - 160 + 8, 172, 130], [w / 2 - 160, 190, 130]], 'mid')); g.add(kit.cyl(w / 2 - 160, 148, 130, 3, 40, { seg: 8, ...lo })); g.add(kit.solid(new T.SphereGeometry(7, 8, 6), w / 2 - 160, 190, 130, { smooth: true, ...lo }));
   } else if (form === 'double') {   // two boards on side uprights: books on the lower, mugs and a jar on the upper
     for (const y of [0, 380]) g.add(Rb(0, y, 0, w, 24, 200, 3));
     for (const s of [-1, 1]) g.add(Rb(s * (w / 2 - 12), 24, 0, 24, 356, 200, 3, lo));
-    let x = -w / 2 + 60; for (let i = 0; i < 6 && x < w / 2 - 200; i++) { const bw = 30 + R() * 20, bh = 200 + R() * 70; g.add(kit.rbox(x, 24, 150, bw, bh, 150, 2, { tone: i % 2 ? 'lo' : 'mid' })); x += bw + 2; }
+    let x = -w / 2 + 60; for (let i = 0; i < 6 && x < w / 2 - 200; i++) { const bw = 30 + R() * 20, bh = 200 + R() * 70; g.add(kit.content(kit.rbox(x, 24, 150, bw, bh, 150, 2, { tone: i % 2 ? 'lo' : 'mid' }))); x += bw + 2; }
     for (let i = 0; i < 2; i++) g.add(kit.cyl(-w / 2 + 120 + i * 130, 404, 100, 40, 84, { rTop: 44, seg: 22 })); g.add(kit.cyl(w / 2 - 130, 404, 100, 54, 130, { rTop: 40, seg: 22, ...lo }));
   } else if (form === 'pegs') {   // a peg rail with a hung cloth and a hung bag
     g.add(Rb(0, 0, 0, w, 90, 24, 4)); const k = Math.max(3, Math.round(w / 220));
     for (let i = 0; i < k; i++) { const x = -w / 2 + 80 + i * (w - 160) / (k - 1); g.add(rod(kit, [x, 45, 12], [x, 45, 100], 10, 10, 'lo')); g.add(kit.cyl(x, 45, 104, 15, 12, { axis: 'z', seg: 12 })); if (i === 1) g.add(kit.rbox(x - 70, -260, 118, 140, 312, 14, 6, lo));   // a folded throw over a peg
-      if (i === k - 1) { g.add(kit.rbox(x - 75, -280, 162, 150, 250, 46, 18)); g.add(kit.lines([[x - 8, 45, 108], [x - 62, -30, 140], [x + 8, 45, 108], [x + 62, -30, 140]], 'lo')); g.add(kit.rbox(x - 56, -40, 152, 34, 130, 26, 2, lo)); g.add(kit.rbox(x - 8, -40, 152, 30, 105, 26, 2)); g.add(kit.rbox(x + 26, -40, 152, 26, 118, 26, 2, lo)); } }   // a tote with books standing in it
+      if (i === k - 1) { g.add(kit.rbox(x - 75, -280, 112, 150, 250, 46, 18)); g.add(kit.box(x - 6, -34, 106, 12, 86, 10, lo)); g.add(kit.lines([[x - 8, 45, 108], [x - 62, -30, 120], [x + 8, 45, 108], [x + 62, -30, 120]], 'lo')); g.add(kit.rbox(x - 56, -40, 124, 34, 130, 26, 2, lo)); g.add(kit.rbox(x - 8, -40, 124, 30, 105, 26, 2)); g.add(kit.rbox(x + 26, -40, 124, 26, 118, 26, 2, lo)); } }   // a tote with books standing in it
   } else {
     g.add(Rb(0, 0, 0, w, 28, 220, 4)); for (const s of [-1, 1]) { const x = s * (w / 2 - 110); g.add(B(x, -150, -103, 22, 170, 14, lo)); g.add(rod(kit, [x, -140, -96], [x, -10, 80], 8, 8, 'lo')); g.add(B(x, -22, -10, 22, 22, 200, lo)); }
-    let x = -w / 2 + 60; for (let i = 0; i < 7 && x < w / 2 - 330; i++) { const bw = 30 + R() * 22, bh = 170 + R() * 80; g.add(kit.rbox(x, 28, 130, bw, bh, 150, 2, { tone: i % 2 ? 'lo' : 'mid' })); x += bw + 2; }
+    let x = -w / 2 + 60; for (let i = 0; i < 7 && x < w / 2 - 330; i++) { const bw = 30 + R() * 22, bh = 170 + R() * 80; g.add(kit.content(kit.rbox(x, 28, 130, bw, bh, 150, 2, { tone: i % 2 ? 'lo' : 'mid' }))); x += bw + 2; }
     g.add(kit.cyl(w / 2 - 170, 28, 110, 48, 120, { rTop: 56, seg: 22 })); g.add(kit.lines(ringXZ(w / 2 - 170, 34, 110, 48.5, 22), 'mid'));
   }
   const root = kit.group(); g.position.z = dz; root.add(g); return kit.merge(root);

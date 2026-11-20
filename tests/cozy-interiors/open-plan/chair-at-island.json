@@ -1,0 +1,847 @@
+{
+ "units": "mm",
+ "seed": 47,
+ "home": {
+  "height": 2700,
+  "accent": "#d9a85c",
+  "floor": {
+   "style": "boards",
+   "seed": 47
+  },
+  "tiles": {
+   "origin": [
+    0,
+    0
+   ]
+  },
+  "walls": [
+   {
+    "id": "dining-back",
+    "from": [
+     5400,
+     0
+    ],
+    "to": [
+     0,
+     0
+    ],
+    "openings": [
+     {
+      "kind": "door",
+      "width": 900,
+      "hinge": "r",
+      "open": 20,
+      "at": 4700
+     },
+     {
+      "kind": "window",
+      "width": 1300,
+      "height": 1200,
+      "sill": 900,
+      "at": 1800
+     }
+    ]
+   },
+   {
+    "id": "dining-right",
+    "from": [
+     5400,
+     4800
+    ],
+    "to": [
+     5400,
+     0
+    ],
+    "openings": []
+   },
+   {
+    "id": "kitchen-back",
+    "from": [
+     5400,
+     10200
+    ],
+    "to": [
+     5400,
+     4800
+    ],
+    "openings": [
+     {
+      "kind": "window",
+      "width": 1000,
+      "height": 1100,
+      "sill": 1000,
+      "sash": "fixed",
+      "at": 3900
+     }
+    ]
+   },
+   {
+    "id": "kitchen-right",
+    "from": [
+     1200,
+     10200
+    ],
+    "to": [
+     5400,
+     10200
+    ],
+    "openings": [
+     {
+      "kind": "window",
+      "width": 1000,
+      "height": 1100,
+      "sill": 1000,
+      "at": 1900
+     }
+    ]
+   }
+  ],
+  "objects": [
+   {
+    "id": "dining-rug",
+    "asset": "rug",
+    "at": [
+     2900,
+     0,
+     3500
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 2200,
+     "d": 2200,
+     "form": "round",
+     "fringe": "ends",
+     "border": 40
+    },
+    "group": "dining:table set",
+    "area": "dining"
+   },
+   {
+    "id": "dining-dining",
+    "asset": "roundTable",
+    "at": [
+     2900,
+     7,
+     3500
+    ],
+    "mount": "floor",
+    "params": {
+     "r": 650,
+     "h": 750
+    },
+    "group": "dining:table set",
+    "hero": true,
+    "area": "dining",
+    "lift": 7
+   },
+   {
+    "id": "dining-dining-chair-1",
+    "asset": "chair",
+    "at": [
+     2900,
+     7,
+     2620
+    ],
+    "mount": "floor",
+    "params": {
+     "form": "ladder"
+    },
+    "group": "dining:table set",
+    "area": "dining",
+    "lift": 7
+   },
+   {
+    "id": "dining-dining-chair-2",
+    "asset": "chair",
+    "at": [
+     3780,
+     7,
+     3500
+    ],
+    "turn": -90,
+    "mount": "floor",
+    "params": {
+     "form": "ladder"
+    },
+    "group": "dining:table set",
+    "area": "dining",
+    "lift": 7
+   },
+   {
+    "id": "dining-dining-chair-3",
+    "asset": "chair",
+    "at": [
+     2900,
+     7,
+     4380
+    ],
+    "turn": 180,
+    "mount": "floor",
+    "params": {
+     "form": "ladder"
+    },
+    "group": "dining:table set",
+    "area": "dining",
+    "lift": 7
+   },
+   {
+    "id": "dining-dining-chair-4",
+    "asset": "chair",
+    "at": [
+     2020,
+     7,
+     3500
+    ],
+    "turn": 90,
+    "mount": "floor",
+    "params": {
+     "form": "ladder"
+    },
+    "group": "dining:table set",
+    "area": "dining",
+    "lift": 7
+   },
+   {
+    "id": "dining-dining-pendantLamp",
+    "asset": "pendantLamp",
+    "at": [
+     2900,
+     0,
+     3500
+    ],
+    "mount": "ceiling",
+    "params": {
+     "rim": 1582
+    },
+    "group": "dining:table set",
+    "area": "dining"
+   },
+   {
+    "id": "dining-dining-jug",
+    "asset": "jug",
+    "at": [
+     2780,
+     757,
+     3500
+    ],
+    "mount": "on",
+    "params": {
+     "r": 70,
+     "h": 220,
+     "form": "belly",
+     "band": "plain",
+     "handle": "none"
+    },
+    "group": "dining:table set",
+    "area": "dining",
+    "dx": -120
+   },
+   {
+    "id": "dining-dining-bookStack",
+    "asset": "bookStack",
+    "at": [
+     3120,
+     757,
+     3500
+    ],
+    "mount": "on",
+    "params": {},
+    "group": "dining:table set",
+    "area": "dining",
+    "dx": 220
+   },
+   {
+    "id": "dining-side",
+    "asset": "sideboard",
+    "at": [
+     2200,
+     0,
+     210
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 1400,
+     "h": 800,
+     "form": "doors",
+     "legs": "plinth"
+    },
+    "group": "dining:wall",
+    "area": "dining"
+   },
+   {
+    "id": "dining-side-vase",
+    "asset": "vase",
+    "at": [
+     1906.7,
+     800,
+     130
+    ],
+    "mount": "on",
+    "params": {
+     "form": 0
+    },
+    "group": "dining:wall",
+    "area": "dining"
+   },
+   {
+    "id": "dining-side-plant",
+    "asset": "plant",
+    "at": [
+     2443.3,
+     800,
+     180
+    ],
+    "mount": "on",
+    "params": {
+     "form": 2
+    },
+    "group": "dining:wall",
+    "area": "dining"
+   },
+   {
+    "id": "dining-pic",
+    "asset": "picture",
+    "at": [
+     2200,
+     1250,
+     0
+    ],
+    "mount": "wall",
+    "params": {
+     "w": 700,
+     "h": 500,
+     "form": 0
+    },
+    "group": "dining:wall",
+    "area": "dining",
+    "shadow": false
+   },
+   {
+    "id": "dining-basket",
+    "asset": "basket",
+    "at": [
+     800,
+     0,
+     3800
+    ],
+    "turn": 10,
+    "mount": "floor",
+    "params": {
+     "form": 0
+    },
+    "group": "dining:wall",
+    "area": "dining"
+   },
+   {
+    "id": "kitchen-run",
+    "asset": "baseRun",
+    "at": [
+     4800,
+     0,
+     5900
+    ],
+    "turn": -90,
+    "mount": "floor",
+    "params": {
+     "depth": 600,
+     "modules": [
+      {
+       "w": 800,
+       "kind": "sink"
+      },
+      {
+       "w": 600,
+       "kind": "drawers",
+       "n": 3
+      },
+      {
+       "w": 900,
+       "kind": "hob"
+      }
+     ]
+    },
+    "group": "kitchen:cooking",
+    "hero": true,
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-run-hob",
+    "asset": "hob",
+    "at": [
+     4800,
+     0,
+     7300
+    ],
+    "turn": -90,
+    "mount": "on",
+    "params": {},
+    "group": "kitchen:stove",
+    "area": "kitchen",
+    "depth": 600
+   },
+   {
+    "id": "kitchen-run-hood1",
+    "asset": "hood",
+    "at": [
+     4800,
+     0,
+     7300
+    ],
+    "turn": -90,
+    "mount": "wall",
+    "params": {},
+    "group": "kitchen:stove",
+    "area": "kitchen",
+    "depth": 600
+   },
+   {
+    "id": "kitchen-run-pan2",
+    "asset": "pan",
+    "at": [
+     4960,
+     940,
+     7930
+    ],
+    "turn": -125,
+    "mount": "on",
+    "params": {},
+    "group": "kitchen:stove",
+    "area": "kitchen",
+    "off": 440
+   },
+   {
+    "id": "kitchen-kettle",
+    "asset": "kettle",
+    "at": [
+     5070,
+     900,
+     6830
+    ],
+    "turn": -90,
+    "mount": "on",
+    "params": {},
+    "group": "kitchen:stove",
+    "area": "kitchen",
+    "off": 330
+   },
+   {
+    "id": "kitchen-fruit",
+    "asset": "fruitBowl",
+    "at": [
+     5070,
+     900,
+     7150
+    ],
+    "turn": -90,
+    "mount": "on",
+    "params": {},
+    "group": "kitchen:stove",
+    "area": "kitchen",
+    "off": 330
+   },
+   {
+    "id": "kitchen-fridge",
+    "asset": "fridge",
+    "at": [
+     4760,
+     0,
+     9250
+    ],
+    "turn": -90,
+    "mount": "floor",
+    "params": {
+     "form": 1
+    },
+    "group": "kitchen:cooking",
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-kshelf",
+    "asset": "openShelf",
+    "at": [
+     5400,
+     1350,
+     8700
+    ],
+    "turn": -90,
+    "mount": "wall",
+    "params": {
+     "w": 700,
+     "plates": 7,
+     "mugs": 2,
+     "seed": 51,
+     "rack": "bowls"
+    },
+    "group": "kitchen:stove",
+    "area": "kitchen",
+    "shadow": false
+   },
+   {
+    "id": "kitchen-island",
+    "asset": "baseRun",
+    "at": [
+     3700,
+     0,
+     6900
+    ],
+    "turn": 90,
+    "mount": "floor",
+    "params": {
+     "depth": 600,
+     "finishedBack": true,
+     "modules": [
+      {
+       "w": 600,
+       "kind": "doors"
+      },
+      {
+       "w": 600,
+       "kind": "drawers",
+       "n": 3
+      },
+      {
+       "w": 600,
+       "kind": "doors"
+      }
+     ]
+    },
+    "group": "kitchen:island",
+    "area": "kitchen",
+    "sep": "island"
+   },
+   {
+    "id": "kitchen-badchair",
+    "asset": "chair",
+    "at": [
+     2650,
+     0,
+     6050
+    ],
+    "turn": -90,
+    "mount": "floor",
+    "params": {
+     "form": "ladder"
+    },
+    "group": "kitchen:island",
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-stool1",
+    "asset": "stool",
+    "at": [
+     2800,
+     0,
+     5600
+    ],
+    "turn": -90,
+    "mount": "floor",
+    "params": {
+     "form": 1
+    },
+    "group": "kitchen:island",
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-stool2",
+    "asset": "stool",
+    "at": [
+     2800,
+     0,
+     6400
+    ],
+    "turn": -90,
+    "mount": "floor",
+    "params": {
+     "form": 2
+    },
+    "group": "kitchen:island",
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-iplant",
+    "asset": "plant",
+    "at": [
+     3400,
+     900,
+     5700
+    ],
+    "turn": -90,
+    "mount": "on",
+    "params": {
+     "form": 1
+    },
+    "group": "kitchen:island",
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-shelfunit",
+    "asset": "shelf",
+    "at": [
+     1700,
+     0,
+     5000
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 900,
+     "h": 1800,
+     "d": 330,
+     "shelves": 4,
+     "base": "legs",
+     "back": "closed",
+     "fill": "mixed",
+     "seed": 18
+    },
+    "group": "kitchen:shelfwall",
+    "area": "kitchen",
+    "sep": "openShelf"
+   },
+   {
+    "id": "kitchen-trolley",
+    "asset": "trolley",
+    "at": [
+     2000,
+     0,
+     9100
+    ],
+    "turn": -90,
+    "mount": "floor",
+    "params": {},
+    "group": "kitchen:cooking",
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-tm1",
+    "asset": "mug",
+    "at": [
+     2020,
+     820,
+     9030
+    ],
+    "turn": -90,
+    "mount": "on",
+    "params": {},
+    "group": "kitchen:cooking",
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-tm2",
+    "asset": "mug",
+    "at": [
+     1970,
+     820,
+     9190
+    ],
+    "turn": -90,
+    "mount": "on",
+    "params": {},
+    "group": "kitchen:cooking",
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-runner",
+    "asset": "rug",
+    "at": [
+     4200,
+     0,
+     7200
+    ],
+    "turn": -90,
+    "mount": "floor",
+    "params": {
+     "form": "runner",
+     "w": 2200,
+     "d": 700,
+     "fringe": "ends",
+     "border": 120
+    },
+    "group": "kitchen:cooking",
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-rshelf",
+    "asset": "wallShelf",
+    "at": [
+     1900,
+     1500,
+     10200
+    ],
+    "turn": -180,
+    "mount": "wall",
+    "params": {
+     "w": 800
+    },
+    "group": "kitchen:shelfwall",
+    "area": "kitchen",
+    "shadow": false
+   },
+   {
+    "id": "dining-rshelf2",
+    "asset": "wallShelf",
+    "at": [
+     5400,
+     1500,
+     3900
+    ],
+    "turn": -90,
+    "mount": "wall",
+    "params": {
+     "w": 900
+    },
+    "group": "dining:wall",
+    "area": "dining",
+    "shadow": false
+   },
+   {
+    "id": "dining-rpic",
+    "asset": "picture",
+    "at": [
+     5400,
+     1200,
+     2400
+    ],
+    "turn": -90,
+    "mount": "wall",
+    "params": {
+     "w": 800,
+     "h": 600,
+     "form": 1
+    },
+    "group": "dining:wall",
+    "area": "dining",
+    "shadow": false
+   },
+   {
+    "id": "dining-rshelf",
+    "asset": "wallShelf",
+    "at": [
+     5400,
+     1500,
+     1550
+    ],
+    "turn": -90,
+    "mount": "wall",
+    "params": {
+     "w": 700
+    },
+    "group": "dining:wall",
+    "area": "dining",
+    "shadow": false
+   }
+  ]
+ },
+ "areas": [
+  {
+   "id": "dining",
+   "name": "Dining",
+   "group": "g1",
+   "O": [
+    0,
+    0
+   ],
+   "psi": 0,
+   "bounds": {
+    "x0": 0,
+    "x1": 5400,
+    "z0": 0,
+    "z1": 4800,
+    "top": 2500
+   },
+   "camera": {
+    "home": {
+     "target": [
+      2900,
+      800,
+      2300
+     ],
+     "az": 52,
+     "el": 14,
+     "fit": "fixed",
+     "dist": 7700
+    },
+    "shots": []
+   }
+  },
+  {
+   "id": "kitchen",
+   "name": "Kitchen",
+   "group": "g1",
+   "O": [
+    5400,
+    4800
+   ],
+   "psi": 90,
+   "bounds": {
+    "x0": 1200,
+    "x1": 5400,
+    "z0": 4800,
+    "z1": 10200,
+    "top": 2500
+   },
+   "camera": {
+    "home": {
+     "target": [
+      3900,
+      800,
+      7300
+     ],
+     "az": -82,
+     "el": 13,
+     "fit": "objects",
+     "dist": 5600
+    },
+    "shots": [
+     {
+      "name": "across the island",
+      "from": [
+       2100,
+       1400,
+       10100
+      ],
+      "look": [
+       3400,
+       600,
+       6000
+      ],
+      "fov": 38,
+      "subject": "kitchen:island",
+      "across": "dining"
+     }
+    ]
+   }
+  }
+ ],
+ "groups": [
+  {
+   "id": "g1",
+   "areas": [
+    "dining",
+    "kitchen"
+   ],
+   "seams": [
+    {
+     "a": "dining",
+     "b": "kitchen",
+     "layout": "corner",
+     "share": 0,
+     "p0": [
+      5400,
+      4800
+     ],
+     "p1": [
+      1200,
+      4800
+     ],
+     "normal": [
+      0,
+      1
+     ],
+     "kinds": [
+      "openShelf",
+      "island"
+     ]
+    }
+   ]
+  }
+ ]
+}

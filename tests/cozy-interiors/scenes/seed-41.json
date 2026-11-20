@@ -248,7 +248,7 @@
     "id": "kitchen-rack",
     "asset": "dishRack",
     "at": [
-     3290,
+     2590,
      900,
      330
     ],
@@ -391,7 +391,9 @@
     "mount": "floor",
     "params": {
      "w": 1400,
-     "h": 850
+     "h": 850,
+     "form": "mixed",
+     "legs": "hairpin"
     },
     "group": "kitchen:dresser",
     "area": "kitchen"
@@ -478,7 +480,8 @@
     "params": {
      "w": 800,
      "d": 700,
-     "h": 750
+     "h": 750,
+     "form": "legs"
     },
     "group": "kitchen:table set",
     "area": "kitchen",
@@ -493,7 +496,9 @@
      3090
     ],
     "mount": "floor",
-    "params": {},
+    "params": {
+     "form": "bentwood"
+    },
     "group": "kitchen:table set",
     "area": "kitchen",
     "lift": 7
@@ -508,7 +513,9 @@
     ],
     "turn": 180,
     "mount": "floor",
-    "params": {},
+    "params": {
+     "form": "bentwood"
+    },
     "group": "kitchen:table set",
     "area": "kitchen",
     "lift": 7
@@ -524,7 +531,10 @@
     "mount": "floor",
     "params": {
      "w": 1900,
-     "d": 1400
+     "d": 1400,
+     "form": "plain",
+     "border": 85,
+     "fringe": "none"
     },
     "group": "kitchen:table light",
     "area": "kitchen"
@@ -636,7 +646,8 @@
     "params": {
      "w": 1800,
      "d": 900,
-     "h": 750
+     "h": 750,
+     "form": "trestle"
     },
     "group": "dining:table set",
     "hero": true,
@@ -652,7 +663,9 @@
      1540
     ],
     "mount": "floor",
-    "params": {},
+    "params": {
+     "form": "upholstered"
+    },
     "group": "dining:table set",
     "area": "dining",
     "lift": 7
@@ -667,7 +680,9 @@
     ],
     "turn": 180,
     "mount": "floor",
-    "params": {},
+    "params": {
+     "form": "upholstered"
+    },
     "group": "dining:table set",
     "area": "dining",
     "lift": 7
@@ -681,7 +696,9 @@
      1540
     ],
     "mount": "floor",
-    "params": {},
+    "params": {
+     "form": "upholstered"
+    },
     "group": "dining:table set",
     "area": "dining",
     "lift": 7
@@ -696,7 +713,9 @@
     ],
     "turn": 180,
     "mount": "floor",
-    "params": {},
+    "params": {
+     "form": "upholstered"
+    },
     "group": "dining:table set",
     "area": "dining",
     "lift": 7
@@ -712,7 +731,10 @@
     "mount": "floor",
     "params": {
      "w": 2400,
-     "d": 2200
+     "d": 2200,
+     "form": "striped",
+     "border": 105,
+     "fringe": "ends"
     },
     "group": "dining:table light",
     "area": "dining"
@@ -781,7 +803,8 @@
     ],
     "mount": "floor",
     "params": {
-     "w": 1300
+     "w": 1300,
+     "form": "upholstered"
     },
     "group": "dining:wall",
     "area": "dining"
@@ -1031,7 +1054,8 @@
     ],
     "mount": "floor",
     "params": {
-     "w": 1200
+     "w": 1200,
+     "form": "trestle"
     },
     "group": "bedroom:foot",
     "area": "bedroom"
@@ -1063,7 +1087,10 @@
     "mount": "floor",
     "params": {
      "w": 3200,
-     "d": 2000
+     "d": 2000,
+     "form": "borderless",
+     "border": 65,
+     "fringe": "ends"
     },
     "group": "bedroom:foot",
     "area": "bedroom"

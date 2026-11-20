@@ -11,22 +11,51 @@ export function canvasOf(w, h) {
 export const VIEW = { c: null, h: null, r0: 1e9, r1: 2e9 };
 const sm = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 // A transparent textured plane that follows the kit's opacity and the view fade and never writes depth. `vis` ({ value } 0..1) is a wall's own visibility, for things standing on that wall.
-export function sheet(kit, canvas, w, h, vis = null) {
+export function sheet(kit, canvas, w, h, vis = null, first = false) {
   const t = new kit.THREE.CanvasTexture(canvas); t.colorSpace = kit.THREE.SRGBColorSpace;
-  return sheetTex(kit, t, w, h, vis);
+  return sheetTex(kit, t, w, h, vis, null, first);
 }
 // the same plane from any texture (a baked render target, say)
-export function sheetTex(kit, t, w, h, vis = null, gain = null) {   // gain: { value } 0..1, a fade a caller drives
+export function sheetTex(kit, t, w, h, vis = null, gain = null, first = false, masks = null) {   // gain: { value } 0..1, a fade a caller drives; first: a backdrop drawn before everything else (see below)
   const T = kit.THREE, mid = new T.Vector3();
-  const mat = new T.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
+  // first: the plane is drawn in the opaque pass before every other piece, writes no depth, and fades by custom blending (so opacity still works): whatever is drawn later, a sash or a bird outside a window, lies over it whatever its depth
+  const mat = first ? new T.MeshBasicMaterial({ map: t, transparent: false, blending: T.CustomBlending, blendSrc: T.SrcAlphaFactor, blendDst: T.OneMinusSrcAlphaFactor, blendSrcAlpha: T.OneFactor, blendDstAlpha: T.OneMinusSrcAlphaFactor, depthWrite: false, toneMapped: false })
+    : new T.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
   const m = new T.Mesh(new T.PlaneGeometry(w, h), mat);
-  m.renderOrder = 1;
+  m.renderOrder = first ? -10 : 1;
+  // masks: [{ box: [x0, z0, x1, z1] in world mm, sv: { value } }] on a floor sheet: where a piece's contact shadow is baked in, the shadow lets go as the piece fades (sv.value 1 = drawn, 0 = gone), around the footprint and 150 mm beyond, melting over 150 mm more
+  const MK = 12, mk = { uMk: { value: Array.from({ length: MK }, () => new T.Vector4()) }, uMa: { value: new Array(MK).fill(0) } };
+  if (masks) {
+    mat.onBeforeCompile = (sh) => {
+      Object.assign(sh.uniforms, mk);
+      sh.vertexShader = 'varying vec2 vMk;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vMk = (modelMatrix * vec4(transformed, 1.0)).xz;');
+      sh.fragmentShader = 'varying vec2 vMk; uniform vec4 uMk[' + MK + ']; uniform float uMa[' + MK + '];\n' + sh.fragmentShader.replace('#include <map_fragment>', '#include <map_fragment>\n float keep = 1.0; for (int i = 0; i < ' + MK + '; i++) { vec2 d = max(max(uMk[i].xy - vMk, vMk - uMk[i].zw), 0.0); float m = 1.0 - smoothstep(150.0, 300.0, length(d)); keep *= 1.0 - uMa[i] * m; } diffuseColor.a *= keep;');
+    };
+  }
   m.onBeforeRender = () => {
+    if (masks) { let n = 0; for (const e of masks) { const a = 1 - e.sv.value; if (a > 0.001 && n < MK) { mk.uMk.value[n].set(e.box[0], e.box[1], e.box[2], e.box[3]); mk.uMa.value[n++] = a; } } for (; n < MK; n++) mk.uMa.value[n] = 0; }
     let f = 1;
-    if (VIEW.c) { m.getWorldPosition(mid); mid.sub(VIEW.c); mid.set(Math.max(Math.abs(mid.x) - VIEW.h.x, 0), Math.max(Math.abs(mid.y) - VIEW.h.y, 0), Math.max(Math.abs(mid.z) - VIEW.h.z, 0)); f = 1 - sm(VIEW.r0, VIEW.r1, mid.length()); }
+    if (VIEW.c) { (m.fadeRef || m).getWorldPosition(mid); mid.sub(VIEW.c); mid.set(Math.max(Math.abs(mid.x) - VIEW.h.x, 0), Math.max(Math.abs(mid.y) - VIEW.h.y, 0), Math.max(Math.abs(mid.z) - VIEW.h.z, 0)); f = 1 - sm(VIEW.r0, VIEW.r1, mid.length()); }
     mat.opacity = kit.fill.uniforms.uOpacity.value * f * (vis ? vis.value : 1) * (gain ? gain.value : 1);
   };
   return m;
+}
+// The outside picture of a window is clipped to its opening with the stencil buffer, so nothing drawn after it (the paper floor that runs on beyond the wall, a fade fill) can paint over it, and a sash or a bird outside still lies over it.
+// openingMask(kit, pts) -> a mesh (the opening's outline [z, y] at the wall face, in the opening's frame) to add next to the picture; stencilClip(sky) restricts the picture to it; STENCIL_OUT(material) keeps a material off the masked pixels.
+export const MASK_REF = 7;
+export function openingMask(kit, pts) {
+  const T = kit.THREE, shape = new T.Shape(pts.map(([z, y]) => new T.Vector2(-z, y)));
+  const m = new T.Mesh(new T.ShapeGeometry(shape), new T.MeshBasicMaterial({ colorWrite: false, depthWrite: false, depthTest: false, side: T.DoubleSide, stencilWrite: true, stencilRef: MASK_REF, stencilFunc: T.AlwaysStencilFunc, stencilZPass: T.ReplaceStencilOp }));
+  m.rotation.y = Math.PI / 2; m.renderOrder = -11; m.name = 'opening-mask'; m.userData.kitLine = true; m.frustumCulled = false;
+  return m;
+}
+export function stencilClip(kit, sky) {
+  const T = kit.THREE; Object.assign(sky.material, { stencilWrite: true, stencilRef: MASK_REF, stencilFunc: T.EqualStencilFunc, stencilFail: T.KeepStencilOp, stencilZFail: T.KeepStencilOp, stencilZPass: T.KeepStencilOp });
+  return sky;
+}
+export function stencilOut(kit, material) {   // the paper that runs on behind the walls: not where an opening's picture lies
+  const T = kit.THREE; Object.assign(material, { stencilWrite: true, stencilRef: MASK_REF, stencilFunc: T.NotEqualStencilFunc, stencilFail: T.KeepStencilOp, stencilZFail: T.KeepStencilOp, stencilZPass: T.KeepStencilOp });
+  return material;
 }
 // A blurred halo round a footprint (a0..a1 by b0..b1): on a floor-like surface at height `at` ('floor': a = x, b = z), on the back wall at depth `at` ('back': a = x, b = y)
 // or on a side wall at x = `at` ('side': a = z, b = y).

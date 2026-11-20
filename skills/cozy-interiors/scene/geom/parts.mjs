@@ -1,0 +1,34 @@
+// inside one asset: does a part pass right through another? (replaces physics.mjs --parts)
+// Two parts that cross deeper than 20 mm are one of two things, told apart along the direction that separates them fastest (the contact normal):
+//   an embedded end (one part ends inside the other: a leg into a top, a rail into a post): joinery, allowed;
+//   a pass-through (one part sticks out of the other on both sides): a bug, unless a part is declared with { through: true } on the kit call.
+// A kit.content(...) part (a magazine, a log) is a separate body inside the asset: any crossing deeper than 20 mm fails, embedded or not.
+import { RAPIER, M, partDesc } from './shapes.mjs';
+import { loadScene } from './load.mjs';
+
+// loose: a loose soft thing (a pillow) pressing deeper than loose into another part fails even when it ends inside it: a pillow 63 mm into a headboard is not joinery. Sewn soft parts (a sofa's arm into its base) stay joinery.
+export const PARTS = { depth: 20, slack: 1, loose: 15 };
+
+export async function checkParts(scene, { src, depth = PARTS.depth, all = false, declared: showDeclared = false } = {}) {
+  const L = scene.objects ? scene : await loadScene(scene, { src }), W = new RAPIER.World({ x: 0, y: 0, z: 0 }), find = [];
+  for (const o of L.objects) {
+    const P = []; o.parts.forEach((p, k) => { if (p.kind === 'flat') return; const c = [(p.box.mn[0] + p.box.mx[0]) / 2, (p.box.mn[1] + p.box.mx[1]) / 2, (p.box.mn[2] + p.box.mx[2]) / 2], s = partDesc(p, c); if (!s.d) return; const b = W.createRigidBody(RAPIER.RigidBodyDesc.fixed().setTranslation(c[0] * M, c[1] * M, c[2] * M)); P.push({ k, p, col: W.createCollider(s.d, b), mesh: s.how === 'mesh' }); });
+    let worst = null; const every = [];
+    const low = Math.min(...o.parts.filter((q) => q.through !== 'held' && q.kind !== 'flat').map((q) => q.box.mn[1]));   // a declared pass-through may cross what holds it, never poke out below the asset's lowest solid part (a pen through the pot's floor)
+    for (let i = 0; i < P.length; i++) for (let j = i + 1; j < P.length; j++) {
+      const A = P[i], B = P[j], a = A.p.box, b = B.p.box;
+      const gate = Math.min(depth, PARTS.loose);
+      if (a.mn[0] > b.mx[0] - gate || a.mx[0] < b.mn[0] + gate || a.mn[1] > b.mx[1] - gate || a.mx[1] < b.mn[1] + gate || a.mn[2] > b.mx[2] - gate || a.mx[2] < b.mn[2] + gate) continue;
+      let r = null; try { r = A.col.contactCollider(B.col, 0); } catch {} if (!r || r.distance >= 0) continue;
+      const d = -r.distance / M, soft = (A.p.soft === 'loose' || B.p.soft === 'loose') && !A.p.content && !B.p.content; if (d <= (soft ? PARTS.loose : depth)) continue;   // a loose pillow: the smaller slack
+      const n = r.normal1, proj = (t) => { let lo = Infinity, hi = -Infinity; for (let q = 0; q < t.length; q += 3) { const v = t[q] * n.x + t[q + 1] * n.y + t[q + 2] * n.z; if (v < lo) lo = v; if (v > hi) hi = v; } return [lo, hi]; };
+      const [al, ah] = proj(A.p.tris), [bl, bh] = proj(B.p.tris), E = PARTS.slack, pierce = (al < bl - E && ah > bh + E) || (bl < al - E && bh > ah + E);
+      const content = A.p.content || B.p.content, declared = A.p.through || B.p.through;
+      if (declared && !content && !showDeclared && ![A, B].some((x) => x.p.through === 'held' && x.p.box.mn[1] < low - 3)) continue; if (!pierce && !content && !soft) continue;
+      const o0 = [Math.min(...o.parts.map((q) => q.box.mn[0])), Math.min(...o.parts.map((q) => q.box.mn[1])), Math.min(...o.parts.map((q) => q.box.mn[2]))]; every.push({ d: Math.round(d), parts: [A.k, B.k], types: [A.p.type, B.p.type], boxes: [A, B].map((x) => [...x.p.box.mn.map((v, i) => Math.round(v - o0[i])), ...x.p.box.mx.map((v, i) => Math.round(v - o0[i]))].join(',')), content });
+      if (!worst || d > worst.depth) worst = { depth: Math.round(d), parts: [A.k, B.k], boxes: [A, B].map((x) => [...x.p.box.mn, ...x.p.box.mx].map(Math.round)), types: [A.p.type, B.p.type], content, pierce };
+    }
+    if (worst) find.push({ rule: 'parts', id: o.id, asset: o.asset, ...(all ? { all: every } : {}), ...worst, text: `${o.id} (${o.asset}): two of its own parts pass ${worst.depth} mm ${worst.pierce ? 'right through' : 'into'} each other (parts ${worst.parts[0]} [${worst.boxes[0].join(',')}] and ${worst.parts[1]} [${worst.boxes[1].join(',')}])${worst.content ? ', one marked content' : ''}` });
+  }
+  W.free(); return find;
+}

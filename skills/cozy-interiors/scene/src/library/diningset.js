@@ -1,6 +1,6 @@
 // @js:library-diningset — the Dining batch: things on and around the table. Table pieces: origin the middle of the foot, front +z. Wall pieces: origin bottom middle on the wall face, standing out toward +z.
 // candlesticks, jug, breadBasket, placeSetting (a plate, cutlery and a glass), glazedCabinet, benchCushion, wallPlates, pendantForm.
-import { rod } from './parts.js';
+import { rod, sweptTube } from './parts.js';
 import { softBox, vessel } from './soft.js';
 import { mug } from './pieces.js';
 const lo = { tone: 'lo' }, DEG = Math.PI / 180;
@@ -30,8 +30,10 @@ export function jug(kit, { r = 70, h = 220, form = 'belly', water = true, band =
   g.add(vessel(kit, P, { contents: water ? 'tea' : 'none', seg: 28, rim: true }));
   const rt = P[P.length - 1][0], ht = h;
   if (band === 'banded') g.add(kit.lines([...ringXZ(0, h * 0.5, 0, P[2][0] * 1.01, 30), ...ringXZ(0, h * 0.58, 0, P[2][0] * 1.0, 30)], 'mid'));
-  if (handle === 'loop') { g.add(rod(kit, [rt * 0.9, ht - 14, 0], [rt * 1.6, ht - 30, 0], 9, 9, 'lo')); g.add(rod(kit, [rt * 1.6, ht - 30, 0], [rt * 1.55, h * 0.3, 0], 9, 9, 'lo')); g.add(rod(kit, [rt * 1.55, h * 0.3, 0], [P[2][0] * 0.95, h * 0.26, 0], 9, 9, 'lo')); } else { g.add(kit.cyl(rt * 1.1, h * 0.55, 0, 12, 40, { axis: 'x', seg: 10, tone: 'lo' })); }
-  { const shp = new T.Shape([new T.Vector2(-rt * 0.62, ht - 40), new T.Vector2(-rt * 1.42, ht + 16), new T.Vector2(-rt * 0.62, ht + 4)]); const lip = kit.solid(new T.ExtrudeGeometry(shp, { depth: 54, bevelEnabled: false }), 0, 0, -27, { smooth: false }); g.add(lip); }   // a pinched pouring lip
+  // the handle: one closed loop of swept tube, from just under the rim out and down to the belly (both ends in the wall), always present; `handle` only picks the shape: loop (tall D) | ring (small round ear)
+  { const bx = P[2][0], loop = handle === 'ring' ? [[rt * 0.9, ht - 30], [rt * 1.75, ht - 24], [rt * 1.75, ht * 0.5], [bx + 4.5, ht * 0.5 - 6]] : [[rt + 4.5, ht - 14], [rt * 2.0, ht - 6], [rt * 2.0, h * 0.24], [bx + 4.5, h * 0.26]], B = (t) => { const u = 1 - t; return [0, 1].map((k) => u * u * u * loop[0][k] + 3 * u * u * t * loop[1][k] + 3 * u * t * t * loop[2][k] + t * t * t * loop[3][k]); };
+    const pts = Array.from({ length: 21 }, (_, i) => { const [x, y] = B(i / 20); return [x, y, 0]; }); for (let k = 0; k < 4; k++) { const hd = sweptTube(kit, pts.slice(k * 5, k * 5 + 6), 7, 7, 8, { tone: 'mid', crease: 100, caps: false }); hd.userData.part = 'handle'; g.add(hd); } }   // five short pieces: one convex hull round the whole D would be a solid blob
+  { const shp = new T.Shape([new T.Vector2(-rt * 0.62, ht - 40), new T.Vector2(-rt * 1.42, ht + 16), new T.Vector2(-rt * 0.62, ht + 4)]); const lip = kit.solid(new T.ExtrudeGeometry(shp, { depth: 40, bevelEnabled: false }), 0, 0, -20, { smooth: false }); lip.userData.part = 'spout'; g.add(lip); }   // a pinched pouring lip
   return kit.merge(g);
 }
 
@@ -40,18 +42,18 @@ export function breadBasket(kit, { r = 150, h = 95, bread = 'loaf', seed = 3, cl
   g.add(kit.solid(new T.LatheGeometry([[r * 0.6, 0], [r * 0.7, 6], [r * 0.95, h * 0.7], [r, h], [r - 12, h], [r * 0.85, h * 0.7], [r * 0.5, 14], [0.01, 14]].map(([a, b]) => new T.Vector2(a, b)), 32), 0, 0, 0, { smooth: true, tone: 'lo' }));
   for (const f of [0.3, 0.6, 0.85]) pts.push(...ringXZ(0, h * f, 0, r * (0.7 + 0.3 * f) + 1.5, 32));
   g.add(kit.lines(pts, 'mid'));
-  if (cloth === 'yes') g.add(kit.rbox(-r * 0.8, 20, r * 0.75, r * 1.6, 8, r * 1.5, 4, { linen: true }));   // a cloth lining
-  if (rim === 'rolled') g.add(kit.cyl(0, h - 6, 0, r + 4, 14, { seg: 32, tone: 'lo' }));
-  if (bread === 'rolls') for (let i = 0; i < 4; i++) { const a = i * 1.57 + R(); g.add(kit.solid(new T.SphereGeometry(48, 14, 10), Math.cos(a) * 62, 70, Math.sin(a) * 62, { smooth: true, tone: 'lo', linen: false })); }
-  else if (bread === 'baguette') for (const [o, a0, len] of [[-36, 0.1, 2.05], [24, -0.14, 1.9]]) {   // a baguette: a long lathe that is fullest in the middle and tapers to both ends, bowed a little, with diagonal slashes
+  if (cloth === 'yes') g.add(kit.rbox(-r * 0.8, 20, r * 0.75, r * 1.6, 8, r * 1.5, 4, { linen: true, through: true }));   // a cloth lining
+  if (rim === 'rolled') g.add(kit.cyl(0, h - 6, 0, r + 4, 14, { seg: 32, tone: 'lo', open: true }));
+  if (bread === 'rolls') { const rr = Math.max(68, r * 0.45), sr = Math.min(48, rr * 0.69); for (let i = 0; i < 4; i++) { const a = i * 1.57 + R() * 0.3; g.add(kit.content(kit.solid(new T.SphereGeometry(sr, 14, 10), Math.cos(a) * rr, 22 + sr, Math.sin(a) * rr, { smooth: true, tone: 'lo', linen: false }))); } }
+  else if (bread === 'baguette') for (const [o, a0, len] of [[-40, 0.05, 2.05], [38, -0.05, 1.9]]) {   // a baguette: a long lathe that is fullest in the middle and tapers to both ends, bowed a little, with diagonal slashes
     const L = r * len, N = 14, prof = []; for (let k = 0; k <= N; k++) { const t = k / N; prof.push(new T.Vector2(Math.max(0.01, 30 * Math.pow(Math.sin(Math.PI * Math.min(0.98, Math.max(0.02, t))), 0.55)), (t - 0.5) * L)); }
     const bg = new T.LatheGeometry(prof, 16); bg.rotateZ(Math.PI / 2); const m = kit.solid(bg, 0, 0, 0, { smooth: true, tone: 'lo' }); m.scale.set(1, 0.92, 1);
     const wrap = kit.group(); wrap.add(m); const sl = []; for (let k = -2; k <= 2; k++) { const x = k * L * 0.17; sl.push([x - 12, 27, -9], [x + 12, 27, 7]); } wrap.add(kit.lines(sl, 'mid'));
-    wrap.position.set(0, h * 0.98, o); wrap.rotation.y = a0; g.add(wrap);
+    wrap.position.set(0, h + 36, o); wrap.rotation.y = a0; g.add(kit.content(wrap));
   }
   else {   // a loaf: an oval or a round boule, domed, scored
     const boule = R() < 0.45, rx = r * (boule ? 0.62 : 0.8), rz = r * (boule ? 0.62 : 0.5), ry = r * (boule ? 0.6 : 0.5);
-    const lf = kit.solid(new T.SphereGeometry(1, 24, 14, 0, Math.PI * 2, 0, Math.PI * 0.62), 0, h * 0.55, 0, { smooth: true, tone: 'lo' }); lf.scale.set(rx, ry, rz); g.add(lf);
+    const lf = kit.solid(new T.SphereGeometry(1, 24, 14, 0, Math.PI * 2, 0, Math.PI * 0.62), 0, h * 0.55, 0, { smooth: true, tone: 'lo' }); lf.scale.set(rx, ry, rz); g.add(kit.content(lf));
     const sl = []; if (boule) { for (const q of [-1, 1]) sl.push([-rx * 0.5 * q, h * 0.55 + ry * 0.86, -rx * 0.5], [rx * 0.5 * q, h * 0.55 + ry * 0.86, rx * 0.5]); }
     else for (let i = -1; i <= 1; i++) { const x = i * rx * 0.4; sl.push([x - 20, h * 0.55 + ry * 0.9, rz * 0.4], [x + 20, h * 0.55 + ry * 0.95, -rz * 0.25]); }
     g.add(kit.lines(sl, 'mid'));
@@ -64,12 +66,12 @@ export function placeSetting(kit, { r = 140, glass: gl = true, napkin: nk = true
   const g = kit.group(), pts = [], T = kit.THREE;
   g.add(kit.cyl(0, 0, 0, r, 12, { seg: 36 })); g.add(kit.cyl(0, 12, 0, r * 0.55, 8, { seg: 28, tone: 'lo' }));
   pts.push(...ringXZ(0, 12.5, 0, r * 0.78, 32));
-  const kx = r + 50;   // knife on the right, fork on the left
+  const kx = r + 8;   // knife on the right, fork on the left, close beside the plate (within the 8 mm that joins pieces)
   g.add(kit.box(kx, 0, 160, 20, 5, 330, lo)); g.add(kit.box(-kx - 20, 0, 150, 22, 5, 300, lo));
   for (const i of [-1, 0, 1]) pts.push([-kx - 9 + i * 7, 5.6, -150], [-kx - 9 + i * 7, 5.6, -80]);
   pts.push([kx + 10, 5.6, -150], [kx + 10, 5.6, 150]);
-  if (glass) g.add(kit.solid(new T.LatheGeometry([[0.01, 0], [34, 0], [34, 3], [6, 8], [5, 70], [48, 100], [50, 160], [44, 164], [43, 102], [4, 74], [0.01, 10]].map(([a, b]) => new T.Vector2(a, b)), 22), kx + 90, 0, -r * 0.8, { smooth: true, tone: 'lo' }));
-  if (napkin) { const sh = new T.Shape([new T.Vector2(0, 0), new T.Vector2(150, 0), new T.Vector2(0, 150)]), ng = new T.ExtrudeGeometry(sh, { depth: 10, bevelEnabled: true, bevelThickness: 3, bevelSize: 3, bevelSegments: 2 }); ng.rotateX(-Math.PI / 2); const nb = kit.solid(ng, -kx - 190, 5, 40, { linen: true, smooth: false }); nb.rotation.y = 0.3; g.add(nb); pts.push([-kx - 190, 16, 50], [-kx - 60, 16, 50]); }   // a folded triangle
+  if (glass) g.add(kit.solid(new T.LatheGeometry([[0.01, 0], [34, 0], [34, 3], [6, 8], [5, 70], [48, 100], [50, 160], [44, 164], [43, 102], [4, 74], [0.01, 10]].map(([a, b]) => new T.Vector2(a, b)), 22), kx + 56, 0, -r * 0.8, { smooth: true, tone: 'lo' }));
+  if (napkin) { const sh = new T.Shape([new T.Vector2(0, 0), new T.Vector2(150, 0), new T.Vector2(0, 150)]), ng = new T.ExtrudeGeometry(sh, { depth: 10, bevelEnabled: true, bevelThickness: 3, bevelSize: 3, bevelSegments: 2 }); ng.rotateX(-Math.PI / 2); const nb = kit.solid(ng, -kx - 170, 5, 40, { linen: true, smooth: false }); nb.rotation.y = 0.3; g.add(nb); pts.push([-kx - 170, 16, 50], [-kx - 50, 16, 50]); }   // a folded triangle
   g.add(kit.lines(pts, 'lo'));
   return kit.merge(g);
 }
@@ -83,7 +85,14 @@ export function glazedCabinet(kit, { w = 1000, h = 1800, d = 420, shelves = 3, d
   g.add(kit.box(-w / 2 + 22, uy - 4, -d / 2 + 30, w - 44, uh + 8, 14, lo)); g.add(kit.rbox(-w / 2 - 12, h - 40, d / 2 + 12, w + 24, 40, d + 12, 6)); if (crown === 'cornice') g.add(kit.rbox(-w / 2 - 26, h - 8, d / 2 + 26, w + 52, 26, d + 26, 5));
   for (let s = 0; s < shelves; s++) {   // shelves with plates standing and a stack of bowls
     const y = uy + (s + 0.5) * uh / shelves - uh / (shelves * 2) + 6; g.add(kit.box(-w / 2 + 22, y, d / 2 - 20, w - 44, 16, d - 60, lo));
-    let x = -w / 2 + 90; while (x < w / 2 - 150) { const rr = 90 + R() * 22; if (R() < 0.7) { const p = kit.group(); p.add(kit.cyl(0, rr, 0, rr, 8, { axis: 'z', seg: 28 })); p.position.set(x, y + 16, 0); p.rotation.x = -0.14; g.add(p); x += 60; } else { g.add(kit.cyl(x, y + 16, 0, 70, 90, { rTop: 90, seg: 24 })); x += 190; } }
+    const sty = ['plates', 'plates', 'plates', 'mixed', 'mixed', 'mixed', 'bowls', 'bowls', 'cups'][Math.floor(R() * 9)];   // each shelf holds its own kind: plates and bowls, a row of cups, a mix with jugs, or stacked bowls
+    let x = -w / 2 + 50; while (true) {
+      const rr = 90 + R() * 22, q = R(), kind = sty === 'cups' ? 'cup' : sty === 'bowls' ? 'bowl' : sty === 'mixed' ? (q < 0.35 ? 'plate' : q < 0.7 ? 'bowl' : 'jug') : (q < 0.8 ? 'plate' : 'bowl'), ri = kind === 'plate' ? rr : kind === 'cup' ? 44 : kind === 'jug' ? 52 : 90; if (x + 2 * ri > w / 2 - 50) break;
+      if (kind === 'plate') { const p = kit.group(); p.add(kit.cyl(0, rr, 0, rr, 8, { axis: 'z', seg: 28 })); p.position.set(x + ri, y + 16, 0); p.rotation.x = -0.14; g.add(kit.content(p)); }
+      else if (kind === 'cup') g.add(kit.content(kit.cyl(x + ri, y + 16, 0, 36, 78, { rTop: 44, seg: 20 })));
+      else if (kind === 'jug') g.add(kit.content(kit.cyl(x + ri, y + 16, 0, 44, 190, { rTop: 34, seg: 20, tone: 'lo' })));
+      else { g.add(kit.content(kit.cyl(x + ri, y + 16, 0, 70, 90, { rTop: 90, seg: 24 }))); if (sty === 'bowls' && R() < 0.5) g.add(kit.content(kit.cyl(x + ri, y + 16 + 90, 0, 62, 80, { rTop: 80, seg: 24 }))); }
+      x += 2 * ri + 16; }
   }
   const cw = (w - 56) / doors;
   for (let i = 0; i < doors; i++) { const x0 = -w / 2 + 28 + i * cw + 3, x1 = x0 + cw - 6, y0 = uy + 6, y1 = uy + uh - 6, mid = (x0 + x1) / 2; for (const sx of [x0, x1 - 22]) g.add(kit.box(sx, y0, z + 3, 22, y1 - y0, 18, lo)); for (const sy of [y0, y1 - 22]) g.add(kit.box(x0, sy, z + 3, x1 - x0, 22, 18, lo)); pts.push([x0, y0, z], [x1, y0, z], [x1, y0, z], [x1, y1, z], [x1, y1, z], [x0, y1, z], [x0, y1, z], [x0, y0, z], [x0 + 22, y0 + 22, z], [x1 - 22, y0 + 22, z], [x1 - 22, y0 + 22, z], [x1 - 22, y1 - 22, z], [x1 - 22, y1 - 22, z], [x0 + 22, y1 - 22, z], [x0 + 22, y1 - 22, z], [x0 + 22, y0 + 22, z], [mid, y0 + 22, z], [mid, y1 - 22, z]); g.add(kit.cyl(i % 2 ? x0 + 26 : x1 - 26, (y0 + y1) / 2, z + 4, 7, 14, { axis: 'z', seg: 10, tone: 'lo' })); }
@@ -93,12 +102,13 @@ export function glazedCabinet(kit, { w = 1000, h = 1800, d = 420, shelves = 3, d
 }
 
 export function benchCushion(kit, { w = 1100, d = 360, thick = 60, tone = 'mid', stripes = 'none', seed = 1 } = {}) {   // a flat seat pad with piping and two ties, for a bench; origin the middle of its foot on the seat
-  const g = kit.group(), pts = [], s = softBox(kit, w, d, thick, { r: 24, bulge: 8, piping: 'edge', tone, dent: 3 }); s.rotation.x = -Math.PI / 2; s.position.y = thick / 2; g.add(s);
+  const g = kit.group(), pts = [], s = softBox(kit, w, d, thick, { r: 30, bulge: 16, piping: 'edge', tone, dent: 9 }); s.rotation.x = -Math.PI / 2; s.position.y = thick / 2; g.add(s);
   if (stripes === 'stripes') for (let i = 1; i < 6; i++) pts.push([-w / 2 + w * i / 6, thick + 0.8, -d / 2 + 20], [-w / 2 + w * i / 6, thick + 0.8, d / 2 - 20]);
   else if (stripes === 'check') { for (let i = 1; i < 6; i++) pts.push([-w / 2 + w * i / 6, thick + 0.8, -d / 2 + 20], [-w / 2 + w * i / 6, thick + 0.8, d / 2 - 20]); for (let i = 1; i < 3; i++) pts.push([-w / 2 + 20, thick + 0.8, -d / 2 + d * i / 3], [w / 2 - 20, thick + 0.8, -d / 2 + d * i / 3]); }
   for (const sx of [-1, 1]) { pts.push([sx * w * 0.38, thick * 0.6, -d / 2 - 2], [sx * w * 0.38 + sx * 20, 6, -d / 2 - 30], [sx * w * 0.38, thick * 0.6, -d / 2 - 2], [sx * w * 0.38 - sx * 24, 10, -d / 2 - 36]); }
   g.add(kit.lines(pts, 'lo'));
-  return kit.merge(g);
+  const q = kit.group(), bb = new kit.THREE.Box3().setFromObject(g); g.position.y -= bb.min.y; q.add(g);   // the bulge pushes the underside below the foot: lift so the lowest point is the seat
+  return kit.merge(q);
 }
 
 export function wallPlates(kit, { n = 5, r = 110, seed = 4, layout = 'cluster' } = {}) {   // decorative plates on the wall, hung flat: a cluster, a row or a ring; origin bottom middle
@@ -122,13 +132,13 @@ export function wallPlates(kit, { n = 5, r = 110, seed = 4, layout = 'cluster' }
 // a pendant lamp for over a table: the shade's lower rim at `rim` above the floor, a cord up to 2700. form: dome | globe | cone | cluster | rattan | linear
 export function pendantForm(kit, { form = 'dome', rim = 1950, r = 220, seed = 1, canopy = 'disc' } = {}) {
   const g = kit.group(), T = kit.THREE, R = rnd(seed), top = 2700;
-  const cord = (x, y0, z) => g.add(rod(kit, [x, y0, z], [x, top, z], 4, 4, 'lo'));
+  const cord = (x, y0, z) => { const mt = top - 250; g.add(kit.cyl(x, y0, z, 5, mt - y0, { seg: 8, tone: 'mid' })); g.add(kit.lines([[x, mt, z], [x, top, z]], 'mid')); };   // the cord is a 20 mm mesh up to 250 mm below the top, so it reads at home-view size (check-pendants), then a fine line to the top
   if (form === 'globe') { g.add(kit.solid(new T.SphereGeometry(r * 0.8, 28, 20), 0, rim + r * 0.8, 0, { smooth: true })); cord(0, rim + r * 1.6, 0); }
   else if (form === 'cone') { g.add(kit.cyl(0, rim, 0, r, r * 0.9, { rTop: r * 0.18, seg: 36 })); g.add(kit.cyl(0, rim + r * 0.9, 0, r * 0.2, r * 0.12, { seg: 16, tone: 'lo' })); cord(0, rim + r * 1.02, 0); }
   else if (form === 'cluster') for (let i = 0; i < 3; i++) { const x = (i - 1) * r * 0.85, rr = r * (0.38 + 0.12 * ((i * 5) % 3)), y = rim + (i === 1 ? r * 0.5 : 0); g.add(kit.solid(new T.SphereGeometry(rr, 20, 14), x, y + rr, 0, { smooth: true })); cord(x, y + rr * 2, 0); }
-  else if (form === 'rattan') { g.add(kit.solid(new T.SphereGeometry(r, 28, 18, 0, 6.2832, 0, 2.1), 0, rim + r * 0.9, 0, { smooth: true, tone: 'lo' })); const wp = []; for (let k = 1; k < 6; k++) { const a = k / 6 * 2.1, rr = Math.sin(a) * r * 1.01; wp.push(...ringXZ(0, rim + r * 0.9 + Math.cos(a) * r, 0, rr, 32)); } g.add(kit.lines(wp, 'mid')); cord(0, rim + r * 1.9, 0); }
+  else if (form === 'rattan') { g.add(kit.solid(new T.SphereGeometry(r, 28, 18, 0, 6.2832, 0, 2.1), 0, rim + r * 0.9, 0, { smooth: true, tone: 'lo' })); g.add(kit.solid(new T.CircleGeometry(r * Math.sin(2.1) - 2, 28).rotateX(Math.PI / 2), 0, rim + r * 0.9 + r * Math.cos(2.1) + 1, 0, { linen: true })); const wp = [], N = 18, cy = rim + r * 0.9; for (const sg of [-1, 1]) for (let k = 0; k < N; k++) for (let i = 0; i < 24; i++) { const pt = (q) => { const th = q / 24 * 2.1, ph = k / N * 6.2832 + sg * q / 24 * 3.4; return [Math.sin(th) * Math.cos(ph) * r * 1.012, cy + Math.cos(th) * r * 1.012, Math.sin(th) * Math.sin(ph) * r * 1.012]; }; wp.push(pt(i), pt(i + 1)); } g.add(kit.lines(wp, 'mid')); cord(0, rim + r * 1.9, 0); }   // rattan: two families of strands wound over the dome in opposite turns, crossing
   else if (form === 'linear') { const L = r * 4; g.add(kit.cyl(-L / 2, rim + 30, 0, 30, L, { axis: 'x', seg: 20 })); for (const s of [-1, 1]) { cord(s * L * 0.35, rim + 60, 0); } g.add(kit.lines([[-L / 2 + 20, rim + 5, 31], [L / 2 - 20, rim + 5, 31]], 'lo')); }
-  else { g.add(kit.solid(new T.SphereGeometry(r, 32, 14, 0, 6.2832, 0, 1.45), 0, rim + r * 0.18, 0, { smooth: true })); g.add(kit.cyl(0, rim + r * 0.18 + r * 0.98, 0, r * 0.12, r * 0.14, { seg: 16, tone: 'lo' })); cord(0, rim + r * 1.3, 0); }
+  else { g.add(kit.solid(new T.SphereGeometry(r, 32, 14, 0, 6.2832, 0, 1.45), 0, rim + r * 0.18, 0, { smooth: true })); g.add(kit.solid(new T.CircleGeometry(r * Math.sin(1.45) - 2, 32).rotateX(Math.PI / 2), 0, rim + r * 0.18 + r * Math.cos(1.45) + 1, 0, { linen: true })); g.add(kit.cyl(0, rim + r * 0.18 + r * 0.98, 0, r * 0.12, r * 0.14, { seg: 16, tone: 'lo' })); cord(0, rim + r * 1.3, 0); }   // the pale warm diffuser closes the opening: the inside reads light, not a dark hole
   if (canopy === 'bar') g.add(kit.cyl(-r * 0.5, top - 20, 0, 18, r, { axis: 'x', seg: 12, tone: 'lo' })); else g.add(kit.cyl(0, top - 24, 0, 60, 24, { seg: 20, tone: 'lo' }));
   return kit.merge(g);
 }
