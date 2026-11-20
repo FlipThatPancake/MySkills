@@ -7,6 +7,7 @@
 //       Returns { ids, left }; a phrase this builder does not know is listed in `left`, not thrown.
 //   node arrange.mjs lists the wall phrases it builds.
 import { fileURLToPath } from 'node:url';
+import { zone } from './slotmath.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -58,12 +59,13 @@ export function wallArr(a, phrase, { wall, xc, over, group, prefix, seed } = {})
   if (!wall) throw new Error(`a.wallArr: give the wall ({ wall: back, xc })`);
   const pre = prefix || `wa${hash(phrase) % 997}`, r = rngOf((seed ?? a.h.S?.seed ?? 1) + hash(pre + phrase)), grp = group;
   const clearOfWindows = (x, half) => {   // on open wall the arrangement stands clear of every window's span (its sash sweeps the room in front of the glass: rule sash)
-    const win = (wall.openings || []).filter((o) => o.kind === 'window').map((o) => [o.x - (o.width || 1000) / 2 - 320, o.x + (o.width || 1000) / 2 + 320]), len = wall.len || 6000, ok = (q) => q - half >= 150 && q + half <= len - 150 && win.every(([a0, a1]) => q + half < a0 || q - half > a1);
+    const win = (wall.openings || []).map((o) => { const z = o.kind === 'window' ? zone(o) + 20 : zone(o); return [o.x - z, o.x + z]; }),   // every opening keeps its zone clear (slotmath.zone: a window its curtain and sash, a door its swing, an arch its casing)
+      len = wall.len || 6000, ok = (q) => q - half >= 150 && q + half <= len - 150 && win.every(([a0, a1]) => q + half < a0 || q - half > a1);
     if (ok(x)) return x; for (let d = 50; d < len; d += 50) { if (ok(x + d)) return x + d; if (ok(x - d)) return x - d; } return x; };
   const put = (suffix, asset, x0, ex) => { const x = over || typeof x0 !== 'number' ? x0 : clearOfWindows(x0, (() => { try { return a.sizeFor(asset, ex.params).w / 2; } catch (e) { return 400; } })()); const id = `${pre}-${suffix}`, tryAt = (xx) => { wall.place(id, asset, xx, { ...(grp ? { group: grp } : {}), ...ex }); ids.push(id); return id; };
     try { return tryAt(x); } catch (e) {
       const msg = String(e.message || e).split('\n')[0];
-      if (!over && /lands inside/.test(msg)) { let alt = []; try { alt = Object.entries(a.slotTable().wall).filter(([k, v]) => k.startsWith(wall.id + ':') && v.best).map(([, v]) => v.xc).filter((q) => Math.abs(q - x) > 200); } catch (e2) { /* no slots: no other place to try */ } for (const xx of alt) { try { return tryAt(xx); } catch (e3) { /* the next free stretch */ } } }   // on open wall the arrangement moves to a bare stretch when its place is taken
+      if (!over && /lands inside/.test(msg)) { let alt = []; try { alt = Object.entries(a.slotTable(Math.max(600, 2 * (() => { try { return a.sizeFor(asset, ex.params).w / 2; } catch (e4) { return 400; } })() + 100)).wall).filter(([k, v]) => k.startsWith(wall.id + ':') && v.best).map(([, v]) => v.xc).filter((q) => Math.abs(q - x) > 200); } catch (e2) { /* no slots: no other place to try */ } for (const xx of alt) { try { return tryAt(xx); } catch (e3) { /* the next free stretch */ } } }   // on open wall the arrangement moves to a bare stretch when its place is taken
       left.push(`${asset}: ${msg.slice(0, 150)}`); return null; } };
   if (rule.mode === 'floor') { put('cab', rule.a[0], xc, {}); return { ids, left, skipped }; }
   if (rule.mode === 'fixed') {

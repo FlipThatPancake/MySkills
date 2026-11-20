@@ -426,7 +426,7 @@ class Area {
     else if (name.startsWith('window')) { const w = slotWall(Object.values(this.walls || {}).map((F) => ({ id: F.id, window: F.openings.some((q) => q.kind === 'window') }))); key = `${w?.id}:${name.split(':')[1] || 'middle'}`; }
     const v = T.wall[key] || T.floor[key]; if (!v) throw new Error(`slot '${name}' for ${what}: no such slot; the names are ${Object.keys(T.wall).concat(Object.keys(T.floor)).join(', ')} (a.slots() prints them)`);
     const fits = Object.entries(T.wall).filter(([, q]) => q.best).map(([k2]) => k2).join(', ') || 'none';
-    if (v.wall) { if (!v.best) throw new Error(`slot '${name}' for ${what}: ${width > 600 ? `the bare wall in that third is ${v.widest} mm at most and the recipe needs ${width}` : `under 600 mm of the wall is bare there`} (${v.cut.join('; ') || 'a corner'}); wall slots that fit now: ${fits}`); return { wall: v.wall, xc: v.xc }; }
+    if (v.wall) { if (!v.best) throw new Error(`slot '${name}' for ${what}: ${width > 600 ? `the bare wall in that third is ${v.widest} mm at most and the recipe needs ${width}` : `under 600 mm of the wall is bare there`} (${v.cut.join('; ') || 'a corner'}); wall slots that fit now: ${fits}`); return { wall: v.wall, xc: v.xc, stretch: v.stretch }; }
     if (v.taken) throw new Error(`slot '${name}' for ${what}: what already stands on the floor leaves no place there for a group ${width} x ${o.depth || 600} mm (the groups placed first keep their floor: place the hero first); free floor slots now: ${Object.entries(T.floor).filter(([, q]) => q.free).map(([k2]) => k2).join(', ')}`);
     if (!v.free) throw new Error(`slot '${name}' for ${what}: the corridor between the area's entries covers ${v.corridor}% of it; free floor slots now: ${Object.entries(T.floor).filter(([, q]) => q.free).map(([k2]) => k2).join(', ')}`);
     return { at: v.at };
@@ -435,12 +435,21 @@ class Area {
     const third = name.includes(':') ? name : `${F.id}:${name}`; if (!third.startsWith(F.id + ':')) throw new Error(`place('${what}'): slot '${name}' is on another wall than '${F.id}'`);
     return this.resolveSlot(third, what, width).xc;
   }
-  group(phrase, opts = {}) { const bare = String(phrase).replace(/ \(the hero group[^)]*\)/, '').replace(/, on the .*$/, ''), nd = groupNeeds(bare) || {};
-    if (opts.slot) { const { slot, ...rest } = opts, r = this.resolveSlot(slot, phrase, this.widthFor(phrase), { inWindow: !!nd.window, depth: nd.d }); opts = r.wall ? { ...rest, wall: r.wall, xc: r.xc } : { ...rest, at: r.at }; } else if (typeof opts.xc === 'string' && opts.wall) opts = { ...opts, xc: this.slotOnWall(opts.wall, opts.xc, phrase, this.widthFor(phrase)) };
-    const res = runGroup(this, phrase, opts), w = nd.w || 600, d = nd.d || 600, [rx0, rz0, rx1, rz1] = this.rect;   // the floor a group stands on is reserved: a later floor group stands where its own footprint is clear (slotmath.mjs floorSpot)
+  group(phrase, opts = {}) { let stretch = null; const bare = String(phrase).replace(/ \(the hero group[^)]*\)/, '').replace(/, on the .*$/, ''), nd = groupNeeds(bare) || {};
+    if (opts.slot) { const { slot, ...rest } = opts, r = this.resolveSlot(slot, phrase, this.widthFor(phrase), { inWindow: !!nd.window, depth: nd.d }); opts = r.wall ? { ...rest, wall: r.wall, xc: r.xc } : { ...rest, at: r.at }; stretch = r.stretch; } else if (typeof opts.xc === 'string' && opts.wall) opts = { ...opts, xc: this.slotOnWall(opts.wall, opts.xc, phrase, this.widthFor(phrase)) };
+    const nTaken = opts.wall ? opts.wall.taken.length : 0, res = runGroup(this, phrase, opts); if (opts.wall && stretch && !nd.free) this.fitStretch(opts.wall, res.ids, stretch, nTaken);
+    const w = nd.w || 600, d = nd.d || 600, [rx0, rz0, rx1, rz1] = this.rect;   // the floor a group stands on is reserved: a later floor group stands where its own footprint is clear (slotmath.mjs floorSpot)
     if (opts.wall && !nd.free) { const F = opts.wall, xc = opts.xc ?? 0, pts = [F.at(xc - w / 2, 0), F.at(xc + w / 2, 0), F.at(xc - w / 2, d), F.at(xc + w / 2, d)]; (this.reserved ||= []).push({ r: [Math.min(...pts.map((q) => q[0])), Math.min(...pts.map((q) => q[1])), Math.max(...pts.map((q) => q[0])), Math.max(...pts.map((q) => q[1]))], wall: F.id }); }
     else if (opts.at) (this.reserved ||= []).push({ r: nd.float && !nd.free ? [opts.at[0] - w / 2, Math.max(opts.at[1] - d / 2, rz0 + 900), opts.at[0] + w / 2, Math.max(opts.at[1] - d / 2, rz0 + 900) + d] : [opts.at[0] - w / 2, opts.at[1] - d / 2, opts.at[0] + w / 2, opts.at[1] + d / 2], wall: 'floor' });
     return res; }   // one roll group phrase as a built arrangement, see groups.mjs
+  fitStretch(F, ids, [sa, sb], nTaken) {   // a recipe may stand its pieces off its middle (a fridge, then a trolley beside it): the group slides along the wall into the bare stretch its slot found, so no piece stands in a corner or an opening's zone
+    const o0 = F.at(0, 0), u1 = F.at(1, 0); let lo = 1e9, hi = -1e9;
+    for (const id of ids) { let b; try { b = this.boxOf(id); } catch { continue; } const o = this.h.S.home.objects.find((q) => q.id === `${this.id}-${id}`); if (!o) continue; for (const [x, z] of [[b.x0, b.z0], [b.x1, b.z0], [b.x0, b.z1], [b.x1, b.z1]]) { const t = (x - o0[0]) * (u1[0] - o0[0]) + (z - o0[1]) * (u1[1] - o0[1]); lo = Math.min(lo, t); hi = Math.max(hi, t); } }
+    if (lo > hi) return; let dl = 0; if (lo < sa) dl = sa - lo; else if (hi > sb) dl = sb - hi; if (!dl || hi - lo > sb - sa + 1 || Math.abs(dl) > 1500) return;
+    const wd = this.P([o0[0] + (u1[0] - o0[0]) * dl, o0[1] + (u1[1] - o0[1]) * dl]), w0 = this.P(o0), dx = wd[0] - w0[0], dz = wd[1] - w0[1];
+    for (const id of ids) { const o = this.h.S.home.objects.find((q) => q.id === `${this.id}-${id}`); if (o) { o.at = [r0(o.at[0] + dx), o.at[1], r0(o.at[2] + dz)]; } }
+    for (const t of F.taken.slice(nTaken)) { t.x = [t.x[0] + dl, t.x[1] + dl]; }
+  }
   dims(id) { const o = this.h.S.home.objects.find((q) => q.id === `${this.id}-${id}`); if (!o) throw new Error(`dims('${id}'): place it first`); const { w, d, h } = sizeOf(o.asset, o.params || {}); return { w, d, h, asset: o.asset, params: o.params || {}, at: o.at }; }   // the placed piece's dealt size in mm (what a group recipe measures its picture or lamp against)
   // the params a.put / place would deal for an asset (its form, its space), so a caller can measure the piece before it stands: a.dealt('picture', { w, h })
   sizeFor(asset, params) { return sizeOf(asset, this.dealt(asset, params)); }   // the size an asset would have with these params (w, d, h in mm), before it is placed
