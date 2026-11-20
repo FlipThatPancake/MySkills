@@ -42,7 +42,7 @@ import { checkAlive, pickVia, MOTION } from './motion-roll.mjs';
 import { sliderClear, ventZone, VENT_STYLES } from './src/motion/rules.js';
 import { installDocument } from './geom/load.mjs';
 import { group as runGroup, groupNeeds } from './groups.mjs';
-import { THIRD, zone, thirdSlot, slotWall } from './slotmath.mjs';
+import { THIRD, zone, thirdSlot, slotWall, rectCut, floorBox, floorSpot, FLOOR_BANDS, FLOOR_THIRDS } from './slotmath.mjs';
 import { still as runStill, wallArr as runWallArr } from './arrange.mjs';
 installDocument();   // the Node canvas stand-in (geom/load.mjs), so a.onTop and the textures work in a plain Node spec
 const rad = (d) => d * Math.PI / 180, deg = (r) => r * 180 / Math.PI, r0 = (v) => Math.round(v * 10) / 10;
@@ -398,16 +398,17 @@ class Area {
   slotTable(width = 600, o = {}) {   // width: how much bare wall a group needs (mm); 600 when none is given; o.inWindow: windows do not cut it (a window seat); the measure itself is slotmath.mjs, shared with the roll
     const T = { wall: {}, floor: {} }, [x0, z0, x1, z1] = this.rect;
     for (const [wid, F] of Object.entries(this.walls || {})) {
-      const cut = [...F.openings.filter((q) => !(o.inWindow && q.kind === 'window')).map((q) => ({ a: q.x - zone(q), b: q.x + zone(q), why: `${q.kind}${q.to ? ' to ' + q.to : ''} at ${Math.round(q.x)}` })), ...F.taken.filter((t) => t.y[0] < 300).map((t) => ({ a: t.x[0] - 50, b: t.x[1] + 50, why: `${t.id} on the floor` }))].sort((p, q) => p.a - q.a);
+      const cut = [...F.openings.filter((q) => !(o.inWindow && q.kind === 'window')).map((q) => ({ a: q.x - zone(q), b: q.x + zone(q), why: `${q.kind}${q.to ? ' to ' + q.to : ''} at ${Math.round(q.x)}` })), ...F.taken.filter((t) => t.y[0] < 300).map((t) => ({ a: t.x[0] - 50, b: t.x[1] + 50, why: `${t.id} on the floor` })), ...(this.reserved || []).filter((q) => q.wall !== wid).map((q) => { const o0 = F.at(0, 0), u = F.at(1, 0), nn = F.at(0, 1), c = rectCut(q.r, (x, z) => (x - o0[0]) * (u[0] - o0[0]) + (z - o0[1]) * (u[1] - o0[1]), (x, z) => (x - o0[0]) * (nn[0] - o0[0]) + (z - o0[1]) * (nn[1] - o0[1])); return c.offMin < (o.depth || 600) + 50 && c.offMax > -50 ? { a: c.a - 50, b: c.b + 50, why: `the floor a group on another wall holds` } : null; }).filter(Boolean)].sort((p, q) => p.a - q.a);
       for (let i = 0; i < 3; i++) { const v = thirdSlot(F.len, cut, i, width, o.inWindow ? F.openings.filter((q) => q.kind === 'window').map((q) => q.x) : []); T.wall[`${wid}:${THIRD[i]}`] = { wall: F, ...v, cut: cut.filter((c) => c.b > v.range[0] && c.a < v.range[1]).map((c) => c.why) }; }
     }
     const D = z1 - z0, W = x1 - x0, segs = [], ent = Object.values(this.walls || {}).flatMap((F) => F.openings.filter((o) => o.to && o.kind !== 'window').map((o) => F.at(o.x, 900)));
     for (let i = 0; i < ent.length; i++) for (let j = i + 1; j < ent.length; j++) segs.push([ent[i], ent[j]]);
     const near = (p) => segs.some(([a, b]) => { const dx = b[0] - a[0], dz = b[1] - a[1], t = Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dz) / (dx * dx + dz * dz || 1))); return Math.hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dz) < 450; });
-    for (const [bn, [d0, d1]] of Object.entries({ back: [0, 0.3], middle: [0.3, 0.7], front: [0.7, 1] })) for (const [tn, [w0, w1]] of Object.entries({ all: [0, 1], left: [0, 1 / 3], middle: [1 / 3, 2 / 3], right: [2 / 3, 1] })) {
-      const box = [Math.round(x0 + W * w0), Math.round(z0 + D * d0), Math.round(x0 + W * w1), Math.round(z0 + D * d1)]; let n = 0, k = 0;
+    for (const bn of Object.keys(FLOOR_BANDS)) for (const tn of Object.keys(FLOOR_THIRDS)) {
+      const box = floorBox(this.rect, bn, tn); let n = 0, k = 0;
       for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) { k++; if (segs.length && near([box[0] + (i + 0.5) * (box[2] - box[0]) / 8, box[1] + (j + 0.5) * (box[3] - box[1]) / 8])) n++; }
-      T.floor[tn === 'all' ? `floor:${bn}` : `floor:${bn}:${tn}`] = { box, at: [Math.round(Math.max(Math.min((box[0] + box[2]) / 2, x1 - 1100), x0 + 1100) / 10) * 10, Math.round(Math.max(Math.min((box[1] + box[3]) / 2, z1 - 1000), z0 + 1400) / 10) * 10], corridor: Math.round(100 * n / k), free: n / k < 0.4 };
+      const spot = floorSpot(this.rect, box, (this.reserved || []).map((q) => q.r), width, o.depth || 600);   // a piece already placed on that floor takes it: the group stands where its own footprint is clear, or the slot is not free
+      T.floor[tn === 'all' ? `floor:${bn}` : `floor:${bn}:${tn}`] = { box, at: spot || floorSpot(this.rect, box, [], width, o.depth || 600), corridor: Math.round(100 * n / k), free: n / k < 0.4 && !!spot, ...(spot ? {} : { taken: true }) };
     }
     return T;
   }
@@ -426,6 +427,7 @@ class Area {
     const v = T.wall[key] || T.floor[key]; if (!v) throw new Error(`slot '${name}' for ${what}: no such slot; the names are ${Object.keys(T.wall).concat(Object.keys(T.floor)).join(', ')} (a.slots() prints them)`);
     const fits = Object.entries(T.wall).filter(([, q]) => q.best).map(([k2]) => k2).join(', ') || 'none';
     if (v.wall) { if (!v.best) throw new Error(`slot '${name}' for ${what}: ${width > 600 ? `the bare wall in that third is ${v.widest} mm at most and the recipe needs ${width}` : `under 600 mm of the wall is bare there`} (${v.cut.join('; ') || 'a corner'}); wall slots that fit now: ${fits}`); return { wall: v.wall, xc: v.xc }; }
+    if (v.taken) throw new Error(`slot '${name}' for ${what}: what already stands on the floor leaves no place there for a group ${width} x ${o.depth || 600} mm (the groups placed first keep their floor: place the hero first); free floor slots now: ${Object.entries(T.floor).filter(([, q]) => q.free).map(([k2]) => k2).join(', ')}`);
     if (!v.free) throw new Error(`slot '${name}' for ${what}: the corridor between the area's entries covers ${v.corridor}% of it; free floor slots now: ${Object.entries(T.floor).filter(([, q]) => q.free).map(([k2]) => k2).join(', ')}`);
     return { at: v.at };
   }
@@ -433,7 +435,12 @@ class Area {
     const third = name.includes(':') ? name : `${F.id}:${name}`; if (!third.startsWith(F.id + ':')) throw new Error(`place('${what}'): slot '${name}' is on another wall than '${F.id}'`);
     return this.resolveSlot(third, what, width).xc;
   }
-  group(phrase, opts = {}) { if (opts.slot) { const { slot, ...rest } = opts, r = this.resolveSlot(slot, phrase, this.widthFor(phrase), { inWindow: !!groupNeeds(String(phrase).replace(/ \(the hero group[^)]*\)/, '').replace(/, on the .*$/, ''))?.window }); opts = r.wall ? { ...rest, wall: r.wall, xc: r.xc } : { ...rest, at: r.at }; } else if (typeof opts.xc === 'string' && opts.wall) opts = { ...opts, xc: this.slotOnWall(opts.wall, opts.xc, phrase, this.widthFor(phrase)) }; return runGroup(this, phrase, opts); }   // one roll group phrase as a built arrangement, see groups.mjs
+  group(phrase, opts = {}) { const bare = String(phrase).replace(/ \(the hero group[^)]*\)/, '').replace(/, on the .*$/, ''), nd = groupNeeds(bare) || {};
+    if (opts.slot) { const { slot, ...rest } = opts, r = this.resolveSlot(slot, phrase, this.widthFor(phrase), { inWindow: !!nd.window, depth: nd.d }); opts = r.wall ? { ...rest, wall: r.wall, xc: r.xc } : { ...rest, at: r.at }; } else if (typeof opts.xc === 'string' && opts.wall) opts = { ...opts, xc: this.slotOnWall(opts.wall, opts.xc, phrase, this.widthFor(phrase)) };
+    const res = runGroup(this, phrase, opts), w = nd.w || 600, d = nd.d || 600, [rx0, rz0, rx1, rz1] = this.rect;   // the floor a group stands on is reserved: a later floor group stands where its own footprint is clear (slotmath.mjs floorSpot)
+    if (opts.wall && !nd.free) { const F = opts.wall, xc = opts.xc ?? 0, pts = [F.at(xc - w / 2, 0), F.at(xc + w / 2, 0), F.at(xc - w / 2, d), F.at(xc + w / 2, d)]; (this.reserved ||= []).push({ r: [Math.min(...pts.map((q) => q[0])), Math.min(...pts.map((q) => q[1])), Math.max(...pts.map((q) => q[0])), Math.max(...pts.map((q) => q[1]))], wall: F.id }); }
+    else if (opts.at) (this.reserved ||= []).push({ r: nd.float && !nd.free ? [opts.at[0] - w / 2, Math.max(opts.at[1] - d / 2, rz0 + 900), opts.at[0] + w / 2, Math.max(opts.at[1] - d / 2, rz0 + 900) + d] : [opts.at[0] - w / 2, opts.at[1] - d / 2, opts.at[0] + w / 2, opts.at[1] + d / 2], wall: 'floor' });
+    return res; }   // one roll group phrase as a built arrangement, see groups.mjs
   dims(id) { const o = this.h.S.home.objects.find((q) => q.id === `${this.id}-${id}`); if (!o) throw new Error(`dims('${id}'): place it first`); const { w, d, h } = sizeOf(o.asset, o.params || {}); return { w, d, h, asset: o.asset, params: o.params || {}, at: o.at }; }   // the placed piece's dealt size in mm (what a group recipe measures its picture or lamp against)
   // the params a.put / place would deal for an asset (its form, its space), so a caller can measure the piece before it stands: a.dealt('picture', { w, h })
   sizeFor(asset, params) { return sizeOf(asset, this.dealt(asset, params)); }   // the size an asset would have with these params (w, d, h in mm), before it is placed

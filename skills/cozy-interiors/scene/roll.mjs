@@ -10,7 +10,7 @@ import { dealMotion } from './motion-roll.mjs';
 import { planHome, wallLoad } from './plan.mjs';
 import { groupNeeds } from './groups.mjs';
 import { THIRD, thirdSlot, slotWall } from './slotmath.mjs';
-import { zone } from './slotmath.mjs';
+import { zone, floorBox, floorSpot, rectCut } from './slotmath.mjs';
 import { STYLE, DEFAULTS } from './src/openings.js';
 const T = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'tables.json'), 'utf8'));
 export const KINDS = Object.keys(T).filter((k) => T[k]?.hero && T[k]?.openings);   // an area kind has a hero and openings ('names' has a hero table but is no area)
@@ -48,7 +48,7 @@ export function phraseAssets(t) {   // the assets a phrase names for certain (on
   return m ? m.split('+').filter((p) => !p.includes('|')) : [];
 }
 // the slot names of a group's place: <wall>:<third> (wall = back | left | right | window, third = left | middle | right); the hero group takes the back wall's third on its side of the home view
-export const SLOTS = { 'on the back wall, left third': 'back:left', 'on the back wall, right third': 'back:right', 'on the window wall or the second wall': 'window:middle', 'on the open floor': 'floor:middle', 'on the back wall, middle third': 'back:middle', 'on the window wall, left third': 'window:left', 'on the window wall, right third': 'window:right' };
+export const SLOTS = { 'on the back wall, left third': 'back:left', 'on the back wall, right third': 'back:right', 'on the window wall or the second wall': 'window:middle', 'on the open floor': 'floor:middle', 'on the open floor, front': 'floor:front', 'on the open floor, back': 'floor:back', 'on the back wall, middle third': 'back:middle', 'on the window wall, left third': 'window:left', 'on the window wall, right third': 'window:right' };
 // a dealt group text without its place: the phrase a.group takes
 export const groupPhrase = (g) => g.replace(/ \(the hero group[^)]*\)$/, '').replace(/, on the .*$/, '');
 export function groupSlot(g, two = true) { const h = g.match(/the hero group, on the (left|right) of the home view/); if (h) return `${two ? (() => { const n = groupNeeds(g.replace(/ \(the hero group.*\)$/, '')); return n?.second ? 'second' : n?.window ? 'window' : 'back'; })() : 'back'}:${h[1]}`; const at = g.lastIndexOf(', on the '); return at < 0 ? null : SLOTS[g.slice(at + 2)] ?? null; }
@@ -61,11 +61,17 @@ function shellFor(out, id) {
   const at = (g) => g.lastIndexOf(', on the '), base = (g) => groupPhrase(g), nd = (g) => groupNeeds(base(g)) || {};
   const wallLen = { back: PA?.fit[0], ...(second ? { [second]: PA?.fit[1] } : {}) }, winsOn = (wn) => (PA?.windows || []).filter((q) => q.wall === wn && q.x != null);
   const winWall = slotWall([{ id: 'back', window: winsOn('back').length > 0 }, ...(second ? [{ id: second, window: winsOn(second).length > 0 }] : [])]).id, wallOf = (v) => (v.startsWith('back:') ? 'back' : v.startsWith('second:') ? second : winWall), taken = {};
+  const reserved = [];   // what the groups dealt so far hold of the floor: { r: [x0, z0, x1, z1], wall } in the area's own frame; a floor group stands clear of them (slotmath.mjs floorSpot) and a wall group along another wall is cut where they reach into its depth (rectCut)
+  const frame = (wn) => { const [W, D] = PA?.fit || [0, 0]; return wn === 'back' ? [(x) => x, (x, z) => z] : wn === 'left' ? [(x, z) => D - z, (x) => x] : [(x, z) => z, (x) => W - x]; };
+  const crossCuts = (wn, n) => { if (!PA || !wn) return []; const [ox, off] = frame(wn); return reserved.filter((q) => q.wall !== wn).map((q) => rectCut(q.r, ox, off)).filter((c) => c.offMin < (n.d || 600) + 50 && c.offMax > -50).map((c) => ({ a: c.a - 50, b: c.b + 50 })); };   // the wall's own pieces are cut by `taken`
   const cutsOf = (wn, n) => [...links.filter((l) => (l.a === id && l.aWall === wn) || (l.b === id && l.bWall === wn)).map((l) => { const o = { kind: l.kind, width: l.width || 1000 }, x = (l.a === id ? l.aF : l.bF) * wallLen[wn]; return { a: x - zone(o), b: x + zone(o) }; }),
-    ...(n.window ? [] : winsOn(wn).map((q) => { const w = STYLE[q.style]?.width ?? DEFAULTS.window.width; return { a: q.x - (w / 2 + 300), b: q.x + (w / 2 + 300) }; })), ...(taken[wn] || [])];
+    ...(n.window ? [] : winsOn(wn).map((q) => { const w = STYLE[q.style]?.width ?? DEFAULTS.window.width; return { a: q.x - (w / 2 + 300), b: q.x + (w / 2 + 300) }; })), ...(taken[wn] || []), ...crossCuts(wn, n)];
   const slot = (v, g) => { const n = nd(g), wn = wallOf(v); return thirdSlot(wallLen[wn], cutsOf(wn, n), THIRD.indexOf(v.split(':')[1]), Math.max(600, n.w || 600), n.window ? winsOn(wn).map((q) => q.x) : []); };
-  const fit = (v, g) => { if (!PA || v.startsWith('floor:')) return true; const wn = wallOf(v); return !!wn && !!wallLen[wn] && !!slot(v, g).best; };   // a.slots(): a bare stretch as wide as the recipe, its middle in the third
-  const stand = (v, g) => { if (!PA || v.startsWith('floor:')) return; const r = slot(v, g), w = nd(g).w || 600; if (r.best) (taken[wallOf(v)] ||= []).push({ a: r.xc - w / 2 - 50, b: r.xc + w / 2 + 50 }); };
+  const rect = PA ? [0, 0, PA.fit[0], PA.fit[1]] : null;   // what the wall groups dealt so far hold of the floor: a floor group stands where its own footprint is clear (slotmath.mjs floorSpot, the measure a.group({ slot: 'floor:..' }) uses)
+  const footprint = (v, g) => { const r = slot(v, g), n = nd(g), w = n.w || 600, d = n.d || 600, wn = wallOf(v), [W, D] = PA.fit; if (!r.best || !wn) return null; return wn === 'back' ? [r.xc - w / 2, 0, r.xc + w / 2, d] : wn === 'left' ? [0, D - (r.xc + w / 2), d, D - (r.xc - w / 2)] : [W - d, r.xc - w / 2, W, r.xc + w / 2]; };
+  const floorAt = (v, g) => { const [, band, third] = v.split(':'), n = nd(g); return floorSpot(rect, floorBox(rect, band, third || 'all'), reserved.map((q) => q.r), n.w || 600, n.d || 600); };
+  const fit = (v, g) => { if (!PA) return true; if (v.startsWith('floor:')) return !!floorAt(v, g); const wn = wallOf(v); return !!wn && !!wallLen[wn] && !!slot(v, g).best; };   // a.slots(): a bare stretch as wide as the recipe, its middle in the third; a floor slot: a clear place for the group's footprint
+  const stand = (v, g) => { if (!PA) return; if (v.startsWith('floor:')) { const at = floorAt(v, g), n = nd(g), w = n.w || 600, d = n.d || 600; if (at) reserved.push({ r: [at[0] - w / 2, Math.max(at[1] - d / 2, 900), at[0] + w / 2, Math.max(at[1] - d / 2, 900) + d], wall: 'floor' }); return; } const r = slot(v, g), w = nd(g).w || 600; if (r.best) { (taken[wallOf(v)] ||= []).push({ a: r.xc - w / 2 - 50, b: r.xc + w / 2 + 50 }); const f = footprint(v, g); if (f) reserved.push({ r: f, wall: wallOf(v) }); } };
   return { fit, stand, two, PA };
 }
 // per group of an area: does the dealt slot hold the group, in the order the groups stand (the roll's own measure, for rollstats)
@@ -77,13 +83,15 @@ function dealSlots(out, kinds) {
     const heroSides = (g) => { const h = groupSlot(g, two), [pre, side] = h.split(':'); return [h, `${pre}:middle`, `${pre}:${side === 'left' ? 'right' : 'left'}`, ...(two && !nd(g).free && pre !== 'second' ? ['second:left', 'second:right', 'second:middle'] : [])]; };   // its own wall first, then the second wall
     // every area gets one group on its open floor: a free group (island, table) already is; else the first group that can float (groups.mjs FLOATS), the hero first
     const fk = a.groups.findIndex((g) => nd(g).free) >= 0 ? -1 : a.groups.findIndex((g) => nd(g).float && !nd(g).window && !nd(g).second && nd(g).wall !== 'solid' && !nd(g).door);
-    if (fk > 0 && !/, on the open floor$/.test(a.groups[fk])) a.groups[fk] = base(a.groups[fk]) + ', ' + say('floor:middle');
+    if (fk > 0 && !/, on the open floor(, front|, back)?$/.test(a.groups[fk])) a.groups[fk] = base(a.groups[fk]) + ', ' + say('floor:middle');
     const used = new Set(), hero = a.groups[0], hs = heroSides(hero), hv = fk === 0 ? 'floor:middle' : hs.find((v) => fit(v, hero)) || hs[0]; used.add(hv); stand(hv, hero);   // the hero keeps its side of the home view; when its third has no bare stretch it takes the next third of the same wall
-    const order = a.groups.map((g, k) => k).slice(1).sort((x, y) => allowed(a.groups[x]).length - allowed(a.groups[y]).length);   // the most constrained group chooses first
+    const order = a.groups.map((g, k) => k).slice(1).sort((x, y) => (nd(a.groups[x]).free ? 1 : 0) - (nd(a.groups[y]).free ? 1 : 0) || allowed(a.groups[x]).length - allowed(a.groups[y]).length);   // the wall groups first, the groups that stand free on the floor after them: the floor is what the walls leave   // the most constrained group chooses first
     const dropped = [];
-    for (const k of order) { const g = a.groups[k], ok = allowed(g), cur = groupSlot(g, two); if (k === fk) { used.add('floor:middle'); continue; } const sl = ok.includes(cur) && !used.has(cur) ? cur : ok.find((v) => !used.has(v)); if (!sl) { if (PA) { dropped.push(k); continue; } const rel = allowed(g, false).find((v) => !used.has(v)) || cur; if (rel && rel !== cur) a.groups[k] = base(g) + ', ' + say(rel); used.add(rel); continue; }
+    for (const k of order) { const g = a.groups[k], ok = allowed(g), cur = groupSlot(g, two); if (k === fk) continue; const sl = ok.includes(cur) && !used.has(cur) ? cur : ok.find((v) => !used.has(v)); if (!sl) { if (PA) { dropped.push(k); continue; } const rel = allowed(g, false).find((v) => !used.has(v)) || cur; if (rel && rel !== cur) a.groups[k] = base(g) + ', ' + say(rel); used.add(rel); continue; }
       if (sl !== cur && at(g) >= 0) a.groups[k] = base(g) + ', ' + say(sl); else if (at(g) < 0) a.groups[k] = base(g) + ', ' + say(sl); used.add(sl); stand(sl, g); }
+    if (fk > 0) { const g = a.groups[fk], v = ['floor:middle', 'floor:front', 'floor:back'].find((q) => fit(q, g)); if (v) { a.groups[fk] = base(g) + ', ' + say(v); used.add(v); stand(v, g); } else dropped.push(fk); }   // the floor group takes what the hero and the wall groups left of the floor, or is left out
     for (const k of dropped.sort((x, y) => y - x)) a.groups.splice(k, 1);   // a group no bare stretch can hold, on either wall or the floor: left out of the deal
+    { const fl = (g) => (groupSlot(g, two) || '').startsWith('floor:'); const rest = a.groups.slice(1); a.groups = [a.groups[0], ...rest.filter((g) => !fl(g)), ...rest.filter(fl)]; }   // built in this order (a.group places them one after the other): the hero, the wall groups, then the groups on the open floor, so each stands where the ones before left room
     a.groupSlots = a.groups.map((g) => groupSlot(g, two)); a.groupSlots[0] = a.heroSlot = hv;   // the hero's own slot (it may have moved off its side of the home view to a bare stretch)
     a.still = (a.still || []).filter((st) => a.groups.some((g) => (prov[st.top] || /./).test(base(g)))); }   // a still life only for a top that one of the groups stands (round 6 stage harness)
 }
