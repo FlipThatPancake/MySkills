@@ -18,7 +18,7 @@ After installing, run `node <skill folder>/test.mjs page.html` and fix every fai
 Select text to comment on exact words, or click anything the hover outline shows: a line of text, a text block, an image, a control, an SVG shape, a formula, or empty space. With Talkback off, only the toggle stays, plus a download button showing how many comments are unsaved. The look is the `author` theme ([themes/author.css](themes/author.css)) unless `--theme=agent-default` is given. `agent-default` keeps the plain look built into talkback.js: use it when the agent should choose the look, and fit the toolbar to the page with CSS passed as `--css=<file>`, aimed at the classes in that script's style block. Give key visuals a name with `data-comment="Force arrow"` so the export names them instead of describing their shape.
 
 Optional page hooks, defined before the install block:
-- `window.commentContext = () => ({ ... })` for state that changes what a comment means, such as the current slide or a slider value. It is stored with each comment.
+- `window.commentContext = () => ({ ... })` for state that changes what a comment means, such as the open tab or a slider value. It is stored with each comment.
 - `window.commentExtras = () => ({ ... })` for other data the user should send along, such as quiz answers. It is added to the export once, as `extras`.
 
 ## Live
