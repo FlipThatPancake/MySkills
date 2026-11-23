@@ -407,6 +407,7 @@
     if (!on || inUi(e) || (box && (!box.isNew || box.el.querySelector('textarea').value))) return;
     const c = fromSelection();
     if (!c) return;
+    if (ca) return compose(c, e);
     closeBox(false); // an empty box left by the first click of a double-click
     picked = true;
     setTimeout(() => (picked = false));
@@ -425,14 +426,17 @@
     const t = targetAt(e.clientX, e.clientY);
     if (!t) return;
     const r = t.el.getBoundingClientRect();
-    openBox(make(t.el, {
+    const c = make(t.el, {
       target: { type: t.type, ...(t.name ? { name: t.name } : {}), ...(t.text ? { text: t.text } : {}) },
       fx: r.width ? (e.clientX - r.left) / r.width : 0.5, fy: r.height ? (e.clientY - r.top) / r.height : 0.5,
-    }), true);
+    });
+    if (ca) return compose(c, e);
+    openBox(c, true);
   }, true);
 
   document.addEventListener('keydown', (e) => {
     const t = e.composedPath()[0];
+    if (e.key === 'Escape' && ca) return ca.exitMode();
     if (e.key === 'Escape') return panelOpen ? ((panelOpen = false), paintLive()) : box ? closeBox(false) : setMode(false);
     if (e.key.toLowerCase() === 'c' && !e.metaKey && !e.ctrlKey && !e.altKey && !/^(input|textarea|select)$/i.test(t.localName) && !t.isContentEditable) setMode(!on);
   });
@@ -632,22 +636,75 @@
     h('button', '', 'Copy prompt', row).onclick = (e) => { const t = 'Listen for my Talkback messages on ' + (document.title || pagePath) + ': run the Talkback helper’s wait, answer every message with reply, and keep listening.'; (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).catch(() => {}); e.target.textContent = 'Copied ✓'; };
     h('button', '', 'Show guide', row).onclick = () => { guide = true; paintLive(); };
   }
+  function restoreState() {
+    try {
+      const r = JSON.parse(sessionStorage.getItem(RS));
+      if (!r) return;
+      sessionStorage.removeItem(RS);
+      setTimeout(() => {
+        scrollTo(...r.scroll);
+        if (typeof window.commentRestore === 'function') window.commentRestore({ context: r.context, extras: r.extras });
+        const c = r.open && items.find((x) => x.id === r.open.id);
+        if (c) { setMode(true); openBox(c, false); const ta = box.el.querySelector('textarea'); ta.value = r.open.text; ta.dispatchEvent(new Event('input')); }
+      }, 500);
+    } catch (e) {}
+  }
+
+  // ---- on claude.ai: Talkback points, claude.ai's own comment panel holds the conversation ----
+  // Send to Claude there wakes the session that published the page. The target travels as the thread's label and detail.
+  let ca = null, threadList = [];
+  const CAK = 'talkback:anchors:' + location.pathname;
+  let known = {};
+  try { known = JSON.parse(localStorage.getItem(CAK)) || {}; } catch (e) {}
+  function compose(c, ev) {
+    const el = findEl(c);
+    if (!el) return;
+    try {
+      const [anchor, at] = ca.domAnchor(el, ev);
+      const label = isText(c) ? 'Text: ' + cut(c.quote, 80) : cut(label_(c.target), 100);
+      const detail = JSON.stringify({ selector: c.selector, section: c.section, target: c.target, ...(isText(c) ? { quote: c.quote } : {}), ...(c.context ? { context: c.context } : {}) }).slice(0, 1000);
+      known[anchor] = { selector: c.selector, ...(isText(c) ? { quote: c.quote, start: c.start, end: c.end } : { fx: c.fx, fy: c.fy }) };
+      try { localStorage.setItem(CAK, JSON.stringify(known)); } catch (e) {}
+      ca.compose(anchor, at, { label, detail }).catch(() => {});
+    } catch (e) {}
+  }
+  const label_ = (t) => (t.name ? t.name : t.type) + (t.text && !t.name ? ': ' + t.text : '');
+  const pinSpot = (k) => {
+    const el = k && (() => { try { return document.querySelector(k.selector); } catch (e) { return null; } })();
+    if (!el) return null;
+    const g = k.quote !== undefined ? geoOf({ selector: k.selector, quote: k.quote, start: k.start, end: k.end }) : geoOf({ selector: k.selector, fx: k.fx, fy: k.fy });
+    return g && { x: g.pin[0] + scrollX, y: g.pin[1] + scrollY };
+  };
+  function report() {
+    if (!ca) return;
+    const map = {};
+    for (const t of threadList) { const p = pinSpot(known[t.anchor]); if (p) map[t.id] = p; }
+    ca.placed(map);
+  }
+  (async () => {
+    if (live.on || !window.claude || !window.claude.use) return;
+    try {
+      const comments = await window.claude.use('comments');
+      if (!comments || !comments.customAnchors) return;
+      ca = await comments.customAnchors({
+        mode: (v) => setMode(!!v),
+        threads: (list) => { threadList = list; report(); },
+        reveal: (id) => {
+          const t = threadList.find((x) => x.id === id), k = t && known[t.anchor], el = k && findEl(k);
+          if (el) el.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
+        },
+      });
+    } catch (e) { ca = null; return; }
+    bar.hidden = true; // claude.ai has its own comment button
+    setInterval(report, 1000);
+    setInterval(() => { try { const f = (fn) => (typeof fn === 'function' ? fn() : null); sessionStorage.setItem(RS, JSON.stringify({ scroll: [scrollX, scrollY], context: f(window.commentContext), extras: f(window.commentExtras) })); } catch (e) {} }, 2000);
+    restoreState();
+  })();
   render();
   if (live.on) {
     sync();
     setInterval(sync, 1500);
     setTimeout(() => { items.forEach((c) => (c.detached = !reattach(c))); save(); syncBar(); }, 1500);
-    try {
-      const r = JSON.parse(sessionStorage.getItem(RS));
-      if (r) {
-        sessionStorage.removeItem(RS);
-        setTimeout(() => {
-          scrollTo(...r.scroll);
-          if (typeof window.commentRestore === 'function') window.commentRestore({ context: r.context, extras: r.extras });
-          const c = r.open && items.find((x) => x.id === r.open.id);
-          if (c) { setMode(true); openBox(c, false); const ta = box.el.querySelector('textarea'); ta.value = r.open.text; ta.dispatchEvent(new Event('input')); }
-        }, 500);
-      }
-    } catch (e) {}
+    restoreState();
   }
 })();
