@@ -1,5 +1,7 @@
 # Blender Agent Studio
 
+For a silhouette overlay, use blender_compare_reference. To fit the camera from known points, use blender_fit_reference_camera. For gaps between attached parts across poses, use blender_inspect_attachments. Check the selected tool’s prerequisites. Run file checks independently of live scene edits.
+
 The [plugin's file tools](https://ifbars.github.io/blender-agent-studio/mcp-tools/)
 run in background Blender. They can check a saved copy alongside live work.
 

@@ -1,6 +1,8 @@
 # Blender CLI
 
-Use for project scripts, batch renders, rebuilds, exports, and independent checks.
+Use the open scene as the working version. If the task concerns unsaved edits, work live or take a separate, identifiable snapshot from the open session. Use a distinct output path for the background job. Check external textures, linked assets or simulation caches only when the job reads or writes them.
+
+For a separately built asset, bring its object or collection and required dependencies into the live scene. Check scale, placement, materials, and fit as the brief requires. For a test or render, use its findings or preview. Associate that evidence with its input snapshot and frame or camera when relevant. If a later edit matters to the conclusion, repeat the affected check against the current state.
 No MCP server or add-on is needed.
 
 Discover the installed executable and check `--version`. Example:

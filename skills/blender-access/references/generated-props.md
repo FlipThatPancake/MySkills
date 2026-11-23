@@ -20,3 +20,6 @@ the user's authorization for inputs and cost.
   handle, hinge, or other functional detail with editable geometry when that
   is cheaper than regenerating the whole mesh. If a retry leaves the same
   defect, change the reference or method before spending more.
+
+If generation succeeds but import fails, retry the downloaded asset before
+paying for another run.

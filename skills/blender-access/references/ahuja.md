@@ -15,3 +15,5 @@
   Keep the listener local and match its port to the server's `--port` or
   `BLENDER_PORT` setting when overriding the default `9876`.
 - Check provider access and costs before using optional generation tools.
+
+The planned local assignment is Ahuja on localhost:9877 and Lab on localhost:9876. Match the Ahuja add-on port and client setting. Verify connectivity before treating this assignment as active.

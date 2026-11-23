@@ -10,7 +10,7 @@ Blender version. Use Blender Core for Python and API questions. Follow
 | --- | --- |
 | [Blender Core](https://github.com/EL4CTEO/blender-skills/blob/9e7e04a603c125a0d17447ab97112fa70a865067/skills/blender-core/SKILL.md) | Python execution and Blender 5.x API patterns |
 | [Scene setup](https://github.com/EL4CTEO/blender-skills/blob/9e7e04a603c125a0d17447ab97112fa70a865067/skills/blender-scene-setup/SKILL.md) | units, collections, and asset libraries |
-| [Hard-surface modeling](https://github.com/EL4CTEO/blender-skills/blob/9e7e04a603c125a0d17447ab97112fa70a865067/skills/blender-hardsurface-modeling/SKILL.md) | bevels, booleans, and normals |
+| [Hard-surface modeling](https://github.com/EL4CTEO/blender-skills/blob/9e7e04a603c125a0d17447ab97112fa70a865067/skills/blender-hardsurface-modeling/SKILL.md) | bevels, booleans, and normals. For a shell with a changing profile, loft cross-sections at the major shape transitions. Shape flush panels to the shell and check the seam in section. |
 | [Sculpting](https://github.com/EL4CTEO/blender-skills/blob/9e7e04a603c125a0d17447ab97112fa70a865067/skills/blender-sculpting/SKILL.md) | organic forms, multires, and remeshing |
 | [Retopology and UVs](https://github.com/EL4CTEO/blender-skills/blob/9e7e04a603c125a0d17447ab97112fa70a865067/skills/blender-retopology-uv/SKILL.md) | unwrap and texel density |
 | [PBR materials](https://github.com/EL4CTEO/blender-skills/blob/9e7e04a603c125a0d17447ab97112fa70a865067/skills/blender-pbr-materials/SKILL.md) | texture sets and color spaces |

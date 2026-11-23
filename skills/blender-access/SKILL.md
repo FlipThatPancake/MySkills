@@ -1,56 +1,19 @@
 ---
 name: blender-access
-description: Choose or troubleshoot Blender access for live edits, saved files, scripts, renders, and validation. Find installed add-ons for generation and specialist edits, or search asset libraries for reusable assets. Also use for image cards, billboards, impostors, and distant asset optimization.
+description: Use when the user asks to work in Blender to plan, build, revise, inspect, or troubleshoot a scene, object, or script.
 ---
 
 # Blender access
 
-Honor the user's integration choice. Check which tools are available and open
-only the reference needed for the current step.
+Honor the user's choice of integration. Use [Ahuja](references/ahuja.md) for editing and viewing the open scene. If you cannot reach it, tell the user and pause the build.
+For revisions, continue from the open scene, including the user's edits. Keep a rebuildable script when requested.
+The open scene is the source of truth. Use [a separate Blender instance](references/blender-cli.md) when a job needs one, for example to retrieve or model an asset independently, run an isolated test, or render in parallel. Assemble and check separately built assets in the open scene. Treat a test or render as evidence about the input it used.
 
-- [MCP for Blender (ahujasid)](references/ahuja.md) is the live default when connected.
-- [Blender Lab MCP](references/blender-lab.md) for live fallback, Blender docs, and file diagnostics.
-- [Blender Agent Studio](references/agent-studio.md) for independent asset checks and repeatable renders.
-- [Blender CLI](references/blender-cli.md) for saved-file scripts and batch jobs.
-- [Higgsfield Bridge](references/higgsfield.md) for Higgsfield-specific or cross-app work.
-
-Confirm the target before live edits and use one editing controller per scene at
-a time. For visual work, inspect a viewport capture or render at useful
-checkpoints. Report any gap in visual verification.
-
-## Choose a production recipe
-
-Before planning the implementation or writing Blender Python, check the
-[EL4CTEO recipe index](references/el4cteo.md) when the request names a
-production technique, asks for a repeatable workflow, or implies technical
-requirements for the deliverable. Examples include a game-ready prop, an
-engine-ready rig, a seamless animation loop, and a reusable environment kit.
-
-For a deliverable that spans several stages, start with a matching end-to-end
-playbook. Open individual guides when a stage needs more detail. For a single
-technique or fix, open the matching specialist guide directly.
-
-Use the recipe to identify prerequisites, implementation steps, and checks
-that affect the requested result. Use the selected Blender controller to
-execute and verify the work. For straightforward scene edits, proceed directly
-with that controller.
-
-## Reuse assets
-
-When a ready-made asset could fit the brief, offer to search the user's
-installed libraries. For a requested search, go straight to discovery.
-Open the [asset source index](references/asset-sources.md) to choose between
-Blender's configured Asset Browser libraries, an add-on catalog, and MCP
-search. Follow the matching provider or local library guide for discovery
-and import. Prefer a short, text-first summary of fit and access. Use
-existing provider previews when the user requests a visual comparison.
-
-## Use installed add-ons
-
-Open [installed add-on workflows](references/addon-workflows.md) when an
-add-on could build or edit scene data. Follow the task link for environments,
-cameras, modeling and UVs, or simulation. Use that guide to choose a command,
-an appendable preset, or a UI step. Use native Blender for routine or exact work.
+When references serve different purposes, identify which governs layout, shape, or look and resolve conflicts that affect the build.
+When a build decision needs the user’s judgment, recommend a method and the smallest preview that will settle the choice.
+Before an expensive or repeated change, test one representative part to the level of finish the decision requires.
+For a substantial revision, establish what may change, what to preserve, and how to judge the result.
+Keep the last accepted version recoverable during long or risky edits.
 
 ## Tripo generation
 
@@ -60,13 +23,24 @@ Script in Blender instead for exact sizes, hard-surface or architectural parts, 
 Never call `generate_3d` with `tripo` or `auto` without the user's explicit ok; each retry needs a new ok.
 Prepare inputs and check results with [Generated props](references/generated-props.md).
 
-## On-demand workflows
+## Choose a guide when its decision arises
 
-- [Complex scene planning and review](references/complex-scenes.md) for planning full scenes, scoping substantial revisions, or proving a representative asset or look before expanding.
-- [Generated props](references/generated-props.md) for preparing image-to-3D inputs or qualifying a generated mesh.
-- [Shot sequences](references/shot-sequences.md) for multi-shot continuity, shot variants, and motion previews.
-- [Compositing handoff](references/compositing-handoff.md) for moving rendered shots into a compositor or applying a localized finishing effect.
-- [Real-time handoff](references/realtime-handoff.md) for proving the look and behavior in the browser or target engine before expanding the scene.
-- [Impostor cards](references/impostor-cards.md) for billboards and distant asset optimization.
-- `blender-to-web` for interactive Blender-backed web or Three.js deliverables.
-- For Astra Test setup, use `BLENDER_AGENT_INSTRUCTIONS.md` when present in the project root.
+| When | Open |
+| --- | --- |
+| Shape or proportions appear wrong against a reference image | [Match shape to a reference](references/match-shape-to-reference.md). |
+| A repeated or moving part needs to fit its surroundings | [Fit parts in an assembly](references/assembly-fit.md). |
+| Revising an existing lighting setup or comparing lighting variants | [Revise lighting](references/lighting-revisions.md). |
+| Planning a multi-stage deliverable or choosing how to perform a production technique | [EL4CTEO recipe catalog](references/el4cteo.md). Look for a matching playbook during planning, or open the specialist guide when choosing the technique. |
+| A library model, material, light, or preset could fit | [Asset sources](references/asset-sources.md). Offer a search when useful. Search directly when asked. |
+| An installed tool could build or edit the required scene data | [Add-on workflows](references/addon-workflows.md). Check availability in the target Blender installation. |
+| Considering image-to-3D, or checking a generated prop | [Generated props](references/generated-props.md). |
+| Writing or debugging Blender Python | [Blender Python](references/blender-python.md). |
+| Discovering an API, checking exact usage, reading the manual, diagnosing file dependencies, or showing the user a location in Blender's interface | [Blender Lab](references/blender-lab.md). |
+| Matching a silhouette to a reference, fitting a camera from known points, or measuring gaps between attached parts across poses | [Blender Agent Studio](references/agent-studio.md). |
+| Shots share staging or timing, or an assembly needs animation | [Shot sequences](references/shot-sequences.md). |
+| Rendered shots need passes, masks, or downstream effects | [Compositing handoff](references/compositing-handoff.md). |
+| The requested result must work in a browser or another real-time viewer | [Real-time handoff](references/realtime-handoff.md). Use blender-to-web for a Blender-backed web deliverable when available. |
+| Distant geometry may work as image planes | [Impostor cards](references/impostor-cards.md). |
+
+Verify the requested result. Use a measurement for an exact edit, the intended view for appearance, and a short clip or relevant frames for motion. Reuse evidence that answers the question. Say what remains unverified.
+For Astra Test setup, consult BLENDER_AGENT_INSTRUCTIONS.md when present.

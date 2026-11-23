@@ -1,8 +1,10 @@
 # Shot sequences and variants
 
-Use when multiple cameras, shot-specific staging, or editorial timing matter.
-For detailed motion authoring and render settings, use the applicable Blender
-Agent Studio animation or rendering workflow when available.
+Use for multi-shot work, editorial timing, and assembly animation.
+
+When a build-up must end on the approved look, compare the final camera view
+with the original. Check for stray shadows or reflections from temporary
+geometry.
 
 - **Choose what is shared.** Keep a common baseline for scale, layout, and
   look where continuity matters. Isolate shot-specific staging, visibility,

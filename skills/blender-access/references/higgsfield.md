@@ -7,7 +7,8 @@
   Connected, report the discrepancy and use a suitable fallback. Refer only to
   controls visible in that version of the panel.
 - Use the exposed `bl_` tools. Read `bl_get_scene_summary` and inspect
-  `bl_screenshot` for visual work. Before edits, load `bl_get_skill(name="blender-scene")`
-  and the applicable modules. Use `bl_execute` for Blender Python when needed.
+  `bl_screenshot` for visual work. Use hosted skill lookup when available.
+  The [published background guides](https://cdn.jsdelivr.net/npm/fnf-blender-mcp@0.2.2/skills/)
+  can also be read directly. Use `bl_execute` for Blender Python when needed.
 - Verify access and generation costs separately. The generation endpoint
   `https://mcp.higgsfield.ai/mcp` serves a different integration.
