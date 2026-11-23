@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Usage: node test.mjs [--size=1440x900] [--setup='js'] page.html
-// Tests comment mode on a page it is installed in: the theme took effect, the toolbar fits and nothing in it overlaps,
+// Tests Talkback on a page it is installed in: the theme took effect, the toolbar fits and nothing in it overlaps,
 // and commenting, saving, export and clearing work. Each run starts with no stored comments. Exits 1 on any failure.
 // A first-visit dialog (role=dialog, aria-modal or <dialog open>) is passed by clicking its first button; --setup runs your own JS instead.
 import { createRequire } from 'node:module';
@@ -74,7 +74,7 @@ const words = await p.evaluate(() => {
 let stage = 'install';
 try {
 // 1. Install and theme
-const theme = await ui(() => { const b = $('.tg'), s = getComputedStyle(b); return { ok: !!b, themed: /PP Neue Montreal/.test((window.commentModeOptions || {}).css || ''), font: s.fontFamily, h: b.offsetHeight }; });
+const theme = await ui(() => { const b = $('.tg'), s = getComputedStyle(b); return { ok: !!b, themed: /PP Neue Montreal/.test((window.talkbackOptions || {}).css || ''), font: s.fontFamily, h: b.offsetHeight }; });
 check('toolbar is installed', theme.ok);
 if (theme.themed) {
   check('author theme: buttons use PP Neue Montreal', /PP Neue Montreal/.test(theme.font), theme.font);
@@ -90,7 +90,7 @@ stage = 'point comment';
 // 3. A point comment: the bubble tip marks the spot, the numbered pin waits until the box closes
 await p.keyboard.press('c');
 await settle(300);
-check('C turns comment mode on', await ui(() => $('.bar').classList.contains('on')));
+check('C turns Talkback on', await ui(() => $('.bar').classList.contains('on')));
 const tip = await ui(() => shown($('.tip')));
 if (tip) { await p.mouse.click(...(await center('.tip button'))); await settle(300); }
 check('first-time hint dismisses', !(await ui(() => shown($('.tip')))));
@@ -196,7 +196,7 @@ stage = 'leaving';
 // 10. Leaving
 await p.keyboard.press('Escape');
 await settle(300);
-check('Esc turns comment mode off', !(await ui(() => $('.bar').classList.contains('on'))));
+check('Esc turns Talkback off', !(await ui(() => $('.bar').classList.contains('on'))));
 } catch (e) {
   check(`the test stopped at "${stage}"`, false, String(e.message).split('\n')[0].replace(/^.*Error: /, ''));
 }
