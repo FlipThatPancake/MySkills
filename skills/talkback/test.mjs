@@ -200,6 +200,62 @@ check('Esc turns Talkback off', !(await ui(() => $('.bar').classList.contains('o
 } catch (e) {
   check(`the test stopped at "${stage}"`, false, String(e.message).split('\n')[0].replace(/^.*Error: /, ''));
 }
+
+// 11. Live: a copy of the page is served by live.mjs; a message goes to the agent commands and the reply comes back.
+try {
+  stage = 'live';
+  const { mkdtempSync, copyFileSync, readFileSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const { spawn, execFileSync } = await import('node:child_process');
+  const { join, dirname, basename } = await import('node:path');
+  const dir = mkdtempSync(join(tmpdir(), 'talkback-live-')), live = join(dirname(new URL(import.meta.url).pathname), 'live.mjs');
+  copyFileSync(file, join(dir, 'page.html'));
+  const helper = spawn('node', [live, 'serve', 'page.html'], { cwd: dir, stdio: 'ignore' });
+  await new Promise((r) => setTimeout(r, 1000));
+  const rt = JSON.parse(readFileSync(join(dir, '.talkback-live.json'), 'utf8'));
+  const agent = (...a) => execFileSync('node', [live, ...a, '--dir=' + dir], { encoding: 'utf8' });
+  const lp = await ctx.newPage();
+  lp.on('pageerror', (e) => errors.push(e.message));
+  await lp.goto(`http://127.0.0.1:${rt.port}/page.html?tb=${rt.token}`);
+  if (setup) await lp.evaluate(setup);
+  await lp.waitForTimeout(2500);
+  const lui = (fn, arg) => lp.evaluate(([src, arg]) => {
+    const host = [...document.body.children].find((e) => e.shadowRoot && e.shadowRoot.querySelector('.bar'));
+    const $ = (s) => host.shadowRoot.querySelector(s), $$ = (s) => [...host.shadowRoot.querySelectorAll(s)];
+    return new Function('$', '$$', 'arg', 'return (' + src + ')(arg)')($, $$, arg);
+  }, [fn.toString(), arg]);
+  check('live: the helper is found, nobody listening yet', (await lui(() => $('.bar').dataset.live)) === 'wait');
+  check('live: the first-time guide shows once', await lui(() => !$('.panel').hidden && /Point at anything/.test($('.panel').textContent)));
+  await lui(() => $('.panel button').click());
+  const waiting = spawn('node', [live, 'wait', '--timeout=20', '--dir=' + dir]);
+  let got = '';
+  waiting.stdout.on('data', (d) => (got += d));
+  await lp.waitForTimeout(2200);
+  check('live: an open wait turns the dot green', (await lui(() => $('.bar').dataset.live)) === 'ok');
+  await lp.keyboard.press('c');
+  await lp.mouse.click(...spot);
+  await lp.waitForTimeout(300);
+  await lp.keyboard.type('Make this bigger');
+  await lp.keyboard.press('Enter');
+  await new Promise((r) => waiting.on('close', r));
+  const msg = JSON.parse(got).messages[0];
+  check('live: the agent receives the message with its target', msg && msg.messages[0] === 'Make this bigger' && msg.target && msg.selector, got.slice(0, 200));
+  await lp.waitForTimeout(1800);
+  check('live: the page shows it as picked up', /Picked up/.test(await lui(() => $('.conv').textContent)));
+  agent('reply', String(msg.n), 'Done: it is bigger.', '--done');
+  await lp.waitForTimeout(2200);
+  check('live: the reply appears on the page', /Done: it is bigger\./.test(await lui(() => $('.conv').textContent)) && /Done, check it/.test(await lui(() => $('.conv .hd').textContent)));
+  await lui(() => $('.rs').click());
+  await lp.waitForTimeout(2200);
+  check('live: only the user resolves, and it reaches the helper', /resolved/.test(JSON.parse(readFileSync(join(dir, 'page.html.talkback.json'), 'utf8')).threads[0].resolved ? 'resolved' : ''));
+  await lp.keyboard.press('Escape');
+  helper.kill();
+  await lp.waitForTimeout(3200);
+  check('live: with the helper stopped the dot goes grey', (await lui(() => $('.bar').dataset.live)) === 'off');
+  await lp.close();
+} catch (e) {
+  check(`the live test stopped at "${stage}"`, false, String(e.message).split('\n')[0]);
+}
 check('no script errors', errors.length === 0, errors.join(' | '));
 
 await browser.close();
