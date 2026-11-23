@@ -17,6 +17,16 @@
     dirty = Array.isArray(d) ? items.length > 0 : !!(d && d.dirty);
   } catch (e) {}
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ items, dirty })); } catch (e) {} };
+  // Live link to an agent: only on a page opened from the helper's link (live.mjs), which carries a secret token.
+  const LIVE_V = 1, uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+  let token = null;
+  try {
+    token = new URLSearchParams(location.search).get('tb') || sessionStorage.getItem('talkback:tb');
+    if (token && /^https?:/.test(location.protocol)) { sessionStorage.setItem('talkback:tb', token); history.replaceState(null, '', location.pathname + location.hash); } else token = null;
+  } catch (e) { token = null; }
+  const live = { on: !!token, ok: false, auth: true, ver: null, listening: false, hello: null, time: 0, stale: false };
+  const pagePath = decodeURIComponent(location.pathname.slice(1));
+  items.forEach((c) => { c.id = c.id || uid(); });
   const clean = (s) => (s || '').replace(/\s+/g, ' ').trim();
   const cut = (s, n = 120) => (s.length > n ? s.slice(0, n - 1) + '…' : s);
   const colorOf = (c) => COLORS[(c.n - 1) % COLORS.length];
@@ -129,7 +139,7 @@
   function make(el, extra) {
     let context = null;
     try { context = typeof window.commentContext === 'function' ? window.commentContext() : null; } catch (err) {}
-    return { n: items.length + 1, text: '', selector: selectorOf(el), section: sectionOf(el), at: new Date().toISOString(), context, ...extra };
+    return { n: items.length + 1, id: uid(), text: '', selector: selectorOf(el), section: sectionOf(el), at: new Date().toISOString(), context, ...extra };
   }
 
   // UI lives in a shadow root so page styles cannot touch it.
@@ -143,6 +153,8 @@
     tg: '<svg viewBox="0 0 16 16"><path d="M2.95 0h9.18a2.95 2.95 0 0 1 2.94 2.95v6.1A2.95 2.95 0 0 1 12.13 12H3.6L0 15.06V2.95A2.95 2.95 0 0 1 2.95 0Z" fill="currentColor"/></svg>',
     dl: '<svg viewBox="0 0 16 17"><path d="M14.48 9.59 9.33 14.57c-.46.46-.76.72-1.05.93h5.03v1.25H2v-1.25h5.02c-.29-.21-.67-.47-1.13-.93L.74 9.5c-.84-.92-.25-1.13.38-1.13h2.51V1.68C3.63.5 4.47 0 5.3 0h4.6c1.35 0 1.69.88 1.69 1.68v6.7h2.47c1.05 0 1.26.33.42 1.21Z" fill="currentColor"/></svg>',
     cp: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="5" y="5" width="10" height="10" rx="2"/><path d="M11 2.8A1.8 1.8 0 0 0 9.2 1H2.8A1.8 1.8 0 0 0 1 2.8v6.4A1.8 1.8 0 0 0 2.8 11"/></svg>',
+    st: '<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="currentColor"/></svg>',
+    rl: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13.5 8A5.5 5.5 0 1 1 11.9 4.1M13.5 1.5v3h-3"/></svg>',
     cl: TRASH.replace('<svg', '<svg preserveAspectRatio="xMidYMid meet"'),
   };
   // Every toolbar button is an icon plus a label; a theme decides when the label shows.
@@ -169,6 +181,25 @@
     .tip p{margin:0;font-size:15px;line-height:1.4}
     .tip div{display:flex;align-items:center;justify-content:space-between;margin-top:14px;font-size:11px;letter-spacing:.05em;text-transform:uppercase}
     .tip span{opacity:.55}.tip button{padding:6px 12px;border:1px solid #dfdeda55;border-radius:99px;letter-spacing:inherit}
+    .st .ic svg{color:#8b8b8b}.bar[data-live=ok] .st .ic svg{color:#1fbf5a}.bar[data-live=wait] .st .ic svg{color:#f69b13}
+    .panel{position:absolute;${vert}:calc(100% + 12px);${horiz === 'center' ? 'left:50%;transform:translateX(-50%)' : horiz + ':0'};width:min(calc(100vw - 32px),340px);box-sizing:border-box;padding:16px 18px;
+      background:#000000e0;color:#dfdeda;border:1px solid #dfdeda24;border-radius:20px;backdrop-filter:blur(14px)}
+    .panel h4{margin:0 0 8px;font-size:14px;font-weight:600}.panel p{margin:6px 0;font-size:13px}
+    .panel ul{margin:0;padding:0;list-style:none}.panel li{margin:5px 0;font-size:12.5px;padding-left:18px;position:relative}
+    .panel li:before{content:'';position:absolute;left:0;top:5px;width:9px;height:9px;border-radius:50%;background:#8b8b8b}
+    .panel li.ok:before{background:#1fbf5a}.panel li.bad:before{background:#e5484d}.panel li.wait:before{background:#f69b13}
+    .panel li small{display:block;opacity:.65}.panel .row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+    .panel button{padding:6px 12px;border:1px solid #dfdeda55;border-radius:99px;font-size:12px}
+    .stack{display:flex;flex-direction:column;gap:8px}
+    .conv{width:280px;max-height:230px;overflow:auto;display:flex;flex-direction:column;gap:6px;padding:10px;box-sizing:border-box;background:#161616f2;color:#e8e6e1;border-radius:14px;font-size:13px}
+    .conv .hd{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:11px;letter-spacing:.04em;text-transform:uppercase;opacity:.8}
+    .conv .hd button{padding:3px 9px;border:1px solid #ffffff55;border-radius:99px;font-size:11px;text-transform:none;letter-spacing:0}
+    .conv .m{display:flex;flex-direction:column;gap:2px;max-width:90%;padding:6px 10px;border-radius:12px;white-space:pre-wrap;overflow-wrap:anywhere}
+    .conv .u{align-self:flex-end;background:#fff;color:#292929}.conv .a{align-self:flex-start;background:#2c2c2c}
+    .conv small{font-size:10.5px;opacity:.6}
+    .pin:not([data-st=""])::after{content:'';position:absolute;right:-6px;top:-6px;width:10px;height:10px;box-sizing:border-box;border-radius:50%;border:2px solid #8b8b8b;background:#fff}
+    .pin[data-st=picked]::after{background:#0d99ff;border-color:#fff}.pin[data-st=asks]::after{background:#f69b13;border-color:#fff}.pin[data-st=done]::after{background:#1fbf5a;border-color:#fff}
+    .pin[data-st=queued]::after{border-style:dashed}.pin[data-st=resolved]{opacity:.5}.pin[data-st=resolved]::after{background:#8b8b8b;border-color:#fff}
     .hl{position:fixed;border:2px solid var(--blue);background:#0d99ff14;border-radius:3px;box-sizing:border-box}
     .tag{position:fixed;max-width:280px;padding:2px 6px;background:var(--blue);color:#fff;border-radius:4px;font-size:11px;
       white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -191,8 +222,8 @@
     .cb.go{background:var(--c);color:#fff}.cb:disabled{background:#2929290f;color:#929292;cursor:not-allowed}
   </style><div id="marks"></div><div class="hl" hidden></div><div class="tag" hidden></div><div id="pins"></div>
   <div class="bar${col ? ' col' : ''}">${tool('tg', 'Comment', 'Talkback (C)')}
-  <div class="x">${tool('cl', '', 'Clear all comments')}${tool('cp', 'Copy JSON', 'Copy every comment as JSON')}${tool('dl', '<span class="nw"><span class="n"></span></span><span class="hw"><span class="h">Download comments</span></span>', 'Download every comment as JSON')}</div>
-  <div class="tip" hidden><p>Select text, or click anything on the page, to pin a comment there.</p><div><span>Esc exits · C toggles</span><button>Got it</button></div></div></div>`;
+  <div class="x">${tool('rl', 'Updated, reload', 'The page changed: reload it')}${tool('st', 'Live', 'Live link status')}${tool('cl', '', 'Clear all comments')}${tool('cp', 'Copy JSON', 'Copy every comment as JSON')}${tool('dl', '<span class="nw"><span class="n"></span></span><span class="hw"><span class="h">Download comments</span></span>', 'Download every comment as JSON')}</div>
+  <div class="panel" hidden></div><div class="tip" hidden><p>Select text, or click anything on the page, to pin a comment there.</p><div><span>Esc exits · C toggles</span><button>Got it</button></div></div></div>`;
   if (window.talkbackOptions && window.talkbackOptions.css) root.appendChild(document.createElement('style')).textContent = window.talkbackOptions.css;
   const $ = (s) => root.querySelector(s);
   const pins = $('#pins'), marks = $('#marks'), hl = $('.hl'), tag = $('.tag'), bar = $('.bar');
@@ -244,6 +275,13 @@
     dl.classList.toggle('dirty', dirty);
     say(cl, armed ? 'Click again to clear' : 'Clear comments');
     cl.classList.toggle('arm', !!armed);
+    $('.st').hidden = !live.on;
+    $('.rl').hidden = !live.stale;
+    bar.dataset.live = !live.on ? '' : !live.ok ? 'off' : live.listening ? 'ok' : 'wait';
+    say($('.st'), !live.ok ? 'Offline' : live.listening ? 'Live' : 'Nobody listening');
+    for (const [c, b] of pinEls) b.dataset.st = stOf(c);
+    $('.tip p').textContent = 'Select text, or click anything on the page, to pin a comment there.' + (live.on ? '' : ' To talk with your agent here, tell it: “Go live with Talkback on this page”.');
+    paintLive();
   }
   const setMode = (v) => {
     on = v;
@@ -263,6 +301,7 @@
       b.style.setProperty('--c', colorOf(c));
       b.textContent = c.n;
       b.title = c.text || 'New comment';
+      b.dataset.st = stOf(c);
       b.onclick = (e) => { e.stopPropagation(); if (!box || box.c !== c) { closeBox(true); openBox(c, false); } };
       pinEls.set(c, b);
       pins.appendChild(b);
@@ -283,22 +322,25 @@
     const el = document.createElement('div');
     el.className = 'box' + (isNew ? '' : ' review');
     el.style.setProperty('--c', colorOf(c));
-    el.innerHTML = BUBBLE + '<div class="field"><textarea rows="1" placeholder="Add a comment"></textarea><button class="cb del" title="Delete">' + TRASH + '</button><button class="cb go" title="Save (Enter)">' + SEND + '</button></div>';
+    el.innerHTML = BUBBLE + '<div class="stack"><div class="conv" hidden></div><div class="field"><textarea rows="1" placeholder="Add a comment"></textarea><button class="cb del" title="Delete">' + TRASH + '</button><button class="cb go" title="' + (live.on ? 'Send to agent (Enter)' : 'Save (Enter)') + '">' + SEND + '</button></div></div>';
     const ta = el.querySelector('textarea'), go = el.querySelector('.go'), del = el.querySelector('.del');
     const fit = () => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; go.disabled = !ta.value.trim(); };
-    ta.value = c.text || '';
+    const talking = live.on && (c.msgs || []).length; // a conversation: the field is for the next message
+    ta.value = talking ? '' : c.text || '';
+    if (talking) ta.placeholder = 'Reply';
     del.hidden = isNew;
-    del.onclick = () => { items = items.filter((x) => x !== c); dirty = true; closeBox(false); };
-    go.onclick = () => closeBox(true);
+    del.onclick = () => { items = items.filter((x) => x !== c); dirty = true; if (live.on) api('delete', { id: c.id }).catch(() => {}); closeBox(false); };
+    go.onclick = () => (live.on ? sendMsg() : closeBox(true));
     ta.oninput = fit;
     ta.onkeydown = (e) => {
       e.stopPropagation();
-      if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); closeBox(true); }
+      if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); live.on ? sendMsg() : closeBox(true); }
       if (e.key === 'Escape') closeBox(false);
     };
-    box = { c, isNew, el };
+    box = { c, isNew, el, fit };
     root.appendChild(el);
     render();
+    paintConv();
     fit();
     ta.focus();
   }
@@ -309,7 +351,9 @@
     const text = el.querySelector('textarea').value.trim();
     box = null;
     el.remove();
-    if (commit && text && text !== c.text) {
+    if (live.on && (c.msgs || []).length) {
+      // a conversation: a half-typed reply is dropped
+    } else if (commit && text && text !== c.text) {
       c.text = text;
       if (isNew) items.push(c);
       dirty = true;
@@ -337,7 +381,7 @@
         while (mk.children.length > g.rects.length) mk.lastChild.remove();
         g.rects.forEach((q, i) => Object.assign(mk.children[i].style, { left: q.left + 'px', top: q.top + 'px', width: q.width + 'px', height: q.height + 'px' }));
       }
-      const g = box && geoOf(box.c);
+      const g = box && (geoOf(box.c) || (box.c.detached ? { at: [innerWidth / 2 - 140, innerHeight / 2] } : null));
       if (g) {
         const w = box.el.offsetWidth, h = box.el.offsetHeight, [px, py] = g.at;
         // A point comment hangs from the bubble's tip, its bottom corner, flipping left near the right edge; a text comment sits under its text.
@@ -389,7 +433,7 @@
 
   document.addEventListener('keydown', (e) => {
     const t = e.composedPath()[0];
-    if (e.key === 'Escape') return box ? closeBox(false) : setMode(false);
+    if (e.key === 'Escape') return panelOpen ? ((panelOpen = false), paintLive()) : box ? closeBox(false) : setMode(false);
     if (e.key.toLowerCase() === 'c' && !e.metaKey && !e.ctrlKey && !e.altKey && !/^(input|textarea|select)$/i.test(t.localName) && !t.isContentEditable) setMode(!on);
   });
 
@@ -403,6 +447,7 @@
         n: c.n, comment: c.text, section: c.section, target: c.target, selector: c.selector,
         ...(isText(c) ? {} : { positionInTarget: { x: +(c.fx * 100).toFixed(1) + '%', y: +(c.fy * 100).toFixed(1) + '%' } }),
         ...(c.context ? { context: c.context } : {}),
+        ...((c.msgs || []).length ? { conversation: c.msgs.map((m) => ({ from: m.who, text: m.text })) } : {}),
       })),
       ...(extras ? { extras } : {}),
     };
@@ -413,6 +458,8 @@
     if (!b) return;
     const a = b.dataset.a, json = JSON.stringify(exportData(), null, 2);
     if (a === 'tg') setMode(!on);
+    if (a === 'st') { panelOpen = !panelOpen; guide = false; paintLive(); }
+    if (a === 'rl') reload();
     if (a === 'cp') {
       const fallback = () => { const ta = document.createElement('textarea'); ta.value = json; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); };
       (navigator.clipboard ? navigator.clipboard.writeText(json) : Promise.reject()).catch(fallback).then(() => {
@@ -434,11 +481,173 @@
       clearTimeout(armed);
       armed = 0;
       closeBox(false);
+      if (live.on) items.forEach((c) => api('delete', { id: c.id }).catch(() => {}));
       items = [];
       dirty = false;
       save();
       render();
     }
   };
+
+  // ---- live: conversation, status, sync ----
+  const h = (tag, cls, text, par) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; if (par) par.appendChild(e); return e; };
+  const STL = { queued: 'Queued, waiting for the helper', ready: 'Ready for agent', picked: 'Picked up', asks: 'Agent asks you', done: 'Done, check it', resolved: 'Resolved' };
+  const hm = (iso) => new Date(iso).toTimeString().slice(0, 5);
+  function stOf(c) { return c.resolved ? 'resolved' : !(c.msgs || []).length ? '' : c.msgs.some((m) => !m.sent) ? 'queued' : c.st || 'ready'; }
+  const wire = (c) => ({ id: c.id, target: c.target, selector: c.selector, section: c.section, context: c.context, quote: c.quote, start: c.start, end: c.end, fx: c.fx, fy: c.fy });
+  async function api(path, body) {
+    const r = await fetch('/_tb/' + path + '?tb=' + token + '&page=' + encodeURIComponent(pagePath), body ? { method: 'POST', body: JSON.stringify({ ...body, page: pagePath }) } : {});
+    live.auth = r.status !== 401;
+    if (!r.ok) throw new Error(r.status);
+    return r.json();
+  }
+  function paintConv() {
+    if (!box) return;
+    const c = box.c, conv = box.el.querySelector('.conv'), ms = c.msgs || [];
+    conv.hidden = !live.on || !ms.length;
+    if (conv.hidden) return;
+    const sig = JSON.stringify([stOf(c), ms.map((m) => [m.text, m.sent, m.picked, m.done])]);
+    if (box.sig === sig) return;
+    box.sig = sig;
+    conv.textContent = '';
+    const hd = h('div', 'hd', undefined, conv);
+    h('span', 'stl', STL[stOf(c)] + (stOf(c) === 'picked' ? ' ' + hm(ms.filter((m) => m.picked).pop().picked) : ''), hd);
+    const rs = h('button', 'rs', c.resolved ? 'Reopen' : 'Resolve', hd);
+    rs.title = 'Only you resolve a conversation';
+    rs.onclick = () => { c.resolved = !c.resolved; c.rsDirty = 1; save(); syncBar(); sync(); };
+    for (const m of ms) {
+      const d = h('div', 'm ' + (m.who === 'user' ? 'u' : 'a'), undefined, conv);
+      h('span', '', m.text, d);
+      const note = m.who === 'user' ? (!m.sent ? 'Queued' : m.picked ? 'Picked up ' + hm(m.picked) : 'Not picked up yet') : m.done ? 'Done, check it' : '';
+      if (note) h('small', '', note, d);
+    }
+    conv.scrollTop = conv.scrollHeight;
+    box.el.querySelector('textarea').placeholder = 'Reply';
+  }
+  function sendMsg() {
+    if (!box) return;
+    const { c, el } = box, ta = el.querySelector('textarea'), text = ta.value.trim();
+    if (!text) return;
+    if (box.isNew) { items.push(c); box.isNew = false; el.classList.add('review'); }
+    if (!(c.msgs || []).length) c.text = text;
+    (c.msgs = c.msgs || []).push({ who: 'user', text, at: new Date().toISOString(), mid: uid(), sent: 0 });
+    c.resolved = false;
+    c.rsDirty = 0;
+    ta.value = '';
+    box.fit();
+    save();
+    render();
+    paintConv();
+    sync();
+  }
+  function merge(s) {
+    live.ver = s.version; live.listening = s.listening; live.hello = s.hello;
+    if (!live.time) live.time = s.pageTime; else if (s.pageTime > live.time + 1) live.stale = true;
+    for (const t of s.threads) {
+      let c = items.find((x) => x.id === t.id);
+      if (!c) {
+        if (!t.msgs.length) continue;
+        c = { n: 0, id: t.id, text: t.msgs[0].text, at: t.msgs[0].at, section: t.section, target: t.target, selector: t.selector, context: t.context, quote: t.quote, start: t.start, end: t.end, fx: t.fx, fy: t.fy };
+        items.push(c);
+      }
+      const local = (c.msgs || []).filter((m) => !m.sent && !t.msgs.some((x) => x.mid === m.mid));
+      c.msgs = t.msgs.map((m) => ({ ...m, sent: 1 })).concat(local);
+      c.st = t.st;
+      if (!c.rsDirty) c.resolved = t.resolved;
+    }
+  }
+  let syncing = false;
+  async function sync() {
+    if (!live.on || syncing) return;
+    syncing = true;
+    try {
+      for (const c of items.slice()) {
+        for (const m of c.msgs || []) if (!m.sent) { await api('send', { thread: wire(c), text: m.text, mid: m.mid, at: m.at }); m.sent = 1; }
+        if (c.rsDirty) { await api('resolve', { id: c.id, resolved: !!c.resolved }); c.rsDirty = 0; }
+      }
+      const n = items.length;
+      merge(await api('state'));
+      live.ok = true;
+      save();
+      if (items.length !== n) render();
+    } catch (e) { live.ok = false; }
+    syncing = false;
+    syncBar();
+  }
+  // Pins re-attach by data-comment name, then by their text; failing both, a conversation moves to the Detached list.
+  function reattach(c) {
+    const el0 = findEl(c);
+    if (el0 && (!isText(c) || rangeOf(c, el0))) return true;
+    const text = isText(c) ? c.quote : c.target && c.target.text;
+    const el = (c.target && c.target.name && [...document.querySelectorAll('[data-comment]')].find((e) => e.dataset.comment === c.target.name))
+      || (text && [...document.querySelectorAll(BLOCKS + ',' + OBJECTS)].find((e) => e.textContent.includes(text)));
+    if (!el) return false;
+    c.selector = selectorOf(el);
+    if (isText(c)) { c.start = el.textContent.indexOf(c.quote); c.end = c.start + c.quote.length; }
+    return true;
+  }
+  const RS = 'talkback:restore', GUIDE = 'talkback:live-guide';
+  let panelOpen = false, guide = false, guideSeen = false;
+  try { guideSeen = !!localStorage.getItem(GUIDE); } catch (e) {}
+  function reload() {
+    try {
+      const f = (fn) => { try { return typeof fn === 'function' ? fn() : null; } catch (e) { return null; } };
+      sessionStorage.setItem(RS, JSON.stringify({ scroll: [scrollX, scrollY], context: f(window.commentContext), extras: f(window.commentExtras), open: box && { id: box.c.id, text: box.el.querySelector('textarea').value } }));
+    } catch (e) {}
+    location.reload();
+  }
+  function paintLive() {
+    if (!live.on) return;
+    if (!guideSeen && live.ok && !panelOpen) panelOpen = guide = true;
+    const pn = $('.panel');
+    pn.hidden = !panelOpen;
+    paintConv();
+    if (!panelOpen) return;
+    const sig = JSON.stringify([guide, live, items.filter((c) => c.detached).map((c) => c.id)]);
+    if (pn.sig === sig) return;
+    pn.sig = sig;
+    pn.textContent = '';
+    if (guide) {
+      h('h4', '', 'Talking with your agent', pn);
+      h('p', '', 'Point at anything and write. Send goes to your agent, and the dots show where each message stands. Only you resolve a conversation.', pn);
+      const row = h('div', 'row', undefined, pn);
+      h('button', '', 'Got it', row).onclick = () => { guideSeen = true; try { localStorage.setItem(GUIDE, '1'); } catch (e) {} panelOpen = guide = false; paintLive(); };
+      return;
+    }
+    h('h4', '', 'Talkback live', pn);
+    const ul = h('ul', '', undefined, pn);
+    const line = (cls, text, note) => { const li = h('li', cls, text, ul); if (note) h('small', '', note, li); };
+    line('ok', 'Opened from the helper’s link');
+    line(live.ok ? (live.ver === LIVE_V ? 'ok' : 'bad') : 'bad', live.ok ? 'Helper found, version ' + live.ver : 'Helper not answering',
+      !live.ok ? 'It may have stopped (computer asleep, session ended). Messages wait here and go out when it is back. Ask your agent: “Go live with Talkback on this page”.' : live.ver !== LIVE_V ? 'Update Talkback in this page (page ' + LIVE_V + ', helper ' + live.ver + ').' : '');
+    line(live.auth ? (live.ok ? 'ok' : '') : 'bad', live.auth ? 'Secret token accepted' : 'Token not accepted', live.auth ? '' : 'Open the link your agent gave you.');
+    line(live.listening ? 'ok' : live.ok ? 'wait' : '', live.listening ? 'Agent listening' : 'Nobody is listening', live.listening || !live.ok ? '' : 'Messages wait. Copy prompt and paste it in your agent’s chat.');
+    line(live.hello ? 'ok' : '', live.hello ? 'Agent answered at ' + hm(live.hello) : 'Waiting for the agent’s “I’m listening”');
+    const lost = items.filter((c) => c.detached);
+    if (lost.length) {
+      h('p', '', 'Detached: the thing they point at is gone', pn);
+      for (const c of lost) { const b = h('button', '', '#' + c.n + ' ' + cut(c.text, 30), pn); b.onclick = () => { panelOpen = false; if (!on) setMode(true); closeBox(true); openBox(c, false); }; }
+    }
+    const row = h('div', 'row', undefined, pn);
+    h('button', '', 'Copy prompt', row).onclick = (e) => { const t = 'Listen for my Talkback messages on ' + (document.title || pagePath) + ': run the Talkback helper’s wait, answer every message with reply, and keep listening.'; (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).catch(() => {}); e.target.textContent = 'Copied ✓'; };
+    h('button', '', 'Show guide', row).onclick = () => { guide = true; paintLive(); };
+  }
   render();
+  if (live.on) {
+    sync();
+    setInterval(sync, 1500);
+    setTimeout(() => { items.forEach((c) => (c.detached = !reattach(c))); save(); syncBar(); }, 1500);
+    try {
+      const r = JSON.parse(sessionStorage.getItem(RS));
+      if (r) {
+        sessionStorage.removeItem(RS);
+        setTimeout(() => {
+          scrollTo(...r.scroll);
+          if (typeof window.commentRestore === 'function') window.commentRestore({ context: r.context, extras: r.extras });
+          const c = r.open && items.find((x) => x.id === r.open.id);
+          if (c) { setMode(true); openBox(c, false); const ta = box.el.querySelector('textarea'); ta.value = r.open.text; ta.dispatchEvent(new Event('input')); }
+        }, 500);
+      }
+    } catch (e) {}
+  }
 })();
