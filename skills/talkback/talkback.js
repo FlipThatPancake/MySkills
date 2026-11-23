@@ -1,13 +1,13 @@
-/* comment-mode: Figma-style comments for any HTML page. Press C or use the toggle; Esc exits.
+/* talkback: Figma-style comments for any HTML page. Press C or use the toggle; Esc exits.
    Select text or click anything to comment; Enter saves. Copy JSON or Download exports every comment.
-   With comment mode off, only the toggle stays, plus the download button while comments are unsaved. */
+   With Talkback off, only the toggle stays, plus the download button while comments are unsaved. */
 (() => {
   if (window.__commentMode) return;
   window.__commentMode = true;
-  const KEY = 'comment-mode:' + location.pathname;
+  const KEY = 'talkback:' + location.pathname;
   const SPOTS = ['top-left', 'top-center', 'top-right', 'bottom-left', 'bottom-center', 'bottom-right'];
-  const spot = SPOTS.includes((window.commentModeOptions || {}).toolbar) ? window.commentModeOptions.toolbar : 'bottom-center';
-  const col = (window.commentModeOptions || {}).layout === 'column'; // actions stack above or below the toggle instead of beside it
+  const spot = SPOTS.includes((window.talkbackOptions || {}).toolbar) ? window.talkbackOptions.toolbar : 'bottom-center';
+  const col = (window.talkbackOptions || {}).layout === 'column'; // actions stack above or below the toggle instead of beside it
   const COLORS = ['#0d99ff', '#f69b13', '#af63f2', '#f35151', '#1fbf5a', '#10b8c4', '#e5469a'];
   let items = [], dirty = false, on = false, box = null, picked = false, armed = 0; // box: { c, isNew, el }
   const pinEls = new Map(), markEls = new Map();
@@ -190,17 +190,17 @@
     .cb svg{width:52%;height:52%}
     .cb.go{background:var(--c);color:#fff}.cb:disabled{background:#2929290f;color:#929292;cursor:not-allowed}
   </style><div id="marks"></div><div class="hl" hidden></div><div class="tag" hidden></div><div id="pins"></div>
-  <div class="bar${col ? ' col' : ''}">${tool('tg', 'Comment', 'Comment mode (C)')}
+  <div class="bar${col ? ' col' : ''}">${tool('tg', 'Comment', 'Talkback (C)')}
   <div class="x">${tool('cl', '', 'Clear all comments')}${tool('cp', 'Copy JSON', 'Copy every comment as JSON')}${tool('dl', '<span class="nw"><span class="n"></span></span><span class="hw"><span class="h">Download comments</span></span>', 'Download every comment as JSON')}</div>
   <div class="tip" hidden><p>Select text, or click anything on the page, to pin a comment there.</p><div><span>Esc exits · C toggles</span><button>Got it</button></div></div></div>`;
-  if (window.commentModeOptions && window.commentModeOptions.css) root.appendChild(document.createElement('style')).textContent = window.commentModeOptions.css;
+  if (window.talkbackOptions && window.talkbackOptions.css) root.appendChild(document.createElement('style')).textContent = window.talkbackOptions.css;
   const $ = (s) => root.querySelector(s);
   const pins = $('#pins'), marks = $('#marks'), hl = $('.hl'), tag = $('.tag'), bar = $('.bar');
 
   const css = document.createElement('style');
   // @font-face only works in the page's own stylesheet, so a theme's font rules are copied there.
   // The empty area of an SVG laid over text lets clicks and selections through; its drawn shapes still catch them.
-  css.textContent = 'html.cm-on,html.cm-on *{cursor:crosshair!important;-webkit-user-select:text!important;user-select:text!important}:where(html.cm-on svg){pointer-events:none}:where(html.cm-on svg *){pointer-events:visiblePainted}' +(((window.commentModeOptions || {}).css || '').match(/@font-face\{[^}]*\}/g) || []).join('');
+  css.textContent = 'html.cm-on,html.cm-on *{cursor:crosshair!important;-webkit-user-select:text!important;user-select:text!important}:where(html.cm-on svg){pointer-events:none}:where(html.cm-on svg *){pointer-events:visiblePainted}' +(((window.talkbackOptions || {}).css || '').match(/@font-face\{[^}]*\}/g) || []).join('');
   // A theme can style light pages differently: the host gets .light when the page background is light.
   const lightPage = () => {
     for (const el of [document.body, document.documentElement]) {
@@ -224,8 +224,8 @@
     tag.style.top = (r.top - 26 > 0 ? r.top - 26 : r.bottom + 6) + 'px';
   }
 
-  // Toolbar: with comment mode off only the toggle shows, plus the download button while comments are unsaved.
-  const TIP = 'comment-mode:tip-seen';
+  // Toolbar: with Talkback off only the toggle shows, plus the download button while comments are unsaved.
+  const TIP = 'talkback:tip-seen';
   let tipSeen = false;
   try { tipSeen = !!localStorage.getItem(TIP); } catch (e) {}
   const hideTip = () => { tipSeen = true; try { localStorage.setItem(TIP, '1'); } catch (e) {} syncBar(); };

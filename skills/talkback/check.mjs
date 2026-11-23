@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Usage: node check.mjs [--theme=agent-default] [--css=file.css] [--sizes=1440x900,1280x720] page.html
-// Renders the page with each toolbar spot and layout (row, column) and reports what the toolbar would cover, with comment mode off and on.
+// Renders the page with each toolbar spot and layout (row, column) and reports what the toolbar would cover, with Talkback off and on.
 // Counts text, images, controls and drawn shapes on every slide (hidden slides keep their layout), not empty space.
 import { execFileSync } from 'node:child_process';
 import { copyFileSync, rmSync } from 'node:fs';
@@ -24,8 +24,8 @@ for (const spot of SPOTS) for (const layout of ['row', 'column']) {
   for (const [w, h] of sizes) {
   const tab = await browser.newPage({ viewport: { width: w, height: h } });
   await tab.addInitScript(() => {
-    localStorage.setItem('comment-mode:tip-seen', '1');
-    localStorage.setItem('comment-mode:' + location.pathname, JSON.stringify({ dirty: true, items: [{ n: 1, text: 'x', selector: 'body', fx: 0.5, fy: 0.5, target: { type: 'empty space' } }] }));
+    localStorage.setItem('talkback:tip-seen', '1');
+    localStorage.setItem('talkback:' + location.pathname, JSON.stringify({ dirty: true, items: [{ n: 1, text: 'x', selector: 'body', fx: 0.5, fy: 0.5, target: { type: 'empty space' } }] }));
   });
   await tab.goto('file://' + file);
   await tab.waitForTimeout(800);
@@ -61,7 +61,7 @@ for (const spot of SPOTS) for (const layout of ['row', 'column']) {
 }
 await browser.close();
 for (const r of results) {
-  console.log(`${r.spot}: covers ${r.off.length} with comment mode off, ${r.on.length} with it on`);
+  console.log(`${r.spot}: covers ${r.off.length} with Talkback off, ${r.on.length} with it on`);
   for (const t of [...new Set(r.off.concat(r.on))].slice(0, 5)) console.log('   ' + t);
 }
 // Least covered wins, mode off counting most; ties go to a corner, the least distracting place for a full toolbar.

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Usage: node add.mjs [--toolbar=bottom-center] [--layout=column] [--theme=author|agent-default] [--css=file.css] page.html [more.html ...]
-// Inlines comment-mode.js before </body>. Run again to update an existing copy.
+// Inlines talkback.js before </body>. Run again to update an existing copy; an old comment-mode block is replaced too.
 // Toolbar spots: top-left, top-center, top-right, bottom-left, bottom-center, bottom-right.
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 const args = process.argv.slice(2);
@@ -13,13 +13,13 @@ if (themeFile && !existsSync(themeFile)) { console.error('unknown theme: ' + the
 const own = (args.find((a) => a.startsWith('--css=')) || '').slice(6);
 const sheet = [themeFile && readFileSync(themeFile, 'utf8'), own && readFileSync(own, 'utf8')].filter(Boolean).join('\n').trim();
 const css = sheet ? ', css: ' + JSON.stringify(sheet).replace(/<\//g, '<\\/') : '';
-const code = readFileSync(new URL('comment-mode.js', import.meta.url), 'utf8').replace(/<\/script/gi, '<\\/script');
-const block = `<!-- comment-mode:start -->\n<script>\nwindow.commentModeOptions = { toolbar: '${spot}'${layout}${css} };\n${code}</script>\n<!-- comment-mode:end -->\n`;
+const code = readFileSync(new URL('talkback.js', import.meta.url), 'utf8').replace(/<\/script/gi, '<\\/script');
+const block = `<!-- talkback:start -->\n<script>\nwindow.talkbackOptions = { toolbar: '${spot}'${layout}${css} };\n${code}</script>\n<!-- talkback:end -->\n`;
 for (const file of args.filter((a) => !a.startsWith('--'))) {
   let html = readFileSync(file, 'utf8');
-  html = html.replace(/<!-- comment-mode:start -->[\s\S]*?<!-- comment-mode:end -->\n?/, '');
+  html = html.replace(/<!-- (?:talkback|comment-mode):start -->[\s\S]*?<!-- (?:talkback|comment-mode):end -->\n?/, '');
   const at = html.lastIndexOf('</body>');
   if (at < 0) { console.error(file + ': no </body>'); process.exitCode = 1; continue; }
   writeFileSync(file, html.slice(0, at) + block + html.slice(at));
-  console.log(file + ': comment-mode installed, toolbar ' + spot + (layout ? ', column layout' : ''));
+  console.log(file + ': Talkback installed, toolbar ' + spot + (layout ? ', column layout' : ''));
 }
