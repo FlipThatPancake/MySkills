@@ -18,7 +18,7 @@ After installing, run `node <skill folder>/test.mjs page.html` and fix every fai
 Select text to comment on exact words, or click anything the hover outline shows: a line of text, a text block, an image, a control, an SVG shape, a formula, or empty space. With Talkback off, only the toggle stays, plus a download button showing how many comments are unsaved. The look is the `author` theme ([themes/author.css](themes/author.css)) unless `--theme=agent-default` is given. `agent-default` keeps the plain look built into talkback.js: use it when the agent should choose the look, and fit the toolbar to the page with CSS passed as `--css=<file>`, aimed at the classes in that script's style block. Give key visuals a name with `data-comment="Force arrow"` so the export names them instead of describing their shape.
 
 Optional page hooks, defined before the install block:
-- `window.commentContext = () => ({ ... })` for state that changes what a comment means, such as the current slide or a slider value. It is stored with each comment.
+- `window.commentContext = () => ({ ... })` for state that changes what a comment means, such as the open tab or a slider value. It is stored with each comment.
 - `window.commentExtras = () => ({ ... })` for other data the user should send along, such as quiz answers. It is added to the export once, as `extras`.
 
 ## Live
@@ -27,7 +27,7 @@ Pick the route your setup allows and tell the user which one it is. Download and
 1. Run `node <skill folder>/live.mjs serve --open page.html` in the background. It serves the page's folder on 127.0.0.1 and prints the link with a secret token; open that link, never the file.
 2. Run `node <skill folder>/live.mjs wait` in the background. It returns new messages as JSON (`n`, `target`, `selector`, `quote`, `context`, `messages`, `earlier`) or `{"timeout":true}`; start it again each time it returns.
 3. Answer every message with `node <skill folder>/live.mjs reply <n> "text" [--done]`. Ask with concrete options when a message is vague. Use `--done` when the work is finished and the user should check it.
-4. When the page changes, the user sees "Updated, reload". `window.commentRestore = ({ context, extras }) => {...}` restores page state (slide, answers) after that reload.
+4. When the page changes, the user sees "Updated, reload". `window.commentRestore = ({ context, extras }) => {...}` restores page state (open tab, form values) after that reload.
 
 The user's states, as in blender-talkback: Ready for agent, Agent asks you, Done check it, Resolved. Only the user resolves. The newest message wins. Where Node or a local session is missing, use Download.
 
