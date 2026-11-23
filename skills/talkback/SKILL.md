@@ -1,6 +1,6 @@
 ---
 name: talkback
-description: "Use when an HTML page the user will read, such as a lesson or prototype, should let them leave Figma-style pinned comments (Talkback) and export them as JSON to paste into the chat."
+description: "Use when any HTML page or web app the user will look at, such as a website, prototype or tool, should let them leave Figma-style pinned comments (Talkback) and export them as JSON to paste into the chat."
 ---
 
 # Talkback
