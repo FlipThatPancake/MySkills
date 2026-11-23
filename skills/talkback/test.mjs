@@ -256,6 +256,32 @@ try {
 } catch (e) {
   check(`the live test stopped at "${stage}"`, false, String(e.message).split('\n')[0]);
 }
+
+// 12. claude.ai: with the comments capability present, Talkback points and hands the target to claude.ai's composer.
+try {
+  stage = 'claude.ai';
+  const cp = await ctx.newPage();
+  cp.on('pageerror', (e) => errors.push(e.message));
+  await cp.addInitScript(() => {
+    window.__calls = [];
+    window.claude = { use: async (n) => (n === 'comments' ? { canSendToClaude: async () => 'available', customAnchors: async (cb) => { window.__cb = cb; return { domAnchor: (el, ev) => ['path:' + el.localName, { x: ev.clientX, y: ev.clientY }], compose: async (a, at, o) => { window.__calls.push({ a, o }); return { opened: true }; }, placed: (m) => { window.__placed = m; }, exitMode() {}, release() {}, areas: false, open: async () => {} }; } } : null) };
+  });
+  await cp.goto('file://' + file);
+  if (setup) await cp.evaluate(setup);
+  await cp.waitForTimeout(800);
+  const hidden = await cp.evaluate(() => { const h = [...document.body.children].find((e) => e.shadowRoot && e.shadowRoot.querySelector('.bar')); return h.shadowRoot.querySelector('.bar').hidden; });
+  check('claude.ai: Talkback hides its own toolbar', hidden);
+  await cp.evaluate(() => window.__cb.mode(true));
+  await cp.mouse.click(...spot);
+  await cp.waitForTimeout(300);
+  const call = await cp.evaluate(() => window.__calls[0]);
+  check('claude.ai: a click opens claude.ai\'s composer with the target', !!call && /path:/.test(call.a) && !!call.o.label && /"selector"/.test(call.o.detail), JSON.stringify(call));
+  await cp.evaluate(() => window.__cb.mode(false));
+  check('claude.ai: leaving comment mode stops the pointing', !(await cp.evaluate(() => document.documentElement.classList.contains('cm-on'))));
+  await cp.close();
+} catch (e) {
+  check(`the claude.ai test stopped at "${stage}"`, false, String(e.message).split('\n')[0]);
+}
 check('no script errors', errors.length === 0, errors.join(' | '));
 
 await browser.close();
