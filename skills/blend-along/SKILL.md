@@ -1,9 +1,9 @@
 ---
-name: blender-access
+name: blend-along
 description: Use when the user asks to work in Blender to plan, build, revise, inspect, or troubleshoot a scene, object, or script.
 ---
 
-# Blender access
+# Blend Along
 
 Honor the user's choice of integration. Use [Ahuja](references/ahuja.md) for editing and viewing the open scene. If you cannot reach it, tell the user and pause the build.
 For revisions, continue from the open scene, including the user's edits. Keep a rebuildable script when requested.

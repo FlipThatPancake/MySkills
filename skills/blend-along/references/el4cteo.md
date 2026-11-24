@@ -4,7 +4,7 @@ These guides are pinned to EL4CTEO's Blender Agent Skills v1.3.2.
 Open the guide that matches the task. Fetch its script and required helpers
 from the same revision when needed, and check compatibility with the installed
 Blender version. Use Blender Core for Python and API questions. Follow
-`blender-access` for the connection.
+`blend-along` for the connection.
 
 | Guide | Use for |
 | --- | --- |

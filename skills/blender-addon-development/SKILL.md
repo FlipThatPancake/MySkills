@@ -1,6 +1,6 @@
 ---
 name: blender-addon-development
-description: Use when writing, packaging, debugging, or testing a Blender add-on or extension (operators, panels, properties, draw handlers, blender_manifest.toml), including add-ons whose data or tools agents read through an MCP. For using add-ons that are already installed, use blender-access instead.
+description: Use when writing, packaging, debugging, or testing a Blender add-on or extension (operators, panels, properties, draw handlers, blender_manifest.toml), including add-ons whose data or tools agents read through an MCP. For using add-ons that are already installed, use blend-along instead.
 ---
 
 # Blender add-on development
