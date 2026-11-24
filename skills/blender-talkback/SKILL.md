@@ -41,8 +41,8 @@ print(json.dumps(result))
 
 | MCP | Tool | Notes |
 |---|---|---|
-| MCP for Blender (Ahuja), server `mcp__blender__` | `execute_blender_code` (`code`) | Returns printed output. |
-| Blender Lab | its run-Python tool (`execute`) | Returns `result`. |
+| MCP for Blender (Ahuja, port 9877), server `mcp__blender__` | `execute_blender_code` (`code`) | Returns printed output. |
+| Blender Lab (port 9876) | its run-Python tool (`execute`) | Returns `result`. |
 | Higgsfield Bridge | `bl_execute` | Returns `result`. Check `get_host_status` first. |
 
 If several Blenders are open, confirm the file first (`bpy.data.filepath`).
@@ -123,6 +123,26 @@ did not need: one clear question per conversation. The result has `opened` (sele
 - **The dock** (a pill in the corner or a header button, their choice) and the panel line show conversations, not messages: "15 ask you · 27 ready · 18 done" means 15 conversations where you asked, 27 waiting for you, 18 done and waiting for them to resolve.
 - **Bubbles of conversations outside the view are hidden** unless the user switches on "Show off-screen bubbles". If they cannot find a conversation you opened, call `open_conversation(n)` (the window shows above its objects) or ask them to switch that setting on.
 - **Talkback mode and the dock start off** at every Blender launch, and the Local MCP server too. Do not assume the MCP tools exist: if they are missing, use the run-Python route. `start_conversation` turns Talkback mode on for them; the Activity log (Check setup) records that and who did it, so use it only when the user needs to look at something.
+
+## Scene conversations (v1.5)
+
+Each Blender scene has one **scene conversation** for things that are about the whole scene (lighting,
+render setup, changes across many objects). The user opens it with Enter in the 3D view with nothing
+selected, or from the dock's scene icon; it shows near the bottom of the view, centred. Its records
+carry `"scope": "scene"`, a stable `scene_id` and the current `scene_name`, and `objects` is empty.
+**Pass that `scene_id` to `history`, `add_comment` and `read_unread`** (`scene=` in run-Python), so your
+reply lands in the right scene even if the user has switched scenes meanwhile. Message numbers can
+repeat across scenes, which is why the `scene_id` matters.
+
+## What else changed in v1.5
+
+- **Unsent text is never sent by accident.** Esc, the X and a click away from a message field all
+  close it without sending; the typed text comes back when the user opens it again. Only Enter or
+  the send arrow sends. Unsent text is never shown to you.
+- **Ports:** the Blender MCP (Ahuja) is on 9877 and Blender Lab on 9876 on the user's Mac. Talkback's
+  *Check connection* expects the Blender MCP on 9877. Talkback's own Local MCP server has its own Port
+  setting (9876 to 9879 are refused there).
+- The close X sits on the conversation window's top-right corner (tooltip "Close · Esc to close").
 
 ## Notes dropped in 3D (v1.3)
 
