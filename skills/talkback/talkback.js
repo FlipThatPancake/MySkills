@@ -280,7 +280,7 @@
     bar.dataset.live = !live.on ? '' : !live.ok ? 'off' : live.listening ? 'ok' : 'wait';
     say($('.st'), !live.ok ? 'Offline' : live.listening ? 'Live' : 'Nobody listening');
     for (const [c, b] of pinEls) b.dataset.st = stOf(c);
-    $('.tip p').textContent = 'Select text, or click anything on the page, to pin a comment there.' + (live.on ? '' : ' To talk with your agent here, tell it: “Go live with Talkback on this page”.');
+    $('.tip p').textContent = 'Select text, or click anything on the page, to pin a comment there.' + (live.on || cc ? '' : ' To talk with your agent here, tell it: “Go live with Talkback on this page”.');
     paintLive();
   }
   const setMode = (v) => {
@@ -322,19 +322,19 @@
     const el = document.createElement('div');
     el.className = 'box' + (isNew ? '' : ' review');
     el.style.setProperty('--c', colorOf(c));
-    el.innerHTML = BUBBLE + '<div class="stack"><div class="conv" hidden></div><div class="field"><textarea rows="1" placeholder="Add a comment"></textarea><button class="cb del" title="Delete">' + TRASH + '</button><button class="cb go" title="' + (live.on ? 'Send to agent (Enter)' : 'Save (Enter)') + '">' + SEND + '</button></div></div>';
+    el.innerHTML = BUBBLE + '<div class="stack"><div class="conv" hidden></div><div class="field"><textarea rows="1" placeholder="Add a comment"></textarea><button class="cb del" title="Delete">' + TRASH + '</button><button class="cb go" title="' + (live.on || cc ? 'Send to agent (Enter)' : 'Save (Enter)') + '">' + SEND + '</button></div></div>';
     const ta = el.querySelector('textarea'), go = el.querySelector('.go'), del = el.querySelector('.del');
     const fit = () => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; go.disabled = !ta.value.trim(); };
-    const talking = live.on && (c.msgs || []).length; // a conversation: the field is for the next message
+    const talking = chat() && (c.msgs || []).length; // a conversation: the field is for the next message
     ta.value = talking ? '' : c.text || '';
     if (talking) ta.placeholder = 'Reply';
     del.hidden = isNew;
     del.onclick = () => { items = items.filter((x) => x !== c); dirty = true; if (live.on) api('delete', { id: c.id }).catch(() => {}); closeBox(false); };
-    go.onclick = () => (live.on ? sendMsg() : closeBox(true));
+    go.onclick = () => (chat() ? sendMsg() : closeBox(true));
     ta.oninput = fit;
     ta.onkeydown = (e) => {
       e.stopPropagation();
-      if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); live.on ? sendMsg() : closeBox(true); }
+      if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); chat() ? sendMsg() : closeBox(true); }
       if (e.key === 'Escape') closeBox(false);
     };
     box = { c, isNew, el, fit };
@@ -351,7 +351,7 @@
     const text = el.querySelector('textarea').value.trim();
     box = null;
     el.remove();
-    if (live.on && (c.msgs || []).length) {
+    if (chat() && (c.msgs || []).length) {
       // a conversation: a half-typed reply is dropped
     } else if (commit && text && text !== c.text) {
       c.text = text;
@@ -407,7 +407,6 @@
     if (!on || inUi(e) || (box && (!box.isNew || box.el.querySelector('textarea').value))) return;
     const c = fromSelection();
     if (!c) return;
-    if (ca) return compose(c, e);
     closeBox(false); // an empty box left by the first click of a double-click
     picked = true;
     setTimeout(() => (picked = false));
@@ -430,13 +429,11 @@
       target: { type: t.type, ...(t.name ? { name: t.name } : {}), ...(t.text ? { text: t.text } : {}) },
       fx: r.width ? (e.clientX - r.left) / r.width : 0.5, fy: r.height ? (e.clientY - r.top) / r.height : 0.5,
     });
-    if (ca) return compose(c, e);
     openBox(c, true);
   }, true);
 
   document.addEventListener('keydown', (e) => {
     const t = e.composedPath()[0];
-    if (e.key === 'Escape' && ca) return ca.exitMode();
     if (e.key === 'Escape') return panelOpen ? ((panelOpen = false), paintLive()) : box ? closeBox(false) : setMode(false);
     if (e.key.toLowerCase() === 'c' && !e.metaKey && !e.ctrlKey && !e.altKey && !/^(input|textarea|select)$/i.test(t.localName) && !t.isContentEditable) setMode(!on);
   });
@@ -508,23 +505,29 @@
   function paintConv() {
     if (!box) return;
     const c = box.c, conv = box.el.querySelector('.conv'), ms = c.msgs || [];
-    conv.hidden = !live.on || !ms.length;
+    conv.hidden = !chat() || !ms.length;
     if (conv.hidden) return;
-    const sig = JSON.stringify([stOf(c), ms.map((m) => [m.text, m.sent, m.picked, m.done])]);
+    const sig = JSON.stringify([stOf(c), c.resolved, ms.map((m) => [m.text, m.sent, m.picked, m.done, m.err])]);
     if (box.sig === sig) return;
     box.sig = sig;
     conv.textContent = '';
     const hd = h('div', 'hd', undefined, conv);
-    h('span', 'stl', STL[stOf(c)] + (stOf(c) === 'picked' ? ' ' + hm(ms.filter((m) => m.picked).pop().picked) : ''), hd);
+    h('span', 'stl', cc ? (c.resolved ? 'Resolved' : ms.some((m) => !m.sent) ? 'Sending…' : 'Sent to Claude') : STL[stOf(c)] + (stOf(c) === 'picked' ? ' ' + hm(ms.filter((m) => m.picked).pop().picked) : ''), hd);
     const rs = h('button', 'rs', c.resolved ? 'Reopen' : 'Resolve', hd);
     rs.title = 'Only you resolve a conversation';
-    rs.onclick = () => { c.resolved = !c.resolved; c.rsDirty = 1; save(); syncBar(); sync(); };
+    rs.onclick = () => {
+      c.resolved = !c.resolved;
+      if (cc) { if (c.srvId) cc.resolve(c.srvId, c.resolved).catch(() => {}); box.sig = ''; save(); syncBar(); return; }
+      c.rsDirty = 1; save(); syncBar(); sync();
+    };
     for (const m of ms) {
       const d = h('div', 'm ' + (m.who === 'user' ? 'u' : 'a'), undefined, conv);
       h('span', '', m.text, d);
-      const note = m.who === 'user' ? (!m.sent ? 'Queued' : m.picked ? 'Picked up ' + hm(m.picked) : 'Not picked up yet') : m.done ? 'Done, check it' : '';
+      const note = m.who === 'user' ? (cc ? (m.sent ? 'Sent to Claude' : m.err ? 'Not sent (' + m.err + ')' : 'Sending…') : !m.sent ? 'Queued' : m.picked ? 'Picked up ' + hm(m.picked) : 'Not picked up yet') : m.done ? 'Done, check it' : '';
       if (note) h('small', '', note, d);
+      if (cc && m.err) h('button', 'rs', 'Retry', d).onclick = () => { m.err = ''; box.sig = ''; deliverAll(); };
     }
+    if (cc) h('small', '', 'Claude’s replies appear in claude.ai’s comment panel.', conv);
     conv.scrollTop = conv.scrollHeight;
     box.el.querySelector('textarea').placeholder = 'Reply';
   }
@@ -542,7 +545,7 @@
     save();
     render();
     paintConv();
-    sync();
+    if (cc) deliverAll(); else sync();
   }
   function merge(s) {
     live.ver = s.version; live.listening = s.listening; live.hello = s.hello;
@@ -650,53 +653,45 @@
     } catch (e) {}
   }
 
-  // ---- on claude.ai: Talkback points, claude.ai's own comment panel holds the conversation ----
-  // Send to Claude there wakes the session that published the page. The target travels as the thread's label and detail.
-  let ca = null, threadList = [];
-  const CAK = 'talkback:anchors:' + location.pathname;
-  let known = {};
-  try { known = JSON.parse(localStorage.getItem(CAK)) || {}; } catch (e) {}
-  function compose(c, ev) {
-    const el = findEl(c);
-    if (!el) return;
-    try {
-      const [anchor, at] = ca.domAnchor(el, ev);
-      const label = isText(c) ? 'Text: ' + cut(c.quote, 80) : cut(label_(c.target), 100);
-      const detail = JSON.stringify({ selector: c.selector, section: c.section, target: c.target, ...(isText(c) ? { quote: c.quote } : {}), ...(c.context ? { context: c.context } : {}) }).slice(0, 1000);
-      known[anchor] = { selector: c.selector, ...(isText(c) ? { quote: c.quote, start: c.start, end: c.end } : { fx: c.fx, fy: c.fy }) };
-      try { localStorage.setItem(CAK, JSON.stringify(known)); } catch (e) {}
-      ca.compose(anchor, at, { label, detail }).catch(() => {});
-    } catch (e) {}
-  }
-  const label_ = (t) => (t.name ? t.name : t.type) + (t.text && !t.name ? ': ' + t.text : '');
-  const pinSpot = (k) => {
-    const el = k && (() => { try { return document.querySelector(k.selector); } catch (e) { return null; } })();
-    if (!el) return null;
-    const g = k.quote !== undefined ? geoOf({ selector: k.selector, quote: k.quote, start: k.start, end: k.end }) : geoOf({ selector: k.selector, fx: k.fx, fy: k.fy });
-    return g && { x: g.pin[0] + scrollX, y: g.pin[1] + scrollY };
-  };
-  function report() {
-    if (!ca) return;
-    const map = {};
-    for (const t of threadList) { const p = pinSpot(known[t.anchor]); if (p) map[t.id] = p; }
-    ca.placed(map);
+  // ---- on claude.ai: Talkback's own comment mode; messages go through claude.ai's comment capability ----
+  // Send to Claude wakes the session that published the page. Replies show in claude.ai's comment panel: a page cannot read them.
+  let cc = null;
+  const chat = () => live.on || !!cc;
+  const targetNote = (c) => '— Talkback target: ' + (isText(c) ? 'text "' + cut(c.quote, 160) + '"' : c.target.name || c.target.type + (c.target.text ? ': ' + cut(c.target.text, 80) : '')) + (c.section ? ' · section ' + c.section : '') + (c.context ? ' · ' + JSON.stringify(c.context).slice(0, 300) : '');
+  let delivering = false;
+  async function deliverAll() {
+    if (!cc || delivering) return;
+    delivering = true;
+    for (const c of items) {
+      for (const m of c.msgs || []) {
+        if (m.sent || m.err) continue;
+        try {
+          const can = await cc.canSendToClaude().catch(() => 'off');
+          const text = c.srvId ? m.text : m.text + '\n\n' + targetNote(c);
+          let r;
+          if (c.srvId) r = can === 'available' ? await cc.sendToClaude({ threadId: c.srvId, text }) : await cc.reply(c.srvId, text);
+          else {
+            const el = findEl(c), anchor = await cc.anchorFor(el);
+            r = can === 'available' ? await cc.sendToClaude({ anchor, text }) : await cc.create({ anchor, text });
+          }
+          c.srvId = r.threadId;
+          m.sent = 1;
+        } catch (e) { m.err = (e && e.code) || 'failed'; }
+        save();
+        if (box) { box.sig = ''; paintConv(); }
+        syncBar();
+      }
+    }
+    delivering = false;
   }
   (async () => {
     if (live.on || !window.claude || !window.claude.use) return;
     try {
       const comments = await window.claude.use('comments');
-      if (!comments || !comments.customAnchors) return;
-      ca = await comments.customAnchors({
-        mode: (v) => setMode(!!v),
-        threads: (list) => { threadList = list; report(); },
-        reveal: (id) => {
-          const t = threadList.find((x) => x.id === id), k = t && known[t.anchor], el = k && findEl(k);
-          if (el) el.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
-        },
-      });
-    } catch (e) { ca = null; return; }
-    bar.hidden = true; // claude.ai has its own comment button
-    setInterval(report, 1000);
+      if (!comments || !comments.sendToClaude || !comments.anchorFor) return;
+      cc = comments;
+    } catch (e) { return; }
+    syncBar();
     setInterval(() => { try { const f = (fn) => (typeof fn === 'function' ? fn() : null); sessionStorage.setItem(RS, JSON.stringify({ scroll: [scrollX, scrollY], context: f(window.commentContext), extras: f(window.commentExtras) })); } catch (e) {} }, 2000);
     restoreState();
   })();
