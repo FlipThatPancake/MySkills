@@ -14,6 +14,7 @@ export const lowest = (o) => { let y = Infinity; for (const p of o.parts) y = Ma
 export const supports = (c, mine) => {
   const A = mine === 'a' ? c.a : c.b, B = mine === 'a' ? c.b : c.a;
   if (B.role === 'wall') return false; if (B.mn[1] > A.mn[1] + 5) return false;
+  if (c.d < 0.5 && Math.abs(B.mx[1] - A.mn[1]) < 0.5) return true;   // a foot resting exactly on a top (a table base on a rug): two flat faces at distance 0 give a contact normal that may point any way, so their heights decide
   return c.approx || c.d < 0 || Math.abs(c.normal.y) > 0.3;   // inside each other the normal is no guide: the position test decides
 };
 

@@ -38,6 +38,7 @@ const issues = await page.evaluate(() => {
     if (b.isEmpty()) b.expandByPoint(new T.Vector3().setFromMatrixPosition(g.matrixWorld));   // a mark drawn only in lines has no solid parts: it counts as a point
     return b;
   };
+  const exactMinY = (g) => { let m = Infinity; const v = new T.Vector3(); g.traverse((o) => { if (!o.isMesh || o.isLineSegments2 || o.userData.lines || o.material.isMeshBasicMaterial || kit.hulls.includes(o.material) || o.material === kit.depth) return; const p = o.geometry.attributes.position; for (let i = 0; i < p.count; i++) { v.fromBufferAttribute(p, i).applyMatrix4(o.matrixWorld); if (v.y < m) m = v.y; } }); return m; };
   const CHIMNEY = { woodStove: 1700, hood: 2250 };
   const boxes = Object.fromEntries(Object.keys(objs).map((id) => { const b = box(objs[id]); if (sc(id).asset === 'baseRun') b.max.y = Math.min(b.max.y, 940); if (CHIMNEY[sc(id).asset]) b.max.y = Math.min(b.max.y, CHIMNEY[sc(id).asset]); return [id, b]; }));   // a chimney or flue runs on up to the ceiling: only its first 1700 (stove) or 2250 (hood) mm count as the object   // a run's tap is not part of its body
   // an object turned off the grid (a sofa on a wall at 60 degrees) is measured by its own box, turned with it: corners are its 8 corners in the world
@@ -78,7 +79,7 @@ const issues = await page.evaluate(() => {
   for (const id of Object.keys(objs)) {
     const m = sc(id).mount, b = boxes[id];
     if (m === 'ceiling' || m === 'lines') continue;
-    if (b.min.y < -3) out.push({ rule: 'floor', what: `${id} reaches ${b.min.y.toFixed(0)} mm below the floor: the asset's origin is not where you think (node assets.mjs), set y` });
+    if (b.min.y < -3) { const ey = exactMinY(objs[id]); if (ey < -3) out.push({ rule: 'floor', what: `${id} reaches ${ey.toFixed(0)} mm below the floor: the asset's origin is not where you think (node assets.mjs), set y` }); }   // the box of a tilted rod is its local box turned: loose; the vertices say where the part really is
     for (const W of home.walls) {
       let lo = 1e9, hi = -1e9, inside = false;
       for (const { x, z } of b.pts) { const dx = x - W.to[0], dz = z - W.to[1], d = dx * W.n[0] + dz * W.n[1], s = -(dx * W.d[0] + dz * W.d[1]); lo = Math.min(lo, d); hi = Math.max(hi, d); if (s > 0 && s < W.len) inside = true; }

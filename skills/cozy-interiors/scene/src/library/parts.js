@@ -31,7 +31,7 @@ export function legs(kit, style, pts, top, o = {}) {
       const pr = [[r * 0.55, 0], [r * 0.7, top * 0.03], [r * 0.5, top * 0.08], [r * 0.5, top * 0.35], [r * 0.85, top * 0.42], [r * 0.5, top * 0.5], [r * 0.6, top * 0.85], [r * 0.95, top * 0.9], [r, top]].map(([a, y]) => new T.Vector2(a, y));
       g.add(kit.solid(new T.LatheGeometry(pr, 16), x, 0, z, { smooth: true, tone }));
     } else if (style === 'hairpin') { const rr = Math.max(r * 0.2, 4), s = r * 0.9; for (const k of [-1, 1]) g.add(rod(kit, [x + k * s * (Math.abs(x - cx) > Math.abs(z - cz) ? 0 : 1), top, z + k * s * (Math.abs(x - cx) > Math.abs(z - cz) ? 1 : 0)], [x, 0, z], rr, rr, tone)); }
-    else if (style === 'splay') { const out = Math.min(top * 0.22, 90); g.add(rod(kit, [x, top, z], [x + sx * out * 0.7, 4, z + sz * out * 0.7], r * 0.62, r * 0.42, tone)); }
+    else if (style === 'splay') { const out = Math.min(top * 0.22, 90); { const dx = sx * out * 0.7, dz = sz * out * 0.7, re = r * 0.42, yEnd = re * Math.sin(Math.atan2(Math.hypot(dx, dz), top)) + 0.3; g.add(rod(kit, [x, top, z], [x + dx, yEnd, z + dz], r * 0.62, re, tone)); } }   // the foot's lowest edge rests on the floor (it ended 4 mm above it: round 6, 32 seeds floating)
     else if (style === 'ball') { g.add(rod(kit, [x, top, z], [x, r * 1.1, z], r * 0.5, r * 0.5, tone)); g.add(kit.solid(new T.SphereGeometry(r * 0.9, 14, 10), x, r * 0.9, z, { smooth: true, tone })); }
   }
   return g;
