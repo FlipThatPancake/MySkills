@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 // node regress.mjs [--only=name,name] [--jobs=4] [--dir=<fixtures dir>] [--json out.json] [--keep] → the bug memory: builds every tiny fixture scene and runs check-home on it (the geometry core included, --quick: no ghost renders).
 // A fixture of kind 'bug' must be reported by some check (expect.rules, naming expect.ids); 'good' must produce no physical finding; 'pending' waits for a rule that is not written yet. known: true marks a bug the checks still miss (XFAIL).
+// x.deliver: after the full check-home run, `build.mjs --deliver` is tried; a refusal is the finding [deliver] (a bug fixture expects it, a good fixture must not get it).
 // Result per fixture: CAUGHT | MISSED (exit 1) | XFAIL | XPASS (a known miss is now caught: remove known) | OK / BAD-ALARM (good, exit 1) / XFAIL-ALARM (a known false alarm) | PENDING | NOW-CAUGHT | ERROR (exit 1).
 // Fixtures live in tests/cozy-interiors/regress/fixtures/*.mjs (default dir, found from the repo root) and export `fixtures`; see bugs.mjs for the shape. Needs Playwright and esbuild (global), like check-home.
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import { dirname, join, resolve } from 'node:path';
@@ -38,8 +39,8 @@ const run = (x) => new Promise((res) => {
 
   if (x.refuses) { const log = console.log; console.log = () => {}; let msg = ''; try { x.build({ Home }); } catch (e) { msg = e.message; } finally { console.log = log; } return res({ x, findings: msg.includes(x.refuses) ? [{ rule: 'refused', text: msg }] : [], error: '' }); }   // fixture.refuses: the build must throw with this text (compose refuses it)
   if (!x.replay) try { const log = console.log; console.log = () => {}; let H; try { H = x.build({ Home }); H.write(json, fs); } finally { console.log = log; } if (x.patch) { const S = JSON.parse(fs.readFileSync(json, 'utf8')); x.patch(S); fs.writeFileSync(json, JSON.stringify(S)); } } catch (e) { return res({ x, error: 'build: ' + e.message, findings: [] }); }
-  let out = ''; const p = spawn('node', [join(here, 'check-home.mjs'), json, ...((x.pairs || []).some(([r]) => r === 'visible') ? [] : ['--quick'])]); p.stdout.on('data', (d) => (out += d)); p.stderr.on('data', (d) => (out += d));
-  p.on('close', () => { const findings = out.split('\n').map((l) => l.match(/^\[([\w-]+)\] (.*)$/)).filter(Boolean).map((m) => ({ rule: m[1], text: m[2] })), err = out.split('\n').filter((l) => /^PAGE ERROR|Error:/.test(l)).join(' | '); res({ x, findings, error: err || (/No problems|issue\(s\)/.test(out) ? '' : 'check-home printed no verdict: ' + out.slice(-200)) }); });
+  let out = ''; const p = spawn('node', [join(here, 'check-home.mjs'), json, ...((x.pairs || []).some(([r]) => r === 'visible') || x.deliver ? [] : ['--quick']), '--all']); p.stdout.on('data', (d) => (out += d)); p.stderr.on('data', (d) => (out += d));
+  p.on('close', () => { if (x.deliver) { const d = spawnSync('node', [join(here, 'build.mjs'), json, json.replace(/\.json$/, '.out.html'), '--deliver'], { encoding: 'utf8' }); out += d.status === 0 ? '' : `\n[deliver] ${String(d.stderr).trim().split('\n')[0]}\n`; } const findings = out.split('\n').map((l) => l.match(/^\[([\w-]+)\] (.*)$/)).filter(Boolean).map((m) => ({ rule: m[1], text: m[2] })), err = out.split('\n').filter((l) => /^PAGE ERROR|Error:/.test(l)).join(' | '); res({ x, findings, error: err || (/No problems|issue\(s\)/.test(out) ? '' : 'check-home printed no verdict: ' + out.slice(-200)) }); });
 });
 const queue = [...list], results = [];
 await Promise.all(Array.from({ length: Math.min(jobs, queue.length) }, async () => { while (queue.length) results.push(await run(queue.shift())); }));
