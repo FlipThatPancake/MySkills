@@ -24,7 +24,9 @@ Goal: equal visible space between a box's edge, its icon and its text, at any fo
 }
 ```
 
-`lh` and `cap` make the offsets follow the font, so one set of numbers holds at every size. Result: icon top inset = left inset = gap to text. Trailing content (close button) takes the same `margin-block`.
+`lh` and `cap` make the offsets follow the font, so one set of numbers holds at every size. Result: icon top inset = left inset = gap to text. Trailing content (close button) takes the same two margins with its own size: top inset = right inset.
+
+Draw icons flush to their viewBox, so the box edge is the ink edge. Buttons need `font: inherit`, or `em` sizes stop following the font. A border adds to the inset: subtract its width from the padding.
 
 ## Other corner content
 
@@ -35,4 +37,4 @@ Goal: equal visible space between a box's edge, its icon and its text, at any fo
 
 ## Check
 
-Does top inset = left inset = gap, and does the icon's centre sit on the first line's centre, at two font sizes? `node scripts/check.mjs <page> --box <css> --icon <css> [--sizes 14,24]` measures this in Chromium (needs Playwright) and exits 1 on a mismatch over 1px. Without a browser, compare the icon's and box's rects by hand.
+Does top inset = left inset = gap, and does the icon's centre sit on the first line's centre, at two font sizes? `node scripts/check.mjs <page> --box <css> --icon <css> [--sizes 14,22]` (icon first, its text next to it) measures this in Chromium (needs Playwright; set NODE_PATH if it isn't found) and exits 1 on a mismatch over 1px. Without a browser, compare the icon's and box's rects by hand.

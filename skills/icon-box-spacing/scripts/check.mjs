@@ -1,12 +1,12 @@
-// node check.mjs <page.html|url> --box <css> --icon <css> [--sizes 14,16,24] [--tol 1]
+// node check.mjs <page.html|url> --box <css> --icon <css> [--sizes 14,22] [--tol 1]
 import { createRequire } from 'node:module';
 import { resolve } from 'node:path';
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 const a = process.argv.slice(2), opt = (n, d) => (a.includes(n) ? a[a.indexOf(n) + 1] : d);
 const target = a[0], box = opt('--box'), icon = opt('--icon');
-const sizes = opt('--sizes', '14,16,24').split(',').map(Number), tol = +opt('--tol', 1);
-if (!target || !box || !icon) { console.error('usage: check.mjs <page> --box <css> --icon <css> [--sizes 14,16,24] [--tol 1]'); process.exit(2); }
+const sizes = opt('--sizes', '14,22').split(',').map(Number), tol = +opt('--tol', 1);
+if (!target || !box || !icon) { console.error('usage: check.mjs <page> --box <css> --icon <css> [--sizes 14,22] [--tol 1]'); process.exit(2); }
 const url = /^https?:|^file:/.test(target) ? target : 'file://' + resolve(target);
 const b = await chromium.launch(), p = await b.newPage();
 await p.goto(url);
