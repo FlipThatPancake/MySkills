@@ -3,7 +3,7 @@
 import { floorPlant as floorPlant0, vase as vase0 } from './decor.js';
 import { picture as picture0 } from './living.js';
 import { plant as plant0 } from '../kitchen/plant.js';
-import { fridge as fridge0 } from '../kitchen/fridge.js';
+import { fridge as fridge0, fridgeSigns } from '../kitchen/fridge.js';
 import { stool as stool0 } from './living.js';
 import { basket as basket0 } from './decor.js';
 import { PAINTINGS } from './paintings.js';
@@ -61,12 +61,12 @@ export function vase(kit, { form = 0, h = 280, stems = 5, seed = 3 } = {}) {   /
   return vaseStems(kit, { form, h, stems, seed });
 }
 
-// Forms 4+: a classic public-domain painting (paintings.js) on a paper mat inside the frame. colour keep (a little muted, to sit with the scene) | soft (mostly faded to the paper tone) | ink (greyscale, near the line style); every mode first stretches the painting's own tones (paintTone.js); the seed picks one when unset.
+// Forms 4+: a classic public-domain painting (paintings.js) on a paper mat inside the frame. colour pastel (the default: very soft colour, the hue kept) | keep (a little muted, to sit with the scene) | soft (mostly faded to the paper tone) | ink (greyscale, near the line style); every mode first stretches the painting's own tones (paintTone.js); the seed picks one when unset.
 function paintedPicture(kit, { form, w, h, seed, colour }) {
-  const F = FRAME.F, D = 24, P = PAINTINGS[(form - 4) % PAINTINGS.length], mode = colour || ['keep', 'soft', 'ink'][seed % 3], fr = fitFrame(P, w, h), y0 = (h - fr.H) / 2;   // the frame follows the painting's proportions, centred in the box w x h the spec asked for
+  const F = FRAME.F, D = 24, P = PAINTINGS[(form - 4) % PAINTINGS.length], mode = colour || 'pastel', fr = fitFrame(P, w, h), y0 = (h - fr.H) / 2;   // the frame follows the painting's proportions, centred in the box w x h the spec asked for
   const g = kit.group(); g.add(kit.rbox(-fr.W / 2, y0, D, fr.W, fr.H, D, 4)); g.add(kit.box(-fr.iw / 2, y0 + F, D + 4, fr.iw, fr.ih, 4, { tone: 'lo' }));
   const out = kit.merge(g), m = artPlane(kit, P, { w: fr.iw, h: fr.ih, margins: fr.margins, mode }); m.position.set(0, y0 + F + fr.ih / 2, D + 8); out.add(m);   // 4 mm in front of the mat face (D + 4), the mat 4 mm in front of the frame: closer and the two planes fight in the depth buffer at a distance, which showed as flicker
-  out.userData.painting = P.name; out.userData.fit = { margins: fr.margins, frame: [fr.W, fr.H] };
+  out.userData.painting = P.name; out.userData.tone = mode; out.userData.fit = { margins: fr.margins, frame: [fr.W, fr.H] };
   return out;
 }
 export function picture(kit, { form = 4, w = 600, h = 800, seed = 2, colour } = {}) {
@@ -93,7 +93,7 @@ export function picture(kit, { form = 4, w = 600, h = 800, seed = 2, colour } = 
   return kit.merge(g);
 }
 
-// a fridge: form 0 side-by-side (910 x 2250, magnets and notes), 1 a tall column with a freezer drawer below (600 x 1850), 2 an under-counter fridge (600 x 850). Doors stand at z = 0.
+// a fridge: form 0 side-by-side (910 x 2250), 1 a tall column with a freezer drawer below (600 x 1850), 2 an under-counter fridge (600 x 850); every form carries the family's magnets, sticky notes and photo (kitchen/fridge.js fridgeSigns), on the door left of the handle. Doors stand at z = 0.
 export function fridge(kit, { form = 0 } = {}) {
   if (!form) return fridge0(kit);
   const g = kit.group(), W = 600, D = 640, H = form === 1 ? 1850 : 850, pts = [];
@@ -102,7 +102,9 @@ export function fridge(kit, { form = 0 } = {}) {
   if (form === 1) { door(42, 560); door(566, H - 4); for (const [x, y, h] of [[W - 60, 380, 160], [W - 60, 700, 700]]) { g.add(kit.cyl(x, y, 28, 9, h)); for (const yy of [y + 30, y + h - 30]) g.add(kit.cyl(x, yy, 12, 6, 18, { axis: 'z' })); } pts.push([0, 563, 12], [W, 563, 12]); }
   else { door(42, H - 4); g.add(kit.cyl(W - 60, H - 330, 28, 9, 240)); for (const yy of [H - 300, H - 120]) g.add(kit.cyl(W - 60, yy, 12, 6, 18, { axis: 'z' })); g.add(kit.box(0, H - 4, -2, W, 4, D - 2, lo)); }
   if (pts.length) g.add(kit.lines(pts, 'mid'));
-  return kit.merge(g);
+  const sg = fridgeSigns(kit, g, form === 1 ? { tx: -515 } : { tx: -390, ty: -628, s: 0.8 }), out = kit.merge(g);   // form 1: the side-by-side's pattern moved onto the tall door; form 2: a little smaller, below the handle's top
+  out.add(sg.plane); out.userData.signs = sg.signs;
+  return out;
 }
 // a stool: form 0 the bar stool; 1 a low round wooden stool on three splayed legs; 2 a wooden chair-height stool with a low back
 export function stool(kit, { form = 0, h = 650 } = {}) {
