@@ -257,27 +257,43 @@ try {
   check(`the live test stopped at "${stage}"`, false, String(e.message).split('\n')[0]);
 }
 
-// 12. claude.ai: with the comments capability present, Talkback points and hands the target to claude.ai's composer.
+// 12. claude.ai: with the comments capability present, Talkback's own comment mode sends through it.
 try {
   stage = 'claude.ai';
   const cp = await ctx.newPage();
   cp.on('pageerror', (e) => errors.push(e.message));
   await cp.addInitScript(() => {
-    window.__calls = [];
-    window.claude = { use: async (n) => (n === 'comments' ? { canSendToClaude: async () => 'available', customAnchors: async (cb) => { window.__cb = cb; return { domAnchor: (el, ev) => ['path:' + el.localName, { x: ev.clientX, y: ev.clientY }], compose: async (a, at, o) => { window.__calls.push({ a, o }); return { opened: true }; }, placed: (m) => { window.__placed = m; }, exitMode() {}, release() {}, areas: false, open: async () => {} }; } } : null) };
+    window.__sent = [];
+    window.claude = { use: async (n) => (n === 'comments' ? {
+      canSendToClaude: async () => 'available',
+      anchorFor: async () => ({ path: 'body > p', x: 1, y: 1 }),
+      sendToClaude: async (t) => { window.__sent.push(t); return { threadId: 't1', commentId: 'c' + window.__sent.length }; },
+      create: async () => ({ threadId: 't1', commentId: 'c' }), reply: async () => ({ commentId: 'r' }), resolve: async () => {},
+    } : null) };
   });
   await cp.goto('file://' + file);
   if (setup) await cp.evaluate(setup);
   await cp.waitForTimeout(800);
-  const hidden = await cp.evaluate(() => { const h = [...document.body.children].find((e) => e.shadowRoot && e.shadowRoot.querySelector('.bar')); return h.shadowRoot.querySelector('.bar').hidden; });
-  check('claude.ai: Talkback hides its own toolbar', hidden);
-  await cp.evaluate(() => window.__cb.mode(true));
+  const cui = (fn, arg) => cp.evaluate(([src, arg]) => {
+    const host = [...document.body.children].find((e) => e.shadowRoot && e.shadowRoot.querySelector('.bar'));
+    const $ = (s) => host.shadowRoot.querySelector(s);
+    return new Function('$', 'arg', 'return (' + src + ')(arg)')($, arg);
+  }, [fn.toString(), arg]);
+  check('claude.ai: Talkback keeps its own toolbar', !(await cui(() => $('.bar').hidden)));
+  await cp.keyboard.press('c');
   await cp.mouse.click(...spot);
   await cp.waitForTimeout(300);
-  const call = await cp.evaluate(() => window.__calls[0]);
-  check('claude.ai: a click opens claude.ai\'s composer with the target', !!call && /path:/.test(call.a) && !!call.o.label && /"selector"/.test(call.o.detail), JSON.stringify(call));
-  await cp.evaluate(() => window.__cb.mode(false));
-  check('claude.ai: leaving comment mode stops the pointing', !(await cp.evaluate(() => document.documentElement.classList.contains('cm-on'))));
+  await cp.keyboard.type('Make this bigger');
+  await cp.keyboard.press('Enter');
+  await cp.waitForTimeout(500);
+  const sent = await cp.evaluate(() => window.__sent);
+  check('claude.ai: a message goes through Send to Claude with its anchor and target', sent.length === 1 && !!sent[0].anchor && /Make this bigger/.test(sent[0].text) && /Talkback target/.test(sent[0].text), JSON.stringify(sent));
+  check('claude.ai: the conversation shows it as sent', /Sent to Claude/.test(await cui(() => $('.conv').textContent)));
+  await cp.keyboard.type('And a bit bluer');
+  await cp.keyboard.press('Enter');
+  await cp.waitForTimeout(500);
+  const sent2 = await cp.evaluate(() => window.__sent);
+  check('claude.ai: a follow-up goes into the same thread', sent2.length === 2 && sent2[1].threadId === 't1', JSON.stringify(sent2[1]));
   await cp.close();
 } catch (e) {
   check(`the claude.ai test stopped at "${stage}"`, false, String(e.message).split('\n')[0]);

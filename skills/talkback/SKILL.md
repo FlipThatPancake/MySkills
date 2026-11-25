@@ -29,7 +29,7 @@ Pick the route your setup allows and tell the user which one it is. Download and
 3. Answer every message with `node <skill folder>/live.mjs reply <n> "text" [--done]`. Ask with concrete options when a message is vague. Use `--done` when the work is finished and the user should check it.
 4. When the page changes, the user sees "Updated, reload". `window.commentRestore = ({ context, extras }) => {...}` restores page state (open tab, form values) after that reload.
 
-On claude.ai (a cloud session the user follows in claude.ai), publish the page as an Artifact with `capabilities: {comments: {customAnchors: true}}`. The user comments in claude.ai's own panel; Talkback supplies the pointing and puts the target in each thread's label and detail. Send to Claude wakes the session that published the page: read the thread, edit, republish and reply there. Leave resolving to the user.
+On claude.ai (a cloud session the user follows in claude.ai), publish the page as an Artifact with `capabilities: {comments: {}}` and tell the user to open the link in their browser. Talkback keeps its own comment mode and sends each message through claude.ai's Send to Claude, with the target appended to the text; the first send asks the user for consent. Send to Claude wakes the session that published the page: read the thread, edit, republish and reply there; the user sees replies in claude.ai's comment panel, not in Talkback. Leave resolving to the user.
 
 The user's states, as in blender-talkback: Ready for agent, Agent asks you, Done check it, Resolved. Only the user resolves. The newest message wins. Where Node or a local session is missing, use Download.
 
