@@ -116,7 +116,7 @@ export function coatStand(kit, { form = 'pole', h = 1750, items = 'both', seed =
     g.add(kit.cyl(0, 0, 0, 200, 24, { rTop: 190, seg: 40, ...lo })); g.add(kit.cyl(0, 24, 0, rp, h - 24, { seg: 20 })); g.add(kit.solid(new T.SphereGeometry(34, 16, 12), 0, h + 6, 0, { smooth: true, ...lo }));
     for (const [y, ang] of [[h - 120, 0], [h - 120, 90], [h - 120, 180], [h - 120, 270], [h - 300, 45], [h - 300, 135], [h - 300, 225], [h - 300, 315]]) { const a = ang * DEG; g.add(rod(kit, [Math.cos(a) * rp, y, Math.sin(a) * rp], [Math.cos(a) * 130, y + 80, Math.sin(a) * 130], 7, 7, 'lo')); }
   } else {   // tree: three splayed legs, a thick turned shaft, peg arms
-    for (let i = 0; i < 3; i++) { const a = (i / 3 * 360 + 30) * DEG; g.add(rod(kit, [Math.cos(a) * 20, 70, Math.sin(a) * 20], [Math.cos(a) * 230, 0, Math.sin(a) * 230], 20, 14, 'lo')); }
+    for (let i = 0; i < 3; i++) { const a = (i / 3 * 360 + 30) * DEG; g.add(rod(kit, [Math.cos(a) * 20, 70, Math.sin(a) * 20], [Math.cos(a) * 230, 14.3, Math.sin(a) * 230], 20, 14, 'lo')); }
     g.add(kit.cyl(0, 40, 0, 30, h - 40, { rTop: 22, seg: 20 })); g.add(kit.cyl(0, h - 6, 0, 28, 32, { rTop: 22, seg: 20, ...lo }));
     for (const [y, ang] of [[h - 140, 20], [h - 140, 140], [h - 140, 260], [h - 320, 80], [h - 320, 200], [h - 320, 320]]) { const a = ang * DEG; g.add(rod(kit, [Math.cos(a) * 20, y, Math.sin(a) * 20], [Math.cos(a) * 150, y + 60, Math.sin(a) * 150], 9, 9, 'lo')); g.add(kit.solid(new T.SphereGeometry(13, 10, 8), Math.cos(a) * 152, y + 62, Math.sin(a) * 152, { smooth: true, ...lo })); }
   }

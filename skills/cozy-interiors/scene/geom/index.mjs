@@ -14,7 +14,7 @@ export async function checkScene(scene, { settle = true, parts = true, src } = {
   const t0 = performance.now(), L = await loadScene(scene, { src }), t1 = performance.now();
   const Q = queryWorld(L), t2 = performance.now(), C = contacts(Q), t3 = performance.now();
   const { find, supporters, supportPolys } = applyRules(Q, C.list), t4 = performance.now();
-  const findings = [...find, ...placementRules(L, L)];
+  const findings = [...find, ...placementRules(L, L)]; { const { pathRules } = await import('./pathrules.mjs'); findings.push(...pathRules(L)); }   // the rule 'path' (check-home ran it in the page before)
   for (const f of Q.failed) findings.push({ rule: 'shape-failed', id: f.owner, text: `${f.owner}: part ${f.k} (${f.type}, ${f.kind}) could not be made into a shape` });
   if (parts) { const { checkParts } = await import('./parts.mjs'); findings.push(...(await checkParts(L))); }
   let t5 = t4;
