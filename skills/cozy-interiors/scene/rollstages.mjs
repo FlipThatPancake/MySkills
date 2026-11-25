@@ -1,5 +1,5 @@
 // rollstages.mjs — framework item F: does the roll, the plan and the shell give a home that is green through stage 4 (anchors)?
-//   node rollstats.mjs --stages [seeds = 200] [--from=1] [--jobs=4] [--only=1,2,3] [--json out.json] [--keep]   (rollstats.mjs calls this file)
+//   node rollstats.mjs --stages [seeds = 200] [--tries=3: a.blocking, best of 3 layouts per area; default 1 = as dealt] [--from=1] [--jobs=4] [--only=1,2,3] [--json out.json] [--keep]   (rollstats.mjs calls this file)
 // Per seed: pick 2 to 4 area kinds, roll them, hand the roll to Home, build each area from the plan (its cell, its ways through, the dealt windows), place the dealt groups by their dealt slots (a.group(phrase, { slot })),
 // then run `check-home --until anchors --quick` on it. A seed is GREEN when the build leaves nothing out and check-home names nothing of stages 1 to 4.
 // A seed that fails is a bug in the roll, a recipe, the slots or the plan tool, not in the agent: the report names the stage, the rule and who owns it, and counts seeds per cause.
@@ -25,7 +25,7 @@ export { phraseOf };   // the roll owns the place wording (SLOTS in roll.mjs): o
 // build the anchors-only home of one seed → { json, kinds, fails: [{ stage, rule, what }], areas }
 const FG = [[/umbrella/i, 'umbrellaStand'], [/basket/i, 'basket'], [/stool/i, 'stool'], [/bench/i, 'bench'], [/pouf/i, 'pouf'], [/cat bed|crate/i, 'crate'], [/waste|bin/i, 'wasteBin'], [/trolley/i, 'trolley'], [/chair/i, 'chair'], [/boot|shoe/i, 'shoes']];
 const TOPASSET = { worktop: ['baseRun'], table: ['table', 'roundTable'], sideboard: ['sideboard'], 'coffee table': ['coffeeTable'], 'side table': ['sideTable'], 'bedside table': ['bedsideTable'], 'chest of drawers': ['chestOfDrawers'], shelf: ['shelf', 'openShelf'], console: ['console'], desk: ['desk'] };
-export async function buildSeed(seed, dir, { Home, roll, KINDS, group }) {
+export async function buildSeed(seed, dir, { Home, roll, KINDS, group, tries = 1, pick }) {
   const rng = rngOf(seed * 7919 + 13), pool = KINDS.filter((k) => k !== 'names'),   // 'names' is a tables.json key with a hero list, not an area kind (roll throws on it: KINDS in roll.mjs should drop it)
      n = 2 + (seed % 3), kinds = [];
   while (kinds.length < n && kinds.length < pool.length) { const k = pool[Math.floor(rng() * pool.length)]; if (!kinds.includes(k)) kinds.push(k); }
@@ -44,6 +44,12 @@ export async function buildSeed(seed, dir, { Home, roll, KINDS, group }) {
         const planX = (wl, len) => R.plan.links.filter((l) => l.kind !== 'open' && ((l.a === id && l.aWall === wl) || (l.b === id && l.bWall === wl))).map((l) => ({ x: Math.round(((l.a === id ? l.aF : l.bF) * len) / 10) * 10, w: l.width || 1000 }));
         const rolled = win.map((o) => ({ o, w: wallOf(o) })), mk = (wl) => (pa.windows || []).filter((q) => q.wall === wl && q.x != null).map((q) => { const o = (rolled.find((r) => r.w === wl && (r.o.style || 'sash') === q.style) || {}).o || {}; return { kind: 'window', x: q.x, ...(o.style ? { style: o.style } : {}), ...(o.sash ? { sash: o.sash } : {}) }; });   // each dealt window at the plan's x (plan.areas[id].windows; x null = left out), as compose builds it for an agent
         let backWall; quiet(() => { backWall = a.back(w, mk('back')); if (second === 'left') a.left(d, mk('left'), bk.angle); if (second === 'right') a.right(d, mk('right'), bk.angle); a.view({ target: [w / 2, 700, d / 2], el: 18 }); }); made[id] = a; made[id + ':back'] = backWall;
+        if (tries > 1 && (ra.groups || []).length && (ra.groupSlots || []).length === ra.groups.length) {   // a.blocking: the dealt layout and tries - 1 others, the best kept (the same call an agent makes)
+          const log = console.log, warn = console.warn; console.log = () => {}; console.warn = () => {};
+          try { const r = await a.blocking(ra, { tries, quiet: true, pick }); out.placed += r.ids.length; (out.chosen ||= []).push(r.chosen); (out.layouts ||= []).push(r.candidates.map((q) => ({ slots: q.slots, tuple: q.tuple }))); if (r.left?.length) fails.push({ stage: 4, rule: 'group', what: `${id}: left out ${r.left.join('; ').slice(0, 120)}` }); for (const f of r.fails || []) { if (/no recipe/.test(f)) { if (/^\S+ at/.test(f) && f.startsWith(phraseOf(ra.groups[0]))) out.heroMissing = true; } fails.push({ stage: 4, rule: /no recipe/.test(f) ? 'group-no-recipe' : 'group', what: `${id}: ${f.slice(0, 170)}` }); } }
+          catch (e) { if (/no recipe/.test(e.message)) out.heroMissing = true; fails.push({ stage: 4, rule: /no recipe/.test(e.message) ? 'group-no-recipe' : 'group', what: `${id}: blocking: ${String(e.message).split('\n')[0].slice(0, 170)}` }); }
+          finally { console.log = log; console.warn = warn; }
+        } else
         (ra.groups || []).forEach((g, k) => { const ph = phraseOf(g), slot = ra.groupSlots?.[k];
           if (!slot) { fails.push({ stage: 4, rule: 'group', what: `${id}: group "${ph}" has no dealt slot` }); return; }
           try { const r = quiet(() => a.group(ph, { slot, hero: k === 0 })); out.placed += r.ids.length; if (r.left?.length) fails.push({ stage: 4, rule: 'group', what: `${id}: "${ph}" at ${slot} left out ${r.left.join('; ').slice(0, 120)}` }); }
@@ -69,10 +75,10 @@ const runCheck = (json) => new Promise((res) => { let o = ''; const p = spawn('n
 const parse = (o) => o.split('\n').map((l) => l.match(/^\[([\w-]+)\] (.*?)  -> stage (\d+|\?) /)).filter(Boolean).map((m) => ({ rule: m[1], what: m[2], stage: m[3] === '?' ? 9 : +m[3] }));
 
 export async function rollStages(argv) {
-  const arg = (k, d) => (argv.find((a) => a.startsWith(`--${k}=`)) || '').slice(k.length + 3) || d, N = Number(argv.find((a) => /^\d+$/.test(a)) || 200), from = Number(arg('from', 1)), JOBS = Number(arg('jobs', 4)), only = arg('only', ''), jsonOut = arg('json', '');
+  const arg = (k, d) => (argv.find((a) => a.startsWith(`--${k}=`)) || '').slice(k.length + 3) || d, N = Number(argv.find((a) => /^\d+$/.test(a)) || 200), from = Number(arg('from', 1)), JOBS = Number(arg('jobs', 4)), only = arg('only', ''), jsonOut = arg('json', ''), TRIES = Number(arg('tries', 1));
   const { Home } = await import(path.join(here, 'compose.mjs')), { roll, KINDS } = await import(path.join(here, 'roll.mjs'));
   const seeds = only ? only.split(',').map(Number) : Array.from({ length: N }, (_, i) => from + i), dir = fs.mkdtempSync(path.join(os.tmpdir(), 'rollstages-')), results = [];
-  for (const s of seeds) results.push(await buildSeed(s, dir, { Home, roll, KINDS }));
+  for (const s of seeds) results.push(await buildSeed(s, dir, { Home, roll, KINDS, tries: TRIES }));
   let next = 0; await Promise.all(Array.from({ length: JOBS }, async () => { while (next < results.length) { const r = results[next++]; if (!r.json) continue; const o = await runCheck(r.json); r.issues = parse(o).filter((i) => i.stage <= 4 || i.stage === 9); } }));
   const by = {}, bump = (k, s) => { (by[k] ||= new Set()).add(s); };
   let green = 0; const lines = [];
@@ -89,7 +95,7 @@ export async function rollStages(argv) {
   console.log('\ncause (stage | rule | owner): seeds');
   for (const [k, v] of Object.entries(by).sort((a, b) => b[1].size - a[1].size)) console.log(`  ${String(v.size).padStart(4)}  ${k}   e.g. seeds ${[...v].slice(0, 5).join(', ')}`);
   console.log('\nper seed:'); for (const l of lines) console.log('  ' + l);
-  if (jsonOut) fs.writeFileSync(jsonOut, JSON.stringify(results.map((r) => ({ seed: r.seed, kinds: r.kinds, fails: r.fails, issues: r.issues, fits: r.fits })), null, 1));
+  if (jsonOut) fs.writeFileSync(jsonOut, JSON.stringify(results.map((r) => ({ seed: r.seed, kinds: r.kinds, fails: r.fails, issues: r.issues, fits: r.fits, chosen: r.chosen, layouts: r.layouts })), null, 1));
   if (!argv.includes('--keep')) fs.rmSync(dir, { recursive: true, force: true }); else console.log(`\nscenes kept in ${dir}`);
   return { seeds: seeds.length, green };
 }

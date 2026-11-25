@@ -25,6 +25,7 @@ export async function checkScene(scene, { settle = true, parts = true, src } = {
   for (let i = findings.length - 1; i >= 0; i--) if (findings[i].rule === 'moves' && /pushed|slides/.test(findings[i].text) && carried(findings[i].id)) findings.splice(i, 1);
   const nSolid = L.objects.filter((o) => o.parts.some((p) => p.kind !== 'flat')).length, skipped = Object.entries(COVER.skipped).map(([k, n]) => `${k} x${n}`).join(', ');
   const coverage = [`physics: ${L.objects.length} objects, ${Q.entries.length} parts${Q.failed.length ? `, ${Q.failed.length} shapes failed` : ''}`, parts ? `parts inside assets: ${nSolid} of ${L.objects.length} objects (flat-only skipped)` : 'parts inside assets: not run', settle ? `settle: ${COVER.falling} falling, ${COVER.fixed} fixed${skipped ? `; left out: ${skipped}` : ''}` : 'settle: not run', `placement: ${L.objects.filter((o) => o.parts.length).length} objects with geometry`];
+  try { Q.W.free(); } catch { /* freed already */ }   // a.blocking scores layouts over and over in one process: the world's memory goes back (without it Rapier's heap runs out after about a thousand calls)
   findings.sort((a, b) => a.rule.localeCompare(b.rule) || String(a.id).localeCompare(String(b.id)));
   return { findings, coverage, shapes: { ...Q.tally, parts: Q.entries.length, objects: L.objects.length }, contacts: C.list.length, timings: { build: t1 - t0, world: t2 - t1, contacts: t3 - t2, rules: t4 - t3, settle: t5 - t4, total: t5 - t0 } };
 }

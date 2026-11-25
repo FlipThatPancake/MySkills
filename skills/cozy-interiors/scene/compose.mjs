@@ -442,6 +442,49 @@ class Area {
     if (opts.wall && !nd.free) { const F = opts.wall, xc = opts.xc ?? 0, pts = [F.at(xc - w / 2, 0), F.at(xc + w / 2, 0), F.at(xc - w / 2, d), F.at(xc + w / 2, d)]; (this.reserved ||= []).push({ r: [Math.min(...pts.map((q) => q[0])), Math.min(...pts.map((q) => q[1])), Math.max(...pts.map((q) => q[0])), Math.max(...pts.map((q) => q[1]))], wall: F.id }); }
     else if (opts.at) (this.reserved ||= []).push({ r: nd.float && !nd.free ? [opts.at[0] - w / 2, Math.max(opts.at[1] - d / 2, rz0 + 900), opts.at[0] + w / 2, Math.max(opts.at[1] - d / 2, rz0 + 900) + d] : [opts.at[0] - w / 2, opts.at[1] - d / 2, opts.at[0] + w / 2, opts.at[1] + d / 2], wall: 'floor' });
     return res; }   // one roll group phrase as a built arrangement, see groups.mjs
+  // a.blocking(roll.areas[id], { tries: 3, pick, quiet }) → { chosen, candidates }: the area's dealt groups placed as `tries` layouts, the best kept (framework item 2; `await` it: the geometry core scores in Node, no browser).
+  //   0 is the layout as the roll dealt it (its slots, the recipe seed); the others keep the hero's slot and move every other group to another free slot of its kind (wall or floor) and step the recipe seed (which furniture, which side the lamp stands).
+  //   Score, lowest wins, compared in this order: physical faults, then the other blocking findings (placement, runner, path, casing), then the other stage 1-4 findings the geometry core names (empty floor, rug reach, seats facing), then pieces a recipe left out. A tie keeps the lower layout, so the roll's own choice stays when nothing is better.
+  //   The page-side rules (hidden, frame fill) are not in the score; check-home still runs them. pick: n keeps layout n whatever the scores.
+  async blocking(ra, { tries = 3, pick, quiet = false } = {}) {
+    const groups = ra?.groups || [], dealt = ra?.groupSlots || []; if (!groups.length) return { chosen: null, candidates: [] };
+    const { groupPhrase } = await import('./roll.mjs'), { checkScene } = await import('./geom/index.mjs'), { blocks, PHYSICAL, ruleStage, makeCtx } = await import('./stages.mjs'), h = this.h, log = (...x) => { if (!quiet) console.log(...x); };
+    const phrases = groups.map(groupPhrase), isFloor = (v) => String(v).startsWith('floor:');
+    const snap = () => ({ n: h.S.home.objects.length, counts: { ...(h.counts || {}) }, signs: h.signs ? JSON.stringify(h.signs) : null, taken: Object.values(this.walls || {}).map((F) => [F, F.taken.length]), reserved: this.reserved ? this.reserved.length : null, rolled: JSON.stringify(h.S.home.rolled ?? null), pairs: { ...(h.pairs || {}) }, curtains: (h.curtainRecs || []).length, decks: Object.fromEntries(Object.entries(h.decks || {}).map(([k, v]) => [k, typeof v === 'function' ? [v, v.get()] : [...v]])) });
+    const back = (z) => { h.S.home.objects.length = z.n; h.counts = { ...z.counts }; h.signs = z.signs ? JSON.parse(z.signs) : h.signs; for (const [F, n] of z.taken) F.taken.length = n; if (z.reserved == null) delete this.reserved; else this.reserved.length = z.reserved; h.S.home.rolled = JSON.parse(z.rolled) ?? h.S.home.rolled; h.pairs = { ...z.pairs }; if (h.curtainRecs) h.curtainRecs.length = z.curtains; h.decks = Object.fromEntries(Object.entries(z.decks).map(([k, v]) => { if (Array.isArray(v) && typeof v[0] === 'function') { v[0].set(v[1]); return [k, v[0]]; } return [k, [...v]]; })); };
+    const place = (c) => {   // layout c: { slots, seed } → { ids, left, fails }
+      const out = { ids: [], left: [], fails: [], slots: [] };
+      groups.forEach((g, k) => {
+        let slot = dealt[k]; const nd = groupNeeds(phrases[k]) || {};
+        if (c > 0 && k > 0) {
+          const T = this.slotTable(this.widthFor(phrases[k]), { inWindow: !!nd.window, depth: nd.d }), floor = isFloor(dealt[k]);
+          const fit = floor ? Object.entries(T.floor).filter(([, q]) => q.free).map(([n]) => n) : Object.entries(T.wall).filter(([, q]) => q.best).map(([n]) => n);
+          if (fit.length) { const at = Math.max(0, fit.indexOf(dealt[k])); slot = fit[(at + c) % fit.length]; }
+        }
+        out.slots.push(slot);
+        try { const r = this.group(phrases[k], { slot, hero: k === 0, ...(c > 0 ? { seed: (h.S.seed ?? 1) + c } : {}) }); out.ids.push(...r.ids); if (r.left?.length) out.left.push(...r.left.map((l) => `${phrases[k]}: ${l}`)); }
+        catch (e) { out.fails.push(`${phrases[k]} at ${slot}: ${String(e.message).split('\n')[0].slice(0, 140)}`); }
+      });
+      return out;
+    };
+    const score = async (res) => {
+      if (res.fails.length) return { ok: false, tuple: [1e6, 0, 0, 0], why: res.fails[0] };
+      this.liftOnRugs(); this.liftOnCloths();
+      const objs = h.S.home.objects.filter((o) => o.area === this.id), mine = new Set(objs.map((o) => o.id));
+      const S = { ...h.S, home: JSON.parse(JSON.stringify({ ...h.S.home, objects: objs })), areas: [] }   /* a copy: buildHome adds defaults (an opening's height) to what it is given */, assetOf = Object.fromEntries(objs.map((o) => [o.id, o.asset ?? o.scene?.asset])), ctx = makeCtx(assetOf);
+      const r = await checkScene(S, { settle: false, parts: false }), fs = r.findings.filter((f) => !/^note-/.test(f.rule) && (!f.id || mine.has(f.id)));
+      const t = [fs.filter((f) => PHYSICAL.has(f.rule)).length, fs.filter((f) => blocks(f.rule) && !PHYSICAL.has(f.rule)).length, fs.filter((f) => !blocks(f.rule) && ruleStage({ rule: f.rule, what: f.text }, ctx) <= 4).length, res.left.length];
+      return { ok: true, tuple: t, why: fs.slice(0, 2).map((f) => `[${f.rule}] ${String(f.text).slice(0, 90)}`).join(' | ') };
+    };
+    const base = snap(), cands = [];
+    for (let c = 0; c < Math.max(1, tries); c++) { const res = place(c), sc = await score(res); cands.push({ index: c, slots: res.slots, ...sc }); back(base); }
+    const cmp = (a, b) => { for (let i = 0; i < 4; i++) if (a.tuple[i] !== b.tuple[i]) return a.tuple[i] - b.tuple[i]; return a.index - b.index; };
+    const best = pick != null ? cands[pick] : [...cands.filter((q) => q.ok)].sort(cmp)[0];
+    if (!best) { log(`blocking ${this.id}: no layout builds, so the dealt one stands as far as it goes: ${cands.map((q) => `${q.index}: ${q.why}`).join('; ')}`); const r0 = place(0); return { chosen: 0, candidates: cands, ids: r0.ids, left: r0.left, fails: r0.fails }; }   // what a plain a.group loop would leave: the pieces that did build, and what failed
+    for (const q of cands) log(`blocking ${this.id} layout ${q.index}${q === best ? ' (kept)' : ''}: ${q.ok ? `physical ${q.tuple[0]}, blocking ${q.tuple[1]}, stage 1-4 ${q.tuple[2]}, left out ${q.tuple[3]}` : 'does not build'}  slots ${q.slots.join(' / ')}${q.why && q.ok ? `   ${q.why}` : q.ok ? '' : ': ' + q.why}`);
+    const res = place(best.index); if (res.fails.length) throw new Error(`a.blocking('${this.id}'): layout ${best.index} failed on the rebuild: ${res.fails[0]}`);
+    return { chosen: best.index, candidates: cands, ids: res.ids, left: res.left, fails: [] };
+  }
   fitStretch(F, ids, [sa, sb], nTaken) {   // a recipe may stand its pieces off its middle (a fridge, then a trolley beside it): the group slides along the wall into the bare stretch its slot found, so no piece stands in a corner or an opening's zone
     const o0 = F.at(0, 0), u1 = F.at(1, 0); let lo = 1e9, hi = -1e9;
     for (const id of ids) { let b; try { b = this.boxOf(id); } catch { continue; } const o = this.h.S.home.objects.find((q) => q.id === `${this.id}-${id}`); if (!o) continue; for (const [x, z] of [[b.x0, b.z0], [b.x1, b.z0], [b.x0, b.z1], [b.x1, b.z1]]) { const t = (x - o0[0]) * (u1[0] - o0[0]) + (z - o0[1]) * (u1[1] - o0[1]); lo = Math.min(lo, t); hi = Math.max(hi, t); } }
