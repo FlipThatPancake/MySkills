@@ -121,7 +121,7 @@ export function createAreaScene(canvas, S) {
   });
   let homePose = null;   // the camera and target of the area's home view, as arrive() sets them
   const sync = () => {
-    home.curArea = cur; home.homeView = !!(cur && !glide && homePose && camera.position.distanceTo(homePose.p) < 60 && controls.target.distanceTo(homePose.t) < 60);   // the home view fades none of its own area's groups (home.js)
+    S.home.curArea = cur; S.home.homeView = !!(cur && !glide && homePose && camera.position.distanceTo(homePose.p) < 60 && controls.target.distanceTo(homePose.t) < 60);   // the home view fades none of its own area's groups (home.js)
     if (!cur || glide || !links || S.home.passageView === false) return;
     for (const l of links) { if (l.kind === 'open' || (l.a !== cur && l.b !== cur)) continue;
       const n = l.a === cur ? l.b : l.a, dir = l.a === cur ? 1 : -1, side = ((camera.position.x - l.p[0]) * l.d[0] + (camera.position.z - l.p[1]) * l.d[1]) * dir, on = side < -100 && !together(cur, n);   // l.d points from a to b

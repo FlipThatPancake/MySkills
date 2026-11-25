@@ -10,8 +10,8 @@ const passageHome = (Home, crowd = false) => {   // crowd: wardrobes in every ro
 };
 
 // a sideboard stands between the camera and the sofa when the camera swings round, with a vase on it
-const tableRoom = (Home, supportFade) => {
-  const H = new Home({ seed: 5, floor: 'plain', detached: true, supportFade }), a = H.area('t', 'T', { rect: [0, 0, 6000, 4500] }); a.back(6000); a.left(4500); a.right(4500);
+const tableRoom = (Home, supportFade, keepHomeView = true, az = 0) => {
+  const H = new Home({ seed: 5, floor: 'plain', detached: true, supportFade, keepHomeView }), a = H.area('t', 'T', { rect: [0, 0, 6000, 4500] }); a.back(6000); a.left(4500); a.right(4500);
   a.put('sofa', 'sofa', [3000, 700], 0, { group: 'seat', hero: true, params: { seats: 3, arms: 'rolled', back: 'tight' } });
   a.put('tb', 'sideboard', [3000, 2600], 0, { group: 'store', params: { w: 1600, h: 800, d: 420 } });
   a.put('vase', 'vase', [3000, 2600], 0, { group: 'store', mount: 'on', y: 800, params: { form: 1 } });
@@ -31,4 +31,8 @@ export const fixtures = [
     build({ Home }) { return tableRoom(Home, true); } },
   { name: 'orbit-room-behind-an-arch-shows-past-the-opening', from: 'round 6 (lead): the room behind the hallway arch showed through a window and past the wall where the hallway has none; here the stencil clip is switched off (portalClip false)', kind: 'bug', expect: { rules: ['orbit'], ids: ['outside the opening'] },
     build({ Home }) { const H = passageHome(Home, true); H.portalClip = false; return H; } },
+  { name: 'orbit-home-view-fades-a-grouped-piece', from: 'round 6 (lead): the kitchen table, in the area own group, was drawn at 0% in the home view (and later half transparent); here the home view keeps nothing drawn (keepHomeView false), so the sideboard in the camera line fades', kind: 'bug', expect: { rules: ['orbit'], ids: ['tb'] },
+    build({ Home }) { return tableRoom(Home, true, false); } },
+  { name: 'good-orbit-home-view-keeps-its-groups-drawn', from: 'round 6 (lead): the same sideboard stays at full opacity in the home view', kind: 'good', counts: ['orbit'],
+    build({ Home }) { return tableRoom(Home, true, true); } },
 ];

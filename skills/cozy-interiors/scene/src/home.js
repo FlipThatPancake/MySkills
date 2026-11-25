@@ -184,7 +184,7 @@ export function buildHome(kit, home, registry, areas = []) {
         if (B.wall === undefined) { B.wall = null; if (!b.isEmpty() && b.min.y > 250) { let best = 160; for (const W of walls) { const x = (b.min.x + b.max.x) / 2, z = (b.min.z + b.max.z) / 2, side = (x - W.to[0]) * W.n[0] + (z - W.to[1]) * W.n[1], al = -((x - W.to[0]) * W.d[0] + (z - W.to[1]) * W.d[1]), half = Math.abs(W.n[0]) * (b.max.x - b.min.x) / 2 + Math.abs(W.n[1]) * (b.max.z - b.min.z) / 2, gap = Math.abs(side) - half; if (gap < best && al > -100 && al < W.len + 100) { best = gap; B.wall = W; } } } }   // a piece hung on a wall (off the floor, touching its plane) takes that wall's fade
         if (home.blockerFade === false) hit = false;
         B.raw = hit;   // what the camera's line says; the checks read it (would the home view fade this piece?)
-        if (hit && home.homeView && B.grp && B.area === home.curArea) hit = false;   // the home view never fades a piece of its own area's groups: the camera is meant to see them (the checks say when one stands in the line: move the target or the piece)
+        if (hit && home.homeView && home.keepHomeView !== false && B.grp && B.area === home.curArea) hit = false;   // the home view never fades a piece of its own area's groups: the camera is meant to see them (the checks say when one stands in the line: move the target or the piece)
         B.goal = hit || (B.wall && B.wall.goal === 0) ? 0 : 1;
         B.own = B.goal;   // B.own: what the piece's own view says; what stands on a piece goes with it (below)
       }

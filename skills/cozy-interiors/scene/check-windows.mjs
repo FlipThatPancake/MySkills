@@ -24,7 +24,8 @@ export async function windowIssues(page, camerasByArea = {}, opt = {}) {
       const c = window.cozyScene, T = c.kit.THREE, { home } = c, out = [];
       c.setArea(id, true); c.controls.enabled = false; c.tour.update = () => false; c.advance(1.5);
       const visibleDeep = (o) => { for (; o; o = o.parent) if (!o.visible) return false; return true; };
-      const skies = []; home.group.traverse((m) => { if (m.isMesh && m.name === 'outside-backdrop' && visibleDeep(m)) skies.push(m); });
+      const inRoom = (m) => { for (const W of home.walls) if (c.portal.has(c.orderArea(W))) for (let q = m; q; q = q.parent) if (q === W.node) return true; return false; };   // a window of the room drawn behind an arch is that room's: it is judged from its own area
+      const skies = []; home.group.traverse((m) => { if (m.isMesh && m.name === 'outside-backdrop' && visibleDeep(m) && !inRoom(m)) skies.push(m); });
       if (!skies.length) return out;
       const home0 = { p: c.camera.position.clone(), t: c.controls.target.clone(), fov: c.camera.fov };
       if (unclipped) c.scene.traverse((m) => { if (m.isMesh && m.material && m.material.stencilWrite && m.name !== 'opening-mask') { m.material.stencilWrite = false; m.material.needsUpdate = true; } });
