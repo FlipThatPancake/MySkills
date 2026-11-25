@@ -11,10 +11,10 @@ import { buildHome, FADE } from './home.js';
 import { bakeLight } from './lightbake.js';
 import { VIEW } from './sheet.js';
 import { createTour } from './tour.js';
-import { route, glidePath } from './glidepath.js';
+import { route, glidePath, glideSecs, camPos } from './glidepath.js';
 import { createMotion } from './motion/index.js';
 
-const rad = THREE.MathUtils.degToRad, deg = THREE.MathUtils.radToDeg, FOV = 30, GLIDE_S = 1.6, SPAN = 80;
+const rad = THREE.MathUtils.degToRad, deg = THREE.MathUtils.radToDeg, FOV = 30, SPAN = 80;
 const smooth = (k) => k * k * (3 - 2 * k);
 
 export function createAreaScene(canvas, S) {
@@ -126,7 +126,7 @@ export function createAreaScene(canvas, S) {
     const from = stance(), to = viewOf(areas[id]);
     let daz = ((to.az - from.az + 540) % 360) - 180;   // the short way round
     const ways = cur && links ? route(links, cur, id) : [], path = ways.length || (cur && links && !together(cur, id)) ? glidePath(from, to, ways, { height: S.home.height || 2700 }) : null;
-    glide = { id, from, to, daz, path, fade0: cur ? fadeOf(areas[cur]) : fadeOf(areas[id]), fade1: fadeOf(areas[id]), t0: performance.now(), hold, k: 0 };
+    glide = { id, from, to, daz, path, secs: path ? path.secs : glideSecs(Math.max(Math.hypot(...to.target.map((v, i) => v - from.target[i])), Math.hypot(...[0, 1, 2].map((i) => camPos(to.target, to.dist, to.az, to.el)[i] - camPos(from.target, from.dist, from.az, from.el)[i])))), fade0: cur ? fadeOf(areas[cur]) : fadeOf(areas[id]), fade1: fadeOf(areas[id]), t0: performance.now(), hold, k: 0 };
     glide.apart = !together(cur, id); controls.enabled = false; markLabels(id); if (glide.apart) only(cur);   // the first frame is the start view itself; the other areas are drawn from the first step on (glideAt)   // between areas of one group nothing switches on or off
   }
   function glideAt(k) {
@@ -224,7 +224,7 @@ export function createAreaScene(canvas, S) {
   arrive(q.get('area') || order[0]);
   const loopFn = (now) => {
     const dt = Math.max(0, Math.min(0.1, (now - last) / 1000)); last = now;
-    if (glide) { lastInput = now; if (!glide.hold) glideAt((now - glide.t0) / 1000 / GLIDE_S); }
+    if (glide) { lastInput = now; if (!glide.hold) glideAt((now - glide.t0) / 1000 / glide.secs); }
     else if (!tour.update(now, now - lastInput)) controls.update();
     for (const g of Object.values(home.objects)) { g.userData.tick?.(dt); g.userData.update?.(dt); }
     api.motion.update(dt, api.area);

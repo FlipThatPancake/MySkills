@@ -1,7 +1,7 @@
 import { roll, slotFits } from '../../../../skills/cozy-interiors/scene/roll.mjs';
 // Round 6 house plan: a home of four areas laid out by the plan stays green; the same areas in a row (no way between them) are the round-5 replay (replays.mjs).
 const homeOf = (Home, seed, rooms, touch, shrink = 1, noLikes = false, windows = null, piece = null, beside = null) => {   // windows: 'plan' stands each dealt window at the plan's x; 'on-link' stands one on the way through
-  const R = rooms ? roll(seed, rooms.flat(), { rooms, touch, noLikes }) : roll(seed, touch), H = new Home({ seed }), made = {}; H.roll({ seed, plan: R.plan, openPlan: R.openPlan, areas: {} });   // the plan only: the fixture does not furnish the areas
+  const R = rooms ? roll(seed, rooms.flat(), { rooms, touch, noLikes: noLikes === true, noSpread: noLikes === 'nospread' }) : roll(seed, touch), H = new Home({ seed }), made = {}; H.roll({ seed, plan: R.plan, openPlan: R.openPlan, areas: {} });   // the plan only: the fixture does not furnish the areas
   for (const id of R.plan.order) {
     const pa = R.plan.areas[id], [w, d] = pa.fit.map((v) => Math.round(v * shrink)), a = H.area(id, id, { rect: [0, 0, w, d] });
     if (pa.entry?.kind === 'open') { const i = R.openPlan.chain.indexOf(id); H.join(made[pa.parent], a, { layout: R.openPlan.layout === 'corner' && i - 1 === R.openPlan.turn ? 'corner' : 'row', share: R.openPlan.seams[i - 1].overlap }); }
@@ -25,8 +25,8 @@ export const fixtures = [
     build({ Home }) { return homeOf(Home, 10, [['hallway'], ['living'], ['bedroom']], [['hallway', 'living'], ['hallway', 'bedroom']], 1, false, 'plan'); } },
   { name: 'good-mated-areas-keep-a-wall-slab-between-them', from: 'round 6 tester (T2): an area mated back to back with its parent stood its wall line on the parent\'s, so each 200 mm slab stood in the other room and every piece on the shared wall fired "200 mm inside a wall"; the mate now leaves the slab\'s thickness between the two wall lines (red before the fix: 200 and 250 mm penetrates on the sideboards)', kind: 'good', counts: ['plan'],
     build({ Home }) { return homeOf(Home, 12, [['living'], ['dining'], ['hallway'], ['bedroom']], [['hallway', 'living'], ['hallway', 'bedroom']], 1, false, null, 'sideboard'); } },
-  { name: 'good-plan-with-a-loop', from: 'round 6 (loops on purpose): four areas in four rooms whose plan has a second way round (two cells grown or stood so their side walls meet one slab apart); every way through is built, none left out', kind: 'good', counts: ['plan'],
-    build({ Home }) { const R = roll(92, ['hallway', 'living', 'dining', 'bedroom'], { rooms: [['hallway'], ['living'], ['dining'], ['bedroom']] }); if (!R.plan.links.some((l) => !l.tree && l.kind !== 'open')) throw new Error('seed 92 no longer plans a loop: pick another seed'); return homeOf(Home, 92, [['hallway'], ['living'], ['dining'], ['bedroom']], []); } },
+  { name: 'good-plan-with-a-loop', from: 'round 6 (loops on purpose): four areas in four rooms whose plan has a second way round (two cells grown or stood so their side walls meet one slab apart); every way through is built, none left out', kind: 'good', counts: ['plan'],   // planned with noSpread: with the spread rule on the plan no longer makes loops here, and this home is a strip
+    build({ Home }) { const R = roll(92, ['hallway', 'living', 'dining', 'bedroom'], { rooms: [['hallway'], ['living'], ['dining'], ['bedroom']], noSpread: true }); if (!R.plan.links.some((l) => !l.tree && l.kind !== 'open')) throw new Error('seed 92 no longer plans a loop: pick another seed'); return homeOf(Home, 92, [['hallway'], ['living'], ['dining'], ['bedroom']], [], 1, 'nospread'); } },
   { name: 'good-hero-keeps-a-bare-stretch-on-its-wall', from: 'round 6 (rollstats hero-slot-without-stretch): a dining table dealt to the back wall while a window wall took the whole wall; the roll now deals a picture window there and the plan keeps the hero\'s third bare', kind: 'good', counts: ['plan'],
     build({ Home }) { const R = roll(1, ['kitchen', 'dining', 'living']); if (slotFits(R, 'dining')[0] === false) throw new Error('the dining hero has no bare stretch in its slot (hero-slot-without-stretch)'); return homeOf(Home, 1, [['kitchen'], ['dining'], ['living']], []); } },
   { name: 'good-plan-four-areas', from: 'round 6 house plan: living, dining, hallway and bedroom stand in one floor plan with ways through; every area reachable, none overlapping', kind: 'good', counts: ['plan'],
@@ -53,8 +53,8 @@ fixtures.push(
 
 // T13 (round 6): the glide walks through a way in the wall; a tall cabinet 350 mm beside the way stands off to the side of the camera, not in its frame
 fixtures.push(
-  { name: 'glide-comes-within-600-of-a-cabinet-beside-the-way', from: 'round 6 (T13): a tall cabinet 350 mm beside the way through: the glide passes it at about 530 mm, under the 600 mm the camera keeps from furniture', kind: 'bug', expect: { rules: ['glide'], ids: ['within'] },
-    build({ Home }) { return homeOf(Home, 10, [['hallway'], ['living'], ['bedroom']], [['hallway', 'living'], ['hallway', 'bedroom']], 1, false, null, 'glazedCabinet', 1150); } },
+  { name: 'glide-comes-within-450-of-a-cabinet-beside-the-way', from: 'round 6 (T13): a tall cabinet 350 mm beside the way through: the glide passes it at about 530 mm, under the 450 mm the camera keeps from furniture (half of the 900 mm corridor)', kind: 'bug', expect: { rules: ['glide'], ids: ['within'] },
+    build({ Home }) { return homeOf(Home, 10, [['hallway'], ['living'], ['bedroom']], [['hallway', 'living'], ['hallway', 'bedroom']], 1, false, null, 'glazedCabinet', 1000); } },
   { name: 'good-glide-past-a-cabinet-beside-the-way-through', from: 'round 6 tester (T13): the glide through a way passes a tall cabinet 350 mm beside it; the check read a box beside the camera as filling the whole frame (red before the fix)', kind: 'good', counts: ['glide'],
     build({ Home }) { return homeOf(Home, 10, [['hallway'], ['living'], ['bedroom']], [['hallway', 'living'], ['hallway', 'bedroom']], 1, false, null, 'glazedCabinet', 1450); } },
 );
