@@ -273,6 +273,17 @@ class Area {
     { const hf = res.pts.filter((_, i) => i % 3 === 1), tops = hf0; if (Math.max(...hf) > tops.top + 40) throw new Error(`drapeOver('${id}'): the cloth rests ${Math.round(Math.max(...hf) - tops.top)} mm above the top of '${targetId}': move it (at or dx/dz) onto the seat, arm or bed, not the back`); }
     this.put(id, 'cloth', [0, 0], 0, { group, y, mount, params: { nx, ny, pts: res.pts, thick, tone } });
   }
+  // round 6 B19: a pan or moka pot that lands over a hob moves to the nearest free burner centre (the check 'overhangs' wants it within 60 mm): the burners are at (225|675, -200|-440) from the hob's front-left origin (src/kitchen/hob.js), in this area's frame
+  burnerSnap(asset, [px, pz], used = []) {
+    if (!/^(mokaPot|pan)$/.test(asset)) return [px, pz];
+    const c = Math.cos(rad(this.psi)), s = Math.sin(rad(this.psi)); let best = null;
+    used = [...used, ...this.h.S.home.objects.filter((q) => /^(mokaPot|pan)$/.test(q.asset) && q.area === this.id).map((q) => { const X = q.at[0] - this.O[0], Z = q.at[2] - this.O[1]; return [X * c + Z * s, -X * s + Z * c]; })];   // a pot already on a burner keeps it
+    for (const h of this.h.S.home.objects.filter((q) => q.asset === 'hob' && q.area === this.id)) {
+      const th = rad(h.turn || 0);
+      for (const [x, z] of [[225, -200], [675, -200], [225, -440], [675, -440]]) { const X = h.at[0] + x * Math.cos(th) + z * Math.sin(th) - this.O[0], Z = h.at[2] - x * Math.sin(th) + z * Math.cos(th) - this.O[1], q = [X * c + Z * s, -X * s + Z * c], d = Math.hypot(q[0] - px, q[1] - pz); if (d < 350 && !used.some((u) => Math.hypot(u[0] - q[0], u[1] - q[1]) < 150) && (!best || d < best.d)) best = { d, q }; }
+    }
+    return best ? best.q.map(Math.round) : [px, pz];
+  }
   // spaced things on one top: a.onTop('desk', [{ id: 'lamp', asset: 'lamp' }, { id: 'books', asset: 'bookStack', params }, ...], { at: 'back' | 'centre' | 'front', margin: 50, group, turn })
   // lays the things in a row along the longer side of the top, in the order given, with equal gaps of at least `margin` mm between them and the edges, every footprint inside the edge; 'back' is the side nearer the area's back wall (lower z). It refuses with the length it needs when they do not fit.
   onTop(surfaceId, things, { at = 'centre', margin = 50, group, turn = 0 } = {}) {
@@ -282,11 +293,12 @@ class Area {
     const need = items.reduce((q, i) => q + i.a, 0) + (items.length + 1) * margin;
     if (need > L) throw new Error(`onTop('${surfaceId}'): the things need ${Math.round(need)} mm along the top and it is ${Math.round(L)} mm long: drop one or use a smaller piece`);
     const deep = items.find((i) => i.b + 2 * margin > W); if (deep) throw new Error(`onTop('${surfaceId}'): '${deep.id}' is ${Math.round(deep.b)} mm deep and the top is ${Math.round(W)} mm: it would hang over the edge`);
-    const gap = (L - items.reduce((q, i) => q + i.a, 0)) / (items.length + 1); let p = (alongX ? x0 : z0) + gap;
+    const gap = (L - items.reduce((q, i) => q + i.a, 0)) / (items.length + 1); let p = (alongX ? x0 : z0) + gap; const taken0 = [];
     for (const i of items) {
       const along = p + i.a / 2, perp = at === 'back' ? (alongX ? z0 : x0) + margin + i.b / 2 : at === 'front' ? (alongX ? z1 : x1) - margin - i.b / 2 : (alongX ? (z0 + z1) / 2 : (x0 + x1) / 2), [px, pz] = alongX ? [along, perp] : [perp, along];
-      const y = this.settleOn('onTop', i.id, i.asset, tris, i.params, [px, pz], i.turn ?? turn);
-      this.put(i.id, i.asset, [px, pz], i.turn ?? turn, { y, mount: 'on', group: i.group || grp, params: i.params, ...(i.hero ? { hero: true } : {}) });
+      const [bx, bz] = this.burnerSnap(i.asset, [px, pz], taken0), snapped = bx !== px || bz !== pz, y = snapped ? 940 : this.settleOn('onTop', i.id, i.asset, tris, i.params, [bx, bz], i.turn ?? turn);   // on a burner it stands on the grate: 940, as R.on(hob, pan) puts it
+      taken0.push([bx, bz]);
+      this.put(i.id, i.asset, [bx, bz], i.turn ?? turn, { y, mount: 'on', group: i.group || grp, params: i.params, ...(i.hero ? { hero: true } : {}) });
       p += i.a + gap;
     }
   }
