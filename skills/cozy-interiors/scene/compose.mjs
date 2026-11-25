@@ -466,9 +466,11 @@ class Area {
   group(phrase, opts = {}) { let stretch = null; const bare = String(phrase).replace(/ \(the hero group[^)]*\)/, '').replace(/, on the .*$/, ''), nd = groupNeeds(bare) || {};
     if (opts.slot) { const { slot, ...rest } = opts, r = this.resolveSlot(slot, phrase, this.widthFor(phrase), { inWindow: !!nd.window, depth: nd.d }); opts = r.wall ? { ...rest, wall: r.wall, xc: r.xc } : { ...rest, at: r.at }; stretch = r.stretch; } else if (typeof opts.xc === 'string' && opts.wall) opts = { ...opts, xc: this.slotOnWall(opts.wall, opts.xc, phrase, this.widthFor(phrase)) };
     const nTaken = opts.wall ? opts.wall.taken.length : 0, res = runGroup(this, phrase, opts); if (opts.wall && stretch && !nd.free) this.fitStretch(opts.wall, res.ids, stretch, nTaken);
+    const fslid = !opts.wall && opts.at && !nd.free ? this.clearPathsFloor(res.ids) : 0;
+    const slid = opts.wall && !nd.free ? this.clearPaths(opts.wall, res.ids, stretch, nTaken) || 0 : 0;
     const w = nd.w || 600, d = nd.d || 600, [rx0, rz0, rx1, rz1] = this.rect;   // the floor a group stands on is reserved: a later floor group stands where its own footprint is clear (slotmath.mjs floorSpot)
-    if (opts.wall && !nd.free) { const F = opts.wall, xc = opts.xc ?? 0, pts = [F.at(xc - w / 2, 0), F.at(xc + w / 2, 0), F.at(xc - w / 2, d), F.at(xc + w / 2, d)]; (this.reserved ||= []).push({ r: [Math.min(...pts.map((q) => q[0])), Math.min(...pts.map((q) => q[1])), Math.max(...pts.map((q) => q[0])), Math.max(...pts.map((q) => q[1]))], wall: F.id }); }
-    else if (opts.at) (this.reserved ||= []).push({ r: nd.float && !nd.free ? [opts.at[0] - w / 2, Math.max(opts.at[1] - d / 2, rz0 + 900), opts.at[0] + w / 2, Math.max(opts.at[1] - d / 2, rz0 + 900) + d] : [opts.at[0] - w / 2, opts.at[1] - d / 2, opts.at[0] + w / 2, opts.at[1] + d / 2], wall: 'floor' });
+    if (opts.wall && !nd.free) { const F = opts.wall, xc = (opts.xc ?? 0) + slid, pts = [F.at(xc - w / 2, 0), F.at(xc + w / 2, 0), F.at(xc - w / 2, d), F.at(xc + w / 2, d)]; (this.reserved ||= []).push({ r: [Math.min(...pts.map((q) => q[0])), Math.min(...pts.map((q) => q[1])), Math.max(...pts.map((q) => q[0])), Math.max(...pts.map((q) => q[1]))], wall: F.id }); }
+    else if (opts.at) { const at = fslid ? [opts.at[0] + fslid[0], opts.at[1] + fslid[1]] : opts.at; (this.reserved ||= []).push({ r: nd.float && !nd.free ? [at[0] - w / 2, Math.max(at[1] - d / 2, rz0 + 900), at[0] + w / 2, Math.max(at[1] - d / 2, rz0 + 900) + d] : [at[0] - w / 2, at[1] - d / 2, at[0] + w / 2, at[1] + d / 2], wall: 'floor' }); }
     return res; }   // one roll group phrase as a built arrangement, see groups.mjs
   // a.blocking(roll.areas[id], { tries: 3, pick, quiet }) → { chosen, candidates }: the area's dealt groups placed as `tries` layouts, the best kept (framework item 2; `await` it: the geometry core scores in Node, no browser).
   //   0 is the layout as the roll dealt it (its slots, the recipe seed); the others keep the hero's slot and move every other group to another free slot of its kind (wall or floor) and step the recipe seed (which furniture, which side the lamp stands).
@@ -512,6 +514,42 @@ class Area {
     for (const q of cands) log(`blocking ${this.id} layout ${q.index}${q === best ? ' (kept)' : ''}: ${q.ok ? `physical ${q.tuple[0]}, blocking ${q.tuple[1]}, stage 1-4 ${q.tuple[2]}, left out ${q.tuple[3]}` : 'does not build'}  slots ${q.slots.join(' / ')}${q.why && q.ok ? `   ${q.why}` : q.ok ? '' : ': ' + q.why}`);
     const res = place(best.index); if (res.fails.length) throw new Error(`a.blocking('${this.id}'): layout ${best.index} failed on the rebuild: ${res.fails[0]}`);
     return { chosen: best.index, candidates: cands, ids: res.ids, left: res.left, fails: [] };
+  }
+  // a floor group (a slot 'floor:...') stands clear of every arch and door zone of this area (check 'path' 4), as a wall group does: where a piece stands in a zone, the group slides across the floor to the nearest spot where none does, inside the area and off the floor already reserved
+  clearPathsFloor(ids) {
+    const walls = Object.values(this.walls || {}), zs = []; for (const F of walls) for (const q of F.openings || []) { if (q.kind === 'window' || q.sill > 0 || /pass$/.test(q.style || '')) continue; const o0 = F.at(0, 0), u1 = F.at(1, 0), n1 = F.at(0, 1); zs.push({ q, o0, ux: u1[0] - o0[0], uz: u1[1] - o0[1], nx: n1[0] - o0[0], nz: n1[1] - o0[1], d1: q.kind === 'arch' ? 2400 : 1500 }); }
+    if (!zs.length) return 0;
+    const pts = [], all = []; for (const id of ids) { const o = this.h.S.home.objects.find((q) => q.id === `${this.id}-${id}`); if (!o) continue; let b; try { b = this.boxOf(id); } catch { continue; } const c = [[b.x0, b.z0], [b.x1, b.z0], [b.x0, b.z1], [b.x1, b.z1]]; all.push(...c); if (o.asset !== 'rug' && b.y0 <= 50) pts.push(c); }
+    if (!pts.length) return 0;
+    const bad = (dx, dz) => zs.some((z) => pts.some((c) => { const t = c.map(([x, y]) => [(x + dx - z.o0[0]) * z.ux + (y + dz - z.o0[1]) * z.uz, (x + dx - z.o0[0]) * z.nx + (y + dz - z.o0[1]) * z.nz]), t0 = Math.min(...t.map((q) => q[0])), t1 = Math.max(...t.map((q) => q[0])), d0 = Math.min(...t.map((q) => q[1])), d1 = Math.max(...t.map((q) => q[1])); return t1 - (z.q.x - 500) > 20 && (z.q.x + 500) - t0 > 20 && d0 < z.d1 - 20 && d1 > 20; }));
+    if (!bad(0, 0)) return 0;
+    const [rx0, rz0, rx1, rz1] = this.rect, X = all.map((q) => q[0]), Z = all.map((q) => q[1]), x0 = Math.min(...X), x1 = Math.max(...X), z0 = Math.min(...Z), z1 = Math.max(...Z), res = this.reserved || [];
+    const fits = (dx, dz) => x0 + dx >= rx0 + 100 && x1 + dx <= rx1 - 100 && z0 + dz >= rz0 + 100 && z1 + dz <= rz1 - 100 && !res.some(({ r }) => x1 + dx > r[0] + 20 && x0 + dx < r[2] - 20 && z1 + dz > r[1] + 20 && z0 + dz < r[3] - 20);
+    const cands = []; for (let i = -30; i <= 30; i++) for (let j = -30; j <= 30; j++) if (i || j) cands.push([i * 100, j * 100]); cands.sort((a, b) => Math.hypot(...a) - Math.hypot(...b));
+    for (const [dx, dz] of cands) { if (!fits(dx, dz) || bad(dx, dz)) continue;
+      const w0 = this.P([0, 0]), wd = this.P([dx, dz]), ddx = wd[0] - w0[0], ddz = wd[1] - w0[1];
+      for (const id of ids) { const o = this.h.S.home.objects.find((q) => q.id === `${this.id}-${id}`); if (o) o.at = [r0(o.at[0] + ddx), o.at[1], r0(o.at[2] + ddz)]; }
+      return [dx, dz]; }
+    return 0;
+  }
+  // a group on a wall stands clear of the straight-ahead zone of an arch or door on that wall (check 'path' 4: 1000 mm wide, 1500 deep, 2400 for an arch): where a piece stands in it, the group slides along the wall to the nearest place where none does (within the slot's stretch, else the wall; it stays off pieces already standing)
+  clearPaths(F, ids, stretch, nTaken) {
+    const ops = (F.openings || []).filter((q) => q.kind !== 'window' && !(q.sill > 0) && !/pass$/.test(q.style || '')); if (!ops.length) return;
+    const o0 = F.at(0, 0), u1 = F.at(1, 0), n1 = F.at(0, 1), ux = u1[0] - o0[0], uz = u1[1] - o0[1], nx = n1[0] - o0[0], nz = n1[1] - o0[1];
+    const bs = [], ext = []; for (const id of ids) { const o = this.h.S.home.objects.find((q) => q.id === `${this.id}-${id}`); if (!o) continue; let b; try { b = this.boxOf(id); } catch { continue; }
+      const c = [[b.x0, b.z0], [b.x1, b.z0], [b.x0, b.z1], [b.x1, b.z1]].map(([x, z]) => [(x - o0[0]) * ux + (z - o0[1]) * uz, (x - o0[0]) * nx + (z - o0[1]) * nz]); ext.push(Math.min(...c.map((q) => q[0])), Math.max(...c.map((q) => q[0]))); if (o.asset === 'rug' || b.y0 > 50) continue; bs.push({ t0: Math.min(...c.map((q) => q[0])), t1: Math.max(...c.map((q) => q[0])), d0: Math.min(...c.map((q) => q[1])), d1: Math.max(...c.map((q) => q[1])) }); }
+    if (!bs.length) return;
+    const zones = ops.map((q) => ({ x0: q.x - 500, x1: q.x + 500, d1: q.kind === 'arch' ? 2400 : 1500 })), bad = (dl) => bs.some((b) => zones.some((z) => b.t1 + dl - z.x0 > 20 && z.x1 - (b.t0 + dl) > 20 && b.d0 < z.d1 - 20 && b.d1 > 20));
+    if (!bad(0)) return;
+    const lo = Math.min(...ext), hi = Math.max(...ext), mine = F.taken.slice(nTaken), others = F.taken.slice(0, nTaken);
+    const [la, lb] = stretch && hi - lo <= stretch[1] - stretch[0] + 1 ? stretch : [100, F.len - 100];
+    for (let k = 1; k <= 60; k++) for (const dl of [k * 50, -k * 50]) {
+      if (lo + dl < la - 1 || hi + dl > lb + 1 || bad(dl) || (F.openings || []).some((q) => q.kind !== 'window' && hi + dl > q.x - zone(q) - 200 && lo + dl < q.x + zone(q) + 200)) continue;
+      if (others.some((t) => t.x && t.x[1] > lo + dl + 20 && t.x[0] < hi + dl - 20 && !(t.x[1] > lo && t.x[0] < hi))) continue;
+      const wd = this.P([o0[0] + ux * dl, o0[1] + uz * dl]), w0 = this.P(o0), dx = wd[0] - w0[0], dz = wd[1] - w0[1];
+      for (const id of ids) { const o = this.h.S.home.objects.find((q) => q.id === `${this.id}-${id}`); if (o) o.at = [r0(o.at[0] + dx), o.at[1], r0(o.at[2] + dz)]; }
+      for (const t of mine) t.x = [t.x[0] + dl, t.x[1] + dl]; return dl;
+    }
   }
   fitStretch(F, ids, [sa, sb], nTaken) {   // a recipe may stand its pieces off its middle (a fridge, then a trolley beside it): the group slides along the wall into the bare stretch its slot found, so no piece stands in a corner or an opening's zone
     const o0 = F.at(0, 0), u1 = F.at(1, 0); let lo = 1e9, hi = -1e9;
