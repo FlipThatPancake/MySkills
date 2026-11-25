@@ -4,7 +4,7 @@
 if (process.argv.includes('--stages')) { const { rollStages } = await import('./rollstages.mjs'); const r = await rollStages(process.argv.slice(2).filter((a) => a !== '--stages')); process.exit(r.green === r.seeds ? 0 : 1); }   // item F: the stages 2 to 4 proved over seeds (rollstages.mjs)
 import { roll } from './roll.mjs';
 import { FURNITURE } from './openplan.mjs';
-import { privateGate, likes, ZONE, wallLoad } from './plan.mjs';
+import { privateGate, likes, ZONE, wallLoad, planAspect, SPREAD_MAX } from './plan.mjs';
 const args = process.argv.slice(2), N = /^\d+$/.test(args[0] || '') ? Number(args.shift()) : 200, kinds = args.length ? args : ['kitchen', 'dining', 'living'];
 const tally = {}, bump = (k, v) => { (tally[k] ||= {})[v] = (tally[k][v] || 0) + 1; };
 for (let seed = 1; seed <= N; seed++) {
@@ -18,6 +18,7 @@ for (let seed = 1; seed <= N; seed++) {
     { const ids = Object.keys(P.areas), kind = (i) => i.replace(/\d+$/, ''); bump('plan: front door area', kind(P.entry)); if (ids.length >= 4) bump('plan: a home of 4+ areas has a loop (a second way round)', P.links.some((l) => !l.tree && l.kind !== 'open') ? 'yes' : 'no'); bump('plan: dislikes linked (bedroom-kitchen, office-kitchen)', P.dislikesMet.length ? 'yes' : 'no'); bump('plan: liked pairs linked per home', P.likesMet.length);
       if (privateGate(ids, P.links.map((l) => [l.a, l.b]), P.entry).length) bump('plan: private room is the only way to a shared one', 'BAD');
       const pairs = ids.flatMap((a, i) => ids.slice(i + 1).filter((b) => likes(a, b)).map((b) => [a, b])); for (const [a, b] of pairs) bump('plan: a liked pair present is linked', P.links.some((l) => (l.a === a && l.b === b) || (l.a === b && l.b === a)) ? 'linked' : 'not linked'); }
+    if (Object.keys(P.areas).length >= 4) { const a = planAspect(Object.values(P.world).map((q) => q.foot)); bump('plan: footprint long side / short side (4+ areas; check-home fails over 1.9)', a < 1.3 ? '1.0-1.3' : a < 1.7 ? '1.3-1.7' : a <= SPREAD_MAX ? '1.7-1.9' : 'OVER 1.9'); }   // round 6: not a strip
     bump('plan: homes with a loop', P.links.some((l) => !l.tree) ? 'yes' : 'no');
     const adj = {}; for (const l of P.links) { (adj[l.a] ||= []).push(l.b); (adj[l.b] ||= []).push(l.a); } const seen = new Set([P.root]), q = [P.root]; while (q.length) for (const n of adj[q.pop()] || []) if (!seen.has(n)) { seen.add(n); q.push(n); } if (seen.size !== Object.keys(P.areas).length) bump('plan: UNREACHABLE area', 'BAD');
     const world = (id) => P.areas[id].az - P.world[id].pose.psi; for (const l of P.links) { const d = Math.abs((((world(l.b) - world(l.a)) % 360) + 540) % 360 - 180); const bk = d < 30 ? '0-30' : d < 60 ? '30-60' : d < 100 ? '60-100' : d < 150 ? '100-150' : '150-180'; bump('plan: camera turn per move (degrees)', bk); bump(l.kind === 'open' ? 'plan: camera turn inside an open room (degrees)' : 'plan: camera turn through a door or arch (degrees)', bk); } }

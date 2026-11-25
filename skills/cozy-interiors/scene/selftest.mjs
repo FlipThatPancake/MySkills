@@ -110,15 +110,16 @@ const { TASKLAMP_POSES } = await import('./src/library/officeset.js');
 
 // Every painting x colour mode stays readable at home-view size (150 px wide): the toned image (library/paintTone.js, run as is in a browser page) must not turn into a dark smudge or a pale blank: mean brightness 100-215 of 255, and the 5th-95th percentile spread at least 80. Needs Playwright; skipped without it.
 {
-  const EDGES = Number(process.env.EDGES || 0.08), STEPS = Number(process.env.STEPS || 4), { PAINTINGS } = await import('./src/library/paintings.js'), { createRequire } = await import('node:module'), { execSync } = await import('node:child_process'), bad = [], rows = [];
+  const CHROMA = [Number(process.env.CHROMA_MIN || 10), Number(process.env.CHROMA_MAX || 45)], EDGES = Number(process.env.EDGES || 0.08), STEPS = Number(process.env.STEPS || 4), { PAINTINGS } = await import('./src/library/paintings.js'), { createRequire } = await import('node:module'), { execSync } = await import('node:child_process'), bad = [], rows = [];
   let chromium; try { ({ chromium } = globalPkg('playwright', true)); } catch { console.log('painting tone: skipped (no Playwright)'); }
   if (chromium) {
     const code = fs.readFileSync(join(here, 'src/library/paintTone.js'), 'utf8').replace(/^export /gm, ''), browser = await chromium.launch(), page = await browser.newPage();
     await page.setContent('<canvas id=c></canvas>'); await page.addScriptTag({ content: code + `
       window.measure = async (src, pw, ph, mode, W = 150) => { const img = new Image(); img.src = src; await img.decode(); H = Math.round(W * ph / pw), c = document.getElementById('c'); c.width = W; c.height = H; const q = c.getContext('2d', { willReadFrequently: true }); q.fillStyle = 'rgb(244,243,238)'; q.fillRect(0, 0, W, H); q.drawImage(img, 0, 0, W, H); adapt(q, 0, 0, W, H, mode); const D = q.getImageData(0, 0, W, H); return { ...toneStats(D), ...structStats(D) }; };` });
-    for (const P of PAINTINGS) for (const mode of ['keep', 'soft', 'ink', 'sepia']) {
-      const t = await page.evaluate(([src, w, h, m]) => window.measure(src, w, h, m), [P.src, P.w, P.h, mode]), u = await page.evaluate(([src, w, h, m]) => window.measure(src, w, h, m, 70), [P.src, P.w, P.h, mode]); rows.push(`${P.name.split(',')[1]?.trim() || P.name} ${mode}: mean ${Math.round(t.mean)}, p5 ${t.p5}, p95 ${t.p95}; at 70 px: mean ${Math.round(u.mean)}, edges ${(u.edges * 100).toFixed(0)}%, steps ${u.steps}`);
+    for (const P of PAINTINGS) for (const mode of ['pastel', 'keep', 'soft', 'ink', 'sepia']) {
+      const t = await page.evaluate(([src, w, h, m]) => window.measure(src, w, h, m), [P.src, P.w, P.h, mode]), u = await page.evaluate(([src, w, h, m]) => window.measure(src, w, h, m, 70), [P.src, P.w, P.h, mode]); rows.push(`${P.name.split(',')[1]?.trim() || P.name} ${mode}: mean ${Math.round(t.mean)}, p5 ${t.p5}, p95 ${t.p95}, chroma ${t.chroma.toFixed(1)}; at 70 px: mean ${Math.round(u.mean)}, edges ${(u.edges * 100).toFixed(0)}%, steps ${u.steps}`);
       if (u.mean < 100 || u.mean > 215 || u.edges < EDGES || u.steps < STEPS) bad.push(`${P.name} in ${mode} at 70 px wide: mean ${Math.round(u.mean)}, edges ${(u.edges * 100).toFixed(0)}% (${(EDGES * 100).toFixed(0)}% at least), tonal steps ${u.steps} (${STEPS} at least): it does not read in a home view`);
+      if (mode === 'pastel' && (t.chroma < CHROMA[0] || t.chroma > CHROMA[1])) bad.push(`${P.name} in the default colour (pastel): chroma ${t.chroma.toFixed(1)} (${CHROMA[0]} to ${CHROMA[1]}): it reads as ${t.chroma < CHROMA[0] ? 'grey, not a very soft colour' : 'loud, not very soft'}`);
       if (t.mean < 100 || t.mean > 215 || t.p95 - t.p5 < 80) bad.push(`${P.name} in ${mode}: mean ${Math.round(t.mean)}, spread ${t.p95 - t.p5} (p5 ${t.p5}, p95 ${t.p95}): it reads as a ${t.mean < 100 ? 'dark smudge' : t.mean > 215 ? 'pale blank' : 'flat patch'}`);
     }
     await browser.close(); if (args.includes('--tones')) console.log(rows.join('\n'));
@@ -129,6 +130,36 @@ const { TASKLAMP_POSES } = await import('./src/library/officeset.js');
       console.log(txt.split('\n').filter((l) => /painting-oblique|oblique painting|PAGE ERROR|rror/.test(l)).join('\n') || 'oblique painting test: no result');
     }
   }
+}
+
+// Round 6 item 5 (Paul: paintings grey): a picture whose spec sets no colour comes out in the default colour (a colour mode, never ink or sepia, whatever its seed), at every form and seed. Measured on the built picture (userData.tone); the chroma of the default tone is checked in the block above.
+{
+  (await import('./geom/load.mjs')).installDocument(); const kk = createKit(), bad = []; let n = 0;
+  for (let f = 4; f < 4 + ASSETS.picture.variants; f++) for (const seed of [undefined, 1, 2, 3, 29]) { const o = REGISTRY.picture(kk, { form: f, w: 400, h: 500, ...(seed === undefined ? {} : { seed }) }); n++; if (o.userData.tone !== 'pastel') bad.push(`picture form ${f} seed ${seed ?? 'unset'}: tone ${o.userData.tone}, the default is pastel (very soft colour)`); }
+  console.log(bad.map((x) => `[painting-colour] ${x}`).join('\n') || 'every painting without a colour in its spec is drawn in the default very soft colour'); console.log(`${bad.length} grey-by-default painting(s) of ${n}`);
+}
+
+// Round 6 item 4 (Paul: an odd triangle on the bed; lead: two folds read as slabs, not as the duvet): the turned-back corner of an unmade duvet is the duvet itself, one cloth. The duvet has no separate piece on it, and over the turned part (the triangle the corner folds onto) it rises at most two cloth thicknesses (2 x 7 mm) plus 6 mm of rumple above the same duvet with turn 0. The old plate-and-rod flap was a second piece, 80 mm high.
+{
+  (await import('./geom/load.mjs')).installDocument(); const kk = createKit(), bad = []; let n = 0;
+  const top = (dv, w, turn) => { const hx = (w - 20) / 2, head = -560, V = new kk.THREE.Vector3(); let y = -1e9; dv.traverse((m) => { const A = m.geometry?.attributes?.position; if (!A) return; for (let i = 0; i < A.count; i++) { V.fromBufferAttribute(A, i).applyMatrix4(m.matrixWorld); const s = (hx - V.x) + (V.z - head); if (s >= turn && V.x >= hx - turn && V.x <= hx && V.z <= head + turn && V.z >= head) y = Math.max(y, V.y); } }); return y; };
+  for (let seed = 1; seed <= 12; seed++) for (const w of [1400, 1600, 1800]) {
+    const o = { w: w - 20, head: -560, foot: 1040, sagL: 110, sagR: 400, sagFoot: 250, seed }, dv = REGISTRY.duvetCloth(kk, { ...o, turn: 720 }), ref = REGISTRY.duvetCloth(kk, { ...o, turn: 0 }); n++;
+    dv.updateMatrixWorld(true); ref.updateMatrixWorld(true);
+    if (dv.children.length > 1) bad.push(`unmade duvet w ${w} seed ${seed}: ${dv.children.length - 1} separate piece(s) lie on the duvet: the turned-back corner is the duvet's own cloth`);
+    const rise = top(dv, w, 720) - top(ref, w, 720); if (rise > 20) bad.push(`unmade duvet w ${w} seed ${seed}: the turned corner stands ${Math.round(rise)} mm above the duvet under it (20 at most, two cloth thicknesses and a little rumple): it reads as a block, not a fold`);
+  }
+  console.log(bad.map((x) => `[duvet] ${x}`).join('\n') || 'every unmade duvet turns its corner back as its own cloth, thin, no separate piece'); console.log(`${bad.length} duvet fold problem(s) of ${n} duvets`);
+}
+
+// Round 6 item 6 (Paul: the fridge needs sticky notes, magnets and a photo): every fridge form carries notes, free magnets and the photo, the photo a textured plane on the door (kitchen/fridge.js fridgeSigns records what it drew in userData.signs).
+{
+  (await import('./geom/load.mjs')).installDocument(); const kk = createKit(), bad = [];
+  for (let f = 0; f < ASSETS.fridge.variants; f++) {
+    const o = REGISTRY.fridge(kk, { form: f }), sg = o.userData.signs || {}; let maps = 0; o.traverse((m) => { if (m.material?.map) maps++; });
+    if (!(sg.notes >= 3 && sg.magnets >= 3 && sg.photo >= 1 && maps >= 1)) bad.push(`fridge form ${f}: ${sg.notes || 0} notes, ${sg.magnets || 0} magnets, ${sg.photo || 0} photo (${maps} textured plane(s)): a fridge door carries 3 notes, 3 magnets and a photo at least`);
+  }
+  console.log(bad.map((x) => `[fridge-signs] ${x}`).join('\n') || 'every fridge form carries notes, magnets and a photo'); console.log(`${bad.length} fridge without signs of life`);
 }
 
 // A painting's frame follows the painting: the mat margins on the four sides differ by at most 1.5 x (the bottom may be a little deeper), at wide, tall and square boxes. Measured on the built picture (userData.fit), not on the spec.

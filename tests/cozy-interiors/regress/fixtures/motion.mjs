@@ -11,7 +11,7 @@ export const fixtures = [
   { name: 'paw-on-a-glass-wall', from: 'round 3: the paw came from a thin curtain bundle on a glass wall, where no cat could hide', kind: 'bug', expect: { rules: ['motion'], ids: [] },
     build({ Home }) { const { H, a, back } = room(Home, { openings: [{ kind: 'window', style: 'wall', x: 3000, width: 3800 }] }); back.place('curtain', 'curtain', 3000, { group: 'g' }); a.alive([{ kind: 'paw' }]); return H; } },
   { name: 'good-paw-narrow-curtain-is-widened', from: 'round 3: the paw hung from a 198 mm panel; compose now widens the curtain to w 1370 (a 301 mm panel) when a paw is dealt', kind: 'good',
-    build({ Home }) { const { H, a, back } = room(Home, { openings: [{ kind: 'window', x: 1200, width: 1400, height: 1200, sill: 900 }] }); back.place('curtain', 'curtain', 4200, { group: 'g', params: { w: 900 } }); a.alive([{ kind: 'paw' }]); return H; } },
+    build({ Home }) { const { H, a, back } = room(Home, { openings: [{ kind: 'window', x: 1200, width: 1400, height: 1200, sill: 900 }] }); back.place('curtain', 'curtain', 1200, { group: 'g', params: { w: 900 } }); a.alive([{ kind: 'paw' }]); return H; } },
   { name: 'good-bird-through-a-pair-window', from: 'round 4 M4: a bird appeared outside a pair window with its wing tips 173 mm off the middle, outside the 287 mm gap between the open sashes (the pose was folded only after it appeared)', kind: 'good',
     build({ Home }) { const { H, a } = room(Home, { openings: [{ kind: 'window', style: 'pair', x: 3000, width: 1100, height: 1500, sill: 900, open: 45 }] }); a.alive([{ kind: 'bird' }]); return H; } },
   { name: 'good-fliers-through-an-arch', from: 'round 4 M5 (the user): with no window that opens, a flier may come through an open door or passage', kind: 'good',

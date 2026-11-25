@@ -68,7 +68,10 @@ export function applyRules(Q, list) {
     for (const { other } of sup) { names.add(other.owner); if (other.owner === 'floor') continue; tops.add(other); }
     const polys = [];
     for (const e of tops) { const top = hull2(ptsNear([e.part], y0, SOFT.test(o.asset) || SOFT.test(asset(e.owner)) ? 12 : 4));   /* a thing sunk a few mm into upholstery still stands on its top */ if (top.length >= 3) polys.push(top); }
-    if (PAN.test(o.asset)) for (const id of names) if (/^hob$/.test(asset(id))) { const ho = O[id], all = []; for (const p of ho.parts) for (let i = 0; i < p.tris.length; i += 3) all.push([p.tris[i], p.tris[i + 2]]); polys.push(hull2(all)); }   // a pan stands anywhere inside the hob's outline
+    if (PAN.test(o.asset)) for (const id of names) if (/^hob$/.test(asset(id))) { const ho = O[id], all = []; for (const p of ho.parts) for (let i = 0; i < p.tris.length; i += 3) all.push([p.tris[i], p.tris[i + 2]]); polys.push(hull2(all));
+      // round 6 B19: and it stands centred on a burner: the four burners sit at (225|675, -200|-440) from the hob's front-left origin (src/kitchen/hob.js); a pot more than 60 mm from every burner centre sits on the edge of one
+      const hs = ho.scene || {}, th = (hs.turn || 0) * Math.PI / 180, [hx, , hz] = hs.at || [0, 0, 0], bs = [[225, -200], [675, -200], [225, -440], [675, -440]].map(([x, z]) => [hx + x * Math.cos(th) + z * Math.sin(th), hz - x * Math.sin(th) + z * Math.cos(th)]), cx = (Math.min(...base.map((q) => q[0])) + Math.max(...base.map((q) => q[0]))) / 2, cz = (Math.min(...base.map((q) => q[1])) + Math.max(...base.map((q) => q[1]))) / 2, dB = Math.min(...bs.map(([x, z]) => Math.hypot(cx - x, cz - z)));
+      if (hs.at && dB > 60) find.push({ rule: 'overhangs', id: o.id, asset: o.asset, pct: 0, on: [id], text: `${o.id} (${o.asset}): stands ${Math.round(dB)} mm from the nearest burner centre (60 at most) on ${id}: centre it on a burner` }); }   // a pan stands anywhere inside the hob's outline for support
     const held = []; if (onFloor) { cover = Ba; held.push(...base); } else for (const top of polys) { const c = clip(base, top); cover += parea(c); held.push(...c); }
     supportPolys[o.id] = hull2(held);
     const over = 1 - Math.min(1, cover / Ba);

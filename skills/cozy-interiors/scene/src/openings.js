@@ -7,7 +7,7 @@
 //   sash: 'fixed' (a window whose sashes stay shut: it can stand over a sink) | 'out' (opens outward: a pot may stand on the sill) | default inward-opening.
 //   -> { group, hole, openables, hit }. `openables` are the leaf / sashes (userData.open: click cycles states ajar -> wide -> shut); `hit` is a clear plane over a door or arch for a click that goes to another area (op.to). Built in the wall's own frame: the wall face is x = 0, the room is +x, z runs along the wall, y is up, the opening is centred on z = 0.
 //   `hole` is the outline [z, y] of the cut in the wall (set.js cuts it). Nothing here is a real light or a real view: the view outside and the daylight are painted.
-import { canvasOf, sheet, glow, openingMask, stencilClip } from './sheet.js';
+import { canvasOf, sheet, glow, openingMask, portalMask, stencilClip } from './sheet.js';
 
 const rad = (d) => d * Math.PI / 180;
 export const DEFAULTS = { window: { width: 1200, height: 1100, sill: 1000 }, door: { width: 900, height: 2050, sill: 0 }, arch: { width: 1100, height: 2250, sill: 0 } };
@@ -248,6 +248,7 @@ export function opening(kit, op, vis = null) {
       g.add(kit.lines([[19, 40, z0], [19, h - 40, z0], [19, h - 40, z0 + lw], [19, 40, z0 + lw]], 'lo')); }
   }
   { let hasSky = false; g.traverse((o) => { if (o.name === 'outside-backdrop') hasSky = true; }); if (hasSky && hole) g.add(openingMask(kit, hole)); }   // the picture shows only inside the opening's outline
+  if (hole && op.kind !== 'window') g.add(portalMask(kit, hole));   // the room beyond a door or arch shows through this outline only
   g.traverse((o) => { if (o.isMesh && !o.material.isMeshBasicMaterial && !o.userData.kitLine) o.userData.solid = true; });   // the checks (scene/geom) treat these as the opening's physical frame, sill and sashes
   return { group: g, hole, width: w, height: h, sill: Y0, openables, hit, kind: op.kind };
 }

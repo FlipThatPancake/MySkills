@@ -31,7 +31,15 @@ export function buildHome(kit, home, registry, areas = []) {
   // what stands between the camera and its target fades out (and returns once it no longer blocks): every object gets its own fade, except flat floor pieces; the area's own subject group (the hero's group) never fades in the home view
   const heroGroups = {}; for (const o of home.objects || []) if (o.hero) (heroGroups[o.area] ||= new Set()).add(o.group);
   const NOFADE = new Set(['rug', 'runner', 'doormat']), blockers = [];
-  for (const o of home.objects || []) { if (NOFADE.has(o.asset)) continue; const g = objects[o.id], fa = kit.fadable(); kit.useFade(g, fa); blockers.push({ id: o.id, g, fa, main: !!(o.hero || heroGroups[o.area]?.has(o.group)), goal: 1, cur: undefined, last: 1, sv: { value: 1 } }); }   // sv: how much of the piece's contact shadow is drawn, the same number as its fade (halos and the baked light both read it)
+  for (const o of home.objects || []) { if (NOFADE.has(o.asset)) continue; const g = objects[o.id], fa = kit.fadable(); kit.useFade(g, fa); blockers.push({ id: o.id, g, fa, grp: !!o.group, area: o.area, main: !!(o.hero || heroGroups[o.area]?.has(o.group)), goal: 1, cur: undefined, last: 1, sv: { value: 1 } }); }   // sv: how much of the piece's contact shadow is drawn, the same number as its fade (halos and the baked light both read it)
+  // what a piece stands on: the blocker whose top meets its underside within 40 mm and whose footprint holds its middle (a vase on a table, a mug on a worktop). A flat floor piece (rug) does not carry, nor does a piece on the floor.
+  const supportOf = (B) => {
+    const b = new T.Box3().setFromObject(B.g); if (b.isEmpty() || b.min.y < 60) return null;
+    const cx = (b.min.x + b.max.x) / 2, cz = (b.min.z + b.max.z) / 2; let best = null;
+    for (const A of blockers) { if (A === B) continue; const a = new T.Box3().setFromObject(A.g); if (a.isEmpty() || Math.abs(a.max.y - b.min.y) > 40 || cx < a.min.x || cx > a.max.x || cz < a.min.z || cz > a.max.z) continue; if (!best || a.max.y > best.y) best = { A, y: a.max.y }; }
+    return best && best.A;
+  };
+  let supportsDone = false;
   const openables = Object.values(objects).flatMap((g) => g.userData.openables || []);
   const boxes = {}, feet = {};
   for (const o of home.objects || []) {
@@ -165,16 +173,25 @@ export function buildHome(kit, home, registry, areas = []) {
       }
       // the objects on the line from the camera to its target
       const P = camera.position, ax = target.x - P.x, ay = target.y - P.y, az = target.z - P.z, pad = 30, tb = new T.Box3();
+      if (!supportsDone) { supportsDone = true; for (const B of blockers) B.onB = supportOf(B); for (const B of blockers) if (B.main) for (let A = B.onB, n = 0; A && n < 8; A = A.onB, n++) A.carriesMain = true; }   // a piece that carries the subject group (the hob under the pan) stays too, so the pan never hangs
       for (const B of blockers) {
         const b = boxes[B.id]; let hit = false;
-        if (!(rest && B.main) && !b.isEmpty()) {
+        if (!(rest && (B.main || B.carriesMain)) && !b.isEmpty()) {
           tb.copy(b).expandByScalar(pad); let t0 = 0, t1 = 1;
           for (const [o, d, lo, hi] of [[P.x, ax, tb.min.x, tb.max.x], [P.y, ay, tb.min.y, tb.max.y], [P.z, az, tb.min.z, tb.max.z]]) { if (Math.abs(d) < 1e-9) { if (o < lo || o > hi) { t0 = 2; break; } } else { let u = (lo - o) / d, v = (hi - o) / d; if (u > v) [u, v] = [v, u]; t0 = Math.max(t0, u); t1 = Math.min(t1, v); if (t0 > t1) break; } }
           hit = t0 <= t1 && t0 <= 1 && !tb.clone().expandByScalar(70).containsPoint(target);   // not the thing the camera looks at
         }
         if (B.wall === undefined) { B.wall = null; if (!b.isEmpty() && b.min.y > 250) { let best = 160; for (const W of walls) { const x = (b.min.x + b.max.x) / 2, z = (b.min.z + b.max.z) / 2, side = (x - W.to[0]) * W.n[0] + (z - W.to[1]) * W.n[1], al = -((x - W.to[0]) * W.d[0] + (z - W.to[1]) * W.d[1]), half = Math.abs(W.n[0]) * (b.max.x - b.min.x) / 2 + Math.abs(W.n[1]) * (b.max.z - b.min.z) / 2, gap = Math.abs(side) - half; if (gap < best && al > -100 && al < W.len + 100) { best = gap; B.wall = W; } } } }   // a piece hung on a wall (off the floor, touching its plane) takes that wall's fade
         if (home.blockerFade === false) hit = false;
-        B.goal = hit || (B.wall && B.wall.goal === 0) ? 0 : 1; let c = B.cur === undefined ? B.goal : B.cur + (B.goal - B.cur) * ease; if (Math.abs(c - B.goal) < 0.02) c = B.goal; B.cur = c;
+        B.raw = hit;   // what the camera's line says; the checks read it (would the home view fade this piece?)
+        if (hit && home.homeView && home.keepHomeView !== false && B.grp && B.area === home.curArea) hit = false;   // the home view never fades a piece of its own area's groups: the camera is meant to see them (the checks say when one stands in the line: move the target or the piece)
+        B.goal = hit || (B.wall && B.wall.goal === 0) ? 0 : 1;
+        B.own = B.goal;   // B.own: what the piece's own view says; what stands on a piece goes with it (below)
+      }
+      for (const B of blockers) { B.would = !!B.raw; for (let A = B.onB, n = 0; A && !B.would && n < 8; A = A.onB, n++) if (A.raw && !A.carriesMain) B.would = true; }
+      if (home.supportFade !== false) for (const B of blockers) { for (let A = B.onB, n = 0; A && n < 8; A = A.onB, n++) if (A.own === 0) { B.goal = 0; break; } }   // a faded table takes its vase along, so nothing hangs in the air
+      for (const B of blockers) {
+        let c = B.cur === undefined ? B.goal : B.cur + (B.goal - B.cur) * ease; if (Math.abs(c - B.goal) < 0.02) c = B.goal; B.cur = c;
         if (c !== B.last) { B.last = c; B.fa.set(c); B.sv.value = home.shadowFade === false ? 1 : c; }
         if (c <= 0.001 && B.g.visible) { B.g.visible = false; B.fh = true; } else if (c > 0.001 && B.fh) { B.g.visible = true; B.fh = false; }   // fully faded: not drawn at all (area-run's only() resets fh)
       }
