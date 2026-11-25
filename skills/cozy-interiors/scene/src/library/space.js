@@ -3,7 +3,7 @@
 // distance(asset, a, b): choices that differ count 1 each (a different `form` counts 2: enough by itself), ranges count |a - b| / (hi - lo); 2 or more reads as clearly different.
 import { SPACE, CHAIR_FIT } from './meta.js';
 const hash = (s) => { let h = 2166136261; for (const c of s) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
-const rng = (seed) => () => { seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+const rng = (seed) => { const f = () => { seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; f.get = () => seed; f.set = (v) => { seed = v; }; return f; };   // get / set: a.blocking saves and restores the deck's generator when it rolls a tried layout back
 const shuffle = (a, R) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(R() * (i + 1));[a[i], a[j]] = [a[j], a[i]]; } return a; };
 const round = (v, lo, hi) => (Number.isInteger(lo) && Number.isInteger(hi) && hi - lo < 20 ? Math.round(v) : hi - lo >= 100 ? Math.round(v / 10) * 10 : hi - lo >= 20 ? Math.round(v) : Math.round(v * 100) / 100);
 const LEGACY = { cushion: ['form', 'pattern', ['plain', 'stripes', 'inset', 'diamond']], shelf: ['form', 'fill', ['books', 'boxes', 'mixed']] };   // an old numeric form maps to a choice

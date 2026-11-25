@@ -50,7 +50,7 @@ const rad = (d) => d * Math.PI / 180, deg = (r) => r * 180 / Math.PI, r0 = (v) =
 export const GAP = 3000;
 const headLine = (o, head) => o.kind !== 'window' || o.feature || ['picture', 'pair', 'wall', 'bay'].includes(o.style) ? o : o.sill != null && o.height == null ? { ...o, height: head - o.sill } : o.height != null && o.sill == null ? { ...o, sill: head - o.height } : o;   // windows on one wall share a head height: a sill alone fixes the height, a height alone fixes the sill
 export class Home {
-  constructor({ seed, floor = 'auto', height = 2700, head = 2100, detached = false, blockerFade = true, shadowFade = true, supportFade = true, passageView = true }) { this.blockerFade = blockerFade; this.supportFade = supportFade; this.passageView = passageView; this.shadowFade = shadowFade; this.detached = detached;   /* a regression fixture only: areas placed by hand with no way between them */ this.head = head;   /* the head height of plain windows: a window given a sill or a height gets the other from it */ if (floor === 'auto') floor = seed % 5 === 3 ? 'tiles' : 'boards'; this.linkX = {}; this.S = { units: 'mm', seed, home: { height, floor: { style: floor, seed }, tiles: { origin: [0, 0] }, walls: [], objects: [] }, areas: [] }; this.list = []; }
+  constructor({ seed, floor = 'auto', height = 2700, head = 2100, detached = false, blockerFade = true, shadowFade = true, supportFade = true, passageView = true, portalClip = true, keepHomeView = true, wallHang = true }) { this.blockerFade = blockerFade; this.supportFade = supportFade; this.passageView = passageView; this.portalClip = portalClip; this.keepHomeView = keepHomeView; this.wallHang = wallHang; this.shadowFade = shadowFade; this.detached = detached;   /* a regression fixture only: areas placed by hand with no way between them */ this.head = head;   /* the head height of plain windows: a window given a sill or a height gets the other from it */ if (floor === 'auto') floor = seed % 5 === 3 ? 'tiles' : 'boards'; this.linkX = {}; this.S = { units: 'mm', seed, home: { height, floor: { style: floor, seed }, tiles: { origin: [0, 0] }, walls: [], objects: [] }, areas: [] }; this.list = []; }
   // passage: { from: 'living', wall: 'right', x: 2100, via: { wall: 'left', x: 1500 } } places this area behind the arch the area `from` has on that wall (x along the wall, as in its openings), turned and moved so its own arch (on via.wall at via.x) stands on the same spot, the two rooms back to back: the glide then crosses a doorway, not a gap. Both areas give the arch to: <the other area>; check-home 'passage' compares the two ends.
   area(id, name, { O, psi = 0, rect, passage }) {
     const pl = this.plan?.areas?.[id];
@@ -122,7 +122,7 @@ export class Home {
       for (let i = 0; i < fp.length; i++) for (let j = i + 1; j < fp.length; j++) { const A = fp[i], B = fp[j]; if (A.a.planGroup && A.a.planGroup === B.a.planGroup) continue; const ox = Math.min(A.x1, B.x1) - Math.max(A.x0, B.x0), oz = Math.min(A.z1, B.z1) - Math.max(A.z0, B.z0); if (ox > 100 && oz > 100) throw new Error(`areas '${A.a.id}' and '${B.a.id}' overlap by ${Math.round(ox)} x ${Math.round(oz)} mm and are not in one open room: shrink a rect (the plan keeps rooms apart; see the plan's cells)`); } }
     for (const l of this.plan?.links || []) if ((this.skippedLinks || []).includes(l.id)) for (const [id, w, o] of [[l.a, l.aWall, l.b], [l.b, l.bWall, l.a]]) { const W = this.S.home.walls.find((q) => q.id === `${id}-${w}`); if (W) W.openings = W.openings.filter((q) => q.to !== o); }   // a loop left out at one end is left out at both
     if (this.S.home.roll?.plan && this.skippedLinks) this.S.home.roll.plan.links = this.S.home.roll.plan.links.filter((l) => !this.skippedLinks.includes(l.id));
-    this.S.home.plan = this.planOut(); if (this.detached) this.S.home.detached = true; if (!this.blockerFade) this.S.home.blockerFade = false; if (!this.shadowFade) this.S.home.shadowFade = false; if (!this.supportFade) this.S.home.supportFade = false; if (!this.passageView) this.S.home.passageView = false;   // a regression fixture only: the fade of what blocks the view switched off
+    this.S.home.plan = this.planOut(); if (this.detached) this.S.home.detached = true; if (!this.blockerFade) this.S.home.blockerFade = false; if (!this.shadowFade) this.S.home.shadowFade = false; if (!this.supportFade) this.S.home.supportFade = false; if (!this.passageView) this.S.home.passageView = false; if (!this.portalClip) this.S.home.portalClip = false; if (!this.keepHomeView) this.S.home.keepHomeView = false; if (!this.wallHang) this.S.home.wallHang = false;   // a regression fixture only: the fade of what blocks the view switched off
     for (const a of this.list) { const objs = this.S.home.objects.filter((o) => o.id.startsWith(a.id + '-')), runs = objs.filter((o) => o.asset === 'baseRun').map((r) => { const W = (r.params?.modules || []).reduce((q, m) => q + (m.w || 0), 0), D = r.params?.depth || 600, t = rad(r.turn || 0), P = (lx, lz) => [r.at[0] + lx * Math.cos(t) + lz * Math.sin(t), r.at[2] - lx * Math.sin(t) + lz * Math.cos(t)], c = [P(0, 0), P(W, 0), P(0, -D), P(W, -D)]; return { x0: Math.min(...c.map((q) => q[0])), x1: Math.max(...c.map((q) => q[0])), z0: Math.min(...c.map((q) => q[1])), z1: Math.max(...c.map((q) => q[1])) }; });
       const bar = objs.filter((o) => o.asset === 'stool' && runs.some((r) => Math.hypot(Math.max(r.x0 - o.at[0], o.at[0] - r.x1, 0), Math.max(r.z0 - o.at[2], o.at[2] - r.z1, 0)) <= 500)); if (bar.length) { for (const o of bar) { if ((o.params?.form ?? 0) !== 0 || (o.params?.h ?? 650) !== 650) console.log(`${o.id}: a stool at a run or island is a counter-height bar stool (form 0, seat 650): it was form ${o.params?.form ?? 0}, seat ${o.params?.h ?? 650}`); o.params = { ...(o.params || {}), form: 0, h: 650 }; } } }   // stools within 500 of a run or island (their middle, the check measures 400 from their edge): one form, counter height
     for (const a of this.list) { const own = this.S.home.objects.filter((o) => o.area === a.id || o.id.startsWith(a.id + '-')).filter((o) => (o.mount || ASSETS[o.asset]?.mount) === 'floor' && !/^(curtain|scuff|leaf|rug|heightChart|baseRun|wallRun)$/.test(o.asset)); if (!own.length) continue;
@@ -206,7 +206,7 @@ class Area {
         const sillWin = (asset === 'curtain' || asset === 'blind') && o.off === undefined ? openings.find((q) => q.kind === 'window' && (q.sill ?? 1000) >= 300 && Math.abs(q.x - xc) <= (q.width + w) / 2) : null;   // a curtain at a sill window hangs in front of the sill's lip (the sill reaches 110 mm into the room): the curtain model's back stands 60 mm out of its origin, so 60 mm off the wall puts it 10 mm past the lip
         const off = o.off ?? (sillWin ? (asset === 'blind' ? 0 : 60) : m.origin === 'centre' ? Math.max(d / 2, backOf()) : m.origin === 'front-left' ? (o.depth ?? d) : m.origin === 'front-centre' ? (o.depth ?? 600) : 0);
         if ((id === 'left' || id === 'right') && mount === 'floor' && (h ?? 0) > 1500 && !o.anywhere) { const gapBack = id === 'left' ? len - (xc + w / 2) : xc - w / 2; if (gapBack > 1000) throw new Error(`place('${oid}', '${asset}', ${xc}): a piece over 1500 tall on a side wall stands at its far end (within 1000 mm of the back wall: xc ${id === 'left' ? len - 1000 - w / 2 : 1000 + w / 2} ${id === 'left' ? 'or more' : 'or less'}): in the middle of the side wall it hides what stands behind it from the home view (pass anywhere: true to place it there on purpose)`); }   // round 6 E4: tall pieces go to the far end of a side wall
-        if (!virtual && !o.anywhere && !['curtain', 'blind'].includes(asset)) { const ext = Math.abs((o.turn || 0) % 180) === 90 ? d : w, past = Math.max(-(xc - ext / 2), xc + ext / 2 - len); if (past > 100) throw new Error(`place('${oid}', '${asset}', ${xc}): reaches ${Math.round(past)} mm past the end of the wall (it runs 0 to ${len} and the piece is ${Math.round(ext)} mm wide): the part past the end stands in the corner wall; move it ${Math.round(past)} mm along, or pass anywhere: true`); }   // round 6 B9: place refuses a spot past a wall's end (a hanging plant at the very end of a 2200 wall stood half in the corner wall)
+        if (!virtual && !o.anywhere && !['curtain', 'blind'].includes(asset)) { const ext = Math.abs((o.turn || 0) % 180) === 90 ? d : w, past = Math.max(-(xc - ext / 2), xc + ext / 2 - len); if (past > 100) { if (ext > len) throw new Error(`place('${oid}', '${asset}', ${xc}): the piece is ${Math.round(ext)} mm wide and the wall runs 0 to ${len}: it cannot stand on this wall`); const to = xc - ext / 2 < 0 ? ext / 2 : len - ext / 2; console.log(`place('${oid}', '${asset}'): xc ${xc} reached ${Math.round(past)} mm past the end of the wall (0 to ${len}); pulled back to ${Math.round(to)} so it stands inside it (anywhere: true keeps the spot)`); xc = Math.round(to); } }   // round 6 B9: place refuses a spot past a wall's end (a hanging plant at the very end of a 2200 wall stood half in the corner wall)
         { const bx = [xc - w / 2, xc + w / 2], by = [y ?? 0, (y ?? 0) + (h ?? 0)], bd = [Math.max(0, off - (m.origin === 'centre' ? d / 2 : 0)), Math.max(0, off - (m.origin === 'centre' ? d / 2 : 0)) + d]; (taken ||= []);   // round 4 G6: a piece never lands inside another on the same wall
           const hit = taken.find((t) => Math.min(t.x[1], bx[1]) - Math.max(t.x[0], bx[0]) > 30 && Math.min(t.y[1], by[1]) - Math.max(t.y[0], by[0]) > 30 && Math.min(t.d[1], bd[1]) - Math.max(t.d[0], bd[0]) > 30);
           if (hit && !o.overlap) throw new Error(`place('${oid}', '${asset}', ${xc}): lands inside '${hit.id}' (${hit.asset}) on the same wall: x ${Math.round(hit.x[0])} to ${Math.round(hit.x[1])} is taken at that height; move it along the wall or give it a y above it (x runs as the plan in the header shows)`);
@@ -273,6 +273,17 @@ class Area {
     { const hf = res.pts.filter((_, i) => i % 3 === 1), tops = hf0; if (Math.max(...hf) > tops.top + 40) throw new Error(`drapeOver('${id}'): the cloth rests ${Math.round(Math.max(...hf) - tops.top)} mm above the top of '${targetId}': move it (at or dx/dz) onto the seat, arm or bed, not the back`); }
     this.put(id, 'cloth', [0, 0], 0, { group, y, mount, params: { nx, ny, pts: res.pts, thick, tone } });
   }
+  // round 6 B19: a pan or moka pot that lands over a hob moves to the nearest free burner centre (the check 'overhangs' wants it within 60 mm): the burners are at (225|675, -200|-440) from the hob's front-left origin (src/kitchen/hob.js), in this area's frame
+  burnerSnap(asset, [px, pz], used = []) {
+    if (!/^(mokaPot|pan)$/.test(asset)) return [px, pz];
+    const c = Math.cos(rad(this.psi)), s = Math.sin(rad(this.psi)); let best = null;
+    used = [...used, ...this.h.S.home.objects.filter((q) => /^(mokaPot|pan)$/.test(q.asset) && q.area === this.id).map((q) => { const X = q.at[0] - this.O[0], Z = q.at[2] - this.O[1]; return [X * c + Z * s, -X * s + Z * c]; })];   // a pot already on a burner keeps it
+    for (const h of this.h.S.home.objects.filter((q) => q.asset === 'hob' && q.area === this.id)) {
+      const th = rad(h.turn || 0);
+      for (const [x, z] of [[225, -200], [675, -200], [225, -440], [675, -440]]) { const X = h.at[0] + x * Math.cos(th) + z * Math.sin(th) - this.O[0], Z = h.at[2] - x * Math.sin(th) + z * Math.cos(th) - this.O[1], q = [X * c + Z * s, -X * s + Z * c], d = Math.hypot(q[0] - px, q[1] - pz); if (d < 350 && !used.some((u) => Math.hypot(u[0] - q[0], u[1] - q[1]) < 150) && (!best || d < best.d)) best = { d, q }; }
+    }
+    return best ? best.q.map(Math.round) : [px, pz];
+  }
   // spaced things on one top: a.onTop('desk', [{ id: 'lamp', asset: 'lamp' }, { id: 'books', asset: 'bookStack', params }, ...], { at: 'back' | 'centre' | 'front', margin: 50, group, turn })
   // lays the things in a row along the longer side of the top, in the order given, with equal gaps of at least `margin` mm between them and the edges, every footprint inside the edge; 'back' is the side nearer the area's back wall (lower z). It refuses with the length it needs when they do not fit.
   onTop(surfaceId, things, { at = 'centre', margin = 50, group, turn = 0 } = {}) {
@@ -282,11 +293,12 @@ class Area {
     const need = items.reduce((q, i) => q + i.a, 0) + (items.length + 1) * margin;
     if (need > L) throw new Error(`onTop('${surfaceId}'): the things need ${Math.round(need)} mm along the top and it is ${Math.round(L)} mm long: drop one or use a smaller piece`);
     const deep = items.find((i) => i.b + 2 * margin > W); if (deep) throw new Error(`onTop('${surfaceId}'): '${deep.id}' is ${Math.round(deep.b)} mm deep and the top is ${Math.round(W)} mm: it would hang over the edge`);
-    const gap = (L - items.reduce((q, i) => q + i.a, 0)) / (items.length + 1); let p = (alongX ? x0 : z0) + gap;
+    const gap = (L - items.reduce((q, i) => q + i.a, 0)) / (items.length + 1); let p = (alongX ? x0 : z0) + gap; const taken0 = [];
     for (const i of items) {
       const along = p + i.a / 2, perp = at === 'back' ? (alongX ? z0 : x0) + margin + i.b / 2 : at === 'front' ? (alongX ? z1 : x1) - margin - i.b / 2 : (alongX ? (z0 + z1) / 2 : (x0 + x1) / 2), [px, pz] = alongX ? [along, perp] : [perp, along];
-      const y = this.settleOn('onTop', i.id, i.asset, tris, i.params, [px, pz], i.turn ?? turn);
-      this.put(i.id, i.asset, [px, pz], i.turn ?? turn, { y, mount: 'on', group: i.group || grp, params: i.params, ...(i.hero ? { hero: true } : {}) });
+      const [bx, bz] = this.burnerSnap(i.asset, [px, pz], taken0), snapped = bx !== px || bz !== pz, y = snapped ? 940 : this.settleOn('onTop', i.id, i.asset, tris, i.params, [bx, bz], i.turn ?? turn);   // on a burner it stands on the grate: 940, as R.on(hob, pan) puts it
+      taken0.push([bx, bz]);
+      this.put(i.id, i.asset, [bx, bz], i.turn ?? turn, { y, mount: 'on', group: i.group || grp, params: i.params, ...(i.hero ? { hero: true } : {}) });
       p += i.a + gap;
     }
   }
@@ -458,6 +470,49 @@ class Area {
     if (opts.wall && !nd.free) { const F = opts.wall, xc = opts.xc ?? 0, pts = [F.at(xc - w / 2, 0), F.at(xc + w / 2, 0), F.at(xc - w / 2, d), F.at(xc + w / 2, d)]; (this.reserved ||= []).push({ r: [Math.min(...pts.map((q) => q[0])), Math.min(...pts.map((q) => q[1])), Math.max(...pts.map((q) => q[0])), Math.max(...pts.map((q) => q[1]))], wall: F.id }); }
     else if (opts.at) (this.reserved ||= []).push({ r: nd.float && !nd.free ? [opts.at[0] - w / 2, Math.max(opts.at[1] - d / 2, rz0 + 900), opts.at[0] + w / 2, Math.max(opts.at[1] - d / 2, rz0 + 900) + d] : [opts.at[0] - w / 2, opts.at[1] - d / 2, opts.at[0] + w / 2, opts.at[1] + d / 2], wall: 'floor' });
     return res; }   // one roll group phrase as a built arrangement, see groups.mjs
+  // a.blocking(roll.areas[id], { tries: 3, pick, quiet }) → { chosen, candidates }: the area's dealt groups placed as `tries` layouts, the best kept (framework item 2; `await` it: the geometry core scores in Node, no browser).
+  //   0 is the layout as the roll dealt it (its slots, the recipe seed); the others keep the hero's slot and move every other group to another free slot of its kind (wall or floor) and step the recipe seed (which furniture, which side the lamp stands).
+  //   Score, lowest wins, compared in this order: physical faults, then the other blocking findings (placement, runner, path, casing), then the other stage 1-4 findings the geometry core names (empty floor, rug reach, seats facing), then pieces a recipe left out. A tie keeps the lower layout, so the roll's own choice stays when nothing is better.
+  //   The page-side rules (hidden, frame fill) are not in the score; check-home still runs them. pick: n keeps layout n whatever the scores.
+  async blocking(ra, { tries = 3, pick, quiet = false } = {}) {
+    const groups = ra?.groups || [], dealt = ra?.groupSlots || []; if (!groups.length) return { chosen: null, candidates: [] };
+    const { groupPhrase } = await import('./roll.mjs'), { checkScene } = await import('./geom/index.mjs'), { blocks, PHYSICAL, ruleStage, makeCtx } = await import('./stages.mjs'), h = this.h, log = (...x) => { if (!quiet) console.log(...x); };
+    const phrases = groups.map(groupPhrase), isFloor = (v) => String(v).startsWith('floor:');
+    const snap = () => ({ n: h.S.home.objects.length, counts: { ...(h.counts || {}) }, signs: h.signs ? JSON.stringify(h.signs) : null, taken: Object.values(this.walls || {}).map((F) => [F, F.taken.length]), reserved: this.reserved ? this.reserved.length : null, rolled: JSON.stringify(h.S.home.rolled ?? null), pairs: { ...(h.pairs || {}) }, curtains: (h.curtainRecs || []).length, decks: Object.fromEntries(Object.entries(h.decks || {}).map(([k, v]) => [k, typeof v === 'function' ? [v, v.get()] : [...v]])) });
+    const back = (z) => { h.S.home.objects.length = z.n; h.counts = { ...z.counts }; h.signs = z.signs ? JSON.parse(z.signs) : h.signs; for (const [F, n] of z.taken) F.taken.length = n; if (z.reserved == null) delete this.reserved; else this.reserved.length = z.reserved; h.S.home.rolled = JSON.parse(z.rolled) ?? h.S.home.rolled; h.pairs = { ...z.pairs }; if (h.curtainRecs) h.curtainRecs.length = z.curtains; h.decks = Object.fromEntries(Object.entries(z.decks).map(([k, v]) => { if (Array.isArray(v) && typeof v[0] === 'function') { v[0].set(v[1]); return [k, v[0]]; } return [k, [...v]]; })); };
+    const place = (c) => {   // layout c: { slots, seed } → { ids, left, fails }
+      const out = { ids: [], left: [], fails: [], slots: [] };
+      groups.forEach((g, k) => {
+        let slot = dealt[k]; const nd = groupNeeds(phrases[k]) || {};
+        if (c > 0 && k > 0) {
+          const T = this.slotTable(this.widthFor(phrases[k]), { inWindow: !!nd.window, depth: nd.d }), floor = isFloor(dealt[k]);
+          const fit = floor ? Object.entries(T.floor).filter(([, q]) => q.free).map(([n]) => n) : Object.entries(T.wall).filter(([, q]) => q.best).map(([n]) => n);
+          if (fit.length) { const at = Math.max(0, fit.indexOf(dealt[k])); slot = fit[(at + c) % fit.length]; }
+        }
+        out.slots.push(slot);
+        try { const r = this.group(phrases[k], { slot, hero: k === 0, ...(c > 0 ? { seed: (h.S.seed ?? 1) + c } : {}) }); out.ids.push(...r.ids); if (r.left?.length) out.left.push(...r.left.map((l) => `${phrases[k]}: ${l}`)); }
+        catch (e) { out.fails.push(`${phrases[k]} at ${slot}: ${String(e.message).split('\n')[0].slice(0, 140)}`); }
+      });
+      return out;
+    };
+    const score = async (res) => {
+      if (res.fails.length) return { ok: false, tuple: [1e6, 0, 0, 0], why: res.fails[0] };
+      this.liftOnRugs(); this.liftOnCloths();
+      const objs = h.S.home.objects.filter((o) => o.area === this.id), mine = new Set(objs.map((o) => o.id));
+      const S = { ...h.S, home: JSON.parse(JSON.stringify({ ...h.S.home, objects: objs })), areas: [] }   /* a copy: buildHome adds defaults (an opening's height) to what it is given */, assetOf = Object.fromEntries(objs.map((o) => [o.id, o.asset ?? o.scene?.asset])), ctx = makeCtx(assetOf);
+      const r = await checkScene(S, { settle: false, parts: false }), fs = r.findings.filter((f) => !/^note-/.test(f.rule) && (!f.id || mine.has(f.id)));
+      const t = [fs.filter((f) => PHYSICAL.has(f.rule)).length, fs.filter((f) => blocks(f.rule) && !PHYSICAL.has(f.rule)).length, fs.filter((f) => !blocks(f.rule) && ruleStage({ rule: f.rule, what: f.text }, ctx) <= 4).length, res.left.length];
+      return { ok: true, tuple: t, why: fs.slice(0, 2).map((f) => `[${f.rule}] ${String(f.text).slice(0, 90)}`).join(' | ') };
+    };
+    const base = snap(), cands = [];
+    for (let c = 0; c < Math.max(1, tries); c++) { const res = place(c), sc = await score(res); cands.push({ index: c, slots: res.slots, ...sc }); back(base); }
+    const cmp = (a, b) => { for (let i = 0; i < 4; i++) if (a.tuple[i] !== b.tuple[i]) return a.tuple[i] - b.tuple[i]; return a.index - b.index; };
+    const best = pick != null ? cands[pick] : [...cands.filter((q) => q.ok)].sort(cmp)[0];
+    if (!best) { log(`blocking ${this.id}: no layout builds, so the dealt one stands as far as it goes: ${cands.map((q) => `${q.index}: ${q.why}`).join('; ')}`); const r0 = place(0); return { chosen: 0, candidates: cands, ids: r0.ids, left: r0.left, fails: r0.fails }; }   // what a plain a.group loop would leave: the pieces that did build, and what failed
+    for (const q of cands) log(`blocking ${this.id} layout ${q.index}${q === best ? ' (kept)' : ''}: ${q.ok ? `physical ${q.tuple[0]}, blocking ${q.tuple[1]}, stage 1-4 ${q.tuple[2]}, left out ${q.tuple[3]}` : 'does not build'}  slots ${q.slots.join(' / ')}${q.why && q.ok ? `   ${q.why}` : q.ok ? '' : ': ' + q.why}`);
+    const res = place(best.index); if (res.fails.length) throw new Error(`a.blocking('${this.id}'): layout ${best.index} failed on the rebuild: ${res.fails[0]}`);
+    return { chosen: best.index, candidates: cands, ids: res.ids, left: res.left, fails: [] };
+  }
   fitStretch(F, ids, [sa, sb], nTaken) {   // a recipe may stand its pieces off its middle (a fridge, then a trolley beside it): the group slides along the wall into the bare stretch its slot found, so no piece stands in a corner or an opening's zone
     const o0 = F.at(0, 0), u1 = F.at(1, 0); let lo = 1e9, hi = -1e9;
     for (const id of ids) { let b; try { b = this.boxOf(id); } catch { continue; } const o = this.h.S.home.objects.find((q) => q.id === `${this.id}-${id}`); if (!o) continue; for (const [x, z] of [[b.x0, b.z0], [b.x1, b.z0], [b.x0, b.z1], [b.x1, b.z1]]) { const t = (x - o0[0]) * (u1[0] - o0[0]) + (z - o0[1]) * (u1[1] - o0[1]); lo = Math.min(lo, t); hi = Math.max(hi, t); } }
