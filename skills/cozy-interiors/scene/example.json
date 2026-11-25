@@ -116,16 +116,16 @@
     "id": "kitchen-run-pan2",
     "asset": "pan",
     "at": [
-     2130,
+     2175,
      940,
-     440
+     400
     ],
     "turn": -35,
     "mount": "on",
     "params": {},
     "group": "kitchen:cook",
     "area": "kitchen",
-    "off": 440
+    "off": 400
    },
    {
     "id": "kitchen-run-herbs3",

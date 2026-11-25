@@ -42,6 +42,7 @@ import { checkAlive, pickVia, MOTION } from './motion-roll.mjs';
 import { sliderClear, ventZone, VENT_STYLES } from './src/motion/rules.js';
 import { installDocument } from './geom/load.mjs';
 import { group as runGroup, groupNeeds } from './groups.mjs';
+import { STYLE, DEFAULTS } from './src/openings.js';
 import { THIRD, zone, thirdSlot, slotWall, rectCut, floorBox, floorSpot, FLOOR_BANDS, FLOOR_THIRDS } from './slotmath.mjs';
 import { still as runStill, wallArr as runWallArr } from './arrange.mjs';
 installDocument();   // the Node canvas stand-in (geom/load.mjs), so a.onTop and the textures work in a plain Node spec
@@ -188,6 +189,15 @@ class Area {
         const prm = vary(p.h, asset, o.params, p.id), pd = Math.min(sizeOf(asset, prm).d, o.potD ?? 100);   // the pot, not the leaves: a plant's footprint counts its spread, the sill carries only the pot (potD, 100 mm unless said)
         return F.place(oid, asset, xc, { ...o, params: prm, y: (W.sill ?? 1000) + 30, mount: 'on', onSill: true, off: o.off ?? 110 - pd / 2 + 15 });   // the pot's front stands 15 mm past the sill's front lip so its leaves clear the sash (the sill reaches 110 mm into the room): centred on the free depth, not on the lip
       },
+      dress(oid, kind, at, o = {}) {   // round 6 B7, B13: hang a blind or curtain ON an opening of this wall: F.dress('bblind', 'blind', opening) or F.dress('lcurt', 'curtain', 1700); `at` is the opening object from this wall's list, its x, or its index (left out when the wall has one candidate). It takes the opening's middle, width and height: nothing is guessed by hand
+        if (kind !== 'blind' && kind !== 'curtain') throw new Error(`dress('${oid}'): kind is 'blind' or 'curtain', not '${kind}'`);
+        const cand = openings.filter((q) => (kind === 'blind' ? q.kind === 'window' : q.kind === 'window' || (q.kind === 'door' && (q.style === 'slider' || q.style === 'french' || !q.to)))), W = typeof at === 'number' && at < openings.length && !openings.some((q) => q.x === at) ? openings[at] : typeof at === 'number' ? openings.find((q) => q.x === at) : at ?? (cand.length === 1 ? cand[0] : undefined);
+        if (!W || !openings.includes(W)) throw new Error(`dress('${oid}', '${kind}'): name the opening it hangs on (an opening of this wall, its x or its index): ${cand.map((q) => `${q.kind} at x ${q.x}`).join('; ') || 'this wall has no ' + (kind === 'blind' ? 'window' : 'window or door')}`);
+        const D = DEFAULTS[W.kind] || {}, SD = STYLE[W.style] || {}, hw = W.width ?? SD.width ?? D.width ?? 900, sill = W.sill ?? SD.sill ?? D.sill ?? 0, ht = W.height ?? (W.sill != null && W.kind === 'window' ? p.h.head - W.sill : null) ?? SD.height ?? D.height ?? 1100;
+        if (kind === 'blind') return F.place(oid, 'blind', W.x, { overlap: true, ...o, y: sill, params: { ...o.params, w: o.params?.w ?? hw + 160, h: o.params?.h ?? ht } });   // the blind's end brackets stand 14 mm outside its width: 80 mm more each side clears the window's casing; the blind's origin is the window's bottom: its h is the window's height, so its top stands 50 mm over the head
+        const w = o.params?.w ?? hw + 300, h = o.params?.h ?? Math.min(2300, sill + ht + 200);   // a curtain reaches 150 past each side of the opening; its rail stands 200 over the head
+        return F.place(oid, 'curtain', W.x, { overlap: true, ...o, params: { panels: 2, ...o.params, w, h } });
+      },
       place(oid, asset, xc, o = {}) {   // by the asset's own origin and size: xc is its middle along the wall, or a slot name from a.slots() ('right', 'middle', 'back:left')
         if (typeof xc === 'string') xc = p.slotOnWall(F, xc, oid, sizeOf(asset, o.params || {}).w);
         if (asset === 'windowSeat') { const W = openings.find((q) => q.kind === 'window' && Math.abs(q.x - xc) <= q.width / 2 + 300); if (W) { const h = o.params?.h ?? Math.min(480, Math.max(400, (W.sill ?? 1000) - 130)); o = { ...o, params: { ...o.params, h, pillowMax: (W.sill ?? 1000) - (h + 70) - 30 }, }; } }   // under a window the seat is as tall as the sill allows (its cushion top within 100 of the sill: a sill of 530-610 fits h 400-480; a higher sill leaves a gap the placement check names)
@@ -196,6 +206,7 @@ class Area {
         const sillWin = (asset === 'curtain' || asset === 'blind') && o.off === undefined ? openings.find((q) => q.kind === 'window' && (q.sill ?? 1000) >= 300 && Math.abs(q.x - xc) <= (q.width + w) / 2) : null;   // a curtain at a sill window hangs in front of the sill's lip (the sill reaches 110 mm into the room): the curtain model's back stands 60 mm out of its origin, so 60 mm off the wall puts it 10 mm past the lip
         const off = o.off ?? (sillWin ? (asset === 'blind' ? 0 : 60) : m.origin === 'centre' ? Math.max(d / 2, backOf()) : m.origin === 'front-left' ? (o.depth ?? d) : m.origin === 'front-centre' ? (o.depth ?? 600) : 0);
         if ((id === 'left' || id === 'right') && mount === 'floor' && (h ?? 0) > 1500 && !o.anywhere) { const gapBack = id === 'left' ? len - (xc + w / 2) : xc - w / 2; if (gapBack > 1000) throw new Error(`place('${oid}', '${asset}', ${xc}): a piece over 1500 tall on a side wall stands at its far end (within 1000 mm of the back wall: xc ${id === 'left' ? len - 1000 - w / 2 : 1000 + w / 2} ${id === 'left' ? 'or more' : 'or less'}): in the middle of the side wall it hides what stands behind it from the home view (pass anywhere: true to place it there on purpose)`); }   // round 6 E4: tall pieces go to the far end of a side wall
+        if (!virtual && !o.anywhere && !['curtain', 'blind'].includes(asset)) { const ext = Math.abs((o.turn || 0) % 180) === 90 ? d : w, past = Math.max(-(xc - ext / 2), xc + ext / 2 - len); if (past > 100) throw new Error(`place('${oid}', '${asset}', ${xc}): reaches ${Math.round(past)} mm past the end of the wall (it runs 0 to ${len} and the piece is ${Math.round(ext)} mm wide): the part past the end stands in the corner wall; move it ${Math.round(past)} mm along, or pass anywhere: true`); }   // round 6 B9: place refuses a spot past a wall's end (a hanging plant at the very end of a 2200 wall stood half in the corner wall)
         { const bx = [xc - w / 2, xc + w / 2], by = [y ?? 0, (y ?? 0) + (h ?? 0)], bd = [Math.max(0, off - (m.origin === 'centre' ? d / 2 : 0)), Math.max(0, off - (m.origin === 'centre' ? d / 2 : 0)) + d]; (taken ||= []);   // round 4 G6: a piece never lands inside another on the same wall
           const hit = taken.find((t) => Math.min(t.x[1], bx[1]) - Math.max(t.x[0], bx[0]) > 30 && Math.min(t.y[1], by[1]) - Math.max(t.y[0], by[0]) > 30 && Math.min(t.d[1], bd[1]) - Math.max(t.d[0], bd[0]) > 30);
           if (hit && !o.overlap) throw new Error(`place('${oid}', '${asset}', ${xc}): lands inside '${hit.id}' (${hit.asset}) on the same wall: x ${Math.round(hit.x[0])} to ${Math.round(hit.x[1])} is taken at that height; move it along the wall or give it a y above it (x runs as the plan in the header shows)`);
@@ -357,7 +368,8 @@ class Area {
         }
         const m = this.mod(kind, oo.nth || 0); m.used = (m.used || 0) + 1; const meta = ASSETS[asset], top = params.top || 900, wall = meta.mount === 'wall';
         let dx0 = oo.dx || 0;
-        if (!wall && !['hob', 'hood', 'pan'].includes(asset)) {   // a second or third thing on one module slides along the worktop to a free stretch (never on top of the first); the call refuses when the module is full
+        const onBurner = asset === 'pan' || (asset === 'mokaPot' && kind === 'hob');   // round 6 B19: a pot stands centred on a burner of the hob (src/kitchen/hob.js: x 225|675, 200|440 behind the front of its 900 mm, centred on the module)
+        if (!wall && !['hob', 'hood'].includes(asset) && !onBurner) {   // a second or third thing on one module slides along the worktop to a free stretch (never on top of the first); the call refuses when the module is full
           const aw = sizeOf(asset, oo.params).w, items = (m.items ||= []), clash = (x) => items.some((q) => Math.abs(x - q.x) < (aw + q.w) / 2 + 20);
           if (oo.dx === undefined) { const xs = []; for (let x = -m.w / 2 + aw / 2 + 20; x <= m.w / 2 - aw / 2 - 20; x += 20) xs.push(x); xs.sort((p, q) => Math.abs(p) - Math.abs(q)); const fx = xs.find((x) => !clash(x)); if (fx === undefined) throw new Error(`R.on('${kind}', '${asset}'): the ${kind} module (${m.w} mm) has no free stretch for a ${Math.round(aw)} mm piece: put it on another module`); dx0 = fx; }
           else if (clash(dx0)) throw new Error(`R.on('${kind}', '${asset}', { dx: ${dx0} }): it would stand on another piece of that module: change dx or the module`);
@@ -366,7 +378,7 @@ class Area {
         const xc = m.xc + dx0, oid = oo.id || `${id}-${asset}${n++ || ''}`;
         const o2 = { group, ...oo, params: oo.params }; delete o2.nth; delete o2.dx; delete o2.id;
         if (asset === 'hob' || asset === 'hood') return F.place(oid, asset, xc, { ...o2, depth });
-        if (asset === 'pan') return F.place(oid, asset, xc + m.w * 0.2, { ...o2, y: 940, off: depth - 160, turn: o2.turn ?? -35 });
+        if (onBurner) { const [bx, bz] = [[225, 200], [-225, 200], [225, 440], [-225, 440]][(m.burner = (m.burner ?? -1) + 1) % 4]; return F.place(oid, asset, xc + bx, { ...o2, y: o2.y ?? 940, off: depth - bz, turn: o2.turn ?? (asset === 'pan' ? -35 : 0) }); }
         const bk = meta.backed && (vary(p.h, asset, o2.params, p.id).form ?? (meta.backed.byDefault ? meta.backed.form : null)) === meta.backed.form ? meta.backed.off : undefined;   // a board leaning on the wall stands against it
         return F.place(oid, asset, xc, { ...o2, y: o2.y ?? top, off: o2.off ?? bk ?? depth * 0.55, ...(wall ? { off: 0, y: o2.y ?? meta.y } : {}) });
       },
@@ -389,6 +401,10 @@ class Area {
   }
   // what the roll named: a.rolled('vase', 'candlesticks') lists the assets the roll dealt to this area; a.skip('vase', 'why') says one is left out (the check 'rolled' wants every rolled asset present or skipped)
   rolled(...assets) { const r = ((this.h.S.home.rolled ||= {})[this.id] ||= { rolled: [], skipped: [] }); r.rolled.push(...assets.flat()); }
+  dress(opening, kind, oid, o = {}) {   // a.dress(window, 'blind', 'bblind'): hang a blind or curtain on that opening (the object from a wall's opening list), whichever wall of this area holds it
+    const F = Object.values(this.walls || {}).find((w) => w.openings.includes(opening)); if (!F) throw new Error(`dress('${oid}'): that opening is not on a wall of ${this.id}: pass an object from the openings list of one of its walls`);
+    return F.dress(oid, kind, opening, o);
+  }
   skip(asset, why) { if (!why) throw new Error(`skip('${asset}'): say why it is left out`); const r = ((this.h.S.home.rolled ||= {})[this.id] ||= { rolled: [], skipped: [] }); r.skipped.push({ asset, why }); }
   still(topId, phrases, opts = {}) { return runStill(this, topId, phrases, opts); }   // the dealt things of one still life on a placed top, see arrange.mjs
   wallArr(phrase, opts = {}) { return runWallArr(this, phrase, opts); }   // one dealt wall arrangement (art over a piece, a shelf, a rail, hooks), see arrange.mjs

@@ -1,0 +1,39 @@
+// Round 6, checks fixer (fix list B7, B13, B10, B14, B15, B18, B9, B19, A8): one red and one green fixture per change, plus the round-6 home as a replay (the faults Paul inspected turn red on the right objects).
+import { room, run } from './common.mjs';
+const bug = (name, from, rules, ids, build, more = {}) => ({ name, from: `round 6 (checks fixer): ${from}`, kind: 'bug', expect: { rules, ids }, build, ...more });
+const good = (name, from, build, counts) => ({ name, from: `round 6 (checks fixer): ${from}`, kind: 'good', ...(counts ? { counts } : {}), build });
+const WIN = { kind: 'window', x: 3000, width: 1100, sash: 'out' }, SLIDER = { kind: 'door', style: 'slider', x: 2000, width: 1800 };
+export const fixtures = [
+  { name: 'replay-round6-a-faults', from: 'round 6 home (seed 148556): B7 blind hung 450 mm over the window head, B13 curtain 1 m off its slider, B10 hat on a lone peg far from the coat stand, B18 kitchen floor lamp in open floor, B19 moka pot, B14 mirror 50 mm from a painting', kind: 'replay', replay: '../replays/round-6-a-home.json',
+    pairs: [['dress', 'bedroom-bblind'], ['dress', 'living-lcurt'], ['placement-5', 'hallway-hhook'], ['placement-10', 'kitchen-klamp'], ['overhangs', 'kitchen-hobrun-mokaPot3'], ['placement-4', 'dining-sbmirror']] },
+  // B7: a blind hangs on its window
+  bug('r6d-blind-too-tall', 'B7: a blind 1500 tall on a 1100 window (its top 450 over the head), placed by hand with overlap:true', ['dress'], ['t-bl'], ({ Home }) => { const { H, back } = room(Home, { openings: [WIN] }); back.place('bl', 'blind', 3000, { group: 'g', y: 1000, overlap: true, params: { w: 1100 } }); return H; }),
+  good('r6d-blind-dressed', 'B7: the blind hung with dress(): the window\'s middle, width and height', ({ Home }) => { const { H, back } = room(Home, { openings: [WIN] }); back.dress('bl', 'blind', WIN, { group: 'g' }); return H; }),
+  bug('r6d-blind-beside-window', 'B7: a blind hung 700 mm off the middle of its window', ['dress'], ['t-bl'], ({ Home }) => { const { H, back } = room(Home, { openings: [WIN] }); back.place('bl', 'blind', 3700, { group: 'g', y: 1000, overlap: true, params: { w: 1100, h: 1100 } }); return H; }),
+  // B13: a curtain hangs on its opening
+  bug('r6d-curtain-off-the-slider', 'B13: a one-panel curtain centred 1000 mm beside the sliding door', ['dress'], ['t-cu'], ({ Home }) => { const { H, back } = room(Home, { openings: [SLIDER] }); back.place('cu', 'curtain', 3000, { group: 'g', overlap: true, params: { w: 1500, panels: 1 } }); return H; }),
+  good('r6d-curtain-dressed', 'B13: the curtain hung with dress() on the sliding door', ({ Home }) => { const { H, back } = room(Home, { openings: [SLIDER] }); back.dress('cu', 'curtain', SLIDER, { group: 'g' }); return H; }),
+  good('r6d-curtain-dressed-on-window', 'B13: the curtain hung with dress() on a window (a.dress finds the wall)', ({ Home }) => { const { H, a } = room(Home, { openings: [WIN] }); const W = a.walls.back.openings[0]; a.dress(W, 'curtain', 'cu', { group: 'g' }); return H; }),
+  // B10: a hat hangs by hooks or on the stand
+  bug('r6d-hat-on-a-lone-peg', 'B10: a hat on its own peg, no hooks or coat stand within 900 mm', ['placement-5'], ['t-hat'], ({ Home }) => { const { H, back } = room(Home); back.place('hat', 'hungHat', 3000, { group: 'g', y: 1650 }); return H; }),
+  good('r6d-hat-beside-hooks', 'B10: the hat beside a coat hook rail', ({ Home }) => { const { H, back } = room(Home); back.place('hk', 'coatHooks', 3000, { group: 'g', y: 1600 }); back.place('hat', 'hungHat', 3800, { group: 'g', y: 1650 }); return H; }),
+  // B14: pieces hung together line up, the others keep a wide gap
+  bug('r6d-mirror-picture-unaligned', 'B14: a mirror and a picture 150 mm apart, centres and edges 50+ mm off each other', ['placement-4'], ['t-pic'], ({ Home }) => { const { H, back } = room(Home); back.place('mir', 'mirror', 3000, { group: 'g', y: 1050, params: { w: 600, h: 900 } }); back.place('pic', 'picture', 3650, { group: 'g', y: 1100, params: { w: 400, h: 500 } }); return H; }),
+  good('r6d-mirror-picture-centred', 'B14: the same two 150 mm apart on one centre line', ({ Home }) => { const { H, back } = room(Home); back.place('mir', 'mirror', 3000, { group: 'g', y: 1050, params: { w: 600, h: 900 } }); back.place('pic', 'picture', 3650, { group: 'g', y: 1250, params: { w: 400, h: 500 } }); return H; }),
+  good('r6d-mirror-picture-wide-apart', 'B14: unaligned pieces 700 mm apart are two separate hangs', ({ Home }) => { const { H, back } = room(Home); back.place('mir', 'mirror', 2500, { group: 'g', y: 1150, params: { w: 600, h: 900 } }); back.place('pic', 'picture', 3900, { group: 'g', y: 1270, params: { w: 400, h: 300 } }); return H; }),
+  // B18: a floor lamp with no seat to serve stands against a wall or beside a big piece
+  bug('r6d-lamp-in-open-floor', 'B18: a floor lamp in open floor of an area without a sofa or armchair', ['placement-10'], ['t-lamp'], ({ Home }) => { const { H, a } = room(Home); a.put('lamp', 'floorLamp', [3000, 2300], 0, { group: 'g' }); return H; }),
+  good('r6d-lamp-in-the-corner', 'B18: the same lamp in a corner', ({ Home }) => { const { H, a } = room(Home); a.put('lamp', 'floorLamp', [350, 350], 0, { group: 'g' }); return H; }),
+  // B19: a pot stands centred on a burner
+  bug('r6d-moka-pot-off-burner', 'B19: a moka pot on a grate but 85 mm off the nearest burner centre', ['overhangs'], ['t-moka'], ({ Home }) => { const { H, a, back } = room(Home), R = run(a, back, [['doors', 600], ['hob', 900], ['doors', 600]]); R.on('hob', 'hob'); R.F.place('moka', 'mokaPot', R.mod('hob').xc + 285, { group: 'run', y: 940, off: 340 }); return H; }),
+  good('r6d-moka-pot-on-burner', 'B19: R.on(hob, mokaPot) centres it on a burner', ({ Home }) => { const { H, a, back } = room(Home), R = run(a, back, [['doors', 600], ['hob', 900], ['doors', 600]]); R.on('hob', 'hob'); R.on('hob', 'mokaPot', { id: 'moka' }); return H; }),
+  good('r6d-pan-on-burner', 'B19: R.on(hob, pan) centres it on a burner too', ({ Home }) => { const { H, a, back } = room(Home), R = run(a, back, [['doors', 600], ['hob', 900], ['doors', 600]]); R.on('hob', 'hob'); R.on('hob', 'pan', { id: 'pan' }); return H; }),
+  // B9: place refuses a spot past a wall's end
+  bug('r6d-plant-past-the-wall-end', 'B9: a hanging plant at the very end of the wall stands half in the corner wall; place refuses', ['refused'], [], ({ Home }) => { const { H, back } = room(Home, { W: 2200 }); back.place('hp', 'hangingPlant', 2200, { group: 'g' }); return H; }, { refuses: 'past the end of the wall' }),
+  good('r6d-plant-inside-the-wall-end', 'B9: the same plant 200 mm in from the end', ({ Home }) => { const { H, back } = room(Home, { W: 2200 }); back.place('hp', 'hangingPlant', 1900, { group: 'g' }); return H; }),
+  // B15: benches count in the variety check (one bench per home)
+  bug('r6d-two-benches-in-two-areas', 'B15: a bench in each of two areas of one home', ['variety'], ['t-b1', 'u-b2'], ({ Home }) => { const { H, a, back } = room(Home); back.place('b1', 'bench', 3000, { group: 'g' }); const b = H.area('u', 'U', { rect: [0, 0, 6000, 4000] }); H.join(a, b, { layout: 'row', share: 500, separators: [] }); const bb = b.back(6000, []); b.view({ target: [3000, 700, 2000], az: 20, el: 15 }); bb.place('b2', 'bench', 3000, { group: 'g' }); return H; }),
+  good('r6d-one-bench-in-a-home', 'B15: one bench in the home', ({ Home }) => { const { H, back } = room(Home); back.place('b1', 'bench', 3000, { group: 'g' }); return H; }),
+  // A8: pulled-out dining chairs stay on the rug (rule rugreach, extended in round 3; the red twin is table-rug-ends-under-the-chairs)
+  good('r6d-rug-under-pulled-out-chairs', 'A8: the table set own rug holds the pulled-out chairs', ({ Home }) => { const { H, a } = room(Home, { W: 7000, D: 5000 }); a.table('dt', { at: [3500, 2500], w: 1800, d: 900, chairs: 4 }); return H; }, ['rugreach']),
+];

@@ -16,7 +16,7 @@ export const fixtures = [
   { name: 'good-read-shelf-every-form', from: 'rollstats --build --stage=2: a readShelf on a wall read as 2 loose pieces and hung on no wall', kind: 'good',
     build({ Home }) { const { H, a } = room(Home); ['ledge', 'floating', 'bracket', 'double', 'pegs'].forEach((f, i) => a.put('rs' + i, 'readShelf', [800 + i * 1100, 0], 0, { group: 'g', y: 1300, mount: 'wall', params: { form: f, w: 800 } })); return H; } },
   { name: 'good-coffee-tables-and-tripod-lamp-on-the-floor', from: 'rollstats --build --stage=2: coffee table shapes round/tray and the tripod reading lamp stood 1-4 mm below the floor', kind: 'good',
-    build({ Home }) { const { H, a } = room(Home, { W: 9000 }); ['round', 'tray', 'frame', 'block'].forEach((s, i) => a.put('ct' + i, 'coffeeTable', [1000 + i * 1500, 2200], 0, { group: 'g', params: { shape: s } })); a.put('rl', 'readingLamp', [7600, 800], 0, { group: 'g', params: { form: 'tripod' } }); return H; } },
+    build({ Home }) { const { H, a } = room(Home, { W: 9000 }); ['round', 'tray', 'frame', 'block'].forEach((s, i) => a.put('ct' + i, 'coffeeTable', [1000 + i * 1500, 2200], 0, { group: 'g', params: { shape: s } })); a.put('rl', 'readingLamp', [7600, 300], 0, { group: 'g', params: { form: 'tripod' } }); return H; } },
   { name: 'good-vase-of-twigs-on-a-console', from: 'rollstats --build --stage=2: a vase of branches with 7 stems fanned 1.2 m wide and reached past the console and the wall', kind: 'good',
     build({ Home }) { const { H, a } = room(Home); a.put('cs', 'console', [3000, 200], 0, { group: 'g' }); a.put('v', 'vase', [3000, 200], 0, { group: 'g', y: 800, mount: 'on', params: { stems: 7, form: 0 } }); return H; } },
 ];

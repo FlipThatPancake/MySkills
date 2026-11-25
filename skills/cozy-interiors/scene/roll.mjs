@@ -38,7 +38,7 @@ function consistent(a, id, home) {   // home: the assets of this home already de
 }
 
 // round 6 item 12: the checks' variety rules are about the whole home, so the roll applies them to the whole home too. A basket, pouf, trolley, crate, stool or footstool stays in one area (three at most); any other small piece that stands on a surface (a mug, a jug, a fruit bowl) comes twice at most. A slot over the cap takes the next phrase of its own pool that keeps every cap. rollstats.mjs proves it over many seeds.
-export const ONE_AREA = new Set(['basket', 'pouf', 'trolley', 'crate', 'stepStool', 'footstool', 'stool']);
+export const ONE_AREA = new Set(['basket', 'pouf', 'trolley', 'crate', 'stepStool', 'footstool', 'stool', 'bench']);   // round 6 B15: a bench in one area of a home (the hallway or the foot of the bed), not two
 export const STAMP_SKIP = /^(tablecloth|tableRunner|cloth|cushion|benchCushion|floorCushion|books|openBook|scuff|leaf|pendantLamp|pan|hob|hood|plate|cup|saltPepper|foldedThrow|teaTowel|curtain|heightChart|cuttingBoard|cat|picture|mirror)$/;
 export const SMALL_ON = new Set(['jug', 'mug', 'vase', 'candlesticks', 'fruitBowl', 'jars', 'herbs', 'mokaPot', 'keyBowl', 'breadBasket', 'glassesBook', 'kettle', 'teaSet', 'globe']);
 export function phraseAssets(t) {   // the assets a phrase names for certain (one choice only): its bracket name, or the single-choice parts of its tables.json names entry
