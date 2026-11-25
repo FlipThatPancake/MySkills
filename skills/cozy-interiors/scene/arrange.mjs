@@ -67,7 +67,7 @@ export function wallArr(a, phrase, { wall, xc, over, group, prefix, seed } = {})
     try { return tryAt(x); } catch (e) {
       const msg = String(e.message || e).split('\n')[0];
       if (!over && /lands inside/.test(msg)) { let alt = []; try { alt = Object.entries(a.slotTable(Math.max(600, 2 * (() => { try { return a.sizeFor(asset, ex.params).w / 2; } catch (e4) { return 400; } })() + 100)).wall).filter(([k, v]) => k.startsWith(wall.id + ':') && v.best).map(([, v]) => v.xc).filter((q) => Math.abs(q - x) > 200); } catch (e2) { /* no slots: no other place to try */ } for (const xx of alt) { try { return tryAt(xx); } catch (e3) { /* the next free stretch */ } } }   // on open wall the arrangement moves to a bare stretch when its place is taken
-      left.push(`${asset}: ${msg.slice(0, 150)}`); return null; } };
+      left.push(`${asset}: ${msg.slice(0, 400)}`); return null; } };
   if (rule.mode === 'floor') { put('cab', rule.a[0], xc, {}); return { ids, left, skipped }; }
   if (rule.mode === 'fixed') {
     const id = put('0', rule.a[0], xc, { y: rule.y });

@@ -21,13 +21,15 @@ const make = (a, phrase, o) => {
   if (!rec.needs?.free && !o.wall) throw new Error(`a.group: "${phrase}" stands at a wall: give { wall, xc } or { slot }`);
   const prefix = o.id || rec.id, grp = o.group || prefix, seed = (o.seed ?? a.h.S?.seed ?? 1) + hash(prefix + phrase), r = rngOf(seed), ov = o.pieces || {}, placed = [], left = [];
   const slot = (name) => ov[name] || {}, skip = (name) => !!slot(name).skip;
-  const fail = (name, e) => { left.push(`${name}: ${String(e.message || e).split(':').slice(0, 1)[0]}`); return null; };
+  const fail = (name, e) => { left.push(`${name}: ${String(e.message || e).split('\n')[0].slice(0, 400)}`); return null; };
   const c = {
     a, r, phrase, wall: o.wall, xc: o.xc, at: o.at, floating: !!o.floating, grp, pick: (list) => list[Math.floor(r() * list.length)], rnd: (lo, hi, step) => rnd(r, lo, hi, step), chance: (p) => r() < p, skip,
     asset: (name, list) => slot(name).asset || c.pick(list),
     // a wall piece or floor piece against the wall: slot, id suffix, asset (or list), xc, extra place() options
     place(name, suffix, assets, xc, ex = {}) { if (skip(name)) return null; const asset = slot(name).asset || (Array.isArray(assets) ? c.pick(assets) : assets), id = `${prefix}-${suffix}`;
-      try { (o.wall).place(id, asset, xc, { group: grp, ...ex, ...(slot(name).params || ex.params ? { params: { ...(ex.params || {}), ...(slot(name).params || {}) } } : {}), ...(o.hero && name === rec.hero ? { hero: true } : {}) }); placed.push(id); return id; } catch (e) { return fail(name, e); } },
+      try { (o.wall).place(id, asset, xc, { group: grp, ...ex, ...(slot(name).params || ex.params ? { params: { ...(ex.params || {}), ...(slot(name).params || {}) } } : {}), ...(o.hero && name === rec.hero ? { hero: true } : {}) }); placed.push(id); return id; } catch (e) {
+        if (typeof xc === 'number' && typeof o.xc === 'number' && /lands inside/.test(String(e.message))) { const x2 = 2 * o.xc - xc; try { (o.wall).place(id, asset, x2, { group: grp, ...ex, ...(slot(name).params || ex.params ? { params: { ...(ex.params || {}), ...(slot(name).params || {}) } } : {}) }); placed.push(id); return id; } catch (e2) { /* the other side is no better */ } }   // round 6: a piece that lands inside its neighbour (the wall's end pulled it back) goes to the group's other side
+        return fail(name, e); } },
     // low level on the wall: ox along it, off out from it, turn added to the facing out from the wall (a chair in front of a desk turns 180)
     putW(name, suffix, assets, ox, off, turn, ex = {}) { if (skip(name)) return null; const asset = slot(name).asset || (Array.isArray(assets) ? c.pick(assets) : assets), id = `${prefix}-${suffix}`;
       try { o.wall.put(id, asset, ox, off, { turn, group: grp, ...ex, ...(slot(name).params || ex.params ? { params: { ...(ex.params || {}), ...(slot(name).params || {}) } } : {}) }); placed.push(id); return id; } catch (e) { return fail(name, e); } },
