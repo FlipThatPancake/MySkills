@@ -35,7 +35,7 @@ const RULE = {
   // visible: a group hidden in the home view is an anchor fault; a small piece hidden is a dress fault
   visible: (i, c) => (/hides the rest of group/.test(i.what) ? 4 : split()(i, c)),
   // 5 dress
-  variety: S.dress, foreground: S.dress, bare: S.dress, tabletop: S.dress, surface: S.dress, lamps: S.dress, lights: S.dress, cushion: S.dress, throw: S.dress, shoes: S.dress, sill: S.dress, curtain: S.dress, kettle: S.dress, towel: S.dress, accent: S.dress, cord: S.dress, 'open-light': S.dress, 'note-lampspot': S.dress,
+  variety: S.dress, foreground: S.dress, bare: S.dress, tabletop: S.dress, surface: S.dress, lamps: S.dress, lights: S.dress, cushion: S.dress, throw: S.dress, shoes: S.dress, sill: S.dress, curtain: S.dress, dress: S.dress, kettle: S.dress, towel: S.dress, accent: S.dress, cord: S.dress, 'open-light': S.dress, 'note-lampspot': S.dress,
   // 6 life
   motion: S.life, windmover: S.life,
   // 7 photographs
@@ -53,6 +53,11 @@ export function makeCtx(assetOf = {}) {
   return { assetOf, assets(text) { if (cache.has(text)) return cache.get(text); const hit = []; for (const id of ids) { const m = new RegExp(`(?<![\\w-])${esc(id)}(?![\\w-])`).exec(text); if (m) hit.push([m.index, assetOf[id]]); } const out = hit.sort((a, b) => a[0] - b[0]).map((h) => h[1]); cache.set(text, out); return out; } };
 }
 
+// What stops a delivery (no waiver): a piece inside another, inside a wall or in the air (physical), and the believability rules the user kept (Nov 19: every placement rule, the coat stand in mid-floor, a way blocked, a casing). Framing, shots, visibility, variety, rolled and notes are reported, not blocking.
+export const PHYSICAL = new Set(['wall', 'overlap', 'penetrates', 'sunk', 'floating', 'support', 'overhangs', 'physics', 'moves', 'floor', 'nan', 'shape-failed']);
+export const BELIEVABLE = new Set(['runner', 'path', 'casing']);
+export const blocks = (rule) => PHYSICAL.has(rule) || BELIEVABLE.has(rule) || /^placement-/.test(rule);
+
 // the one next move (the ladder: nudge in slot, swap slot, go back one stage, a.skip)
 const SWAP = new Set(['variety', 'bare', 'interest', 'tabletop', 'lamps']);
 export function nextMove(issue, n) {
@@ -69,17 +74,19 @@ export function nextMove(issue, n) {
 }
 
 // issues → { shown: [...], lines, held } . until: a stage name or number or null
-export function stageReport(issues, ctx, until = null) {
-  const lim = until == null ? 99 : (typeof until === 'number' ? until : STAGES.indexOf(until) + 1 || +until || 99);
+export function stageReport(issues, ctx, until = null, { earliest = false } = {}) {   // earliest: with no until, only the earliest stage that has findings (the build stops there); a line says what waits behind it
+  let lim = until == null ? 99 : (typeof until === 'number' ? until : STAGES.indexOf(until) + 1 || +until || 99);
   const tagged = issues.map((i) => { const n = ruleStage(i, ctx); return { ...i, stage: n, move: nextMove(i, n) }; });
+  const early = earliest && until == null ? Math.min(99, ...tagged.filter((i) => i.stage !== UNSTAGED).map((i) => i.stage)) : null; if (early != null) lim = early;
   const shown = tagged.filter((i) => i.stage === UNSTAGED || i.stage <= lim).sort((a, b) => a.stage - b.stage), held = tagged.length - shown.length;
   const counts = {}; for (const i of tagged) (counts[i.stage] ||= []).push(i.rule);
   const lines = []; let cur = -1;
   for (const i of shown) { if (i.stage !== cur) { cur = i.stage; const k = shown.filter((x) => x.stage === cur).length; lines.push(`== stage ${cur === UNSTAGED ? '?' : cur} ${STAGES[cur - 1] || 'unstaged'}: ${k} issue(s) ==`); } lines.push(`[${i.rule}] ${i.what}  -> stage ${i.stage === UNSTAGED ? '?' : i.stage} ${STAGES[i.stage - 1] || 'unstaged'}: ${i.move}`); }
   const first = shown.find((i) => i.stage !== UNSTAGED), later = until == null && first ? shown.filter((i) => i.stage > first.stage).length : 0;
-  if (first && until == null && later) lines.push(`fix stage ${first.stage} (${STAGES[first.stage - 1]}) first; ${later} later issue(s) may change`);
+  if (early != null) { const w = [...new Set(tagged.filter((i) => i.stage !== UNSTAGED && i.stage > early).map((i) => i.stage))].sort((a, b) => a - b); if (held) lines.push(`${held} more issue(s) wait in stage(s) ${w.join(', ')} until stage ${early} (${STAGES[early - 1]}) is clean: --all lists them`); }
+  else if (first && until == null && later) lines.push(`fix stage ${first.stage} (${STAGES[first.stage - 1]}) first; ${later} later issue(s) may change`);
   const unstaged = [...new Set(tagged.filter((i) => i.stage === UNSTAGED).map((i) => i.rule))];
-  const cov = `stages: ${until == null ? 'all 8 stages reported, grouped earliest first' : `ran stages 1-${lim} (until ${STAGES[lim - 1] || until}); later stages are not reported`}${unstaged.length ? `; rule(s) without a stage (printed always): ${unstaged.join(', ')}` : ''}`;
+  const cov = `stages: ${until == null ? (early != null ? `earliest stage with findings only (stage ${early}); --all reports every stage` : 'all 8 stages reported, grouped earliest first') : `ran stages 1-${lim} (until ${STAGES[lim - 1] || until}); later stages are not reported`}${unstaged.length ? `; rule(s) without a stage (printed always): ${unstaged.join(', ')}` : ''}`;
   return { shown, lines, held, coverage: cov };
 }
 

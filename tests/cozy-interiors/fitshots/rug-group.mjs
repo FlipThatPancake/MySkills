@@ -27,7 +27,7 @@ if (!/→ \[/.test(line)) { console.log('FAIL: no camera for a sofa group on a r
 // check-home must accept that very camera (the two measure alike)
 const S = JSON.parse(fs.readFileSync(json, 'utf8')), cam = JSON.parse(fs.readFileSync(join(d, 'cams.json'), 'utf8')).living.sofa, sh = S.areas[0].camera.shots[0];
 [sh.from, sh.look, sh.fov] = cam; fs.writeFileSync(json, JSON.stringify(S));
-let rep = ''; try { rep = execSync(`node ${join(scene, 'check-home.mjs')} ${json} --quick`, { encoding: 'utf8' }); } catch (e) { rep = String(e.stdout || ''); }
+let rep = ''; try { rep = execSync(`node ${join(scene, 'check-home.mjs')} ${json} --quick --all`, { encoding: 'utf8' }); } catch (e) { rep = String(e.stdout || ''); }
 const mine = rep.split('\n').filter((l) => /^\[shot\] living shot "sofa"/.test(l));
 if (mine.length) { console.log('FAIL: check-home rejects the camera fitshots found:\n' + mine.join('\n')); process.exit(1); }
 console.log('ok: a camera was found and check-home accepts it');

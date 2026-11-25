@@ -26,7 +26,7 @@ if (!/→ \[/.test(out) || !/FRAMED WITHOUT/.test(out)) { console.log('FAIL: wan
 const cams = JSON.parse(fs.readFileSync(join(d, 'cams.json'), 'utf8')), cam = cams.living.sofa, core = cams._core?.living?.sofa;
 if (!core?.length) { console.log('FAIL: cameras.json holds no _core for the shot'); process.exit(1); }
 const S = JSON.parse(fs.readFileSync(json, 'utf8')), sh = S.areas[0].camera.shots[0]; [sh.from, sh.look, sh.fov] = cam; sh.core = core; fs.writeFileSync(json, JSON.stringify(S));
-let rep = ''; try { rep = execSync(`node ${join(scene, 'check-home.mjs')} ${json} --quick`, { encoding: 'utf8' }); } catch (e) { rep = String(e.stdout || ''); }
+let rep = ''; try { rep = execSync(`node ${join(scene, 'check-home.mjs')} ${json} --quick --all`, { encoding: 'utf8' }); } catch (e) { rep = String(e.stdout || ''); }
 const mine = rep.split('\n').filter((l) => /^\[shot\] living shot "sofa"/.test(l));
 if (mine.length) { console.log('FAIL: check-home rejects the core camera:\n' + mine.join('\n')); process.exit(1); }
 console.log('ok: core framed, left-out pieces named, check-home accepts the shot');

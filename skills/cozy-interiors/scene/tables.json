@@ -214,8 +214,7 @@
    "mirror over the sideboard",
    "wall shelf",
    "cushion on a chair",
-   "floor lamp beside the seat",
-   "bench"
+   "floor lamp beside the seat"
   ],
   "more": [
    "candlesticks (candlesticks)",
@@ -234,7 +233,6 @@
   ],
   "foreground": [
    "basket",
-   "bench end",
    "chair pulled out"
   ]
  },
@@ -524,8 +522,8 @@
    "key bowl (keyBowl)",
    "letter tray (letterTray)",
    "boots",
-   "hat on a hook (hungHat)",
-   "bag on a hook (hungBag)"
+   "hat on a hook beside the coat hooks, or on the coat stand (hungHat)",
+   "bag on a hook beside the coat hooks (hungBag)"
   ],
   "more": [
    "umbrella stand (umbrellaStand)",
@@ -1385,7 +1383,6 @@
     "plant corner: a floor plant on a plant stand, or with a basket beside it",
     "bar cart or trolley with bottles and glasses",
     "armchair with a floor lamp and a side table",
-    "bench under a picture, with a cushion and a basket",
     "glazed cabinet with dishes and a plant"
    ],
    "living": [
@@ -1394,7 +1391,7 @@
     "plant corner: a floor plant with a basket or pouf",
     "console or sideboard with a still life under a picture",
     "reading corner: armchair, floor lamp and a book stack",
-    "bench or window seat with cushions"
+    "window seat with cushions"
    ],
    "kitchen": [
     "island or table with two stools",
@@ -1406,7 +1403,6 @@
    "bedroom": [
     "wardrobe or chest of drawers with a still life and a mirror",
     "armchair with a floor lamp and a side table",
-    "bench at a wall with a blanket and a basket",
     "plant corner: a floor plant on a plant stand",
     "desk or dressing table with a stool and a lamp"
    ],
@@ -1414,7 +1410,7 @@
     "bookcase with books and objects",
     "side table with a lamp and a cup, a pouf beside it",
     "plant corner: a floor plant with a basket",
-    "window seat or bench with cushions",
+    "window seat with cushions",
     "armchair on a round rug, with a side table"
    ],
    "hallway": [
@@ -1480,7 +1476,6 @@
       "printer": "printer",
       "globe": "globe",
       "step stool": "stepStool",
-      "bench end": "bench",
       "chair pulled out": "chair",
       "footstool": "footstool",
       "log basket": "logBasket",
@@ -1575,7 +1570,6 @@
       "plant corner: a floor plant on a plant stand, or with a basket beside it": "floorPlant|plantStand",
       "bar cart or trolley with bottles and glasses": "trolley",
       "armchair with a floor lamp and a side table": "armchair+floorLamp+sideTable",
-      "bench under a picture, with a cushion and a basket": "bench+picture+cushion+basket",
       "glazed cabinet with dishes and a plant": "glazedCabinet",
       "bookcase or shelf unit with books and objects": "shelf",
       "side chair with a lamp and a small table": "chair|armchair+sideTable",
@@ -1584,14 +1578,12 @@
       "reading corner: armchair, floor lamp and a book stack": "armchair|readingChair+floorLamp+bookStack",
       "runner rug down the hall": "runner+floorPlant",
       "armchair on a round rug, with a side table": "armchair+rug+sideTable",
-      "bench or window seat with cushions": "bench|windowSeat+cushion",
+      "window seat with cushions": "windowSeat+cushion",
       "wardrobe or chest of drawers with a still life and a mirror": "wardrobe|chestOfDrawers+mirror|leaningMirror",
-      "bench at a wall with a blanket and a basket": "bench+basket",
       "plant corner: a floor plant on a plant stand": "floorPlant|plantStand",
       "desk or dressing table with a stool and a lamp": "desk+stool",
       "bookcase with books and objects": "shelf",
       "side table with a lamp and a cup, a pouf beside it": "sideTable+pouf",
-      "window seat or bench with cushions": "windowSeat|bench+cushion",
       "console with a mirror, a key bowl and a plant": "console+mirror+keyBowl",
       "coat hooks with a bench, shoes and an umbrella stand": "coatHooks+bench+umbrellaStand",
       "shelf with baskets above a bench": "shelf+bench",

@@ -397,7 +397,7 @@ const areaIssues = await page.evaluate(() => {
   { const SKIP = /^(tablecloth|tableRunner|cloth|cushion|benchCushion|floorCushion|bookStack|books|openBook|scuff|leaf|pendantLamp|pan|hob|hood|plate|cup|saltPepper|foldedThrow|teaTowel|curtain|heightChart|cuttingBoard|cat)$/, cnt = {};   // small things that come three or more times in one home read as a stamp: vary them
     for (const i of ids) { const a = sc(i).asset; if (SKIP.test(a)) continue; const small = sc(i).mount === 'on' || ['jug', 'mug', 'vase', 'candlesticks', 'fruitBowl', 'jars', 'herbs', 'mokaPot', 'keyBowl', 'breadBasket'].includes(a); if (small) (cnt[a] ||= []).push(i); }
     for (const [a, l] of Object.entries(cnt)) if (l.length >= 3) out.push({ rule: 'variety', what: `${l.join(', ')}: ${l.length} ${a}s in one home (three or more of one small piece read as a stamp): give two of them another piece` }); }
-  { const ACC = ['basket', 'pouf', 'trolley', 'stool', 'footstool', 'stepStool', 'crate'], seen = {}; for (const i of ids) { const a = sc(i).asset; if (ACC.includes(a)) (seen[a] ||= []).push(i); }
+  { const ACC = ['basket', 'pouf', 'trolley', 'stool', 'footstool', 'stepStool', 'crate', 'bench'], seen = {}; /* round 6 B15: benches count too */ for (const i of ids) { const a = sc(i).asset; if (ACC.includes(a)) (seen[a] ||= []).push(i); }
     for (const [a, l] of Object.entries(seen)) if (l.length > (a === 'stool' ? 3 : 1) && new Set(l.map((i) => areaOf(i))).size > 1 || l.length > 3) out.push({ rule: 'variety', what: `${l.join(', ')}: ${a} used in ${new Set(l.map((i) => areaOf(i))).size} areas of one home (one accent asset per home: choose a different foreground piece for each area)` });
     const forms = {}; for (const i of ids) { const f = sc(i).params?.form ?? sc(i).params?.shape; if (f !== undefined) (forms[`${sc(i).asset}/${f}`] ||= []).push(i); }
     for (const [k, l] of Object.entries(forms)) if (l.length > 1 && new Set(l.map((i) => areaOf(i))).size > 1) out.push({ rule: 'variety', what: `${l.join(', ')} all use the same ${k.split('/')[0]} (${k.split('/')[1]}): give each area a different form or shape, one decor accent per home` }); }
@@ -583,11 +583,20 @@ const assetOf = await page.evaluate(() => Object.fromEntries(Object.keys(window.
 await browser.close();
 for (const e of errors) console.log('PAGE ERROR', e);
 const notes = []; for (let k = issues.length - 1; k >= 0; k--) if (/^note-/.test(issues[k].rule)) notes.unshift(...issues.splice(k, 1));   // notes: taste, not failures (placement coverage): printed, never counted
-const { stageReport, makeCtx } = await import('./stages.mjs'), untilArg = (process.argv.find((a) => a.startsWith('--until=')) || '').slice(8) || (process.argv.includes('--until') ? process.argv[process.argv.indexOf('--until') + 1] : null);   // --until <stage>: only the stages up to that one (deal plan shell anchors dress life photographs walk, or 1-8)
-const staged = stageReport(issues, makeCtx(assetOf), untilArg && /^\d$/.test(untilArg) ? +untilArg : untilArg); coverage.push(staged.coverage);
-issues.splice(0, issues.length, ...staged.shown);   // the count below is what the chosen stages report
+const { stageReport, makeCtx, blocks, ruleStage, nextMove, PHYSICAL, STAGES } = await import('./stages.mjs'), untilArg = (process.argv.find((a) => a.startsWith('--until=')) || '').slice(8) || (process.argv.includes('--until') ? process.argv[process.argv.indexOf('--until') + 1] : null);   // --until <stage>: only the stages up to that one (deal plan shell anchors dress life photographs walk, or 1-8); --all: every stage, not only the earliest with findings
+const ctx = makeCtx(assetOf), everything = issues.slice(), blockers = issues.filter((i) => blocks(i.rule)).sort((x, y) => PHYSICAL.has(y.rule) - PHYSICAL.has(x.rule)), rest = issues.filter((i) => !blocks(i.rule));   // blockers (stages.mjs): physical faults and the believability rules stop a delivery and print first, whatever their stage
+const staged = stageReport(rest, ctx, untilArg && /^\d$/.test(untilArg) ? +untilArg : untilArg, { earliest: !process.argv.includes('--all') }); coverage.push(staged.coverage);
+issues.splice(0, issues.length, ...blockers, ...staged.shown);   // the count below is what the chosen stages report
+const blockLines = blockers.map((i) => { const n = ruleStage(i, ctx); return `[${i.rule}] ${i.what}  -> stage ${n === 9 ? '?' : n} ${STAGES[n - 1] || 'unstaged'}: ${nextMove(i, n)}`; });
 for (const l of coverage) console.log(`coverage: ${l}`);   // what each sampling check looked at and what it left out
+if (blockLines.length) { console.log(`== BLOCKING DELIVERY: ${blockLines.length} (${blockers.filter((i) => PHYSICAL.has(i.rule)).length} physical: a piece inside another, in a wall or in the air; the rest believability rules) ==`); for (const l of blockLines) console.log(l); }
 for (const l of staged.lines) console.log(l);   // the issues grouped by stage, earliest first, each ending with its stage and next move (stages.mjs)
 for (const i of notes) console.log(`[${i.rule}] ${i.what}`);
 { const S = JSON.parse((await import('node:fs')).readFileSync(scene, 'utf8')); if ((S.areas || []).some((a) => a.motion?.length)) console.log(`NEXT: the rules cannot see motion. Run  node ${join(here, 'watch.mjs')} ${scene}  and look at the strips (watch-<area>.png): do the living things read, stay in frame, and start where the home view shows them?`); }
+{   // the verdict build.mjs --deliver reads: this exact scene file, a full run, and what blocks
+  const { createHash } = await import('node:crypto'), { readFileSync: rf, writeFileSync: wf } = await import('node:fs'), full = !QUICK && !untilArg, verdict = scene.replace(/\.json$/, '.verdict.json');
+  wf(verdict, JSON.stringify({ sceneSha: createHash('sha256').update(rf(scene)).digest('hex'), full, blocking: blockers.length, physical: blockers.filter((i) => PHYSICAL.has(i.rule)).length, errors: errors.length, issues: everything.length, blockingLines: blockLines.slice(0, 40), at: new Date().toISOString() }, null, 1));
+  if (blockers.length || errors.length) console.log(`${basename(scene)}: ${blockers.length} blocking delivery${full ? '' : ' (this was not a full run: node build.mjs --deliver needs one)'}`);
+}
 console.log(issues.length || errors.length ? `${basename(scene)}: ${issues.length} issue(s)` : `${basename(scene)}: No problems.`);
+process.exitCode = issues.length || errors.length ? 1 : 0;
