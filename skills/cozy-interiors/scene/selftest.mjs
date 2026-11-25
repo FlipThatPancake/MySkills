@@ -139,20 +139,17 @@ const { TASKLAMP_POSES } = await import('./src/library/officeset.js');
   console.log(bad.map((x) => `[painting-colour] ${x}`).join('\n') || 'every painting without a colour in its spec is drawn in the default very soft colour'); console.log(`${bad.length} grey-by-default painting(s) of ${n}`);
 }
 
-// Round 6 item 4 (Paul: an odd triangle on the bed): the turned-back corner of an unmade duvet is made of soft folds, each a body with a real footprint (its short side at least a fifth of its long side) and some height (at least 50 mm): no thin stick lying on the duvet and no flat plate. The cloth itself is the first child; every later child of the duvet is a fold.
+// Round 6 item 4 (Paul: an odd triangle on the bed; lead: two folds read as slabs, not as the duvet): the turned-back corner of an unmade duvet is the duvet itself, one cloth. The duvet has no separate piece on it, and over the turned part (the triangle the corner folds onto) it rises at most two cloth thicknesses (2 x 7 mm) plus 6 mm of rumple above the same duvet with turn 0. The old plate-and-rod flap was a second piece, 80 mm high.
 {
   (await import('./geom/load.mjs')).installDocument(); const kk = createKit(), bad = []; let n = 0;
+  const top = (dv, w, turn) => { const hx = (w - 20) / 2, head = -560, V = new kk.THREE.Vector3(); let y = -1e9; dv.traverse((m) => { const A = m.geometry?.attributes?.position; if (!A) return; for (let i = 0; i < A.count; i++) { V.fromBufferAttribute(A, i).applyMatrix4(m.matrixWorld); const s = (hx - V.x) + (V.z - head); if (s >= turn && V.x >= hx - turn && V.x <= hx && V.z <= head + turn && V.z >= head) y = Math.max(y, V.y); } }); return y; };
   for (let seed = 1; seed <= 12; seed++) for (const w of [1400, 1600, 1800]) {
-    const dv = REGISTRY.duvetCloth(kk, { w: w - 20, head: -560, foot: 1040, sagL: 110, sagR: 400, sagFoot: 250, seed, turn: 720 }); n++;
-    dv.updateMatrixWorld(true);
-    dv.children.slice(1).forEach((c, k) => {   // the footprint along its own principal axes, so a stick lying on the diagonal still measures thin
-      const V = new kk.THREE.Vector3(), P = []; let y0 = 1e9, y1 = -1e9; c.traverse((m) => { const A = m.geometry?.attributes?.position; if (!A) return; for (let i = 0; i < A.count; i++) { V.fromBufferAttribute(A, i).applyMatrix4(m.matrixWorld); P.push([V.x, V.z]); y0 = Math.min(y0, V.y); y1 = Math.max(y1, V.y); } });
-      if (!P.length) return; const mx = P.reduce((q, p) => q + p[0], 0) / P.length, mz = P.reduce((q, p) => q + p[1], 0) / P.length; let sxx = 0, szz = 0, sxz = 0; for (const [x, z] of P) { sxx += (x - mx) ** 2; szz += (z - mz) ** 2; sxz += (x - mx) * (z - mz); }
-      const th = 0.5 * Math.atan2(2 * sxz, sxx - szz), ca = Math.cos(th), sa = Math.sin(th), us = P.map(([x, z]) => (x - mx) * ca + (z - mz) * sa), vs = P.map(([x, z]) => -(x - mx) * sa + (z - mz) * ca), long = Math.max(...us) - Math.min(...us), short = Math.max(...vs) - Math.min(...vs), sy = y1 - y0, [L, S] = long >= short ? [long, short] : [short, long];
-      if (L > 200 && (S < 0.2 * L || sy < 50)) bad.push(`unmade duvet w ${w} seed ${seed}: fold ${k} is ${Math.round(L)} x ${Math.round(S)} x ${Math.round(sy)} mm: it reads as ${sy < 50 ? 'a flat plate' : 'a stick'} on the duvet`);
-    });
+    const o = { w: w - 20, head: -560, foot: 1040, sagL: 110, sagR: 400, sagFoot: 250, seed }, dv = REGISTRY.duvetCloth(kk, { ...o, turn: 720 }), ref = REGISTRY.duvetCloth(kk, { ...o, turn: 0 }); n++;
+    dv.updateMatrixWorld(true); ref.updateMatrixWorld(true);
+    if (dv.children.length > 1) bad.push(`unmade duvet w ${w} seed ${seed}: ${dv.children.length - 1} separate piece(s) lie on the duvet: the turned-back corner is the duvet's own cloth`);
+    const rise = top(dv, w, 720) - top(ref, w, 720); if (rise > 20) bad.push(`unmade duvet w ${w} seed ${seed}: the turned corner stands ${Math.round(rise)} mm above the duvet under it (20 at most, two cloth thicknesses and a little rumple): it reads as a block, not a fold`);
   }
-  console.log(bad.map((x) => `[duvet] ${x}`).join('\n') || 'every unmade duvet turns its corner back in soft folds, no stick or plate'); console.log(`${bad.length} duvet fold problem(s) of ${n} duvets`);
+  console.log(bad.map((x) => `[duvet] ${x}`).join('\n') || 'every unmade duvet turns its corner back as its own cloth, thin, no separate piece'); console.log(`${bad.length} duvet fold problem(s) of ${n} duvets`);
 }
 
 // Round 6 item 6 (Paul: the fridge needs sticky notes, magnets and a photo): every fridge form carries notes, free magnets and the photo, the photo a textured plane on the door (kitchen/fridge.js fridgeSigns records what it drew in userData.signs).
