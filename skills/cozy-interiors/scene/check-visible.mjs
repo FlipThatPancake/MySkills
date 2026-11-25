@@ -13,7 +13,7 @@ const MIN = 0.2, GMIN = 0.3, GTINY = 40, BIG = 1500, TINY = 15, SKIP = ['rug', '
 export async function visibleIssues(page, camerasByArea = {}, opt = {}) {
   const size = page.viewportSize(); await page.setViewportSize({ width: 600, height: 375 });   // half size: a draw in software GL is a quarter of the time
   await page.evaluate(() => window.cozyScene.loop(false));
-  const ids = await page.evaluate(() => window.cozyScene.areaIds), issues = [], rows = [], cov = { objects: 0, judged: 0, tiny: 0, flat: 0, rescued: 0, groups: 0, hiddenGroups: 0 };
+  const ids = await page.evaluate(() => window.cozyScene.areaIds), issues = [], rows = [], cov = { faded: 0, objects: 0, judged: 0, tiny: 0, flat: 0, rescued: 0, groups: 0, hiddenGroups: 0 };
   for (const A of ids) {
     const res = await page.evaluate(([A, shots, SKIP, TINY, GMIN, GTINY, BIG]) => {
       const c = window.cozyScene, out = {}; c.setArea(A, true); c.controls.enabled = false; c.tour.update = () => false; c.advance(1.5);
@@ -23,9 +23,11 @@ export async function visibleIssues(page, camerasByArea = {}, opt = {}) {
       const diff = (a, b) => { let n = 0; for (let i = 0; i < a.length; i += 4) if (Math.abs(a[i] - b[i]) + Math.abs(a[i + 1] - b[i + 1]) + Math.abs(a[i + 2] - b[i + 2]) > 12) n++; return n; };
       const set = (f) => { for (const k of all) c.objects[k].visible = f(k); };
       const measure = (list) => { set(() => false); const E = grab(); set(() => true); const F = grab(), m = {}; for (const k of list) { set((i) => i === k); const alone = diff(grab(), E); set((i) => i !== k); m[k] = [alone, diff(grab(), F)]; } set(() => true); return m; };
+      const fade = {}; for (const b of c.home.blockers) if (sc(b.id) && sc(b.id).area === A && b.goal < 1 && !(b.wall && b.wall.goal === 0)) fade[b.id] = +b.goal.toFixed(2);   // the view fade at the home view (a piece hung on a wall that fades with it is left out: the near wall goes by design), before any piece is switched off: a piece the camera looks through is drawn at its goal
       const cands = all.filter((k) => !SKIP.includes(sc(k).asset)), home = { p: c.camera.position.clone(), t: c.controls.target.clone(), fov: c.camera.fov };
       const m0 = measure(cands), bad = cands.filter((k) => m0[k][0] >= TINY && m0[k][1] < 0.2 * m0[k][0]);
-      for (const k of cands) out[k] = { alone: m0[k][0], seen: m0[k][1], asset: sc(k).asset, group: sc(k).group, shot: null };
+      for (const k of cands) out[k] = { alone: m0[k][0], seen: m0[k][1], asset: sc(k).asset, group: sc(k).group, shot: null, fade: fade[k] ?? 1 };
+      out.__fade = Object.entries(fade).map(([id, goal]) => ({ id, goal, asset: sc(id).asset, group: sc(id).group }));
       for (const [name, cam] of Object.entries(shots)) { if (!bad.length) break;   // only the objects that fail the home view are measured from the shot cameras
         c.camera.fov = cam[2]; c.camera.updateProjectionMatrix(); c.at(cam[0], cam[1]); const m = measure(bad);
         for (const k of bad) if (!out[k].shot && m[k][0] >= TINY && m[k][1] >= 0.2 * m[k][0]) out[k].shot = name; }
@@ -46,7 +48,8 @@ export async function visibleIssues(page, camerasByArea = {}, opt = {}) {
       out.__groups = groups;
       return out;
     }, [A, camerasByArea[A] || {}, SKIP, TINY, GMIN, GTINY, BIG]);
-    const gr = res.__groups; delete res.__groups;
+    const gr = res.__groups, fd = res.__fade; delete res.__groups; delete res.__fade;
+    for (const f of fd) { if (f.group) { cov.faded++; issues.push({ rule: 'visible', what: `${f.id} (${f.asset}) is faded out in the ${A} home view (drawn at ${Math.round(100 * f.goal)}%): the camera looks through it to the view centre, and the home view must not fade a piece of the area's own group ${f.group}: move the view target or the piece` }); } }
     for (const r of gr) { cov.groups++; (issues.groupRows ||= []).push({ area: A, ...r }); if (r.seen >= GMIN * r.alone) continue; cov.hiddenGroups++;
       issues.push({ rule: 'visible', what: `${r.cause} (${r.asset}) hides the rest of group ${r.g} in the ${A} home view: only ${Math.round(100 * r.seen / r.alone)}% of the group's pixels show (${r.seen} of ${r.alone} px; ${Math.round(100 * GMIN)}% at least): move ${r.cause} or the group; a tour shot does not excuse a group hidden in the home view` }); }
     for (const [id, r] of Object.entries(res)) {
@@ -55,13 +58,14 @@ export async function visibleIssues(page, camerasByArea = {}, opt = {}) {
       cov.judged++;
       const f = r.seen / r.alone;
       if (f >= MIN) continue;
+      if (r.fade < 0.6) { if (r.group) continue; cov.faded++; issues.push({ rule: 'visible', what: `${id} (${r.asset}): faded out in the ${A} home view, drawn at ${Math.round(100 * r.fade)}%: the camera looks through it to the view centre (the view fade, not another piece, hides it): move the view target or the piece` }); continue; }
       if (r.shot) { cov.rescued++; (cov.ids ||= []).push(`${id} by shot ${r.shot}`); continue; }
       if (r.asset === 'table' && Object.values(res).some((o) => o.asset === 'tablecloth' && o.group === r.group)) continue;   // a table under its own cloth
       issues.push({ rule: 'visible', what: `${id} (${r.asset}): ${Math.round(100 * f)}% of it shows in the ${A} home view (${r.seen} of ${r.alone} px) and no tour shot shows it better: it is hidden behind other pieces; move it or what stands in front` });
     }
   }
   await page.setViewportSize(size); await page.evaluate(() => window.cozyScene.loop(true));
-  issues.rows = rows; issues.coverage = `visible: ${cov.objects} object(s) in ${ids.length} area(s): ${cov.judged} judged from the home view, ${cov.tiny} skipped (under ${TINY} px), flat rugs and runners left out, ${cov.rescued} shown by a tour shot instead; ${cov.groups} group(s) judged as a whole, ${cov.hiddenGroups} hidden${cov.ids ? ' (' + cov.ids.join(', ') + ')' : ''}`;
+  issues.rows = rows; issues.coverage = `visible: ${cov.objects} object(s) in ${ids.length} area(s): ${cov.judged} judged from the home view, ${cov.tiny} skipped (under ${TINY} px), flat rugs and runners left out, ${cov.rescued} shown by a tour shot instead; ${cov.groups} group(s) judged as a whole, ${cov.hiddenGroups} hidden, ${cov.faded} faded in the home view${cov.ids ? ' (' + cov.ids.join(', ') + ')' : ''}`;
   return issues;
 }
 
