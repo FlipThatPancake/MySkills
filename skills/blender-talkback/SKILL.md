@@ -1,6 +1,6 @@
 ---
 name: blender-talkback
-description: Use when the user asks you to check their Talkback messages in Blender (notes on objects or collections, written as a conversation with you), to answer or act on one, or when you need the user to look at specific objects and want to open a conversation on them yourself. Reads, answers and opens conversations through the Talkback MCP or any Blender MCP's run-Python tool.
+description: Use when the user asks you to check their Talkback messages in Blender (notes on objects or collections, written as a conversation with you), to answer or act on one, or when you need the user to look at specific objects (or the whole scene) and want to open a conversation on them yourself. Reads, answers and opens conversations through the Talkback MCP or any Blender MCP's run-Python tool.
 ---
 
 # Talkback (agent side)
@@ -26,7 +26,7 @@ you read or change anything.
 
 ## Tools
 
-With the Talkback MCP server connected (server name `talkback`; tools `list_comments`, `get_comment`,
+With the Talkback MCP server connected (server name `talkback`, MCP script version 0.8.0; tools `list_comments`, `get_comment`,
 `get_context`, `read_unread`, `history`, `add_comment`, `start_conversation`, `open_conversation`, `move_conversation`) call them directly. Otherwise run the
 same functions (the `cc` below) in Blender through your Blender MCP's
 run-Python tool (the MCP server is named `mcp__blender__` where it is installed
@@ -116,6 +116,33 @@ only a speech bubble appears (`typing: true` in the result): do not ask again. T
 conversation use `open_conversation(n)` (any message number in it). Do not open conversations the user
 did not need: one clear question per conversation. The result has `opened` (selected and shown) and
 `typing`. Records also carry `collection` (the collection's name, or `None`).
+
+## The chat area and scene chat (v1.6)
+
+From v1.6 the user can talk to you in a **chat area** inside Blender (a panel beside the 3D view, opened from the dock's
+speech-bubble button). It shows **Scene Chat** (the scene's own conversation), an **All Conversations** list and Settings.
+In the records you read this changes little, but these things are new:
+
+- **Start a conversation without objects.** `start_conversation(text, scene_wide=True, title=...)` asks about the whole scene
+  and opens Scene Chat; leave out `objects` and `collection` when you pass it (mixing them is `bad_input`). `add_comment(text,
+  scene_wide=True)` writes to the scene's conversation too (no `reply_to`). Objects and collections work as before.
+- **`scene_id` on every tool.** `open_conversation`, `start_conversation`, `read_unread`, `history`, `add_comment`,
+  `get_comment`, `get_context`, `list_comments`, `resolve`, `back_to_draft`, `queue` and `mark_sent` all accept `scene_id`
+  (a stable id from a scene conversation's record). Pass it whenever a record carried one: message numbers repeat across
+  scenes. An unknown `scene_id` returns `not_found` and names it. `open_conversation(n, scene_id=...)` opens a conversation of
+  another scene.
+- **`context` on records.** A message sent from the chat area carries `context`: a copy taken at send time, so renames and
+  deletions later do not change it: `{"tags": [{"name", "kind"}], "mode", "active", "scene", "refs": [{"name", "kind"}]}`.
+  `tags` are the objects the user had selected as chips, `refs` are the `@name` mentions typed in the text (kinds `obj`, `coll`,
+  `light`, `cam`, `mat`, `world`), `active` the active object, `scene` the scene name. Older messages and
+  messages from other surfaces have `context: None`. Use `refs` and `tags` to know what the user pointed at, but the text and
+  `get_context(n)` stay the source for what you change.
+- **`@name` in the text** means that object, collection, material or the world, picked from the chat area's `@` menu.
+- **Send mode (the user's choice).** *Queued* (default): messages wait until you check (`read_unread`); *Send each message*:
+  each message is pushed to you at once when Local MCP is on and an agent chat can receive it. Either way, behave the same:
+  answer every unread message. The user sees "Not picked up yet" on a message until you read it.
+- **The disc, the text box and the dock are the user's side.** You do not need to describe them. If the user says the chat
+  area is missing, they open it from the dock or the header button; it has no keyboard shortcut.
 
 ## What the user sees (v1.3), so you can describe it
 
