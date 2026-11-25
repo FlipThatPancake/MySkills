@@ -25,14 +25,14 @@ export function glidePath(from, to, ways, opts = {}) {
   if (!walk.length && ways.length) {   // with no wall to walk through (an open room, or ends on one side of the way) the camera takes a curved path: it backs out sideways from the straight line (away from where it looks) and comes round into the next view, so a small turn still reads as a walk, not a slide
     const c = [p1[0] - p0[0], p1[2] - p0[2]], L = Math.hypot(...c) || 1, n = [-c[1] / L, c[0] / L], look = [from.target[0] - p0[0] + to.target[0] - p1[0], from.target[2] - p0[2] + to.target[2] - p1[2]], sg = n[0] * look[0] + n[1] * look[1] > 0 ? -1 : 1;
     cam.splice(1, 0, [(p0[0] + p1[0]) / 2 + n[0] * sg * 0.22 * L, (p0[1] + p1[1]) / 2, (p0[2] + p1[2]) / 2 + n[1] * sg * 0.22 * L]); }
-  const  aim = [from.target, ...ways.map((w) => [w.p[0] + w.d[0] * 4500, 1000, w.p[1] + w.d[1] * 4500]), to.target];
-  const smooth = (t) => { t = Math.min(1, Math.max(0, t)); return t * t * (3 - 2 * t); }, hi = (home) => home + 300;
+  const  aim = [from.target, ...ways.map(() => to.target), to.target];   // from the first opening on the camera looks at the destination's own view target, so the middle frames show the room being entered, not the wall just ahead
+  const smooth = (t) => { t = Math.min(1, Math.max(0, t)); return t * t * (3 - 2 * t); }, hi = (home) => home + 1500;
   const pos = (u) => {   // the lift eases in over the first twentieth of the path and out over the last, so a wall right beside a home view is passed over
-    const q = spline(cam, u), near = walk.length ? Math.min(...walk.map((w) => Math.hypot(q[0] - w.p[0], q[2] - w.p[1]))) : 1e9, w = smooth((near - 500) / 2000) * smooth(Math.min(u, 1 - u) / 0.05);; return [q[0], q[1] + Math.max(0, hi(opts.height) - q[1]) * w, q[2]]; };
+    const q = spline(cam, u), near = walk.length ? Math.min(...walk.map((w) => Math.hypot(q[0] - w.p[0], q[2] - w.p[1]))) : 1e9, w = smooth((near - 400) / 1000) * smooth(Math.min(u, 1 - u) / 0.05);; return [q[0], q[1] + Math.max(0, hi(opts.height) - q[1]) * w, q[2]]; };
   // even speed (round 6 B3): the progress e (0 to 1) is turned into a distance along the walked line, so the camera covers equal lengths in equal times whatever the spacing of the points; secs grows with the length
   const N = 240, tab = [0]; { let q = pos(0); for (let i = 1; i <= N; i++) { const r = pos(i / N); tab.push(tab[i - 1] + Math.hypot(r[0] - q[0], r[1] - q[1], r[2] - q[2])); q = r; } }
   const len = tab[N] || 1, param = (e) => { const s = Math.min(1, Math.max(0, e)) * len; let lo = 0, hi = N; while (hi - lo > 1) { const m = (lo + hi) >> 1; if (tab[m] <= s) lo = m; else hi = m; } return (lo + (tab[hi] > tab[lo] ? (s - tab[lo]) / (tab[hi] - tab[lo]) : 0)) / N; };
   return { pos: (e) => pos(param(e)), tgt: (e) => spline(aim, param(e)), ways, len, secs: glideSecs(len) };
 }
-export const GLIDE_SPEED = 3500, GLIDE_MIN_S = 1.6, GLIDE_MAX_S = 9;   // mm per second on average (the ease at both ends makes the middle up to 1.5 times that), and the shortest and longest a move lasts
+export const GLIDE_SPEED = 5000, GLIDE_MIN_S = 1.6, GLIDE_MAX_S = 5;   // mm per second on average (the ease at both ends makes the middle up to 1.5 times that), and the shortest and longest a move lasts
 export const glideSecs = (len) => Math.min(GLIDE_MAX_S, Math.max(GLIDE_MIN_S, len / GLIDE_SPEED));   // a longer move takes longer, so a long way through is no faster than a short one
