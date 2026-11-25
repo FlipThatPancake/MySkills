@@ -34,6 +34,7 @@ export const fixtures = [
   // B15: benches count in the variety check (one bench per home)
   bug('r6d-two-benches-in-two-areas', 'B15: a bench in each of two areas of one home', ['variety'], ['t-b1', 'u-b2'], ({ Home }) => { const { H, a, back } = room(Home); back.place('b1', 'bench', 3000, { group: 'g' }); const b = H.area('u', 'U', { rect: [0, 0, 6000, 4000] }); H.join(a, b, { layout: 'row', share: 500, separators: [] }); const bb = b.back(6000, []); b.view({ target: [3000, 700, 2000], az: 20, el: 15 }); bb.place('b2', 'bench', 3000, { group: 'g' }); return H; }),
   good('r6d-one-bench-in-a-home', 'B15: one bench in the home', ({ Home }) => { const { H, back } = room(Home); back.place('b1', 'bench', 3000, { group: 'g' }); return H; }),
+  good('r6d-still-moka-over-the-hob-snaps', 'harness: a.onTop spaces a moka pot along the worktop over the hob; it moves onto a burner centre', ({ Home }) => { const { H, a, back } = room(Home), R = run(a, back, [['doors', 600], ['hob', 900], ['doors', 600]]); R.on('hob', 'hob'); a.onTop('run', [{ id: 'moka', asset: 'mokaPot' }], { at: 'centre', margin: 80, group: 'run' }); return H; }),
   // A8: pulled-out dining chairs stay on the rug (rule rugreach, extended in round 3; the red twin is table-rug-ends-under-the-chairs)
   good('r6d-rug-under-pulled-out-chairs', 'A8: the table set own rug holds the pulled-out chairs', ({ Home }) => { const { H, a } = room(Home, { W: 7000, D: 5000 }); a.table('dt', { at: [3500, 2500], w: 1800, d: 900, chairs: 4 }); return H; }, ['rugreach']),
 ];
