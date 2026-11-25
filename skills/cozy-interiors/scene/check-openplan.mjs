@@ -234,14 +234,25 @@ export async function orbitIssues(page, sceneFile) {
   for (const A of S.areas || []) {
     const bad = await page.evaluate((id) => {
       const c = window.cozyScene, T = c.kit.THREE; c.setArea(id, true); const tg = c.controls.target.clone(), off = c.camera.position.clone().sub(tg), dist = off.length(), az0 = Math.atan2(off.x, off.z) * 180 / Math.PI, el0 = Math.asin(off.y / dist) * 180 / Math.PI, res = [];
-      const B = c.home.blockers, ray = new T.Raycaster(), meshes = (g) => { const m = []; g.traverse((o) => { if (o.isMesh && !o.isLineSegments2 && o.material && !o.material.isMeshBasicMaterial && o.visible) m.push(o); }); return m; };
+      const B = c.home.blockers, viaWall = (b) => { for (let q = b, n = 0; q && n < 8; q = q.onB, n++) if (q.wall && q.wall.goal === 0) return true; return false; }, ray = new T.Raycaster(), meshes = (g) => { const m = []; g.traverse((o) => { if (o.isMesh && !o.isLineSegments2 && o.material && !o.material.isMeshBasicMaterial && o.visible) m.push(o); }); return m; };
       for (const d of [-80, -40, 0, 40, 80]) for (const el of [Math.max(8, el0 - 8), el0 + 14, el0 + 32]) {
         c.look(dist, az0 + d, el, tg.toArray()); c.camera.updateMatrixWorld(true); c.home.update(c.camera, c.controls.target, true, true);   // instant: each fade has settled, so what is drawn equals where it is heading
         const P = c.camera.position, dir = tg.clone().sub(P), L = dir.length(); ray.set(P, dir.normalize());
-        for (const b of B) { if (b.main && b.goal < 1 && !(b.wall && b.wall.goal === 0)) { res.push(`a piece of the subject group (${b.id}) fades at az ${Math.round(az0 + d)}, el ${Math.round(el)}`); break; } }
+        for (const b of B) { if (b.main && b.goal < 1 && !viaWall(b)) { res.push(`a piece of the subject group (${b.id}) fades at az ${Math.round(az0 + d)}, el ${Math.round(el)}`); break; } }
         for (const b of B) if (b.sv.value > (b.cur ?? 1) + 0.02) { res.push(`the contact shadow of ${b.id} is drawn (${b.sv.value.toFixed(2)}) while the piece is faded (${(b.cur ?? 1).toFixed(2)}) at az ${Math.round(az0 + d)}, el ${Math.round(el)}`); break; }
         if (res.length) break;
         for (const b of B) { if (b.goal < 0.5 || b.main || !b.g.userData.scene || b.g.userData.scene.area !== id || new T.Box3().setFromObject(b.g).expandByScalar(100).containsPoint(tg)) continue; const hit = ray.intersectObjects(meshes(b.g), false)[0]; if (hit && hit.distance < L - 300) { res.push(`${b.id} stands unfaded between the camera and the view centre at az ${Math.round(az0 + d)}, el ${Math.round(el)} (it is ${Math.round(hit.distance)} mm out of ${Math.round(L)})`); break; } }
+        for (const b of B) if (b.onB && b.goal > 0.5 && b.onB.goal === 0 && (b.cur ?? 1) > 0.5) { res.push(`${b.id} hangs in the air at az ${Math.round(az0 + d)}, el ${Math.round(el)}: ${b.onB.id}, which it stands on, is faded out and it is not`); break; }   // a faded table takes what stands on it along (home.js supportOf)
+        if (res.length) break;
+        // through the arches and doors: the first room beyond each (src/area-run.js sync) must fill the opening from every angle of the orbit where the camera stands on this side; a ray through the opening that meets nothing above the floor shows empty white
+        c.sync(); c.home.group.updateMatrixWorld(true);
+        for (const l of (c.S.home.plan?.links || [])) { if (l.kind === 'open' || (l.a !== id && l.b !== id)) continue;
+          const dir = l.a === id ? 1 : -1, side = ((P.x - l.p[0]) * l.d[0] + (P.z - l.p[1]) * l.d[1]) * dir; if (side > -100) continue;   // the camera is past the way's plane: the room behind it is not drawn (and the area is seen from beyond)
+          const ms = []; c.scene.traverse((o) => { if (!o.isMesh || o.isLineSegments2 || !o.material) return; for (let q = o; q; q = q.parent) if (!q.visible) return; if (o.material.transparent && o.material.opacity < 0.5) return; ms.push(o); });
+          const px = -l.d[1], pz = l.d[0]; let miss = 0, n = 0;
+          for (const u of [-350, -175, 0, 175, 350]) for (const y of [700, 1100, 1500, 1800]) { const S = new T.Vector3(l.p[0] + px * u, y, l.p[1] + pz * u), r = S.clone().sub(P), dl = r.length(); ray.set(P, r.normalize()); n++;
+            if (!ray.intersectObjects(ms, false).some((h) => h.distance > dl + 80 && (h.point.y > 300 || r.y < 0))) miss++; }
+          const nb = l.a === id ? l.b : l.a; if (!l.shows?.[nb] || miss / n > 0.75) { res.push(`through the ${l.kind} to ${nb} the view shows empty white (${l.shows?.[nb] ? '' : 'the room behind is not drawn; '}${miss} of ${n} sight lines through the opening meet nothing) at az ${Math.round(az0 + d)}, el ${Math.round(el)}: draw the first room behind the way through (area-run.js sync)`); break; } }
         if (res.length) break;
       }
       c.setArea(id, true); return res;

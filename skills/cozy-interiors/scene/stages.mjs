@@ -35,7 +35,7 @@ const RULE = {
   // visible: a group hidden in the home view is an anchor fault; a small piece hidden is a dress fault
   visible: (i, c) => (/hides the rest of group/.test(i.what) ? 4 : split()(i, c)),
   // 5 dress
-  variety: S.dress, foreground: S.dress, bare: S.dress, tabletop: S.dress, surface: S.dress, lamps: S.dress, lights: S.dress, cushion: S.dress, throw: S.dress, shoes: S.dress, sill: S.dress, curtain: S.dress, kettle: S.dress, towel: S.dress, accent: S.dress, cord: S.dress, 'open-light': S.dress, 'note-lampspot': S.dress,
+  variety: S.dress, foreground: S.dress, bare: S.dress, tabletop: S.dress, surface: S.dress, lamps: S.dress, lights: S.dress, cushion: S.dress, throw: S.dress, shoes: S.dress, sill: S.dress, curtain: S.dress, dress: S.dress, kettle: S.dress, towel: S.dress, accent: S.dress, cord: S.dress, 'open-light': S.dress, 'note-lampspot': S.dress,
   // 6 life
   motion: S.life, windmover: S.life,
   // 7 photographs

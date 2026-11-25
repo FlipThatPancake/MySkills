@@ -6,7 +6,7 @@ export const CLOTH = /cloth|throw|towel|curtain|blanket|runner|duvet/i;         
 export const SEAT = /cushion|pillow|sofa|armchair|readingChair|daybed|bed|windowSeat|footstool|pouf|seatSoft/i;  // upholstery: things may sink 30 mm
 export const SOFT = new RegExp(CLOTH.source + '|' + SEAT.source, 'i');                                     // a rug is not soft: things stand on its pile
 export const RUG = /rug/i;
-export const PAN = /^(pan|pot|saucepan|frypan)$/i;
+export const PAN = /^(pan|pot|saucepan|frypan|mokaPot)$/i;   // round 6 B19: a moka pot stands like a pan: anywhere inside the hob's outline for support, but centred on a burner (rules.mjs)
 export const isFree = (o) => !/^(wall|ceiling|lines|in)/.test(o.mount) && !FLATMARK.test(o.asset || '') && !BUILT_IN.test(o.asset || '') && !DRAPE.test(o.asset || '');
 export const softKind = (asset) => (CLOTH.test(asset || '') ? 'cloth' : SEAT.test(asset || '') ? 'seat' : null);
 export const FOLDED = /^(foldedThrow|cushion|benchCushion|floorCushion|pillow)$/;                         // folded cloth things lie on a surface like any piece: the support rules (floating, overhangs, sunk) read them, the settle test leaves them be
