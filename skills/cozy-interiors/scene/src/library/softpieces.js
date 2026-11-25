@@ -178,7 +178,7 @@ export function tableRunner(kit, { w = 1600, d = 900, rw = 400, drop = 280, fold
   g.add(kit.lines(ln, 'mid')); return g;
 }
 // An unmade duvet over a mattress (x: -w/2..w/2, z from `head` to `foot`, the top at the surface): one side hangs low and the other less, the foot hangs, the top has soft lumps,
-// and the pillow-end corner on the getting-out (+x) side is turned back diagonally over the top, showing a triangle of sheet where it lay.
+// and the pillow-end corner on the getting-out (+x) side is turned back diagonally over the top as a soft roll along the fold, showing the sheet where it lay.
 export function duvetCloth(kit, { w = 1600, head = -700, foot = 900, sagL = 130, sagR = 400, sagFoot = 260, turn = 720, tone = 'lo', seed = 1, made = false } = {}) {
   const hx = w / 2, grid = hangGrid({ bx: [-hx, hx], bz: [head, foot], cx: [-hx - sagL, hx + sagR], cz: [head, foot + sagFoot], y: 4, fold: 4, amp: 46, ripple: 8, seed, nx: Math.round((w + sagL + sagR) / 36), ny: Math.round((foot - head + sagFoot) / 36), flare: 0.1 }), P = grid.pts;
   const lumps = [[-hx * 0.35 + 90 * Math.sin(seed), head + 700, 190, 38], [hx * 0.25, head + 1150 + 60 * Math.cos(seed), 230, 30], [-hx * 0.1, foot - 380, 160, 20]];
@@ -196,10 +196,9 @@ export function duvetCloth(kit, { w = 1600, head = -700, foot = 900, sagL = 130,
   if (made) {   // a made bed: a soft roll of the duvet folded back across the head
     const roll = softBox(kit, w * 0.96, 250, 70, { r: 33, bulge: 8, sag: 0, tone }); roll.rotation.x = -Math.PI / 2; roll.position.set(0, 4 + 34, head + 170); g.add(roll); return g;
   }
-  // the flap: a triangle folded back over the top along the diagonal, its wrong side (linen) up, a soft roll along the fold
-  const topY = 10 + 6, sh = new T.Shape([new T.Vector2(hx - turn + 12, head + 10), new T.Vector2(hx - 14, head + turn - 4), new T.Vector2(hx - turn + 12, head + turn - 14)]);
-  const fg = new T.ExtrudeGeometry(sh, { depth: 18, bevelEnabled: true, bevelThickness: 16, bevelSize: 16, bevelSegments: 7, curveSegments: 4 }); fg.rotateX(Math.PI / 2);   // the turned-back corner: a thick, rounded fold in the duvet's own colour, not a board
-  g.add(kit.solid(fg, 0, topY + 34, 0, { smooth: true, tone }));
-  g.add(rod(kit, [hx - turn + 10, topY + 30, head + 8], [hx - 10, topY + 30, head + turn - 6], 40, 40, tone));
+  // the head end is turned back on the getting-out side: two soft folds of the duvet lying one over the other, a little crooked, wide and low, with the bare sheet showing where the corner lay (round 6: a flat triangle plate with a rod on its edge read as a triangle with a stick)
+  const fold = (len, dep, hh, x, z, ang, r) => { const b = softBox(kit, len, dep, hh, { r, bulge: 14, sag: 0, tone }); b.rotation.x = -Math.PI / 2; const q = kit.group(); q.add(b); q.rotation.y = ang; q.position.set(x, 4 + hh / 2 - 6, z); g.add(q); };
+  fold(turn * 1.05, 300, 90, hx - turn * 0.48, head + turn * 0.4, -0.5 + 0.08 * Math.sin(seed * 5), 42);
+  fold(turn * 0.7, 230, 70, hx - turn * 0.32, head + turn * 0.62, -0.78 + 0.08 * Math.cos(seed * 3), 34);
   return g;
 }
