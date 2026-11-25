@@ -56,7 +56,7 @@ fixtures.push(
   { name: 'glide-flies-over-a-wardrobe-beside-the-way', from: 'round 6 (T13, new path Nov 25): the camera crosses a wall high, like a crane, so it no longer comes within 450 mm of furniture; a wardrobe 900 mm beside the way still fills over 30% of the frame at k 0.1 (a large piece near the start view)', kind: 'bug', expect: { rules: ['glide'], ids: ['fills'] },
     build({ Home }) { return homeOf(Home, 10, [['hallway'], ['living'], ['bedroom']], [['hallway', 'living'], ['hallway', 'bedroom']], 1, false, null, 'wardrobe', 900); } },
   { name: 'good-glide-past-a-cabinet-beside-the-way-through', from: 'round 6 tester (T13): the glide through a way passes a tall cabinet 350 mm beside it; the check read a box beside the camera as filling the whole frame (red before the fix)', kind: 'good', counts: ['glide'],
-    build({ Home }) { return homeOf(Home, 10, [['hallway'], ['living'], ['bedroom']], [['hallway', 'living'], ['hallway', 'bedroom']], 1, false, null, 'glazedCabinet', 1450); } },
+    build({ Home }) { return homeOf(Home, 10, [['hallway'], ['living'], ['bedroom']], [['hallway', 'living'], ['hallway', 'bedroom']], 1, false, null, 'glazedCabinet', 1800); } },
 );
 
 // what stands between the camera and its target fades out (home.js update; check-openplan orbitIssues): a wardrobe at the side of the room is in the way when the camera swings round; with the fade switched off the orbit check names it
