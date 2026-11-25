@@ -20,6 +20,15 @@ const tableRoom = (Home, supportFade, keepHomeView = true, az = 0) => {
 };
 
 // a furnished hallway with a window on the wall beside the arch: with the clip on, the kitchen-side pieces show through the arch only
+// a picture on the right wall; the camera swings out past that wall
+const wallPic = (Home, wallHang) => {
+  const H = new Home({ seed: 5, floor: 'plain', detached: true, wallHang }), a = H.area('t', 'T', { rect: [0, 0, 6000, 4500] }); a.back(6000); a.left(4500); const Fr = a.right(4500);
+  a.put('sofa', 'sofa', [3000, 700], 0, { group: 'seat', hero: true, params: { seats: 3, arms: 'rolled', back: 'tight' } });
+  Fr.place('pic', 'picture', 2250, { group: 'seat', y: 1000 });
+  a.view({ target: [3000, 600, 800], az: 20, el: 18 });
+  return H;
+};
+
 export const fixtures = [
   { name: 'orbit-room-behind-an-arch-is-not-drawn', from: 'round 6 (Paul): behind the hallway arch nothing was drawn at rest, so from an angle the opening showed empty white; here the room behind is switched off (passageView false)', kind: 'bug', expect: { rules: ['orbit'], ids: ['the room behind is not drawn'] },
     build({ Home }) { const H = passageHome(Home); H.passageView = false; return H; } },
@@ -35,4 +44,8 @@ export const fixtures = [
     build({ Home }) { return tableRoom(Home, true, false); } },
   { name: 'good-orbit-home-view-keeps-its-groups-drawn', from: 'round 6 (lead): the same sideboard stays at full opacity in the home view', kind: 'good', counts: ['orbit'],
     build({ Home }) { return tableRoom(Home, true, true); } },
+  { name: 'orbit-picture-stays-when-its-wall-fades', from: 'round 6 (lead): the hallway hat stayed in the air where its wall had faded; here a piece on the right wall no longer goes with the wall (wallHang false), and the camera swings out past that wall', kind: 'bug', expect: { rules: ['orbit'], ids: ['pic'] },
+    build({ Home }) { return wallPic(Home, false); } },
+  { name: 'good-orbit-picture-fades-with-its-wall', from: 'round 6 (lead): a piece hung on a wall fades with it', kind: 'good', counts: ['orbit'],
+    build({ Home }) { return wallPic(Home, true); } },
 ];
