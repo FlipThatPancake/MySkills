@@ -2,10 +2,10 @@
 import { roll } from '../../../../skills/cozy-interiors/scene/roll.mjs';
 
 // a hallway with a door to the bedroom and a way to the living room, as the round-6 plan builds them (plan.mjs homeOf, without furniture)
-const passageHome = (Home, patch) => {
+const passageHome = (Home, crowd = false) => {   // crowd: wardrobes in every room, so a leak of the room behind shows in pixels (the good fixture stays bare: wardrobes there break the placement rules)
   const R = roll(10, ['hallway', 'living', 'bedroom'], { rooms: [['hallway'], ['living'], ['bedroom']], touch: [['hallway', 'living'], ['hallway', 'bedroom']] }), H = new Home({ seed: 10 });
   H.roll({ seed: 10, plan: R.plan, openPlan: R.openPlan, areas: {} });
-  for (const id of R.plan.order) { const pa = R.plan.areas[id], [w, d] = pa.fit.map((v) => Math.round(v)); const a = H.area(id, id, { rect: [0, 0, w, d] }); a.back(w); a.left(d); a.right(d); }
+  for (const id of R.plan.order) { const pa = R.plan.areas[id], [w, d] = pa.fit.map((v) => Math.round(v)); const a = H.area(id, id, { rect: [0, 0, w, d] }); a.back(w); a.left(d); a.right(d); if (crowd) for (const f of [0.2, 0.5, 0.8]) a.put(`wd${id}${f}`, 'wardrobe', [Math.round(w * f), 800], 0, { group: 'g' }); }
   return H;
 };
 
@@ -19,6 +19,7 @@ const tableRoom = (Home, supportFade) => {
   return H;
 };
 
+// a furnished hallway with a window on the wall beside the arch: with the clip on, the kitchen-side pieces show through the arch only
 export const fixtures = [
   { name: 'orbit-room-behind-an-arch-is-not-drawn', from: 'round 6 (Paul): behind the hallway arch nothing was drawn at rest, so from an angle the opening showed empty white; here the room behind is switched off (passageView false)', kind: 'bug', expect: { rules: ['orbit'], ids: ['the room behind is not drawn'] },
     build({ Home }) { const H = passageHome(Home); H.passageView = false; return H; } },
@@ -28,4 +29,6 @@ export const fixtures = [
     build({ Home }) { return tableRoom(Home, false); } },
   { name: 'good-orbit-vase-fades-with-its-table', from: 'round 6 (Paul, item 16): a faded table takes its vase along (home.js supportOf)', kind: 'good', counts: ['orbit'],
     build({ Home }) { return tableRoom(Home, true); } },
+  { name: 'orbit-room-behind-an-arch-shows-past-the-opening', from: 'round 6 (lead): the room behind the hallway arch showed through a window and past the wall where the hallway has none; here the stencil clip is switched off (portalClip false)', kind: 'bug', expect: { rules: ['orbit'], ids: ['outside the opening'] },
+    build({ Home }) { const H = passageHome(Home, true); H.portalClip = false; return H; } },
 ];

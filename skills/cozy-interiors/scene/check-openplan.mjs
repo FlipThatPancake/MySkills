@@ -249,6 +249,18 @@ export async function orbitIssues(page, sceneFile) {
         for (const b of B) { if (b.goal < 0.5 || b.main || !b.g.userData.scene || b.g.userData.scene.area !== id || new T.Box3().setFromObject(b.g).expandByScalar(100).containsPoint(tg)) continue; const hit = ray.intersectObjects(meshes(b.g), false)[0]; if (hit && hit.distance < L - 300) { res.push(`${b.id} stands unfaded between the camera and the view centre at az ${Math.round(az0 + d)}, el ${Math.round(el)} (it is ${Math.round(hit.distance)} mm out of ${Math.round(L)})`); break; } }
         for (const b of B) if (b.onB && b.goal > 0.5 && b.onB.goal === 0 && (b.cur ?? 1) > 0.5) { res.push(`${b.id} hangs in the air at az ${Math.round(az0 + d)}, el ${Math.round(el)}: ${b.onB.id}, which it stands on, is faded out and it is not`); break; }   // a faded table takes what stands on it along (home.js supportOf)
         if (res.length) break;
+        // a neighbouring room shows only through a door's or arch's outline (portal mask, area-run.js): the picture with the neighbour drawn and the picture without it may differ inside the openings only; a difference elsewhere is the neighbour showing through a window or past a wall's end
+        if (c.portal.size) {
+          const W0 = 160, H0 = 100, cv = document.createElement('canvas'); cv.width = W0; cv.height = H0; const x2 = cv.getContext('2d', { willReadFrequently: true }), grab = () => { x2.drawImage(c.draw(), 0, 0, W0, H0); return x2.getImageData(0, 0, W0, H0).data.slice(); };
+          const A1 = grab(), saved = [], hide = [];
+          for (const o of Object.values(c.home.objects)) if (c.portal.has(o.userData.scene.area)) hide.push(o);
+          for (const w of c.home.walls) if (c.portal.has(c.orderArea(w)) && !w.walk.length) hide.push(w.node);
+          for (const o of hide) { saved.push(o.visible); o.visible = false; }
+          const A2 = grab(); hide.forEach((o, i) => { o.visible = saved[i]; });
+          const rects = []; c.scene.traverse((o) => { if (o.name !== 'portal-mask') return; for (let q = o; q; q = q.parent) if (!q.visible) return; const b = new T.Box3().setFromObject(o); let x0 = 9, y0 = 9, x1 = -9, y1 = -9; for (const xx of [b.min.x, b.max.x]) for (const yy of [b.min.y, b.max.y]) for (const zz of [b.min.z, b.max.z]) { const v = new T.Vector3(xx, yy, zz).project(c.camera); x0 = Math.min(x0, v.x); x1 = Math.max(x1, v.x); y0 = Math.min(y0, v.y); y1 = Math.max(y1, v.y); } rects.push([(x0 + 1) / 2 * W0 - 8, (1 - y1) / 2 * H0 - 8, (x1 + 1) / 2 * W0 + 8, (1 - y0) / 2 * H0 + 8]); });
+          let bad = 0; for (let i = 0; i < W0 * H0; i++) { const px = i % W0, py = (i / W0) | 0; if (Math.abs(A1[i * 4] - A2[i * 4]) + Math.abs(A1[i * 4 + 1] - A2[i * 4 + 1]) + Math.abs(A1[i * 4 + 2] - A2[i * 4 + 2]) > 30 && !rects.some((r) => px >= r[0] && px <= r[2] && py >= r[1] && py <= r[3])) bad++; }
+          if (bad > 25) { res.push(`the room behind a way through shows outside the opening (${bad} px of ${W0 * H0} differ with it switched off; through a window or past a wall's end) at az ${Math.round(az0 + d)}, el ${Math.round(el)}: it must show through the door or arch only (portal mask, area-run.js)`); break; } }
+        if (res.length) break;
         // through the arches and doors: the first room beyond each (src/area-run.js sync) must fill the opening from every angle of the orbit where the camera stands on this side; a ray through the opening that meets nothing above the floor shows empty white
         c.sync(); c.home.group.updateMatrixWorld(true);
         for (const l of (c.S.home.plan?.links || [])) { if (l.kind === 'open' || (l.a !== id && l.b !== id)) continue;

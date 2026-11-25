@@ -23,7 +23,7 @@ export async function visibleIssues(page, camerasByArea = {}, opt = {}) {
       const diff = (a, b) => { let n = 0; for (let i = 0; i < a.length; i += 4) if (Math.abs(a[i] - b[i]) + Math.abs(a[i + 1] - b[i + 1]) + Math.abs(a[i + 2] - b[i + 2]) > 12) n++; return n; };
       const set = (f) => { for (const k of all) c.objects[k].visible = f(k); };
       const measure = (list) => { set(() => false); const E = grab(); set(() => true); const F = grab(), m = {}; for (const k of list) { set((i) => i === k); const alone = diff(grab(), E); set((i) => i !== k); m[k] = [alone, diff(grab(), F)]; } set(() => true); return m; };
-      const fade = {}; for (const b of c.home.blockers) if (sc(b.id) && sc(b.id).area === A && b.goal < 1 && !(b.wall && b.wall.goal === 0)) fade[b.id] = +b.goal.toFixed(2);   // the view fade at the home view (a piece hung on a wall that fades with it is left out: the near wall goes by design), before any piece is switched off: a piece the camera looks through is drawn at its goal
+      const fade = {}; for (const b of c.home.blockers) if (sc(b.id) && sc(b.id).area === A && b.would && !(b.wall && b.wall.goal === 0)) fade[b.id] = +b.goal.toFixed(2);   // the view fade at the home view (a piece hung on a wall that fades with it is left out: the near wall goes by design), before any piece is switched off: a piece the camera looks through is drawn at its goal
       const cands = all.filter((k) => !SKIP.includes(sc(k).asset)), home = { p: c.camera.position.clone(), t: c.controls.target.clone(), fov: c.camera.fov };
       const m0 = measure(cands), bad = cands.filter((k) => m0[k][0] >= TINY && m0[k][1] < 0.2 * m0[k][0]);
       for (const k of cands) out[k] = { alone: m0[k][0], seen: m0[k][1], asset: sc(k).asset, group: sc(k).group, shot: null, fade: fade[k] ?? 1 };
@@ -49,7 +49,7 @@ export async function visibleIssues(page, camerasByArea = {}, opt = {}) {
       return out;
     }, [A, camerasByArea[A] || {}, SKIP, TINY, GMIN, GTINY, BIG]);
     const gr = res.__groups, fd = res.__fade; delete res.__groups; delete res.__fade;
-    for (const f of fd) { if (f.group) { cov.faded++; issues.push({ rule: 'visible', what: `${f.id} (${f.asset}) is faded out in the ${A} home view (drawn at ${Math.round(100 * f.goal)}%): the camera looks through it to the view centre, and the home view must not fade a piece of the area's own group ${f.group}: move the view target or the piece` }); } }
+    for (const f of fd) { if (f.group) { cov.faded++; issues.push({ rule: 'visible', what: `${f.id} (${f.asset}) stands between the camera and the view centre of the ${A} home view (the view fade would hide it; the home view keeps a piece of the area's own group ${f.group} drawn, so it blocks the view): move the view target or the piece` }); } }
     for (const r of gr) { cov.groups++; (issues.groupRows ||= []).push({ area: A, ...r }); if (r.seen >= GMIN * r.alone) continue; cov.hiddenGroups++;
       issues.push({ rule: 'visible', what: `${r.cause} (${r.asset}) hides the rest of group ${r.g} in the ${A} home view: only ${Math.round(100 * r.seen / r.alone)}% of the group's pixels show (${r.seen} of ${r.alone} px; ${Math.round(100 * GMIN)}% at least): move ${r.cause} or the group; a tour shot does not excuse a group hidden in the home view` }); }
     for (const [id, r] of Object.entries(res)) {

@@ -49,6 +49,14 @@ export function openingMask(kit, pts) {
   m.rotation.y = Math.PI / 2; m.renderOrder = -11; m.name = 'opening-mask'; m.userData.kitLine = true; m.frustumCulled = false;
   return m;
 }
+// A door or arch lets the room beyond show through its outline only: the mask writes PORTAL_REF into the stencil buffer, and the pieces and walls of a neighbouring room are drawn only where it reads PORTAL_REF (area-run.js sync hooks them). A window never shows a neighbour.
+export const PORTAL_REF = 5;
+export function portalMask(kit, pts) {
+  const T = kit.THREE, shape = new T.Shape(pts.map(([z, y]) => new T.Vector2(-z, y)));
+  const m = new T.Mesh(new T.ShapeGeometry(shape), new T.MeshBasicMaterial({ colorWrite: false, depthWrite: false, depthTest: false, side: T.DoubleSide, stencilWrite: true, stencilRef: PORTAL_REF, stencilFunc: T.AlwaysStencilFunc, stencilZPass: T.ReplaceStencilOp }));
+  m.rotation.y = Math.PI / 2; m.renderOrder = -12; m.name = 'portal-mask'; m.userData.kitLine = true; m.frustumCulled = false;
+  return m;
+}
 export function stencilClip(kit, sky) {
   const T = kit.THREE; Object.assign(sky.material, { stencilWrite: true, stencilRef: MASK_REF, stencilFunc: T.EqualStencilFunc, stencilFail: T.KeepStencilOp, stencilZFail: T.KeepStencilOp, stencilZPass: T.KeepStencilOp });
   return sky;
