@@ -42,7 +42,7 @@ export const ASSETS = {
   console: A('centre', [1100, 330, 800], 'floor', 'w 1100, d 330, h 800'),
   bench: A('centre', [1200, 380, 450], 'floor', 'w 1200, d 380, h 450, form plank|slatted|upholstered|trestle'),
   stool: A('centre', [370, 370, 650], 'floor', 'h 650'),
-  picture: A('wall-centre', [600, 52, 800], 'wall', 'w 600, h 800, seed, colour keep|soft|ink (forms 4 and up: classic paintings)', { y: 1100, note: 'on open wall its middle stands at 1500: y = 1500 - h / 2 (1100 for h 800); over furniture 150-250 above its top, about 0.5-0.8 of its width' }),
+  picture: A('wall-centre', [600, 52, 800], 'wall', 'w 600, h 800, colour pastel (default)|keep|soft|ink (forms 4 and up: classic paintings)', { y: 1100, note: 'on open wall its middle stands at 1500: y = 1500 - h / 2 (1100 for h 800); over furniture 150-250 above its top, about 0.5-0.8 of its width' }),
   mirror: A('wall-centre', [700, 56, 1000], 'wall', 'w 700, h 1000, shape arch|round|pill', { y: 800 }),
   wallShelf: A('wall-centre', [900, 230, 280], 'wall', 'w 900, seed', { y: 1300, note: 'books, a pot and a bowl on it' }),
   blind: A('wall-centre', [1200, 300, 1500], 'wall', 'w 1200, h 1500 (the window it covers), form roller|roman, drawn 0.2-0.9 (the share of h lowered from the top), tone mid|lo', { y: 800, note: 'a window blind drawn part way; y is the window sill (the bottom of the covered height); stands in front of the window' }),
