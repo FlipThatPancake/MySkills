@@ -33,7 +33,7 @@ export function glidePath(from, to, ways, opts = {}) {
   const N = 240, tab = [0]; { let q = pos(0); for (let i = 1; i <= N; i++) { const r = pos(i / N); tab.push(tab[i - 1] + Math.hypot(r[0] - q[0], r[1] - q[1], r[2] - q[2])); q = r; } }
   const len = tab[N] || 1, param = (e) => { const s = Math.min(1, Math.max(0, e)) * len; let lo = 0, hi = N; while (hi - lo > 1) { const m = (lo + hi) >> 1; if (tab[m] <= s) lo = m; else hi = m; } return (lo + (tab[hi] > tab[lo] ? (s - tab[lo]) / (tab[hi] - tab[lo]) : 0)) / N; };
   // the aim blends from the start target to the destination's, and is pushed out along its own direction whenever the camera would look down steeper than 58 degrees (the move reads as looking into a room, never down on a plan the page does not show)
-  const tgt = (e) => { const u = param(e), c = pos(u), k = smooth(e), t = [0, 1, 2].map((i) => from.target[i] + (to.target[i] - from.target[i]) * k), h = [t[0] - c[0], t[2] - c[2]], dy = c[1] - t[1], hl = Math.hypot(...h); if (dy <= 0 || Math.atan2(dy, hl) <= rad(MAXPITCH)) return t;
+  const tgt = (e) => { const u = param(e), c = pos(u), k = smooth(Math.min(1, e * 1.6)), t = [0, 1, 2].map((i) => from.target[i] + (to.target[i] - from.target[i]) * k), h = [t[0] - c[0], t[2] - c[2]], dy = c[1] - t[1], hl = Math.hypot(...h); if (dy <= 0 || Math.atan2(dy, hl) <= rad(MAXPITCH)) return t;
     let d = h; if (hl < 1) { const b = pos(param(Math.min(1, e + 0.03))), a = pos(param(Math.max(0, e - 0.03))); d = [b[0] - a[0], b[2] - a[2]]; } const L = Math.hypot(...d) || 1, need = dy / Math.tan(rad(MAXPITCH)); return [c[0] + d[0] / L * need, t[1], c[2] + d[1] / L * need]; };
   return { pos: (e) => pos(param(e)), tgt, ways, len, secs: glideSecs(len) };
 }
