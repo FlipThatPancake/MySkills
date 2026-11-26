@@ -185,7 +185,7 @@ export const SPACE = {
   boots: { kind: ['wellington', 'ankle', 'hiker'], spread: [150, 300], shaft: [200, 330], tone: ['lo', 'mid'], seed: [1, 90] },
   runner: { w: [560, 860], l: [1800, 3200], form: ['stripe', 'bands', 'check'], fringe: ['yes', 'no'], fold: ['yes', 'no'], seed: [1, 90] },
   letterTray: { form: ['tray', 'caddy'], w: [260, 400], n: [3, 8], seed: [1, 90] },
-  coffeeTable: { w: [800, 1200], d: [500, 700], h: [340, 440], shape: ['frame', 'round', 'tray', 'block'] },
+  coffeeTable: { w: [800, 1200], d: [500, 700], h: [370, 440], shape: ['frame', 'round', 'tray', 'block'] },
   floorCushion: { w: [560, 780], thick: [120, 180], tone: ['mid', 'lo'], piping: ['none', 'edge'] },
   logBasket: { r: [230, 310], h: [170, 220], seed: [1, 90] },
   woodStove: { flue: ['wall', 'up'], w: [440, 600], d: [380, 480], h: [520, 700], flueH: [1500, 2000], door: ['glass', 'solid', 'round'], legs: ['feet', 'pedestal'] },

@@ -32,4 +32,8 @@ export const fixtures = [
     build({ Home }) { const { H, a, back } = room(Home); a.put('arm', 'armchair', [900, 485], 0, { group: 'g' }); a.group('side table with a lamp and a cup, a pouf beside it', { wall: back, xc: 3500, hero: true }); return H; } },
   { name: 'good-armchair-on-a-rug-at-a-wall', kind: 'good', from: 'rollstats 200 seeds: 8 seeds, the round rug of "armchair on a round rug, with a side table" crossed the back wall by 200 mm when dealt at a wall',
     build({ Home }) { const { H, a, back } = room(Home); a.group('armchair on a round rug, with a side table', { wall: back, xc: 3000, hero: true }); return H; } },
+  { name: 'good-coffee-table-dealt-above-350', kind: 'good', from: 'rollstats 200 seeds: 13 seeds, a seat had no top within 600 mm because its coffee table was dealt 340-350 high (the rule counts tops above 350)',
+    build({ Home }) { let low = 0; for (let sd = 1; sd <= 60; sd++) { const { a } = room(Home, { seed: sd }); const p = a.dealt('coffeeTable', {}); if ((p.h ?? 400) <= 350) low++; } if (low) throw new Error(`${low} of 60 coffee tables were dealt 350 mm high or less`); return room(Home).H; } },
+  { name: 'good-sofa-with-an-armchair-has-a-top', kind: 'good', from: 'rollstats 200 seeds: 5 seeds, the armchair of "sofa with an armchair" had no top within 600 mm, and its coffee table was a fixed 800 (placement 7)',
+    build({ Home }) { const { H, a, back } = room(Home, { W: 9000, D: 6000 }); a.group('sofa with an armchair, a rug and a coffee table', { wall: back, xc: 4500, hero: true }); H.S.home.roll = { seed: 5, behind: [], areas: { t: { plantAt: [], groups: [], openings: [], still: [], passages: [], signs: [], accents: [], pieces: [], named: [], groupTexts: [] } } }; return H; } },
 ];
