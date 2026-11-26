@@ -23,7 +23,7 @@ const make = (a, phrase, o) => {
   const slot = (name) => ov[name] || {}, skip = (name) => !!slot(name).skip;
   const fail = (name, e) => { left.push(`${name}: ${String(e.message || e).split('\n')[0].slice(0, 400)}`); return null; };
   const c = {
-    a, r, phrase, wall: o.wall, xc: o.xc, at: o.at, floating: !!o.floating, grp, pick: (list) => list[Math.floor(r() * list.length)], rnd: (lo, hi, step) => rnd(r, lo, hi, step), chance: (p) => r() < p, skip,
+    a, r, phrase, compact: !!o.compact, wall: o.wall, xc: o.xc, at: o.at, floating: !!o.floating, grp, pick: (list) => list[Math.floor(r() * list.length)], rnd: (lo, hi, step) => rnd(r, lo, hi, step), chance: (p) => r() < p, skip,
     asset: (name, list) => slot(name).asset || c.pick(list),
     // a wall piece or floor piece against the wall: slot, id suffix, asset (or list), xc, extra place() options
     place(name, suffix, assets, xc, ex = {}) { if (skip(name)) return null; const asset = slot(name).asset || (Array.isArray(assets) ? c.pick(assets) : assets), id = `${prefix}-${suffix}`;
@@ -143,11 +143,11 @@ RECIPES.push(
 
 // hero groups (item 4): the dealt hero phrases of tables.json, one recipe each. A hero stands on the back wall's third (slot back:left | back:right); what stands in front of it is placed by the wall's own frame: c.pt(ox, off) is the area point ox along and off out from the wall.
 const sofaSides = (c, sofa) => { const sd = c.dims(sofa); return { sd, half: sd.w / 2 }; };
-const heroRug = (c, name, W, off, d = 1700, dx = 0) => c.put(name, 'rug', 'rug', c.pt(c.xc + dx, off), 0, { params: { w: Math.min(3200, Math.max(1800, Math.round((W + 700) / 100) * 100)), d } });
+const heroRug = (c, name, W, off, d = 1700, dx = 0) => c.putW(name, 'rug', 'rug', c.xc + dx, off, 0, { params: { w: Math.min(3200, Math.max(1800, Math.round((W + 700) / 100) * 100)), d } });
 RECIPES.push(
-  { id: 'sofaset', needs: { w: 3200, d: 2400, wall: 'any' }, hero: 'seat', phrases: ['sofa with a rug and coffee table', 'sofa with an armchair, a rug and a coffee table', 'sofa under a window with a side table and a rug'],
+  { id: 'sofaset', needs: { w: 3200, d: 2400, wall: 'any', wc: 2300 }, hero: 'seat', phrases: ['sofa with a rug and coffee table', 'sofa with an armchair, a rug and a coffee table', 'sofa under a window with a side table and a rug'],
     slots: { seat: 'the sofa', rug: 'the rug under the front', table: 'the coffee table', arm: 'the armchair', side: 'the side table', top: 'things on a table' },
-    make(c) { const ph = c.phrase, sofa = c.place('seat', 'seat', 'sofa', c.xc, {}); if (!sofa) return; const { sd, half } = sofaSides(c, sofa);
+    make(c) { const ph = c.compact ? c.phrase.replace(/armchair/g, '') : c.phrase, sofa = c.place('seat', 'seat', 'sofa', c.xc, c.compact ? { params: { seats: 2 } } : {}); if (!sofa) return; const { sd, half } = sofaSides(c, sofa);
       heroRug(c, 'rug', /side table/.test(ph) ? sd.w - 700 : sd.w, Math.round(sd.d / 2 + 880), 1800);   // with a side table the rug ends at the sofa's ends: the table stands off it, not across its edge
       if (/side table/.test(ph)) { const r = c.rnd(230, 290, 10), t = c.place('side', 'side', 'sideTable', c.xc + (c.chance(0.5) ? -1 : 1) * (half + r + 90), { params: { r } });   /* its edge stands 90 mm off the sofa's end (check placement 8: within 150) */ if (t) c.on('top', t, [{ asset: 'plant', params: { form: Math.floor(c.r() * 5) } }]); }
       try { c.a.coffeeTable('ct', sofa, { group: c.grp }); c.add('ct'); } catch (e) { /* a sofa with no clear seat front gets no coffee table */ }   // a side-table phrase too: sized from the sofa (check placement 7: 0.5-0.75 of its length), not a fixed 800
@@ -195,9 +195,9 @@ RECIPES.push(
   { id: 'breakfast', needs: { w: 2600, d: 1800, wall: 'any', window: true }, hero: 'table', phrases: ['breakfast table by the window'],
     slots: { table: 'the small table and two chairs' },
     make(c) { c.a.table('table', { at: c.pt(c.xc, 1100), w: 900, d: 700, chairs: 2, rug: false, group: c.grp }); } },
-  { id: 'kitchenrun', needs: { w: 3000, d: 700, wall: 'any' }, hero: 'run', phrases: ['range hood over the hob', 'tall pantry wall', 'window over the sink'],
+  { id: 'kitchenrun', needs: { w: 3000, d: 700, wall: 'any', wc: 2800 }, hero: 'run', phrases: ['range hood over the hob', 'tall pantry wall', 'window over the sink'],
     slots: { run: 'the cabinet run', hood: 'the hood over the hob', tall: 'the pantry units' },
-    make(c) { const ph = c.phrase, mods = /pantry/.test(ph) ? [{ w: 600, kind: 'doors' }, { w: 900, kind: 'drawers', n: 3 }, { w: 600, kind: 'doors' }] : /sink/.test(ph) ? [{ w: 600, kind: 'doors' }, { w: 900, kind: 'sink' }, { w: 600, kind: 'drawers', n: 3 }, { w: 600, kind: 'doors' }] : [{ w: 600, kind: 'drawers', n: 3 }, { w: 900, kind: 'hob' }, { w: 600, kind: 'doors' }];
+    make(c) { const ph = c.phrase, mods = /pantry/.test(ph) ? (c.compact ? [{ w: 900, kind: 'drawers', n: 3 }, { w: 600, kind: 'doors' }] : [{ w: 600, kind: 'doors' }, { w: 900, kind: 'drawers', n: 3 }, { w: 600, kind: 'doors' }]) : /sink/.test(ph) ? [{ w: 600, kind: 'doors' }, { w: 900, kind: 'sink' }, { w: 600, kind: 'drawers', n: 3 }, { w: 600, kind: 'doors' }] : [{ w: 600, kind: 'drawers', n: 3 }, { w: 900, kind: 'hob' }, { w: 600, kind: 'doors' }];
       const len = mods.reduce((s, m) => s + m.w, 0), all = /pantry/.test(ph) ? len + 1320 : len, left = Math.max(60, Math.round((c.xc - all / 2) / 10) * 10), R = c.a.run(c.wall, 'run', left, mods, { group: c.grp, hero: !!c.hero });
       if (/hood/.test(ph)) { R.on('hob', 'hob'); R.on('hob', 'hood'); R.on('hob', 'pan'); }
       else if (/sink/.test(ph)) { R.on('sink', 'kettle'); }
