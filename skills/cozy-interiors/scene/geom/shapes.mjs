@@ -64,12 +64,12 @@ export function partDesc(p, c) {
 export function classify(t, verts) {
   const m = new Map(), pts = [], ids = [];
   for (let i = 0; i < t.length; i += 3) { const k = Math.round(t[i] * 100) + ',' + Math.round(t[i + 1] * 100) + ',' + Math.round(t[i + 2] * 100); let j = m.get(k); if (j === undefined) { j = pts.length; m.set(k, j); pts.push([t[i], t[i + 1], t[i + 2]]); } ids.push(j); }
-  const edges = new Map(); let vol = 0, area = 0; const mn = [Infinity, Infinity, Infinity], mx = [-Infinity, -Infinity, -Infinity];
+  const edges = new Map(); let vol = 0, area = 0; const cen = [0, 1, 2].map((a) => pts.reduce((q, p) => q + p[a], 0) / (pts.length || 1)); const mn = [Infinity, Infinity, Infinity], mx = [-Infinity, -Infinity, -Infinity];
   for (const p of pts) for (let a = 0; a < 3; a++) { if (p[a] < mn[a]) mn[a] = p[a]; if (p[a] > mx[a]) mx[a] = p[a]; }
   for (let f = 0; f < ids.length; f += 3) {
     const a = ids[f], b = ids[f + 1], e = ids[f + 2]; if (a === b || b === e || a === e) continue;
     for (const [u, w] of [[a, b], [b, e], [e, a]]) { const k = u < w ? u + '_' + w : w + '_' + u; edges.set(k, (edges.get(k) || 0) + 1); }
-    const A = pts[a], B = pts[b], C = pts[e];
+    const A = pts[a].map((v, k) => v - cen[k]), B = pts[b].map((v, k) => v - cen[k]), C = pts[e].map((v, k) => v - cen[k]);   // about the centroid: a mesh whose triangles are not all wound the same way (a cloth's side walls) has a volume that depends on where it stands
     vol += (A[0] * (B[1] * C[2] - B[2] * C[1]) - A[1] * (B[0] * C[2] - B[2] * C[0]) + A[2] * (B[0] * C[1] - B[1] * C[0])) / 6;
     area += Math.hypot((B[1] - A[1]) * (C[2] - A[2]) - (B[2] - A[2]) * (C[1] - A[1]), (B[2] - A[2]) * (C[0] - A[0]) - (B[0] - A[0]) * (C[2] - A[2]), (B[0] - A[0]) * (C[1] - A[1]) - (B[1] - A[1]) * (C[0] - A[0])) / 2;
   }
