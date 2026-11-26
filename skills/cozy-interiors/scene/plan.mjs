@@ -12,6 +12,7 @@ import { groupNeeds } from './groups.mjs';
 import { thirdSlot, THIRD, openingWidth } from './slotmath.mjs';
 const T = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'tables.json'), 'utf8'));
 const D2R = Math.PI / 180, r0 = (v) => Math.round(v * 10) / 10;
+export const CELLCAP = Number(process.env.CELLCAP || 3);   // round 6 (oversized rooms): the most a wall is grown for the deal: the kind's largest cell times this. 3 = off (default): 1.15 cut the mean rect 39.0 -> 36.3 m2 over 40 seeds but refused 5 heroes of 120 and showed neighbours in front of pieces; 1.0 refused 12 (round-6 oversized rooms, Nov 26)
 export const SIZES = { kitchen: [6600, 5200], dining: [7200, 4800], living: [8400, 5000], bedroom: [5600, 4600], hallway: [6200, 3000], 'reading-corner': [4000, 3600], 'home-office': [4800, 3800] };   // the largest rect each kind of area may have (mm); the plan deals a cell up to 15% smaller
 export const LINK_WIDTH = { door: 900, round: 1100, cased: 1000, portal: 1300, pocket: 900 };
 const EDGE = 700, SPACE = 1200, TOUCH = 1500, GAP = 80;   // a link's middle keeps EDGE from a wall's end and its width + SPACE from another link; two walls meet over TOUCH mm at least; two cells may not overlap by more than GAP
@@ -101,12 +102,13 @@ export function roomNeeds(a, kind, links = 0, fixed = null) {
   { const [mw, md] = MINSIZE[kind] || MINDEF; w = Math.max(w, mw); d = Math.max(d, md); }
   // the ways through need wall beside the walls' own windows: each way goes to the wall that must grow least, one after the other
   { const b = T.backing.find((x) => x.id === a.backing), name = { first: 'back', second: b.second }, lw = Object.entries(linkWalls(a)).filter(([, q]) => !q.blocked).map(([wall]) => wall), want = Math.max(links, 2), cnt = Object.fromEntries(lw.map((q) => [q, 0])), dim = { back: w, left: d, right: d };
-    const cap = SIZES[kind] || SIZES.living, capOf = (wall) => (wall === 'back' ? cap[0] : cap[1]) * 3;   // a deal that wants more wall than the kind's largest cell (+15%) is left to the roll: the groups that do not fit are left out
+    const cap = SIZES[kind] || SIZES.living, capOf = (wall) => (wall === 'back' ? cap[0] : cap[1]) * CELLCAP;   // a deal that wants more wall than the kind's largest cell (+15%) is left to the roll: the groups that do not fit are left out
     const req = (wall, n) => Math.max(Math.min(wallLoad(a, kind, wall, n), capOf(wall)), 2 * EDGE + n * LINK_WIDTH.round + (n - 1) * SPACE);
     const grow = (wall, n) => Math.max(0, req(wall, n) - dim[wall]);
     if (lw.length) { if (fixed) for (const q of lw) cnt[q] = fixed[q] || 0; else for (let k = 0; k < want; k++) { const pick = lw.map((q) => ({ q, inc: grow(q, cnt[q] + 1) - (cnt[q] ? grow(q, cnt[q]) : 0) })).sort((p, q) => p.inc - q.inc)[0]; cnt[pick.q]++; }
       for (const wall of lw) if (cnt[wall] && grow(wall, cnt[wall]) > 0) { const v = req(wall, cnt[wall]); if (wall === 'back') w = v; else d = v; why.push(`${wall} wall grown to ${v} for its window(s) and ${cnt[wall]} way(s) through`); } } }
-  { const b = T.backing.find((x) => x.id === a.backing), cap = SIZES[kind] || SIZES.living, lb = Math.min(wallLoad(a, kind, 'back', 0), cap[0] * 3), ls = b.walls === 2 ? Math.min(wallLoad(a, kind, b.second, 0), cap[1] * 3) : 0; if (lb > w) { w = lb; why.push(`back wall grown to ${Math.round(lb)} for its groups and openings`); } if (ls > d) { d = ls; why.push(`${b.second} wall grown to ${Math.round(ls)} for its groups and openings`); } }
+  { const b = T.backing.find((x) => x.id === a.backing), cap = SIZES[kind] || SIZES.living, lb = Math.min(wallLoad(a, kind, 'back', 0), cap[0] * CELLCAP), ls = b.walls === 2 ? Math.min(wallLoad(a, kind, b.second, 0), cap[1] * CELLCAP) : 0; if (lb > w) { w = lb; why.push(`back wall grown to ${Math.round(lb)} for its groups and openings`); } if (ls > d) { d = ls; why.push(`${b.second} wall grown to ${Math.round(ls)} for its groups and openings`); } }
+  { const cap = SIZES[kind] || SIZES.living, cw = cap[0] * CELLCAP, cd = cap[1] * CELLCAP; if (w > cw) { why.push(`width held to ${Math.round(cw)} (the kind's largest cell x ${CELLCAP}): what does not fit is left out`); w = cw; } if (d > cd) { why.push(`depth held to ${Math.round(cd)} (the kind's largest cell x ${CELLCAP}): what does not fit is left out`); d = cd; } }
   return { w: Math.round(w / 100) * 100, d: Math.round(d / 100) * 100, why: why.join('; ') };
 }
 

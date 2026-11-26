@@ -7,7 +7,7 @@ const rnd = (seed) => { let r = (seed || 1) * 9301 + 49297; return () => { r = (
 import { potTop } from './pots.js';
 import { bookRow } from './books.js';
 import { sleeper } from '../motion/catmodel.js';
-import { softBox, drape } from './soft.js';
+import { cloth } from './softpieces.js';
 const lo = { tone: 'lo' };
 
 export function vase(kit, { h = 280, stems = 5, seed = 3 } = {}) {   // a bottle vase with branches: thin curved lines with a few leaves
@@ -97,16 +97,19 @@ export function floorPlant(kit, { h = 950, seed = 6 } = {}) {   // a large pot w
   }
   return kit.merge(g);
 }
-export function basket(kit, { r = 230, h = 320 } = {}) {   // a woven basket with a blanket folded over the rim
-  const g = kit.group(), pts = [];
-  g.add(kit.cyl(0, 0, 0, r * 0.88, h, { rTop: r, seg: 36, ...lo }));
+export function basket(kit, { r = 230, h = 320, seed = 1 } = {}) {   // a hollow woven basket with a heap of laundry in it and one garment over the rim
+  const g = kit.group(), pts = [], T = kit.THREE, wall = 14, ri = (y) => r * (0.88 + 0.12 * y / h) - wall;
+  g.add(kit.solid(new T.LatheGeometry([[0.01, 0], [r * 0.88, 0], [r, h], [r + 3, h + 3], [r + 1, h + 7], [r - 7, h + 8], [ri(h), h + 3], [ri(30), 30], [0.01, 30]].map(([x, y]) => new T.Vector2(x, y)), 36), 0, 0, 0, { smooth: true, ...lo }));   // the wall and floor: a hollow tub
   for (const f of [0.3, 0.55, 0.8]) { const rr = r * (0.88 + 0.12 * f) + 1, n = 36; for (let i = 0; i < n; i++) { const a = i / n * 6.2832, b = (i + 1) / n * 6.2832; pts.push([Math.cos(a) * rr, h * f, Math.sin(a) * rr], [Math.cos(b) * rr, h * f, Math.sin(b) * rr]); } }
   g.add(kit.lines(pts, 'mid'));
-  // laundry: three soft garments resting on each other (each a separate body: selftest fails any that pass into another or the basket), the first wide and sagging over the rim
-  const cloth = (w, dep, th, x, y, z, ang, tilt, sag, tone) => { const m = softBox(kit, w, dep, th, { r: th * 0.45, bulge: 6, sag, tone }); m.rotation.x = -Math.PI / 2; const q = kit.group(); q.add(m); q.rotation.y = ang; q.rotation.z = tilt; q.position.set(x, y + th / 2, z); return kit.content(q); };
-  g.add(cloth(r * 2.15, r * 1.3, 78, -r * 0.05, h, 0, 0.25, 0.03, 24, 'lo'));
-  g.add(cloth(r * 1.15, r * 0.95, 64, r * 0.1, h + 88, -r * 0.08, -0.4, -0.05, 8, 'mid'));
-  g.add(cloth(r * 0.7, r * 0.55, 52, -r * 0.12, h + 156, r * 0.05, 1.0, 0.03, 4, 'lo'));
+  // laundry: a crumpled heap of thin cloth inside, a low uneven mound over the rim, and one garment (a shirt) lying over the heap, across the rim and down the outside; each a separate body (selftest fails any that pass into each other or the basket)
+  const K = seed * 2.3, bumps = [[-0.25, 0.1, 0.34, 62], [0.2, -0.2, 0.3, 48], [0.1, 0.25, 0.26, 38], [-0.05, -0.05, 0.4, 30]], span = 0.6 * r;
+  const heapY = (x, z) => { const u = x / r, v = z / r; let y = h - 70 + 13 * Math.sin(u * 17 + K) * Math.cos(v * 13 + K * 2) + 9 * Math.sin(u * 31 + v * 23 + K) + 6 * Math.sin(u * 53 - v * 41 + K * 3); for (const [bx, bz, sg, a] of bumps) y += a * Math.exp(-(((u - bx) ** 2 + (v - bz) ** 2) / (2 * sg * sg * 0.5))) * 0.85; const e = Math.max(Math.abs(x), Math.abs(z)) / span; return y - 60 * Math.pow(Math.max(0, e - 0.7) / 0.3, 2); };
+  const sheet = (nx, ny, f, thick, tone) => { const P = []; for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) { const x = (i / (nx - 1) - 0.5) * 2 * span, z = (j / (ny - 1) - 0.5) * 2 * span; P.push(x, f(x, z), z); } const c = cloth(kit, { nx, ny, pts: P, thick, tone, folds: false, relax: 1 }); return c; };
+  g.add(kit.content(sheet(16, 16, heapY, 9, 'lo')));
+  const sw = 90, nxs = 11, nys = 22, path = (t) => { const z0 = 0.05 * r, z1 = r - 30; if (t < 0.5) { const zz = z0 + (z1 - z0) * (t / 0.5); return [zz, zz < r - 90 ? heapY(0, zz) + 14 : h + 36]; } const q = (t - 0.5) / 0.5; if (q < 0.2) return [z1 + (r + 18 - z1) * (q / 0.2), h + 36 - 14 * (q / 0.2)]; return [r + 18, h + 22 - (h + 22 - (h - 200)) * Math.pow((q - 0.2) / 0.8, 0.8)]; };
+  const SP = []; for (let j = 0; j < nys; j++) { const [zz, yy] = path(j / (nys - 1)); for (let i = 0; i < nxs; i++) { const x = (0.5 - i / (nxs - 1)) * 2 * sw; SP.push(x, yy + 5 * Math.sin(x * 0.06 + j * 0.5 + K) * (j > 12 ? 0.4 : 1) + (j <= 10 ? Math.max(0, heapY(x, zz) + 14 - yy) : 0), zz + (j > 12 ? 4 * Math.sin(x * 0.05 + K) : 0)); } }
+  g.add(kit.content(cloth(kit, { nx: nxs, ny: nys, pts: SP, thick: 8, tone: 'mid', folds: false, relax: 1 })));
   return kit.merge(g);
 }
 import { poufBody } from './softpieces.js';
