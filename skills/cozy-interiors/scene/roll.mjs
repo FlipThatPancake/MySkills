@@ -7,7 +7,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { dealOpenPlan } from './openplan.mjs';
 import { dealMotion } from './motion-roll.mjs';
-import { planHome, wallLoad } from './plan.mjs';
+import { planHome, wallLoad, SIZES } from './plan.mjs';
 import { groupNeeds } from './groups.mjs';
 import { THIRD, thirdSlot, slotWall } from './slotmath.mjs';
 import { zone, floorBox, floorSpot, rectCut } from './slotmath.mjs';
@@ -178,6 +178,8 @@ export function roll(seed, kinds = ['kitchen', 'dining', 'living'], opts = {}) {
     if (id === 'bedroom' && a.openings.some((o) => o.kind === 'window' && o.on === 'first')) { if (b.walls !== 2) a.backing = T.backing.find((x) => x.walls === 2).id; a.hero = 'bed with its headboard on the second wall (the back wall holds the window)'; }   // round 6 item 8: a headboard never stands under a window
     { let special = false; a.openings = a.openings.map((o) => { if (o.kind !== 'window') return o; const fixed = o.sash === 'fixed' || o.sash === 'out' || /sink/.test(a.hero); if (fixed) return o; const st = winStyle(id, !special); if (st.style === 'sash') return o; usedWin.add(st.style); if (st.style === 'picture' || st.style === 'pair') return { ...o, style: st.style }; special = true; const { sash, ...rest } = o; return { ...rest, ...(st.kind ? { kind: st.kind } : {}), style: st.style }; }); }   // a window wall or glass door is the area's one big opening: the other openings stay plain
     { const hn = groupNeeds(a.hero); if (hn && !hn.free && !hn.window && !hn.second) a.openings = a.openings.map((o) => (o.kind === 'window' && o.on === 'first' && (o.style === 'wall' || o.style === 'bay') ? { ...o, style: 'picture' } : o)); }   // a hero that stands at the back wall keeps a bare stretch there (hero-slot-without-stretch): a window wall or bay would take the whole wall, so that window is a picture window
+    { const hn = groupNeeds(a.hero), win = a.openings.find((o) => o.kind === 'window' && o.on === 'first' && o.style !== 'wall' && o.style !== 'bay'), cap = SIZES[id.replace(/\d+$/, '')];   // round 6 (oversized rooms): a window beside a hero and its neighbour on the back wall made the plan grow that wall (kitchen 6000 -> 8100 mm); the window goes to the second wall when the hero's wall would pass the kind's largest cell
+      if (hn && !hn.free && !hn.second && win && cap && b.walls !== 0 && hn.w + 1600 + (({ sash: 1500, picture: 2100, pair: 1100 })[win.style] || 1500) + 600 > cap[0]) { const two = b.walls === 2 ? b : pick3(T.backing.filter((x) => x.walls === 2 && x.angle === 90)); a.backing = two.id; a.openings = a.openings.map((o) => (o === win ? { ...o, on: 'second' } : o)); } }
     a.accents = a.accents.map((x) => { if (!(ONE.includes(x) && usedAcc.has(x))) return x; const spare = t.accents.filter((y) => !a.accents.includes(y) && !(ONE.includes(y) && usedAcc.has(y))); return spare.length ? spare[Math.floor(rnd2() * spare.length)] : x; });   // a basket, pouf or trolley already dealt to another area is swapped for a spare accent (from the seed itself, so no other pick moves)
     a.accents.forEach((x) => { if (ONE.includes(x)) usedAcc.add(x); });
     a.more = some2(t.more || [], 1 + Math.floor(rnd2() * 2));
