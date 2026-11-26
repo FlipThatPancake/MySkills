@@ -82,6 +82,7 @@ export function createAreaScene(canvas, S) {
   const fadeOf = (A) => {
     let b = boundsOf(A); const top = b.top || 2500, w = Math.max(b.x1 - b.x0, b.z1 - b.z0), r0 = 0;
     for (const W of home.walls) if (W.walk.length && W.id && together(order.find((q) => W.id.startsWith(q + '-')), A.id)) b = { ...b, ...[W.from, W.to].reduce((e, q) => { const x = q[0] - W.n[0] * 1600, z = q[1] - W.n[1] * 1600; return { x0: Math.min(e.x0, x), x1: Math.max(e.x1, x), z0: Math.min(e.z0, z), z1: Math.max(e.z1, z) }; }, { x0: b.x0, x1: b.x1, z0: b.z0, z1: b.z1 }) };   // the floor beyond a way through stays in view
+    if (S.home.neighbourFade === true) for (const n of portal) { const nb = boundsOf(areas[n]); b = { ...b, x0: Math.min(b.x0, nb.x0), x1: Math.max(b.x1, nb.x1), z0: Math.min(b.z0, nb.z0), z1: Math.max(b.z1, nb.z1) }; }   // opt-in (neighbourFade: true): the fade box takes in a room drawn through an arch or door; off by default because the floor lines of the enlarged box then show outside the opening
     const bx = b.x1 - b.x0, bz = b.z1 - b.z0;   // objects past the bounds thin from the edge: about 35% gone at 1 m, all gone at 2 m
     return [(b.x0 + b.x1) / 2, top / 2 - 150, (b.z0 + b.z1) / 2, bx / 2, top / 2 + 300, bz / 2, FADE[0] * w, FADE[1] * w, r0, 900];
   };
@@ -123,17 +124,22 @@ export function createAreaScene(canvas, S) {
   const sync = () => {
     S.home.curArea = cur; S.home.homeView = !!(cur && !glide && homePose && camera.position.distanceTo(homePose.p) < 60 && controls.target.distanceTo(homePose.t) < 60);   // the home view fades none of its own area's groups (home.js)
     if (!cur || glide || !links || S.home.passageView === false) return;
+    let fadeChanged = false;
     for (const l of links) { if (l.kind === 'open' || (l.a !== cur && l.b !== cur)) continue;
       const n = l.a === cur ? l.b : l.a, dir = l.a === cur ? 1 : -1, side = ((camera.position.x - l.p[0]) * l.d[0] + (camera.position.z - l.p[1]) * l.d[1]) * dir, on = side < -100 && !together(cur, n);   // l.d points from a to b
-      if (!l.shows) l.shows = {}; if (l.shows[n] === on) continue; l.shows[n] = on; if (on) portal.add(n); else portal.delete(n);
-      for (const o of Object.values(home.objects)) if (o.userData.scene.area === n) o.visible = on;
-      for (const W of home.walls) if ((W.id || '').startsWith(n + '-')) W.node.visible = on;
-      for (const b of home.blockers) if (b.g.userData.scene.area === n) b.fh = false; }
+      if (!l.shows) l.shows = {}; if (l.shows[n] === on) continue; l.shows[n] = on; fadeChanged = true;
+      for (const m of order.filter((q) => groupOf(q) === groupOf(n))) {   // the room beyond is the whole open plan it belongs to: kitchen, dining and living all stand behind the arch
+        if (on) portal.add(m); else portal.delete(m);
+        for (const o of Object.values(home.objects)) if (o.userData.scene.area === m) o.visible = on;
+        for (const W of [...home.walls, ...home.closers]) if ((W.id || '').startsWith(m + '-')) { W.node.visible = on; solid(W, on); }
+        for (const b of home.blockers) if (b.g.userData.scene.area === m) b.fh = false; } }
+    if (fadeChanged) applyFade(fadeOf(areas[cur]));
   };
   const orderArea = (W) => order.find((a) => (W.id || '').startsWith(a + '-'));
   if (S.home.portalClip !== false) for (const o of Object.values(home.objects)) hookPortal(o, o.userData.scene.area);
-  if (S.home.portalClip !== false) for (const W of home.walls) if (orderArea(W) && !W.walk.length) hookPortal(W.node, orderArea(W));
-  const only = (id) => { portal.clear(); for (const W of home.walls) W.node.visible = id === null || shown(id, order.find((a) => (W.id || '').startsWith(a + '-'))); for (const o of Object.values(home.objects)) o.visible = shown(id, o.userData.scene.area); for (const b of home.blockers) b.fh = false; for (const l of links || []) l.shows = null; };   // an area's whole open-plan group is drawn at rest
+  if (S.home.portalClip !== false) for (const W of [...home.walls, ...home.closers]) if (orderArea(W) && !W.walk.length) hookPortal(W.node, orderArea(W));
+  const solid = (W, on) => { const m = W.plane && W.plane.material; if (!m) return; if (on) { if (m.alphaMap) { m.userData.am = m.alphaMap; m.alphaMap = null; m.needsUpdate = true; } } else if (m.userData.am && !m.alphaMap) { m.alphaMap = m.userData.am; m.needsUpdate = true; } };   // a room seen through an opening has whole walls: no melting ends
+  const only = (id) => { portal.clear(); for (const W of home.closers) { W.node.visible = false; solid(W, false); } for (const W of home.walls) { solid(W, false); W.node.visible = id === null || shown(id, order.find((a) => (W.id || '').startsWith(a + '-'))); } for (const o of Object.values(home.objects)) o.visible = shown(id, o.userData.scene.area); for (const b of home.blockers) b.fh = false; for (const l of links || []) l.shows = null; };   // an area's whole open-plan group is drawn at rest
   function arrive(id) {
     cur = id; api.area = id; only(id);
     const v = viewOf(areas[id]);
