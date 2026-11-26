@@ -321,35 +321,32 @@
    },
    {
     "id": "kitchen-bench",
-    "asset": "bench",
+    "asset": "chair",
     "at": [
      330,
      0,
-     3750
+     3450
     ],
     "turn": 90,
     "mount": "floor",
     "params": {
-     "w": 1000,
-     "form": "slatted"
+     "form": "bentwood"
     },
     "group": "kitchen:bench",
     "area": "kitchen"
    },
    {
-    "id": "kitchen-bpic",
-    "asset": "picture",
+    "id": "kitchen-bench2",
+    "asset": "chair",
     "at": [
+     330,
      0,
-     650,
-     3700
+     4050
     ],
     "turn": 90,
-    "mount": "wall",
+    "mount": "floor",
     "params": {
-     "w": 720,
-     "h": 500,
-     "form": 6
+     "form": "ladder"
     },
     "group": "kitchen:bench",
     "area": "kitchen"
@@ -565,6 +562,7 @@
     "links": [],
     "areas": {
      "kitchen": {
+      "room": 0,
       "fit": [
        6600,
        5200
@@ -631,14 +629,14 @@
      {
       "name": "cook",
       "from": [
+       1700,
        1100,
-       1100,
-       5700
+       6000
       ],
       "look": [
-       1247,
-       900,
-       301
+       1212,
+       500,
+       371
       ],
       "fov": 40,
       "subject": "kitchen:cook"
@@ -646,29 +644,29 @@
      {
       "name": "table",
       "from": [
-       200,
-       2100,
-       5700
+       500,
+       1700,
+       6150
       ],
       "look": [
-       3065,
+       3080,
        300,
-       2498
+       2627
       ],
-      "fov": 34,
+      "fov": 36,
       "subject": "kitchen:breakfast"
      },
      {
       "name": "cook2",
       "from": [
-       2600,
+       200,
        1000,
-       5850
+       6000
       ],
       "look": [
-       1280,
-       900,
-       469
+       1035,
+       700,
+       144
       ],
       "fov": 40,
       "subject": "kitchen:cook"

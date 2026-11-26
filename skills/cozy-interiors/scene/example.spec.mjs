@@ -21,7 +21,7 @@ a.put('runner', 'runner', [1900, 1250], 90, { group: 'cook', params: { w: 700, l
 left.place('dresser', 'sideboard', 3000, { group: 'dresser', params: { w: 1000 } }); left.place('dpic', 'picture', 3000, { group: 'dresser', y: 1000, params: { w: 600, h: 450, colour: 'keep' } }); a.onTop('dresser', [{ id: 'dplant', asset: 'plant' }, { id: 'djug', asset: 'bookStack' }], { group: 'dresser' });   // the roll's dresser group: a sideboard with a still life under a picture
 left.place('shelves', 'openShelf', 600, { group: 'shelves', params: { w: 900 } }); // the roll's shelves group: open shelves with jars and a plant
 a.put('bsk', 'basket', [1000, 4500], 0, { group: 'shelves' });
-a.put('bench', 'bench', [330, 3750], 90, { group: 'bench', params: { w: 1000 } }); left.place('bpic', 'picture', 1500, { group: 'bench', y: 650, params: { w: 720, h: 500 } });   // a bench on the left wall
+a.put('bench', 'chair', [330, 3450], 90, { group: 'bench' }); a.put('bench2', 'chair', [330, 4050], 90, { group: 'bench' });   // two spare chairs by the left wall
 // A table set: a round table with two chairs and a rug, standing in open floor within reach of the cooking.
 const T = a.table('bt', { at: [3300, 3200], r: 520, chairs: 2, group: 'breakfast', cloth: true });   // a cloth on the table
 T.on('mug', { y: 757, dx: -180 }); T.on('saltPepper', { y: 757, dx: 260 });   // the roll's table still life: a mug and salt and pepper
@@ -31,8 +31,8 @@ a.skip('hanging', 'no hanging-plant asset yet: the plant stands on the sill and 
 a.skip('mokaPot', 'the hob carries a pan under the hood: a moka pot would stand in its place');
 a.skip('utensilCrock', 'the hob has no room beside it for a crock: pans hang on the rail instead');   // a thing the roll dealt and the scene leaves out says why
 // Shots: a.shot(name, from, look, fov, group). fitshots.mjs finds the cameras; its numbers go in here.
-a.shot('cook', ...C('kitchen', 'cook', [[1100, 1100, 5700], [1247, 900, 301], 40]), 'cook');   // C(area, name, fallback): the fitted camera, or the fallback on the first run
-a.shot('table', ...C('kitchen', 'table', [[200, 2100, 5700], [3065, 300, 2498], 34]), 'breakfast');
-a.shot('cook2', ...C('kitchen', 'cook2', [[2600, 1000, 5850], [1280, 900, 469], 40]), 'cook');
+a.shot('cook', ...C('kitchen', 'cook', [[1700, 1100, 6000], [1212, 500, 371], 40]), 'cook');   // C(area, name, fallback): the fitted camera, or the fallback on the first run
+a.shot('table', ...C('kitchen', 'table', [[500, 1700, 6150], [3080, 300, 2627], 36]), 'breakfast');
+a.shot('cook2', ...C('kitchen', 'cook2', [[200, 1000, 6000], [1035, 700, 144], 40]), 'cook');
 a.view({ target: [2800, 700, 2200], el: 20 });   // az comes from the plan
 H.write(out, fs);
