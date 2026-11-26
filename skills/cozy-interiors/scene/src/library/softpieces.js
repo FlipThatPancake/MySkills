@@ -68,8 +68,8 @@ export function cloth(kit, { nx = 2, ny = 2, pts = [0, 0, 0, 1, 0, 0, 0, 0, 1, 1
   for (let i = 0; i < n; i++) for (let k = 0; k < 3; k++) pos[(n + i) * 3 + k] = pos[i * 3 + k] - nrm.getComponent(i, k) * thick;
   const all = [...idx]; for (let t = 0; t < idx.length; t += 3) all.push(n + idx[t], n + idx[t + 2], n + idx[t + 1]);
   const edge = []; for (let i = 0; i < nx; i++) edge.push(i, (ny - 1) * nx + i); for (let j = 0; j < ny; j++) edge.push(j * nx, j * nx + nx - 1);
-  for (let i = 0; i < nx - 1; i++) { for (const base of [0, (ny - 1) * nx]) { const a = base + i, b = a + 1; all.push(a, b, n + a, b, n + b, n + a); } }
-  for (let j = 0; j < ny - 1; j++) { for (const off of [0, nx - 1]) { const a = j * nx + off, b = a + nx; all.push(a, b, n + a, b, n + b, n + a); } }
+  for (let i = 0; i < nx - 1; i++) { for (const base of [0, (ny - 1) * nx]) { const a = base + i, b = a + 1; if (base) all.push(b, a, n + a, b, n + a, n + b); else all.push(a, b, n + a, b, n + b, n + a); } }   // every side wall faces outward (two of the four were wound inward: dark edges, and a volume that depended on where the cloth stood)
+  for (let j = 0; j < ny - 1; j++) { for (const off of [0, nx - 1]) { const a = j * nx + off, b = a + nx; if (off) all.push(a, b, n + a, b, n + b, n + a); else all.push(b, a, n + a, b, n + a, n + b); } }
   const solid = new T.BufferGeometry(); solid.setAttribute('position', new T.BufferAttribute(pos, 3)); solid.setIndex(all); solid.computeVertexNormals(); solid.userData.soft = true;
   g.add(kit.solid(solid, 0, 0, 0, { smooth: true, tone, crease: 100, linen, grey }));
   const fl = []; for (const f of folds || []) { const i = Math.round((nx - 1) * f); for (let j = 2; j < ny - 3; j++) { for (const jj of [j, j + 1]) { const k = jj * nx + i; fl.push([pos[k * 3] + nrm.getX(k) * 1.5, pos[k * 3 + 1] + nrm.getY(k) * 1.5, pos[k * 3 + 2] + nrm.getZ(k) * 1.5]); } } }   // two or three fold lines along the cloth
