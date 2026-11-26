@@ -159,7 +159,7 @@ RECIPES.push(
     slots: { shelf: 'the shelf wall', seat: 'the armchair or sofa', rug: 'the rug' },
     make(c) { const sofa = /sofa/.test(c.phrase); const sh = c.place('shelf', 'shelf', 'shelf', sofa ? c.xc : c.xc - 600, { params: { w: sofa ? 1500 : 1300 } }); if (!sh) return;
       if (sofa) { const sd = c.a.dealt('sofa', {}); c.putW('seat', 'seat', 'sofa', c.xc + 1400, 2300, 180); heroRug(c, 'rug', 2000, 1500, 1800, 1400); }
-      else { const ar = c.place('seat', 'seat', 'armchair', c.xc + 900, ARM(c)); faceTable(c, ar); } } },
+      else { const A = ARM(c), aw = c.a.sizeFor('armchair', A.params).w, ar = c.place('seat', 'seat', 'armchair', c.xc - 600 + 650 + 30 + aw / 2, A); faceTable(c, ar); } } },   // about 60 mm off the shelf's end: they read as one group (check placement 9: within 100 to group, 600 or more to walk between)
   { id: 'diningset', needs: { w: 3000, d: 2800, wall: 'any' }, hero: 'table', phrases: ['long table under a pendant', 'round table on a rug'],
     slots: { table: 'the table and its chairs', pendant: 'the pendant' },
     make(c) { const round = /round/.test(c.phrase), r = c.rnd(550, 650, 25), w = c.rnd(1800, 2200, 100), d = round ? 2 * r : 900, at = c.pt(c.xc, Math.round(d / 2 + 760 + 700)), t = c.a.table('table', round ? { at, r, chairs: 4, rug: true, group: c.grp } : { at, w, d, chairs: 6, rug: !c.chance(0.5), group: c.grp });
@@ -180,14 +180,14 @@ RECIPES.push(
   { id: 'shoerack', needs: { w: 1500, d: 700, wall: 'any', door: true }, hero: 'rack', phrases: ['shoe rack by the door', 'coat stand and a runner'],
     slots: { rack: 'the shoe rack or coat stand', extra: 'shoes, boots, runner' },
     make(c) { if (/shoe rack/.test(c.phrase)) { const r = c.place('rack', 'rack', 'shoeRack', c.xc, {}); if (!r) return; c.place('extra', 'shoes', 'shoes', c.xc + c.dims(r).w / 2 + 380, { off: 200, params: { arrange: 'neat', kind: 'sneaker' } }); }
-      else { const s = c.place('rack', 'stand', 'coatStand', c.xc, {}); if (!s) return; c.put('extra', 'runner', 'runner', c.pt(c.xc + 600, 1200), 0, {}); } } },
+      else { const s = c.place('rack', 'stand', 'coatStand', c.xc, { off: 290 }); if (!s) return; const l = c.rnd(2000, 2400, 100), w = c.rnd(640, 800, 20); c.put('extra', 'runner', 'runner', c.pt(c.xc + 450 + w / 2, Math.round(l / 2 + 30)), 0, { params: { w, l } }); } } },   /* the stand's foot (up to 270 mm wide) stands clear of the wall (at 200 mm it pushed on it and tipped); the runner runs out into the floor like the hall runner, its end 30 mm off the wall (a default one lay along the wall and crossed its end) */
   { id: 'officeset', needs: { w: 2400, d: 1100, wall: 'any' }, hero: 'desk', phrases: ['desk under a window', 'desk with a shelf wall', 'trestle desk with a pinboard above', 'writing desk in a corner'],
     slots: { desk: 'the desk', seat: 'the chair', art: 'the pinboard or shelves', top: 'things on the desk' },
     make(c) { const ph = c.phrase, id = c.place('desk', 'desk', 'desk', c.xc, /trestle/.test(ph) ? { params: { form: 'trestle' } } : {}); if (!id) return; const d = c.dims(id), top0 = c.top(id);
       c.on('top', id, [{ asset: c.pick(['laptop', 'monitor']) }, { asset: 'notebook' }].slice(0, 2));
       c.putW('seat', 'seat', 'deskChair', c.xc, Math.round(d.d + 300), 180);
       if (/pinboard/.test(ph)) c.place('art', 'art', 'pinboard', c.xc, { y: top0 + 350 });
-      if (/shelf wall/.test(ph)) { c.place('art', 'art', ['readShelf', 'openShelf'], c.xc, { y: 1300 }); c.place('art', 'side', 'shelf', c.xc + d.w / 2 + 700, {}); } } },
+      if (/shelf wall/.test(ph)) { c.place('art', 'art', ['readShelf', 'openShelf'], c.xc, { y: 1300 }); c.place('art', 'side', 'shelf', c.xc + d.w / 2 + 60 + 400, { params: { w: 800 } }); } } },   /* 60 mm off the desk's end: one group (check placement 9: within 100, or 600 or more) */
   { id: 'dresser', needs: { w: 2200, d: 500, wall: 'any' }, hero: 'dresser', phrases: ['open shelves and a dresser'],
     slots: { furn: 'the dresser', shelf: 'the open shelves above', still: 'the things on top' },
     make(c) { const f = c.place('furn', 'furn', 'sideboard', c.xc - 500, {}); if (!f) return; c.on('still', f, stillPool(c, 2)); c.place('shelf', 'shelf', 'openShelf', c.xc + 700, { y: 1300 }); } },

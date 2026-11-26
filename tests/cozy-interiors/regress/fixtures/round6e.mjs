@@ -20,4 +20,10 @@ export const fixtures = [
     build({ Home }) { const { H, a, back } = room(Home); a.group('reading chair with a footstool and a floor lamp', { wall: back, xc: 3000, hero: true }); H.S.home.roll = { seed: 5, behind: [], areas: { t: { plantAt: [], groups: [], openings: [], still: [], passages: [], signs: [], accents: [], pieces: [], named: [], groupTexts: [] } } }; return H; } },   // the rule reads a dealt home (S.home.roll)
   { name: 'good-sofa-with-a-side-table', kind: 'good', from: 'rollstats 200 seeds: 13 seeds had the side table 560 mm off the sofa end (check placement 8: within 150)',
     build({ Home }) { const { H, a, back } = room(Home); a.group('sofa under a window with a side table and a rug', { wall: back, xc: 3000, hero: true }); return H; } },
+  { name: 'good-coat-stand-and-runner', kind: 'good', from: 'rollstats 200 seeds: 14 seeds, the runner of "coat stand and a runner" lay along the wall (default size) and crossed the wall end',
+    build({ Home }) { const { H, a, back } = room(Home, { W: 3000 }); a.group('coat stand and a runner', { wall: back, xc: 800, hero: true }); return H; } },
+  { name: 'good-shelf-wall-with-an-armchair', kind: 'good', from: 'rollstats 200 seeds: 22 seeds, the armchair of "shelf wall with an armchair" stood 430-490 mm from the shelf (check placement 9: 100 or less, or 600 or more)',
+    build({ Home }) { const { H, a, back } = room(Home, { seed: 9 }); a.group('shelf wall with an armchair', { wall: back, xc: 3000, hero: true }); return H; } },
+  { name: 'good-desk-with-a-shelf-wall', kind: 'good', from: 'rollstats 200 seeds: 14 seeds, the side shelf of "desk with a shelf wall" stood 210-390 mm from the desk (check placement 9)',
+    build({ Home }) { const { H, a, back } = room(Home); a.group('desk with a shelf wall', { wall: back, xc: 3000, hero: true }); return H; } },
 ];
