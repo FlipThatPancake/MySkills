@@ -9,12 +9,12 @@ const passageHome = (Home, crowd = false) => {   // crowd: wardrobes in every ro
   return H;
 };
 
-// a sideboard stands between the camera and the sofa when the camera swings round, with a vase on it
+// a wardrobe stands between the camera and the sofa when the camera swings round, with a vase on it
 const tableRoom = (Home, supportFade, keepHomeView = true, az = 0) => {
   const H = new Home({ seed: 5, floor: 'plain', detached: true, supportFade, keepHomeView }), a = H.area('t', 'T', { rect: [0, 0, 6000, 4500] }); a.back(6000); a.left(4500); a.right(4500);
   a.put('sofa', 'sofa', [3000, 700], 0, { group: 'seat', hero: true, params: { seats: 3, arms: 'rolled', back: 'tight' } });
-  a.put('tb', 'sideboard', [3000, 2600], 0, { group: 'store', params: { w: 1600, h: 800, d: 420 } });
-  a.put('vase', 'vase', [3000, 2600], 0, { group: 'store', mount: 'on', y: 800, params: { form: 1 } });
+  a.put('tb', 'wardrobe', [3000, 2600], 0, { group: 'store' });
+  a.put('vase', 'vase', [3000, 2600], 0, { group: 'store', mount: 'on', y: 2100, params: { form: 1 } });
   a.view({ target: [3000, 600, 800], az: 0, el: 18 });
   return H;
 };

@@ -35,7 +35,7 @@ const runAsset = async (x) => {
 const run = (x) => new Promise((res) => {
   const json = join(tmp, x.name + '.json');
   if (x.asset) return res(runAsset(x));
-  if (x.replay) fs.copyFileSync(join(dir, x.replay), json);   // kind 'replay': a saved round home (a scene json); no build step
+  if (x.replay) { fs.copyFileSync(join(dir, x.replay), json); if (x.patch) { const S = JSON.parse(fs.readFileSync(json, 'utf8')); x.patch(S); fs.writeFileSync(json, JSON.stringify(S)); } }   // kind 'replay': a saved round home (a scene json); no build step
 
   if (x.refuses) { const log = console.log; console.log = () => {}; let msg = ''; try { x.build({ Home }); } catch (e) { msg = e.message; } finally { console.log = log; } return res({ x, findings: msg.includes(x.refuses) ? [{ rule: 'refused', text: msg }] : [], error: '' }); }   // fixture.refuses: the build must throw with this text (compose refuses it)
   if (!x.replay) try { const log = console.log; console.log = () => {}; let H; try { H = x.build({ Home }); H.write(json, fs); } finally { console.log = log; } if (x.patch) { const S = JSON.parse(fs.readFileSync(json, 'utf8')); x.patch(S); fs.writeFileSync(json, JSON.stringify(S)); } } catch (e) { return res({ x, error: 'build: ' + e.message, findings: [] }); }

@@ -7,5 +7,9 @@ export const fixtures = [
   { name: 'replay-round6-a-plan-and-glide', from: 'round 6 home (tester seed 148556): kitchen, dining and living in one row with the hallway and bedroom hung on the same side, so the footprint is a strip (house in one line, B2); the walk between areas rushes, swoops close and pulls away (B3). Rules: plan (strip) and glide (the move bedroom -> hallway still shows the bed at over 30% of the frame at k 0.2: the door stands beside the bed, a layout fault left open). With the round-6 glide the other moves read as close-ups (red on the old path, checked by hand: 1897, 806 mm), so only this one stays red', kind: 'replay', replay: '../replays/round-6-a-home.json',
     pairs: [['plan', 'strip'], ['glide', 'bedroom -> hallway']] },
   { name: 'replay-round6-a-fade', from: 'round 6 home (tester commit 727e3be, seed 148556), fix list B1/16: the kitchen table and its vase are faded out of the kitchen home view and no line said so (check-visible named only two groups hidden by pieces)', kind: 'replay', replay: '../replays/round-6-a-home.json',
-    pairs: [['visible', 'kitchen-island-table'], ['visible', 'kitchen-bvase']]},
+    patch: (S) => { S.home = { ...(S.home || {}), rayFade: true }; },   // the fix list's fault is the old rule (the single line from camera to target fades whatever it crosses); today's page fades by projected share, so the replay switches the old rule back on
+    pairs: [['visible', 'kitchen-island-table'], ['visible', 'kitchen-bvase'], ['orbit', 'kitchen-island-table']]},
+  { name: 'replay-round6-a-open-room', from: 'round 6 home (tester commit 727e3be, seed 148556), the user\'s Nov 26 look at the arch: the room behind a way through was drawn with two of its four walls, walls that melt at their ends and a floor that runs out, so the opening showed floor, a partial wall and haze. Today closing walls (home.js) stand behind an opening; the replay switches them off', kind: 'replay', replay: '../replays/round-6-a-home.json',
+    patch: (S) => { S.home = { ...(S.home || {}), closeRooms: false }; },
+    pairs: [['orbit', 'through the arch to kitchen'], ['orbit', 'through the door to dining']] },
 ];
