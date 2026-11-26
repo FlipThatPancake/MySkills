@@ -7,6 +7,7 @@ const rnd = (seed) => { let r = (seed || 1) * 9301 + 49297; return () => { r = (
 import { potTop } from './pots.js';
 import { bookRow } from './books.js';
 import { sleeper } from '../motion/catmodel.js';
+import { softBox, drape } from './soft.js';
 const lo = { tone: 'lo' };
 
 export function vase(kit, { h = 280, stems = 5, seed = 3 } = {}) {   // a bottle vase with branches: thin curved lines with a few leaves
@@ -101,8 +102,11 @@ export function basket(kit, { r = 230, h = 320 } = {}) {   // a woven basket wit
   g.add(kit.cyl(0, 0, 0, r * 0.88, h, { rTop: r, seg: 36, ...lo }));
   for (const f of [0.3, 0.55, 0.8]) { const rr = r * (0.88 + 0.12 * f) + 1, n = 36; for (let i = 0; i < n; i++) { const a = i / n * 6.2832, b = (i + 1) / n * 6.2832; pts.push([Math.cos(a) * rr, h * f, Math.sin(a) * rr], [Math.cos(b) * rr, h * f, Math.sin(b) * rr]); } }
   g.add(kit.lines(pts, 'mid'));
-  const b1 = kit.rbox(-r * 0.75, h - 30, r * 0.5, r * 1.1, 130, r * 1.0, 55), b2 = kit.rbox(-r * 0.15, h - 10, r * 0.55, r * 0.95, 110, r * 0.9, 50);   // a blanket, two soft folds
-  b1.rotation.y = 0.25; b2.rotation.y = -0.3; g.add(b1, b2);
+  // laundry: three soft garments resting on each other (each a separate body: selftest fails any that pass into another or the basket), the first wide and sagging over the rim
+  const cloth = (w, dep, th, x, y, z, ang, tilt, sag, tone) => { const m = softBox(kit, w, dep, th, { r: th * 0.45, bulge: 6, sag, tone }); m.rotation.x = -Math.PI / 2; const q = kit.group(); q.add(m); q.rotation.y = ang; q.rotation.z = tilt; q.position.set(x, y + th / 2, z); return kit.content(q); };
+  g.add(cloth(r * 2.15, r * 1.3, 78, -r * 0.05, h, 0, 0.25, 0.03, 24, 'lo'));
+  g.add(cloth(r * 1.15, r * 0.95, 64, r * 0.1, h + 88, -r * 0.08, -0.4, -0.05, 8, 'mid'));
+  g.add(cloth(r * 0.7, r * 0.55, 52, -r * 0.12, h + 156, r * 0.05, 1.0, 0.03, 4, 'lo'));
   return kit.merge(g);
 }
 import { poufBody } from './softpieces.js';
