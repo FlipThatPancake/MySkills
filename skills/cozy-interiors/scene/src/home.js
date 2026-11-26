@@ -186,7 +186,7 @@ export function buildHome(kit, home, registry, areas = []) {
       for (const W of walls) {
         const d = (camera.position.x - W.to[0]) * W.n[0] + (camera.position.z - W.to[1]) * W.n[1];
         let s = Math.min(step((d + span / 2) / span), d > 300 ? 1 : 0);   // a wall is out altogether when the camera is within 300 mm of its plane, so no half-faded sheet hangs in front of the lens
-        if (s > 0 && !W.closing && blocksView(W, camera.position, target, home.height || 2700)) s = 0;   // a wall that stands between the camera and the view centre (not through one of its openings) fades too, so a glide through the house never looks at the back of a wall
+        if (s > 0 && !W.closing && !W.noBlock && blocksView(W, camera.position, target, home.height || 2700)) s = 0;   // a wall that stands between the camera and the view centre (not through one of its openings) fades too, so a glide through the house never looks at the back of a wall
         W.goal = s; let c = W.cur === undefined ? s : W.cur + (s - W.cur) * ease; if (Math.abs(c - s) < 0.02) c = s; W.cur = c;   // goal: where the fade is heading (the checks read it); cur: what is drawn now
         if (c !== W.last) { W.last = c; W.vis.value = c; W.fa.set(c); if (W.plane) { W.plane.visible = c > 0.001; W.plane.material.opacity = c; } }
       }

@@ -131,7 +131,7 @@ export function createAreaScene(canvas, S) {
       for (const m of order.filter((q) => groupOf(q) === groupOf(n))) {   // the room beyond is the whole open plan it belongs to: kitchen, dining and living all stand behind the arch
         if (on) portal.add(m); else portal.delete(m);
         for (const o of Object.values(home.objects)) if (o.userData.scene.area === m) o.visible = on;
-        for (const W of [...home.walls, ...home.closers]) if ((W.id || '').startsWith(m + '-')) { W.node.visible = on; solid(W, on); }
+        for (const W of [...home.walls, ...home.closers]) if ((W.id || '').startsWith(m + '-')) { W.node.visible = on; W.noBlock = on; solid(W, on); }
         for (const b of home.blockers) if (b.g.userData.scene.area === m) b.fh = false; } }
     if (fadeChanged) applyFade(fadeOf(areas[cur]));
   };
@@ -139,7 +139,7 @@ export function createAreaScene(canvas, S) {
   if (S.home.portalClip !== false) for (const o of Object.values(home.objects)) hookPortal(o, o.userData.scene.area);
   if (S.home.portalClip !== false) for (const W of [...home.walls, ...home.closers]) if (orderArea(W) && !W.walk.length) hookPortal(W.node, orderArea(W));
   const solid = (W, on) => { const m = W.plane && W.plane.material; if (!m) return; if (on) { if (m.alphaMap) { m.userData.am = m.alphaMap; m.alphaMap = null; m.needsUpdate = true; } } else if (m.userData.am && !m.alphaMap) { m.alphaMap = m.userData.am; m.needsUpdate = true; } };   // a room seen through an opening has whole walls: no melting ends
-  const only = (id) => { portal.clear(); for (const W of home.closers) { W.node.visible = false; solid(W, false); } for (const W of home.walls) { solid(W, false); W.node.visible = id === null || shown(id, order.find((a) => (W.id || '').startsWith(a + '-'))); } for (const o of Object.values(home.objects)) o.visible = shown(id, o.userData.scene.area); for (const b of home.blockers) b.fh = false; for (const l of links || []) l.shows = null; };   // an area's whole open-plan group is drawn at rest
+  const only = (id) => { portal.clear(); for (const W of home.closers) { W.node.visible = false; solid(W, false); } for (const W of home.walls) { solid(W, false); W.noBlock = false; W.node.visible = id === null || shown(id, order.find((a) => (W.id || '').startsWith(a + '-'))); } for (const o of Object.values(home.objects)) o.visible = shown(id, o.userData.scene.area); for (const b of home.blockers) b.fh = false; for (const l of links || []) l.shows = null; };   // an area's whole open-plan group is drawn at rest
   function arrive(id) {
     cur = id; api.area = id; only(id);
     const v = viewOf(areas[id]);
