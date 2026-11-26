@@ -26,4 +26,10 @@ export const fixtures = [
     build({ Home }) { const { H, a, back } = room(Home, { seed: 9 }); a.group('shelf wall with an armchair', { wall: back, xc: 3000, hero: true }); return H; } },
   { name: 'good-desk-with-a-shelf-wall', kind: 'good', from: 'rollstats 200 seeds: 14 seeds, the side shelf of "desk with a shelf wall" stood 210-390 mm from the desk (check placement 9)',
     build({ Home }) { const { H, a, back } = room(Home); a.group('desk with a shelf wall', { wall: back, xc: 3000, hero: true }); return H; } },
+  { name: 'good-round-table-group-before-an-arch', kind: 'good', from: 'rollstats 200 seeds: 16 seeds, the table and chairs of "round table on a rug" stood in the zone of an arch on a side wall (a.group did not know the table\'s ids, so it never slid the group)',
+    build({ Home }) { const { H, a } = room(Home, { openings: [{ kind: 'arch', x: 3000, width: 1000, height: 2150 }] }); a.left(4000, [{ kind: 'arch', x: 2000, width: 1000, height: 2150 }]); a.group('round table on a rug', { at: [1600, 2000], hero: true }); return H; } },
+  { name: 'good-side-table-with-a-seat-and-pouf', kind: 'good', from: 'rollstats 200 seeds: 17 seeds, the side table of "side table with a lamp and a cup, a pouf beside it" had no seat the rule counts at its side (a pouf is not one): an armchair stands there, the pouf is its footrest',
+    build({ Home }) { const { H, a, back } = room(Home); a.put('arm', 'armchair', [900, 485], 0, { group: 'g' }); a.group('side table with a lamp and a cup, a pouf beside it', { wall: back, xc: 3500, hero: true }); return H; } },
+  { name: 'good-armchair-on-a-rug-at-a-wall', kind: 'good', from: 'rollstats 200 seeds: 8 seeds, the round rug of "armchair on a round rug, with a side table" crossed the back wall by 200 mm when dealt at a wall',
+    build({ Home }) { const { H, a, back } = room(Home); a.group('armchair on a round rug, with a side table', { wall: back, xc: 3000, hero: true }); return H; } },
 ];
