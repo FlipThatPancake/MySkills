@@ -978,6 +978,21 @@
     },
     "group": "sheet:row6",
     "area": "sheet"
+   },
+   {
+    "id": "sheet-bk-0",
+    "asset": "basket",
+    "at": [
+     1000,
+     0,
+     6200
+    ],
+    "mount": "floor",
+    "params": {
+     "form": 0
+    },
+    "group": "sheet:row6",
+    "area": "sheet"
    }
   ]
  },
