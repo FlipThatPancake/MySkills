@@ -230,7 +230,9 @@ const issues = await page.evaluate(() => {
 });
 
 lap('rules on all objects');
-const areaIssues = await page.evaluate(() => {
+const entryIds = await (async () => {   // areas of the entry kind (the roll's room type: hallway; a hand-built scene names it hallway, entry or foyer): the only places a bench may stand
+  try { const S = JSON.parse((await import('node:fs')).readFileSync(scene, 'utf8')), pl = S.home.roll?.plan?.areas || {}; return (S.areas || []).map((a) => a.id).filter((id) => /^(hallway|entry|foyer)$/.test((pl[id]?.room || id).replace(/\d+$/, ''))); } catch { return []; } })();
+const areaIssues = await page.evaluate((ENTRY) => {
   const api = window.cozyScene, FLAT = ['rug', 'runner']; if (!api.areaIds) return [];   // FLAT: pieces that lie on the floor: never a blocker or a share of the frame in a shot
   const { home, kit, camera } = api, T = kit.THREE, out = [], objs = home.objects, ids = Object.keys(objs), sc = (id) => objs[id].userData.scene;
   const box = (g) => { g.updateMatrixWorld(true); const b = new T.Box3(), bb = new T.Box3(); g.traverse((o) => { if (!o.isMesh || o.isLineSegments2 || o.userData.lines || o.material.isMeshBasicMaterial || kit.hulls.includes(o.material) || o.material === kit.depth) return; o.geometry.computeBoundingBox(); b.union(bb.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld)); }); g.traverse((o) => { if (o.userData.landing) { const L = new T.Vector3(...o.userData.landing).applyMatrix4(o.matrixWorld), c = b.getCenter(new T.Vector3()); b.expandByPoint(L); b.expandByPoint(new T.Vector3(c.x - 130, L.y, c.z - 130)); b.expandByPoint(new T.Vector3(c.x + 130, L.y, c.z + 130)); } }); return b; };
@@ -386,7 +388,7 @@ const areaIssues = await page.evaluate(() => {
   { const SKIP = /^(tablecloth|tableRunner|cloth|cushion|benchCushion|floorCushion|bookStack|books|openBook|scuff|leaf|pendantLamp|pan|hob|hood|plate|cup|saltPepper|foldedThrow|teaTowel|curtain|heightChart|cuttingBoard|cat)$/, cnt = {};   // small things that come three or more times in one home read as a stamp: vary them
     for (const i of ids) { const a = sc(i).asset; if (SKIP.test(a)) continue; const small = sc(i).mount === 'on' || ['jug', 'mug', 'vase', 'candlesticks', 'fruitBowl', 'jars', 'herbs', 'mokaPot', 'keyBowl', 'breadBasket'].includes(a); if (small) (cnt[a] ||= []).push(i); }
     for (const [a, l] of Object.entries(cnt)) if (l.length >= 3) out.push({ rule: 'variety', what: `${l.join(', ')}: ${l.length} ${a}s in one home (three or more of one small piece read as a stamp): give two of them another piece` }); }
-  { const ACC = ['basket', 'pouf', 'trolley', 'stool', 'footstool', 'stepStool', 'crate', 'bench'], seen = {}; /* round 6 B15: benches count too */ for (const i of ids) if (sc(i).asset === 'bench' && !/hall/.test(areaOf(i) || '')) out.push({ rule: 'variety', what: `${i}: a bench in ${areaOf(i)}: benches stand in hallways only; use a basket, stool or chair elsewhere` }); for (const i of ids) { const a = sc(i).asset; if (ACC.includes(a)) (seen[a] ||= []).push(i); }
+  { const ACC = ['basket', 'pouf', 'trolley', 'stool', 'footstool', 'stepStool', 'crate', 'bench'], seen = {}; /* round 6 B15: benches count too */ for (const i of ids) if (sc(i).asset === 'bench' && !ENTRY.includes(areaOf(i))) out.push({ rule: 'variety', what: `${i}: a bench in ${areaOf(i)}: benches stand in hallways only; use a basket, stool or chair elsewhere` }); for (const i of ids) { const a = sc(i).asset; if (ACC.includes(a)) (seen[a] ||= []).push(i); }
     for (const [a, l] of Object.entries(seen)) if (l.length > (a === 'stool' ? 3 : 1) && new Set(l.map((i) => areaOf(i))).size > 1 || l.length > 3) out.push({ rule: 'variety', what: `${l.join(', ')}: ${a} used in ${new Set(l.map((i) => areaOf(i))).size} areas of one home (one accent asset per home: choose a different foreground piece for each area)` });
     const forms = {}; for (const i of ids) { const f = sc(i).params?.form ?? sc(i).params?.shape; if (f !== undefined) (forms[`${sc(i).asset}/${f}`] ||= []).push(i); }
     for (const [k, l] of Object.entries(forms)) if (l.length > 1 && new Set(l.map((i) => areaOf(i))).size > 1) out.push({ rule: 'variety', what: `${l.join(', ')} all use the same ${k.split('/')[0]} (${k.split('/')[1]}): give each area a different form or shape, one decor accent per home` }); }
@@ -394,7 +396,7 @@ const areaIssues = await page.evaluate(() => {
       for (const i of mine) { const a = sc(i).asset; if (['mirror'].includes(a) || (a === 'floorPlant' && sc(i).params?.form === 3)) out.push({ rule: 'variety', what: `${A}: ${i} (${a}) is decor that does not come from kitchen use: a mirror or a sculptural planter has no place by the hob; use a picture, a vase, jars, herbs or a wall shelf` }); } }
   if ((window.__poufAreas || new Set()).size > 1) out.push({ rule: 'variety', what: `${[...window.__poufAreas].join(', ')} all use a pouf: one area per home at most; use a stool, bench end, basket or plant elsewhere` });
   return out;
-});
+}, entryIds);
 lap('per-area rules');
 const heroSide = Object.fromEntries(areaIssues.filter((i) => i.rule === '_heroside').map((i) => [i.area, i.cx]));
 for (const i of areaIssues) if (i.rule !== '_heroside') issues.push(i);
