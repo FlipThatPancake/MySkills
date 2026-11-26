@@ -49,11 +49,11 @@ export function saltPepper(kit, { form = 'shakers' } = {}) {
   if (form === 'mill') {
     g.add(kit.solid(new T.LatheGeometry([[0.01, 0], [34, 0], [38, 10], [40, 30], [34, 44], [0.01, 44]].map(([a, b]) => new T.Vector2(a, b)), 24), -42, 0, 0, { smooth: true, tone: 'lo' }));   // a salt cellar, lid up
     g.add(kit.cyl(-42, 44, 0, 8, 12, { seg: 10, tone: 'lo' }));
-    g.add(kit.solid(new T.LatheGeometry([[0.01, 0], [28, 0], [30, 6], [22, 50], [20, 120], [26, 170], [18, 190], [9, 196], [0.01, 198]].map(([a, b]) => new T.Vector2(a, b)), 28), 40, 0, 0, { smooth: true }));   // the turned mill
-    g.add(kit.lines(Array.from({ length: 22 }, (_, i) => { const a = i / 22 * 6.2832, b = (i + 1) / 22 * 6.2832; return [[40 + Math.cos(a) * 27, 56, Math.sin(a) * 27], [40 + Math.cos(b) * 27, 56, Math.sin(b) * 27]]; }).flat(), 'mid'));
+    g.add(kit.solid(new T.LatheGeometry([[0.01, 0], [28, 0], [30, 6], [22, 50], [20, 120], [26, 170], [18, 190], [9, 196], [0.01, 198]].map(([a, b]) => new T.Vector2(a, b)), 28), 20, 0, 0, { smooth: true }));   // the turned mill
+    g.add(kit.lines(Array.from({ length: 22 }, (_, i) => { const a = i / 22 * 6.2832, b = (i + 1) / 22 * 6.2832; return [[20 + Math.cos(a) * 27, 56, Math.sin(a) * 27], [20 + Math.cos(b) * 27, 56, Math.sin(b) * 27]]; }).flat(), 'mid'));
     return kit.merge(g);
   }
-  for (const [x, tone, holes] of [[-34, undefined, 3], [34, 'lo', 5]]) {
+  for (const [x, tone, holes] of [[-23, undefined, 3], [23, 'lo', 5]]) {
     g.add(kit.solid(new T.LatheGeometry(P(24, 78).map(([a, b]) => new T.Vector2(a, b)), 20), x, 0, 0, { smooth: true }));   // the glass body
     g.add(kit.solid(new T.LatheGeometry([[0.01, 78], [24, 78], [24, 90], [20, 98], [0.01, 100]].map(([a, b]) => new T.Vector2(a, b)), 20), x, 0, 0, { smooth: true, tone: tone || 'mid' }));   // the cap
     const hl = []; for (let i = 0; i < holes; i++) { const a = i / holes * 6.2832; hl.push([x + Math.cos(a) * 9, 100.6, Math.sin(a) * 9], [x + Math.cos(a) * 9 + 2, 100.6, Math.sin(a) * 9]); } hl.push([x, 100.6, 0], [x + 2, 100.6, 0]); g.add(kit.lines(hl, 'mid'));
