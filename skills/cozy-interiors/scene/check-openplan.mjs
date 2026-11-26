@@ -211,7 +211,7 @@ let veil = 0, veilId = ''; { const top = c.home.height || 2700, cp = c.camera.po
       }
       if (!bad.length && q.near < CORRIDOR_HALF) bad.push(`the camera comes within ${Math.round(q.near)} mm of ${q.nearId} at k ${q.k} (keep ${CORRIDOR_HALF} mm from furniture, half of the 900 mm corridor check-home rule path keeps clear between the entries; high over the rest)`);
       if (!bad.length && q.k >= 0.5 && q.k <= 0.6 && q.dest < 0.15 && q.dn >= 6) bad.push(`only ${Math.round(q.dest * 100)}% of ${b}'s pieces are in the frame at k ${q.k} (a mid-move frame shows the room being entered: 15% at least)`);
-      if (!bad.length && q.fill > (q.k < 0.9 ? 0.3 : 0.4)) bad.push(`${q.fillId} fills ${Math.round(q.fill * 100)}% of the frame at k ${q.k} (the move flies over it: keep the camera further off or higher)`);
+      if (!bad.length && q.fill > (q.k < 0.9 ? 0.3 : 0.4) && !(q.p[1] > H && q.dest >= 0.5)) bad.push(`${q.fillId} fills ${Math.round(q.fill * 100)}% of the frame at k ${q.k} (the move flies over it: keep the camera further off or higher; above the wall tops the destination's share in the frame decides, 50% of its pieces at least)`);
       if (!bad.length && q.shade.length) bad.push(`the contact shadow of ${q.shade[0]} is drawn while the piece is faded at k ${q.k}`);
       if (!bad.length && q.hung.length) bad.push(`${q.hung[0]} is drawn while its wall is faded out (a piece on a wall fades with its wall) at k ${q.k}`);
       if (!bad.length && q.veil > 1 / 3) bad.push(`${q.veilId} stands part-faded over ${Math.round(q.veil * 100)}% of the frame at k ${q.k} (a milky veil: a wall the camera is about to pass must fade out completely over a short distance)`);

@@ -29,5 +29,6 @@ a.put('tt-run', 'table', [1000 + 6 * D, 1500], 0, { group: 'row5', params: { w: 
 // round 6 rows: a fridge of each form (magnets, notes, photo on every one), unmade and made beds (the duvet)
 for (let f = 0; f < 3; f++) a.put(`fr-${f}`, 'fridge', [1000 + f * D, 4300], 0, { mount: 'floor', group: 'row6', params: { form: f } });
 for (const [k, p] of [['bedU1', { duvet: 'unmade', seed: 29 }], ['bedU2', { duvet: 'unmade', seed: 3 }], ['bedM', { duvet: 'made' }]]) a.put(k, 'bed', [1000 + (3 + ['bedU1', 'bedU2', 'bedM'].indexOf(k)) * 2 * D, 4300], 0, { mount: 'floor', group: 'row6', params: { w: 1400, frame: 'box', head: 860, ...p } });
+a.put('bk-0', 'basket', [1000, 6200], 0, { mount: 'floor', group: 'row6' });   // the laundry basket (round 6, Nov 26): soft garments resting on each other
 a.view({ target: [7000, 600, 4000], az: 0, el: 10, dist: 14000 });
 H.write(new URL('./assets.json', import.meta.url).pathname, fs);

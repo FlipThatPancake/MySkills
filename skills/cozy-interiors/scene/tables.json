@@ -367,8 +367,7 @@
    "leaning mirror by the wall, or mirror over the chest of drawers",
    "basket",
    "cat",
-   "floor lamp beside the chair or bench",
-   "bench at the foot of the bed",
+   "floor lamp beside the chair",
    "wall shelf",
    "picture over the bed, or on open wall at eye level",
    "book stack"
@@ -386,7 +385,6 @@
   ],
   "foreground": [
    "basket",
-   "bench at the foot of the bed",
    "clothes chair",
    "hamper"
   ]
@@ -1457,8 +1455,7 @@
       "picture or gallery over the sofa": "picture|galleryWall",
       "side table at the arm of the seat": "sideTable",
       "leaning mirror by the wall, or mirror over the chest of drawers": "leaningMirror|mirror",
-      "floor lamp beside the chair or bench": "floorLamp",
-      "bench at the foot of the bed": "bench",
+      "floor lamp beside the chair": "floorLamp",
       "picture over the bed, or on open wall at eye level": "picture",
       "picture over the seat, or on open wall at eye level": "picture",
       "floor books": "floorBooks",
