@@ -120,11 +120,11 @@ did not need: one clear question per conversation. The result has `opened` (sele
 ## The chat area and scene chat (v1.6)
 
 From v1.6 the user can talk to you in a **chat area** inside Blender (a panel beside the 3D view, opened from the dock's
-speech-bubble button). It shows **Scene Chat** (the scene's own conversation), an **All Conversations** list and Settings.
+speech-bubble button). It shows **Scene chat** (the scene's own conversation), an **All Conversations** list and Settings.
 In the records you read this changes little, but these things are new:
 
 - **Start a conversation without objects.** `start_conversation(text, scene_wide=True, title=...)` asks about the whole scene
-  and opens Scene Chat; leave out `objects` and `collection` when you pass it (mixing them is `bad_input`). `add_comment(text,
+  and opens Scene chat; leave out `objects` and `collection` when you pass it (mixing them is `bad_input`). `add_comment(text,
   scene_wide=True)` writes to the scene's conversation too (no `reply_to`). Objects and collections work as before.
 - **`scene_id` on every tool.** `open_conversation`, `start_conversation`, `read_unread`, `history`, `add_comment`,
   `get_comment`, `get_context`, `list_comments`, `resolve`, `back_to_draft`, `queue` and `mark_sent` all accept `scene_id`
@@ -143,6 +143,33 @@ In the records you read this changes little, but these things are new:
   answer every unread message. The user sees "Not picked up yet" on a message until you read it.
 - **The disc, the text box and the dock are the user's side.** You do not need to describe them. If the user says the chat
   area is missing, they open it from the dock or the header button; it has no keyboard shortcut.
+
+## What changed for the user in v1.7 (version 1.7.0)
+
+No tool, argument or record changed in 1.7 (MCP script version stays 0.8.0, `api_version` 1). What the user sees, so you can
+describe it and understand what they say:
+
+- **Scene chat** is the name everywhere (the tab, the dock's scene button, the viewport window). Its window has no title row:
+  a small scene mark (a sphere and a cone on a ground line, Blender's own picture for a scene) leads the hint "Message the scene…".
+- **The conversation window grows out of its speech bubble**, to the right of it (to the left when there is no room), and keeps
+  the selected objects clear. Messages and the text box are one window with no line between them. In the text box a click puts
+  the caret, a drag selects, a double click selects a word.
+- **Status is a flat dot** everywhere: orange = you asked (Agent asks you), green with a tick = done (check it), hollow = waiting
+  for you, a small grey dot = resolved. In words (on hover in the chat area's list and in the dock): "Your turn", "Waiting for the agent",
+  "Agent says done, check it", "Resolved".
+- **Resolve all** (All Conversations and the dock) resolves every open conversation after one question. It is the user's action:
+  you never resolve, and you cannot undo it for them.
+- **All Conversations has a search field** (title, object names, message text); the **@ menu** lists Objects, Materials and World
+  and scrolls. **Every setting is in the chat area's Settings page** too (the same add-on preferences as the N-panel).
+- **Tooltips everywhere** and Enter/Esc work with the pointer over the chat area as in the viewport. With Talkback mode off the
+  chat area keeps working; "Show in viewport" turns the mode on and frames the objects.
+- **The dock button** is a round icon-only disc (no word, no count); its icon is filled while the chat area is open.
+- **The Send button is a small toggle** (text box in the chat area and in the viewport window): hovering Send slides a second
+  circle out from behind it. Arrow = Queue in Blender, star = Send each message (greyed with the hint "Needs Local MCP" when Local
+  MCP is off). The filled circle is the current mode and sends on a click; clicking the other one only switches the mode. It is
+  the same Send mode as in Settings, so nothing changes for you.
+- **The Colours setting has two options, Mono (default) and Per conversation.** The old "Stage (old)" option is gone; a saved
+  Stage value shows as the default look.
 
 ## What the user sees (v1.3), so you can describe it
 
