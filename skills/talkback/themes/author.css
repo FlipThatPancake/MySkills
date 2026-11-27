@@ -27,8 +27,7 @@
 .tip p{font-size:18px;font-weight:400}
 .tip div{margin-top:20px;font-size:13px}
 .tip button{padding:9px 16px}
-.field{box-sizing:border-box;width:280px;min-height:48px;padding:13px 8px 13px 18px;align-items:flex-end;animation:pop .22s var(--ease)}
-.box.review .field{border-radius:26px 26px 26px 4px}
-textarea{font-family:'PP Neue Montreal',system-ui,sans-serif;font-size:15px;line-height:1.3;letter-spacing:.04em;color:#292929e6;margin-bottom:3px}
-.cb{width:27px;height:27px}
-@keyframes pop{from{opacity:0;transform:translateY(4px) scale(.97)}}
+.box{--surf:#f6f5f1;--ring:#8a8a85;--hair:#c9c8c2;--chip:#e6e5df;--ink:#1f1f1f;--soft:#585854;--sub:#62625d;font-family:'PP Neue Montreal',system-ui,sans-serif;font-weight:500;letter-spacing:.03em}
+.stl{font-size:11px;letter-spacing:.55px;text-transform:uppercase}
+.hd .first{font-size:12.5px;letter-spacing:.02em}
+.chip{letter-spacing:.02em}

@@ -148,7 +148,27 @@
   const [vert, horiz] = spot.split('-');
   const SEND = '<svg viewBox="0 0 12 13"><path d="M5.4.2.25 5.1c-.27.27-.37.86-.07 1.18.3.32.88.32 1.19 0l3.77-3.57v9.48a.81.81 0 0 0 1.62 0V2.7l3.77 3.57c.3.32.9.34 1.18 0 .26-.31.27-.9-.07-1.18L6.51.22C6.3 0 5.76-.15 5.4.22Z" fill="currentColor"/></svg>';
   const TRASH = '<svg viewBox="0 0 9 11"><path d="M6.13.57 6 .1A.14.14 0 0 0 5.87 0H2.57a.14.14 0 0 0-.14.1l-.13.47a.14.14 0 0 1-.13.1H.14A.14.14 0 0 0 0 .81v.4c0 .07.06.13.14.13h8.16c.08 0 .14-.06.14-.14V.8a.14.14 0 0 0-.14-.14H6.26a.14.14 0 0 1-.13-.1ZM.25 1.94v7.2c0 .69.55 1.23 1.23 1.23h5.47c.68 0 1.23-.55 1.23-1.23v-7.2H.25Zm1.54 7.01a.23.23 0 0 1-.23.23h-.05a.23.23 0 0 1-.23-.23V3.34c0-.12.1-.22.23-.22h.05c.13 0 .23.1.23.22v5.61Zm2.68 0a.23.23 0 0 1-.23.23h-.05a.23.23 0 0 1-.23-.23V3.34c0-.12.1-.22.23-.22h.05c.13 0 .23.1.23.22v5.61Zm2.68 0a.23.23 0 0 1-.23.23h-.05a.23.23 0 0 1-.23-.23V3.34c0-.12.1-.22.23-.22h.05c.13 0 .23.1.23.22v5.61Z" fill="currentColor"/></svg>';
-  const BUBBLE = '<svg class="bub" viewBox="9 3 21 22"><path d="M25.32 4.58c2.04 0 3.68 1.65 3.68 3.69v7.63c0 2.03-1.65 3.68-3.68 3.68H14.66l-4.5 3.84V8.27c0-2.04 1.65-3.69 3.68-3.69h11.48Z" fill="currentColor"/></svg>';
+  const PIN = {
+    spark: '<svg viewBox="0 0 16 16"><path d="M8 2.2c.9 3.3 2.5 4.9 5.8 5.8-3.3.9-4.9 2.5-5.8 5.8-.9-3.3-2.5-4.9-5.8-5.8 3.3-.9 4.9-2.5 5.8-5.8Z" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>',
+    person: '<svg viewBox="0 0 16 16"><circle cx="8" cy="5.6" r="2.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M3.2 13.4c.6-2.7 2.4-4 4.8-4s4.2 1.3 4.8 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+    add: '<svg viewBox="0 0 16 16"><path d="M13.5 8.5a5 5 0 0 1-5 5H4l-1.5 1.5V8.5a5 5 0 0 1 5-5H8.5a5 5 0 0 1 5 5ZM8 6v4M6 8h4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    tick: '<svg viewBox="0 0 16 16"><path d="m3.5 8.4 2.8 2.8 6.2-6.4" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    back: '<svg viewBox="0 0 16 16"><path d="M6.5 3.5 3 7l3.5 3.5M3.5 7H10a3 3 0 0 1 0 6H8" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    image: '<svg viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="m3 11.5 3.2-3.2 2.3 2.3 1.6-1.6 2.9 2.9" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"/></svg>',
+    text: '<svg viewBox="0 0 16 16"><path d="M2.5 4h11M2.5 8h11M2.5 12h6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+    button: '<svg viewBox="0 0 16 16"><rect x="2" y="4.5" width="12" height="7" rx="3.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M6 8h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>',
+    spot: '<svg viewBox="0 0 16 16"><rect x="2.5" y="2.5" width="11" height="11" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-dasharray="2.4 2"/></svg>',
+  };
+  // Popup choices: where the pin sits and how your turns line up.
+  const pinInside = () => (window.talkbackOptions || {}).pin === 'inside';
+  const turnsLeft = () => (window.talkbackOptions || {}).userTurns === 'left';
+  const INK = { '': '#585854', queued: '#0a7bd4', ready: '#0a7bd4', picked: '#0a7bd4', asks: '#b86e00', done: '#16883f', resolved: '#5f5f5f' };
+  const DOT = { queued: '#8b8b8b', ready: '#0d99ff', picked: '#0d99ff', asks: '#f69b13', done: '#1fbf5a', resolved: '#8b8b8b' };
+  const chipOf = (c) => {
+    const ty = (c.target && c.target.type) || '', txt = isText(c) || /^(text|p|h\d|li|blockquote|label|td|th)/.test(ty) ? 'text' : /^(img|svg|canvas|video|picture)/.test(ty) ? 'image' : /^(button|a|link|input|select|textarea)/.test(ty) ? 'button' : 'spot';
+    const name = c.target.name || (isText(c) ? cut(c.quote, 40) : c.target.text ? cut(c.target.text, 40) : ty);
+    return [PIN[txt], name];
+  };
   const ICON = {
     tg: '<svg viewBox="0 0 16 16"><path d="M2.95 0h9.18a2.95 2.95 0 0 1 2.94 2.95v6.1A2.95 2.95 0 0 1 12.13 12H3.6L0 15.06V2.95A2.95 2.95 0 0 1 2.95 0Z" fill="currentColor"/></svg>',
     dl: '<svg viewBox="0 0 16 17"><path d="M14.48 9.59 9.33 14.57c-.46.46-.76.72-1.05.93h5.03v1.25H2v-1.25h5.02c-.29-.21-.67-.47-1.13-.93L.74 9.5c-.84-.92-.25-1.13.38-1.13h2.51V1.68C3.63.5 4.47 0 5.3 0h4.6c1.35 0 1.69.88 1.69 1.68v6.7h2.47c1.05 0 1.26.33.42 1.21Z" fill="currentColor"/></svg>',
@@ -190,13 +210,48 @@
     .panel li.ok:before{background:#1fbf5a}.panel li.bad:before{background:#e5484d}.panel li.wait:before{background:#f69b13}
     .panel li small{display:block;opacity:.65}.panel .row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
     .panel button{padding:6px 12px;border:1px solid #dfdeda55;border-radius:99px;font-size:12px}
-    .stack{display:flex;flex-direction:column;gap:8px}
-    .conv{width:280px;max-height:230px;overflow:auto;display:flex;flex-direction:column;gap:6px;padding:10px;box-sizing:border-box;background:#161616f2;color:#e8e6e1;border-radius:14px;font-size:13px}
-    .conv .hd{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:11px;letter-spacing:.04em;text-transform:uppercase;opacity:.8}
-    .conv .hd button{padding:3px 9px;border:1px solid #ffffff55;border-radius:99px;font-size:11px;text-transform:none;letter-spacing:0}
-    .conv .m{display:flex;flex-direction:column;gap:2px;max-width:90%;padding:6px 10px;border-radius:12px;white-space:pre-wrap;overflow-wrap:anywhere}
-    .conv .u{align-self:flex-end;background:#fff;color:#292929}.conv .a{align-self:flex-start;background:#2c2c2c}
-    .conv small{font-size:10.5px;opacity:.6}
+    /* the comment popup: one card holding the thread and the line you type in, with a round pin level with that line */
+    .box{position:fixed;left:0;top:0;display:flex;align-items:flex-end;pointer-events:auto;--surf:#fff;--ring:#7a7a76;--hair:#d0cfca;--chip:#ecebe8;--ink:#1f1f1f;--soft:#585854;--sub:#62625d}
+    .card{box-sizing:border-box;width:360px;max-width:calc(100vw - 24px);padding:14px;background:var(--surf);border:1px solid var(--ring);border-radius:26px;color:var(--ink);font-size:15px;line-height:1.4;text-wrap:pretty;
+      box-shadow:0 10px 30px #00000024;animation:pop .22s ease;margin:0 0 -12px -4px}
+    .box.flip{flex-direction:row-reverse}.box.flip .card{margin:0 -4px -12px 0}
+    .box.inside .card{margin:0 0 -15px -7px;border-bottom-left-radius:4px}
+    .box.inside.flip .card{margin:0 -7px -15px 0;border-radius:26px 26px 4px 26px}
+    .bub{flex:none;position:relative;z-index:2;display:grid;place-items:center;width:34px;height:34px;border-radius:17px 17px 17px 3px;background:var(--surf);
+      box-shadow:inset 0 0 0 1px var(--ring),0 2px 8px #0003;color:var(--pc,var(--soft))}
+    .bub svg{width:17px;height:17px}
+    .box.flip .bub{border-radius:17px 17px 3px 17px}
+    .box.inside .bub{width:28px;height:28px;margin:0 0 0 -8px;align-self:flex-end;border-radius:14px 14px 14px 3px;box-shadow:inset 0 0 0 1px var(--ring)}
+    .box.inside.flip .bub{margin:0 -8px 0 0;border-radius:14px 14px 3px 14px;order:1}
+    .box.inside .bub svg{width:15px;height:15px}
+    .box.inside .hd .bub{align-self:center}
+    .hd{display:flex;align-items:center;gap:8px;min-height:28px;margin:0 0 10px;font-size:12px}
+    .stl{flex:none;color:var(--soft);white-space:nowrap}
+    .stl::before{content:'';display:inline-block;width:8px;height:8px;margin-right:7px;border-radius:50%;background:var(--sc,#8b8b8b);vertical-align:-0.5px;box-sizing:border-box}
+    .box[data-st=queued] .stl::before{background:none;border:2px dashed #8b8b8b}
+    .chip{display:inline-flex;align-items:center;gap:5px;min-width:0;height:22px;padding:0 9px 0 6px;border-radius:99px;background:var(--chip);color:#3f3f3b;font-size:12.5px;white-space:nowrap}
+    .chip svg{width:13px;height:13px;flex:none}.chip span{min-width:0;overflow:hidden;text-overflow:ellipsis}
+    .rs{margin-left:auto;flex:none;display:grid;place-items:center;width:28px;height:28px;border-radius:50%;box-shadow:inset 0 0 0 1px var(--ring);color:#3f3f3b;transition:background .2s}
+    .rs:hover{background:var(--chip)}.rs svg{width:15px;height:15px}
+    .box.res .hd{margin:0}.box.res .hd .first{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--soft)}.box.res :is(.ml,.cmp){display:none}
+    .ml{max-height:300px;overflow:auto;display:flex;flex-direction:column;gap:4px;margin:0 -8px;padding:0 8px;scroll-snap-type:y proximity}
+    .ml.scr{-webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 24px);mask-image:linear-gradient(to bottom,transparent 0,#000 24px)}
+    .m{display:flex;gap:10px;padding:5px 0;scroll-snap-align:start}
+    .m.u{margin-left:30px}.box.left .m.u{margin-left:0}
+    .mk{flex:none;display:grid;place-items:center;width:1.35em;height:1.35em;margin-block:calc((1lh - 1.35em) / 2);border-radius:50%;background:var(--surf);box-shadow:inset 0 0 0 1px var(--ring)}
+    .mk svg{width:.85em;height:.85em}
+    .tx{white-space:pre-wrap;overflow-wrap:anywhere}
+    .tx small,.sm{display:block;margin-top:2px;font-size:12px;line-height:1.35;color:var(--soft)}
+    .tx button{margin-left:8px;padding:2px 8px;border-radius:99px;box-shadow:inset 0 0 0 1px var(--ring);font-size:12px}
+    .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+    .cmp{display:flex;gap:10px;align-items:flex-start;min-height:28px}
+    .conv:not([hidden])~.cmp{margin:8px -8px 0;padding:10px 8px 0;border-top:1px solid var(--hair)}
+    .conv:not([hidden])~.cmp textarea{padding-left:30px}.box.inside .conv:not([hidden])~.cmp textarea{padding-left:0}
+    textarea{box-sizing:border-box;flex:1;min-width:0;max-height:160px;resize:none;border:0;outline:0;padding:3.5px 0;background:none;font:inherit;color:inherit}
+    textarea::placeholder{color:var(--sub)}
+    .cb{flex:none;align-self:flex-end;display:grid;place-items:center;width:26px;height:26px;margin-block:1px;border-radius:50%;background:none;color:var(--sub);box-shadow:inset 0 0 0 1px var(--ring)}
+    .cb svg{width:13px;height:13px}.cb.go:not(:disabled){background:var(--ink);color:var(--surf);box-shadow:none}.cb.del:hover{color:#a71414}.cb:disabled{cursor:not-allowed}
+    @keyframes pop{from{opacity:0;transform:translateY(4px) scale(.97)}}
     .pin:not([data-st=""])::after{content:'';position:absolute;right:-6px;top:-6px;width:10px;height:10px;box-sizing:border-box;border-radius:50%;border:2px solid #8b8b8b;background:#fff}
     .pin[data-st=picked]::after{background:#0d99ff;border-color:#fff}.pin[data-st=asks]::after{background:#f69b13;border-color:#fff}.pin[data-st=done]::after{background:#1fbf5a;border-color:#fff}
     .pin[data-st=queued]::after{border-style:dashed}.pin[data-st=resolved]{opacity:.5}.pin[data-st=resolved]::after{background:#8b8b8b;border-color:#fff}
@@ -209,17 +264,6 @@
       background:var(--c);color:#fff;font-weight:600;text-align:center;line-height:22px;border:2px solid #fff;
       box-sizing:border-box;box-shadow:0 2px 6px #0005;pointer-events:auto}
     .pin.text{width:20px;height:20px;margin:-10px 0 0;border-radius:10px;line-height:16px;font-size:11px}
-    .box{position:fixed;left:0;top:0;display:flex;align-items:flex-end;gap:6px;pointer-events:auto}
-    .box.flip{flex-direction:row-reverse}.box.flip .bub{transform:scaleX(-1)}
-    .bub{flex:none;width:21px;height:22px;color:var(--c)}
-    .field{display:flex;align-items:flex-end;gap:8px;width:280px;padding:9px 7px 9px 14px;background:#fff;border:1px solid var(--c);
-      border-radius:13px;box-shadow:0 1px 2px #0001,2px 3px 4px #0000001a,4px 7px 5px #0000000d}
-    textarea{flex:1;min-width:0;max-height:160px;resize:none;border:0;outline:0;padding:0;background:none;font:500 15px/1.3 system-ui,sans-serif;
-      color:#292929;letter-spacing:.01em}
-    textarea::placeholder{color:#29292955}
-    .cb{flex:none;width:25px;height:25px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#2929290f;color:#292929}
-    .cb svg{width:52%;height:52%}
-    .cb.go{background:var(--c);color:#fff}.cb:disabled{background:#2929290f;color:#929292;cursor:not-allowed}
   </style><div id="marks"></div><div class="hl" hidden></div><div class="tag" hidden></div><div id="pins"></div>
   <div class="bar${col ? ' col' : ''}">${tool('tg', 'Comment', 'Talkback (C)')}
   <div class="x">${tool('rl', 'Updated, reload', 'The page changed: reload it')}${tool('st', 'Live', 'Live link status')}${tool('cl', '', 'Clear all comments')}${tool('cp', 'Copy JSON', 'Copy every comment as JSON')}${tool('dl', '<span class="nw"><span class="n"></span></span><span class="hw"><span class="h">Download comments</span></span>', 'Download every comment as JSON')}</div>
@@ -320,9 +364,10 @@
     highlight(null);
     if (!tipSeen) hideTip();
     const el = document.createElement('div');
-    el.className = 'box' + (isNew ? '' : ' review');
+    el.className = 'box' + (pinInside() ? ' inside' : '') + (turnsLeft() ? ' left' : '');
     el.style.setProperty('--c', colorOf(c));
-    el.innerHTML = BUBBLE + '<div class="stack"><div class="conv" hidden></div><div class="field"><textarea rows="1" placeholder="Add a comment"></textarea><button class="cb del" title="Delete">' + TRASH + '</button><button class="cb go" title="' + (live.on || cc ? 'Send to agent (Enter)' : 'Save (Enter)') + '">' + SEND + '</button></div></div>';
+    const pin = '<div class="bub"></div>';
+    el.innerHTML = (pinInside() ? '' : pin) + '<div class="card"><div class="conv" hidden></div><div class="cmp">' + (pinInside() ? pin : '') + '<textarea rows="1" placeholder="Add a comment"></textarea><button class="cb del" title="Delete" aria-label="Delete">' + TRASH + '</button><button class="cb go" title="' + (live.on || cc ? 'Send to agent (Enter)' : 'Save (Enter)') + '" aria-label="Send">' + SEND + '</button></div></div>';
     const ta = el.querySelector('textarea'), go = el.querySelector('.go'), del = el.querySelector('.del');
     const fit = () => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; go.disabled = !ta.value.trim(); };
     const talking = chat() && (c.msgs || []).length; // a conversation: the field is for the next message
@@ -388,7 +433,7 @@
         const flip = isText(box.c) ? px + 8 + w > innerWidth - 8 : px + w > innerWidth - 8;
         box.el.classList.toggle('flip', flip);
         const x = isText(box.c) ? clamp(px + 8, 8, innerWidth - w - 8) : clamp(flip ? px - w : px, 8, innerWidth - w - 8);
-        box.el.style.transform = `translate(${x}px,${clamp(isText(box.c) ? py + 10 : py - h, 8, innerHeight - h - 8)}px)`;
+        box.el.style.transform = `translate(${x}px,${clamp(isText(box.c) ? py + 10 : py - h, 8, innerHeight - h - 20)}px)`;
       }
     }
     requestAnimationFrame(tick);
@@ -502,33 +547,52 @@
     if (!r.ok) throw new Error(r.status);
     return r.json();
   }
+  // The pin carries the state: your initial-free person while your message waits, the agent's spark when it spoke last, a tick when resolved.
+  function paintPin() {
+    const b = box.el.querySelector('.bub'), c = box.c, ms = c.msgs || [], s = chat() && ms.length ? stOf(c) : '';
+    b.innerHTML = !chat() || !ms.length ? PIN.add : c.resolved ? PIN.tick : ms[ms.length - 1].who === 'user' ? PIN.person : PIN.spark;
+    b.style.setProperty('--pc', INK[s] || INK['']);
+    box.el.dataset.st = s;
+    box.el.style.setProperty('--sc', DOT[s] || '#8b8b8b');
+  }
   function paintConv() {
     if (!box) return;
-    const c = box.c, conv = box.el.querySelector('.conv'), ms = c.msgs || [];
+    const c = box.c, conv = box.el.querySelector('.conv'), ms = c.msgs || [], cmp = box.el.querySelector('.cmp'), bub = box.el.querySelector('.bub');
     conv.hidden = !chat() || !ms.length;
-    if (conv.hidden) return;
+    box.el.classList.toggle('res', !conv.hidden && !!c.resolved);
+    paintPin();
+    if (conv.hidden) { if (pinInside() && bub.parentNode !== cmp) cmp.prepend(bub); return; }
     const sig = JSON.stringify([stOf(c), c.resolved, ms.map((m) => [m.text, m.sent, m.picked, m.done, m.err])]);
     if (box.sig === sig) return;
     box.sig = sig;
+    if (pinInside()) cmp.prepend(bub); // keep the pin out of the thread while it is rebuilt
     conv.textContent = '';
     const hd = h('div', 'hd', undefined, conv);
+    if (pinInside() && c.resolved) hd.prepend(bub);
     h('span', 'stl', cc ? (c.resolved ? 'Resolved' : ms.some((m) => !m.sent) ? 'Sending…' : 'Sent to Claude') : STL[stOf(c)] + (stOf(c) === 'picked' ? ' ' + hm(ms.filter((m) => m.picked).pop().picked) : ''), hd);
-    const rs = h('button', 'rs', c.resolved ? 'Reopen' : 'Resolve', hd);
-    rs.title = 'Only you resolve a conversation';
+    if (c.resolved) h('span', 'first', '· ' + cut(c.text || ms[0].text, 60), hd);
+    else { const [icon, name] = chipOf(c), chip = h('span', 'chip', undefined, hd); chip.innerHTML = icon; h('span', '', name, chip); }
+    const rs = h('button', 'rs', undefined, hd);
+    rs.innerHTML = c.resolved ? PIN.back : PIN.tick;
+    rs.title = c.resolved ? 'Reopen' : 'Resolve'; rs.setAttribute('aria-label', rs.title);
     rs.onclick = () => {
       c.resolved = !c.resolved;
-      if (cc) { if (c.srvId) cc.resolve(c.srvId, c.resolved).catch(() => {}); box.sig = ''; save(); syncBar(); return; }
-      c.rsDirty = 1; save(); syncBar(); sync();
+      if (cc) { if (c.srvId) cc.resolve(c.srvId, c.resolved).catch(() => {}); box.sig = ''; save(); syncBar(); paintConv(); return; }
+      c.rsDirty = 1; save(); syncBar(); sync(); box.sig = ''; paintConv();
     };
+    const list = h('div', 'ml', undefined, conv);
     for (const m of ms) {
-      const d = h('div', 'm ' + (m.who === 'user' ? 'u' : 'a'), undefined, conv);
-      h('span', '', m.text, d);
-      const note = m.who === 'user' ? (cc ? (m.sent ? 'Sent to Claude' : m.err ? 'Not sent (' + m.err + ')' : 'Sending…') : !m.sent ? 'Queued' : m.picked ? 'Picked up ' + hm(m.picked) : 'Not picked up yet') : m.done ? 'Done, check it' : '';
-      if (note) h('small', '', note, d);
-      if (cc && m.err) h('button', 'rs', 'Retry', d).onclick = () => { m.err = ''; box.sig = ''; deliverAll(); };
+      const d = h('div', 'm ' + (m.who === 'user' ? 'u' : 'a'), undefined, list), mk = h('i', 'mk', undefined, d);
+      mk.innerHTML = '<span class="vh">' + (m.who === 'user' ? 'You: ' : 'Agent: ') + '</span>' + (m.who === 'user' ? PIN.person : PIN.spark);
+      const tx = h('div', 'tx', m.text, d);
+      if (cc && m.err) { h('small', '', 'Not sent (' + m.err + ')', tx); h('button', '', 'Retry', tx).onclick = () => { m.err = ''; box.sig = ''; deliverAll(); }; }
     }
-    if (cc) h('small', '', 'Claude’s replies appear in claude.ai’s comment panel.', conv);
-    conv.scrollTop = conv.scrollHeight;
+    if (cc) h('small', 'sm', 'Claude’s replies appear in claude.ai’s comment panel.', list);
+    const f = () => list.classList.toggle('scr', list.scrollTop > 2);
+    list.onscroll = f;
+    list.scrollTop = list.scrollHeight;
+    f();
+    if (pinInside() && c.resolved) return;
     box.el.querySelector('textarea').placeholder = 'Reply';
   }
   function sendMsg() {
