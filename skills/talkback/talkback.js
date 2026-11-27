@@ -315,7 +315,6 @@
     pins.hidden = marks.hidden = !on;
     $('.cp').hidden = cl.hidden = !on || !n;
     dl.hidden = !n || (!on && !dirty);
-    $('.tip').hidden = !on || tipSeen;
     dl.querySelector('.n').textContent = n + ' unsaved'; // shown while dirty; hover shows Download comments
     dl.title = n + (n === 1 ? ' comment' : ' comments') + (dirty ? ', not downloaded or copied yet' : ', saved') + ' · click to download';
     dl.classList.toggle('dirty', dirty);
@@ -328,6 +327,7 @@
     for (const [c, b] of pinEls) b.dataset.st = stOf(c);
     $('.tip p').textContent = 'Select text, or click anything on the page, to pin a comment there.' + (live.on || cc ? '' : ' To talk with your agent here, tell it: “Go live with Talkback on this page”.');
     paintLive();
+    $('.tip').hidden = !on || tipSeen || panelOpen; // both sit in the same spot; the panel goes first
   }
   const setMode = (v) => {
     on = v;
@@ -489,7 +489,7 @@
 
   document.addEventListener('keydown', (e) => {
     const t = e.composedPath()[0];
-    if (e.key === 'Escape') return panelOpen ? ((panelOpen = false), paintLive()) : box ? closeBox(false) : setMode(false);
+    if (e.key === 'Escape') return panelOpen ? closePanel() : box ? closeBox(false) : setMode(false);
     if (e.key.toLowerCase() === 'c' && !e.metaKey && !e.ctrlKey && !e.altKey && !/^(input|textarea|select)$/i.test(t.localName) && !t.isContentEditable) setMode(!on);
   });
 
@@ -514,7 +514,7 @@
     if (!b) return;
     const a = b.dataset.a, json = JSON.stringify(exportData(), null, 2);
     if (a === 'tg') setMode(!on);
-    if (a === 'st') { panelOpen = !panelOpen; guide = false; paintLive(); }
+    if (a === 'st') { panelOpen = guide || !panelOpen; seeGuide(); syncBar(); } // from the guide, Live goes on to the status list
     if (a === 'rl') reload();
     if (a === 'cp') {
       const fallback = () => { const ta = document.createElement('textarea'); ta.value = json; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); };
@@ -670,6 +670,14 @@
   const RS = 'talkback:restore', GUIDE = 'talkback:live-guide';
   let panelOpen = false, guide = false, guideSeen = false;
   try { guideSeen = !!localStorage.getItem(GUIDE); } catch (e) {}
+  // Leaving the first-time guide by any route marks it seen, so it does not open itself again.
+  function seeGuide() {
+    if (!guide) return;
+    guide = false;
+    guideSeen = true;
+    try { localStorage.setItem(GUIDE, '1'); } catch (e) {}
+  }
+  function closePanel() { seeGuide(); panelOpen = false; syncBar(); }
   function reload() {
     try {
       const f = (fn) => { try { return typeof fn === 'function' ? fn() : null; } catch (e) { return null; } };
@@ -692,7 +700,7 @@
       h('h4', '', 'Talking with your agent', pn);
       h('p', '', 'Point at anything and write. Send goes to your agent, and the dots show where each message stands. Only you resolve a conversation.', pn);
       const row = h('div', 'row', undefined, pn);
-      h('button', '', 'Got it', row).onclick = () => { guideSeen = true; try { localStorage.setItem(GUIDE, '1'); } catch (e) {} panelOpen = guide = false; paintLive(); };
+      h('button', '', 'Got it', row).onclick = closePanel;
       return;
     }
     h('h4', '', 'Talkback live', pn);

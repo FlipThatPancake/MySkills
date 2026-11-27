@@ -68,8 +68,18 @@ function serve() {
       if (!stores.has(p)) { let d = null; try { d = JSON.parse(readFileSync(storeFile(p), 'utf8')); } catch (e) {} stores.set(p, { threads: (d && d.threads) || [], next: (d && d.next) || 1, hello: (d && d.hello) || null }); }
       return stores.get(p);
     };
-    const saveStore = (p) => { const s = stores.get(p); writeFileSync(storeFile(p), JSON.stringify({ version: VERSION, next: s.next, hello: s.hello, threads: s.threads }, null, 1)); };
+    const saveStore = (p) => {
+      const s = stores.get(p);
+      writeFileSync(storeFile(p), JSON.stringify({ version: VERSION, next: s.next, hello: s.hello, threads: s.threads }, null, 1));
+      if (p.includes('/') && !listed.includes(p)) writeFileSync(listFile, JSON.stringify([...listed, p])), listed.push(p);
+    };
     try { for (const f of readdirSync(dir)) if (f.endsWith('.talkback.json')) load(f.slice(0, -14)); } catch (e) {}
+    // Subfolder pages load at start too, so numbers do not repeat and unread messages reach the next wait. They are listed rather than searched for: the served folder may be huge.
+    const listFile = join(dir, '.talkback-pages.json');
+    let listed = [];
+    try { listed = JSON.parse(readFileSync(listFile, 'utf8')).filter((p) => typeof p === 'string' && !p.includes('..')); } catch (e) {}
+    for (const p of listed) if (existsSync(storeFile(p))) load(p);
+    const freeNumber = () => Math.max(1, ...[...stores.values()].map((s) => s.next)); // reply takes only a number, so it is unique across pages
 
     let waiters = [], lastWaitEnd = 0, hello = null;
     const listening = () => waiters.length > 0 || Date.now() - lastWaitEnd < 5000;
@@ -95,7 +105,7 @@ function serve() {
     const readBody = (req) => new Promise((ok) => { let b = ''; req.on('data', (c) => { b += c; if (b.length > 2e6) req.destroy(); }); req.on('end', () => { try { ok(JSON.parse(b || '{}')); } catch (e) { ok({}); } }); });
     const pagePath = (p) => (typeof p === 'string' && p && !p.includes('..') && !p.startsWith('/') && !p.split('/').some((x) => x.startsWith('.')) ? p : name);
 
-    const server = http.createServer(async (req, res) => {
+    const handle = async (req, res) => {
       const url = new URL(req.url, 'http://x'), port = server.address().port;
       const hostOk = req.headers.host === '127.0.0.1:' + port || req.headers.host === 'localhost:' + port;
       if (!hostOk) return json(res, 403, { error: 'bad host' });
@@ -120,8 +130,9 @@ function serve() {
             const t = s.threads.find((x) => x.n === b.n);
             if (!t) continue;
             const now = new Date().toISOString();
-            for (const m of t.msgs) if (m.who === 'user' && !m.picked) m.picked = now;
-            t.msgs.push({ who: 'agent', text: String(b.text || ''), at: now, ...(b.done ? { done: true } : {}) });
+            // A message no wait has handed over stays unread and goes after the reply, which cannot have answered it.
+            const unseen = t.msgs.findIndex((m) => m.who === 'user' && !m.picked);
+            t.msgs.splice(unseen < 0 ? t.msgs.length : unseen, 0, { who: 'agent', text: String(b.text || ''), at: now, ...(b.done ? { done: true } : {}) });
             saveStore(p);
             return json(res, 200, { ok: true, n: t.n, state: stOf(t) });
           }
@@ -138,7 +149,7 @@ function serve() {
           const th = b.thread || {};
           if (!th.id || !b.text) return json(res, 400, { error: 'missing' });
           let t = s.threads.find((x) => x.id === th.id);
-          if (!t) { t = { id: th.id, n: s.next++, msgs: [] }; s.threads.push(t); }
+          if (!t) { t = { id: th.id, n: freeNumber(), msgs: [] }; s.next = t.n + 1; s.threads.push(t); }
           Object.assign(t, { target: th.target, selector: th.selector, section: th.section, context: th.context, ...(th.quote ? { quote: th.quote, start: th.start, end: th.end } : {}), ...(th.fx !== undefined ? { fx: th.fx, fy: th.fy } : {}) });
           if (!t.msgs.some((m) => m.mid === b.mid)) { t.msgs.push({ who: 'user', text: String(b.text), at: b.at || new Date().toISOString(), mid: b.mid }); t.resolved = false; }
           saveStore(p);
@@ -153,8 +164,10 @@ function serve() {
       if (!file.startsWith(dir + sep) || relative(dir, file).split(sep).some((x) => x.startsWith('.')) || file.endsWith('.talkback.json')) return json(res, 404, { error: 'not found' });
       try { if (!statSync(file).isFile()) throw 0; } catch (e) { return json(res, 404, { error: 'not found' }); }
       res.writeHead(200, { 'content-type': TYPES[extname(file).toLowerCase()] || 'application/octet-stream', 'cache-control': 'no-store' });
-      createReadStream(file).pipe(res);
-    });
+      createReadStream(file).on('error', () => res.destroy()).pipe(res);
+    };
+    // A request that throws gets an error answer; it must not stop the helper.
+    const server = http.createServer((req, res) => handle(req, res).catch((e) => { console.error('Request failed: ' + e.message); if (res.headersSent) res.destroy(); else json(res, 400, { error: 'bad request' }); }));
 
     let tries = 0;
     const listen = (port) => server.listen(port, '127.0.0.1');
