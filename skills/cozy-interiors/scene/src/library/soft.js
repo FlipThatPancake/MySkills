@@ -20,7 +20,7 @@ export function softGeometry(T, { w, h, d, r = 40, bulge = 0, dent = 0, dentAt =
     if (sag) v.y -= sag * (1 - Math.pow(Math.abs(v.x / a), 2)) * (v.y > 0 ? 1 : 0.3) * 0.5;
     P.setXYZ(i, v.x, v.y, v.z);
   }
-  g.computeVertexNormals();
+  g.computeVertexNormals(); g.userData.soft = true;
   return g;
 }
 // The piping: a seam line round the rim of each big face, drawn as one loop (the ring where the rounded edge turns from the face into the side).
@@ -58,12 +58,12 @@ export function softBox(kit, w, h, d, o = {}) {
 // A pillow: thin at the seam all round (edge mm), puffy in the middle (thick mm), corners a little pointed. Centred on the origin, thickness along z. dent presses a hollow into the front.
 export function pillowGeometry(T, { w, h, thick, edge = 26, dent = 0, n = 28, skew = 0, crease = 0 }) {
   const pos = [], idx = [], N = n + 1, bump = (u, v) => Math.pow(Math.max(0, (1 - u * u) * (1 - v * v)), 0.62);
-  const at = (i, j) => { const u = i / n * 2 - 1, v = j / n * 2 - 1, k = 1 - 0.07 * Math.pow(Math.abs(u * v), 2), t = edge + (thick - edge) * bump(u - skew, v + skew * 0.6) - crease * Math.exp(-Math.pow((u * 0.8 + v * 0.6 + 0.1) / 0.14, 2)) * Math.max(0, bump(u, v)); return [u * w / 2 * k, v * h / 2 * k, t / 2, u, v]; };
+  const at = (i, j) => { const u = i / n * 2 - 1, v = j / n * 2 - 1, k = 1 - 0.15 * Math.pow(Math.abs(u * v), 1.6), t = edge + (thick - edge) * bump(u - skew, v + skew * 0.6) - crease * Math.exp(-Math.pow((u * 0.8 + v * 0.6 + 0.1) / 0.14, 2)) * Math.max(0, bump(u, v)); return [u * w / 2 * k, v * h / 2 * k - (v > 0 ? h * 0.05 * (1 - u * u) * v : 0), t / 2, u, v]; };
   for (const s of [1, -1]) for (let j = 0; j <= n; j++) for (let i = 0; i <= n; i++) { const [x, y, z, u, v] = at(i, j); pos.push(x, y, s * (z - (s > 0 ? dent * Math.exp(-((u * u + v * v) / 0.28)) : 0))); }
   for (const s of [0, 1]) for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) { const a = s * N * N + j * N + i, b = a + 1, c = a + N, d = c + 1; if (s === 0) idx.push(a, b, c, b, d, c); else idx.push(a, c, b, b, c, d); }
   const ring = []; for (let i = 0; i < n; i++) ring.push([i, 0]); for (let j = 0; j < n; j++) ring.push([n, j]); for (let i = 0; i < n; i++) ring.push([n - i, n]); for (let j = 0; j < n; j++) ring.push([0, n - j]);
   for (let k = 0; k < ring.length; k++) { const [i0, j0] = ring[k], [i1, j1] = ring[(k + 1) % ring.length]; if (i0 === i1 && j0 === j1) continue; const a = j0 * N + i0, b = j1 * N + i1, c = N * N + a, d = N * N + b; idx.push(a, c, b, b, c, d); }
-  const g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
+  const g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals(); g.userData.soft = 'loose';   // a loose soft thing (a pillow: it is pushed against what holds it, never sunk into it); soft: true marks a sewn part (geom/parts.mjs)
   return g;
 }
 // The surface height (z) of a pillow's front at (x, y) in its own frame, for lines that lie on it.
@@ -85,7 +85,7 @@ export function drape(kit, w, h, { folds = 4, depth = 28, thick = 10, flare = 0.
   for (let j = 0; j < ny; j++) for (const i of [0, nx]) { const a = ix(i, j, 0), b = ix(i, j + 1, 0), c = ix(i, j, 1), d = ix(i, j + 1, 1); if (i === 0) idx.push(a, c, b, b, c, d); else idx.push(a, b, c, b, d, c); }
   for (let i = 0; i < nx; i++) { const a = ix(i, ny, 0), b = ix(i + 1, ny, 0), c = ix(i, ny, 1), d = ix(i + 1, ny, 1); idx.push(a, b, c, b, d, c); }
   const g = new T.BufferGeometry(); g.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
-  const grp = kit.group(); grp.add(kit.solid(g, 0, 0, 0, { smooth: true, tone, grey }));
+  g.userData.soft = true; const grp = kit.group(); grp.add(kit.solid(g, 0, 0, 0, { smooth: true, tone, grey }));
   const fl = []; for (let k = 1; k < folds; k++) { const i = Math.round(k / folds * nx); for (let j = 1; j < ny - 1; j += 1) { const a = j * (nx + 1) + i, b = (j + 1) * (nx + 1) + i; if (j % 3 !== 1) fl.push([pos[a * 3], pos[a * 3 + 1], pos[a * 3 + 2] + 1], [pos[b * 3], pos[b * 3 + 1], pos[b * 3 + 2] + 1]); } }
   if (fl.length) grp.add(kit.lines(fl, 'lo'));
   return grp;

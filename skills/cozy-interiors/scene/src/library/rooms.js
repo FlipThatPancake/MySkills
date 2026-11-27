@@ -4,16 +4,22 @@
 // daybed({ w = 1900, d = 850 }), readingChair() (an armchair with a high back), footstool({ w = 520 }), console({ w = 1100, d = 330, h = 800 }).
 import { armchair } from './living.js';
 import { duvetCloth } from './softpieces.js';
+import { pillowGeometry } from './soft.js';
 import { bedFrame } from './bedset.js';
 const lo = { tone: 'lo' };
 const bx = (kit) => (cx, y, cz, w, h, d, o) => kit.box(cx - w / 2, y, cz + d / 2, w, h, d, o), rb = (kit) => (cx, y, cz, w, h, d, r, o) => kit.rbox(cx - w / 2, y, cz + d / 2, w, h, d, r, o);
-export function bed(kit, { w = 1600, l = 2100, head = 1000, duvet = 'made', seed = 1, frame = 'box' } = {}) {   // head: the headboard's height above the base (the bed stands 300 + head mm tall)
+export function bed(kit, { w = 1600, l = 2100, head = 1000, duvet = 'made', seed = 1, frame = 'box', tone = 'lo' } = {}) {   // head: the headboard's height above the base (the bed stands 300 + head mm tall)
   const g = kit.group(), B = bx(kit), R = rb(kit);
   g.add(bedFrame(kit, frame, { w, l, head }));                                              // the base and headboard for the frame style (box, legs, upholstered, platform)
-  g.add(R(0, 300, 40, w - 20, 210, l - 100, 40, lo));                                       // the mattress
-  if (duvet === 'unmade') { const d = duvetCloth(kit, { w: w - 20, head: -560, foot: 1040, sagL: 110 + 40 * ((seed * 7) % 5) / 4, sagR: 400, sagFoot: 250, seed }); d.position.set(0, 510, 0); g.add(d); }   // thrown over unevenly: one side sags low, the foot hangs
-  else g.add(R(0, 505, 260, w - 40, 90, l - 760, 36));                                       // the duvet, folded back at the top
-  for (const s of [-1, 1]) g.add(R(s * w * 0.24, 510, -l / 2 + 240, w * 0.4, 130, 330, 50, lo));   // two pillows
+  g.add(R(0, 300, 40, w - 20, 210, l - 100, 40, { ...lo, through: true }));                                       // the mattress
+  const e = 190 + 20 * ((seed * 7) % 3), dv = duvetCloth(kit, duvet === 'unmade'
+    ? { w: w - 20, head: -560, foot: 1040, sagL: 110 + 40 * ((seed * 7) % 5) / 4, sagR: 400, sagFoot: 250, seed, tone, turn: 720 }
+    : { w: w - 20, head: -560, foot: 1040, sagL: e, sagR: e, sagFoot: 230, seed, tone, made: true, turn: 0 });
+  dv.position.set(0, 534, 0); g.add(dv);   // the duvet: thrown over unevenly (unmade) or laid even with a roll folded back (made)
+  const front = { upholstered: 140, legs: 50, platform: 60 }[frame] ?? 50;   // where the headboard's front face stands from the head end: the pillows lean against it, never into it
+  for (const s of [-1, 1]) {   // two plump pillows, tipped back against the headboard, each with a dent in the middle
+    const pg = pillowGeometry(kit.THREE, { w: w * 0.4, h: 330, thick: 150, edge: 46, dent: 22, n: 24 }), pl = kit.solid(pg, s * w * 0.24, 510 + 70, -l / 2 + Math.max(230, front + 160), { smooth: true, tone: 'lo' }); pl.rotation.x = -Math.PI / 2 + 0.2; g.add(pl);
+  }
   return kit.merge(g);
 }
 export function bedsideTable(kit, { w = 450, d = 380, h = 520 } = {}) {
@@ -38,7 +44,7 @@ export function deskChair(kit) {   // a swivel chair: five-star base, a gas post
   g.add(kit.cyl(0, 60, 0, 22, 330, { seg: 14, ...lo }));
   g.add(kit.cyl(0, 400, 0, 230, 70, { rTop: 215, seg: 32 }));
   g.add(kit.rbox(-190, 520, -180, 380, 330, 60, 60));
-  g.add(kit.cyl(0, 470, -215, 14, 100, { seg: 10, ...lo }));
+  g.add(kit.cyl(0, 470, -215, 14, 100, { seg: 10, through: true, ...lo }));
   return kit.merge(g);
 }
 import { coat, tote } from './softpieces.js';
@@ -47,8 +53,8 @@ export function coatHooks(kit, { n = 4, w = 900 } = {}) {   // a wooden board on
   const g = kit.group(), zc = 24 + 110;
   g.add(kit.rbox(-w / 2, 0, 24, w, 120, 24, 6));
   for (let i = 0; i < n; i++) { const x = -w / 2 + w * (i + 0.5) / n; g.add(kit.cyl(x, 80, 24 + 55, 9, 55, { axis: 'z', seg: 10 })); g.add(kit.cyl(x, 80, 24 + 80, 13, 24, { seg: 10, tone: 'lo' })); }
-  g.add(coat(kit, -w / 2 + w * 1.5 / n, 70, zc + 10));
-  g.add(tote(kit, -w / 2 + w * 3.5 / n, 80, 24 + 100));
+  g.add(kit.through(coat(kit, -w / 2 + w * 1.5 / n, 70, zc + 10)));   // hung on its hook
+  g.add(kit.through(tote(kit, -w / 2 + w * 3.5 / n, 80, 24 + 100)));
   return kit.merge(g);
 }
 export function daybed(kit, { w = 1900, d = 850 } = {}) {
@@ -56,7 +62,7 @@ export function daybed(kit, { w = 1900, d = 850 } = {}) {
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) g.add(kit.cyl(sx * (w / 2 - 70), 0, sz * (d / 2 - 60), 24, 170, { rTop: 18, seg: 12, ...lo }));
   g.add(R(0, 170, 0, w, 90, d, 10)); g.add(R(0, 260, 20, w - 40, 170, d - 40, 36, lo));
   g.add(R(0, 430, -d / 2 + 30, w, 380, 60, 14)); for (const s of [-1, 1]) g.add(R(s * (w / 2 - 30), 260, 0, 60, 330, d, 14));   // back and ends
-  g.add(R(-w / 2 + 250, 430, 40, 140, 140, 520, 60));                                                // a bolster
+  g.add(kit.content(R(-w / 2 + 250, 430, 40, 140, 140, 520, 60)));                                                // a bolster
   return kit.merge(g);
 }
 export const readingChair = (kit, p = {}) => armchair(kit, { w: 820, d: 900, ...p });

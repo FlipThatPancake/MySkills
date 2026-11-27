@@ -34,14 +34,21 @@ export function umbrellaStand(kit, { h = 520 } = {}) {   // a tall round bin hol
     u.add(kit.lines([[34 * 0.97, c, 0], [8, 0, 0], [-34 * 0.97, c, 0], [-8, 0, 0]], 'lo'));   // two seams down the furled canopy
     u.position.set(x, h * 0.45, z); u.rotation.set(0, spin, tilt); return u;
   };
-  g.add(umbrella(-40, 10, 0.16, 760, 0)); g.add(umbrella(45, -20, -0.1, 700, 0));
-  g.add(bar(kit, [0, h * 0.5, 50], [30, h * 0.5 + 780, 40], 12, lo));
+  g.add(kit.through(umbrella(-40, 10, 0.16, 760, 0), true)); g.add(kit.through(umbrella(45, -20, -0.1, 700, 0), true));   // standing in the bin
+  g.add(kit.through(bar(kit, [0, h * 0.5, 50], [30, h * 0.5 + 780, 40], 12, lo), true));   // the umbrellas and the stick stand in the hollow bin, so they join its body
   return kit.merge(g);
 }
 import { shoe } from './softpieces.js';
-export function shoes(kit, { pairs = 2, kind = 'sneaker' } = {}) {   // pairs of shoes side by side, toes to the front, a little askew
-  const g = kit.group(), tw = [0.09, -0.06, 0.05, -0.1];
-  for (let p = 0; p < pairs; p++) for (const s of [-1, 1]) { const k = p * 2 + (s > 0 ? 1 : 0), sh = shoe(kit, 0, 0, p ? 250 : 270, { kind, tone: p ? 'lo' : undefined }); sh.position.set(p * 300 + s * 75 - (pairs - 1) * 150, 0, 0); sh.rotation.y = tw[k % 4]; g.add(sh); }
+export function shoes(kit, { arrange = 'mixed', pairs = 2, kind = 'sneaker' } = {}) {   // by the door; arrange neat (pairs side by side, toes forward, parallel) | dropped (one pair kicked off: one shoe standing at an angle, the other on its side) | mixed (a neat pair beside a dropped pair)
+  const g = kit.group(), T = kit.THREE, put = (x, rot, side, L, tone) => {   // a shoe at x (its own middle), turned rot about the vertical; side: lying on its outer side, lifted so its lowest point touches the floor
+    const sh = shoe(kit, 0, 0, L, { kind, tone }); if (side) { sh.rotation.z = side * Math.PI / 2; sh.updateMatrixWorld(true); sh.position.y = -new T.Box3().setFromObject(sh).min.y; }
+    const w = new T.Group(); w.add(sh); w.position.set(x, 0, 0); w.rotation.y = rot; g.add(w);
+  };
+  const neat = (x0, L, tone) => { put(x0 - 62, 0.02, 0, L, tone); put(x0 + 62, -0.02, 0, L, tone); };
+  const dropped = (x0, L, tone) => { put(x0 - 70, 0.55, 0, L, tone); put(x0 + 150, -0.4, 1, L, tone); };
+  if (arrange === 'neat') for (let p = 0; p < Math.max(1, pairs); p++) neat((p - (Math.max(1, pairs) - 1) / 2) * 300, p ? 250 : 270, p ? 'lo' : undefined);
+  else if (arrange === 'dropped') dropped(0, 270);
+  else { neat(-208, 270); dropped(122, 250, 'lo'); }
   return kit.merge(g);
 }
 export function wasteBin(kit, { h = 340 } = {}) {   // a slim round waste bin with a rolled rim

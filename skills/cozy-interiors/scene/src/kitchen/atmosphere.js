@@ -166,12 +166,13 @@ export function pendantLamp(kit) {
   for (let i = 0; i <= 16; i++) { const a = i / 16 * Math.PI / 2; prof.push(new T.Vector2(Math.max(0.01, R * Math.cos(a) * (1 - 0.04 * Math.sin(a))), H * Math.sin(a))); }
   const shade = kit.solid(new T.LatheGeometry(prof, 40), X, RIM, Z, { smooth: true, tone: 'mid' });
   g.add(shade);
-  g.add(kit.solid(new T.CircleGeometry(R - 1, 40).rotateX(Math.PI / 2), X, RIM + 1, Z, { tone: 'lo' }));   // a pale diffuser closes the underside, so it reads light, not a grey hole
+  g.add(kit.solid(new T.CircleGeometry(R - 1, 40).rotateX(Math.PI / 2), X, RIM + 1, Z, { linen: true }));   // a pale warm diffuser closes the underside, so it reads light, not a grey hole
   const rim = [];
   for (let i = 0; i < 40; i++) { const a = i / 40 * Math.PI * 2, b = (i + 1) / 40 * Math.PI * 2; rim.push([X + Math.cos(a) * R, RIM + 0.5, Z + Math.sin(a) * R], [X + Math.cos(b) * R, RIM + 0.5, Z + Math.sin(b) * R]); }
   g.add(kit.lines(rim, 'mid'));
   g.add(kit.cyl(X, RIM + H - 2, Z, 14, 34, { seg: 16, tone: 'lo' }));                 // the socket cap on top
   const top = 3300, full = 2500;                                                      // the cord is at full strength up to 2500 mm, then melts out by 3300
-  g.add(kit.meltingLine([X, RIM + H + 30, Z], [X, top, Z], (p) => Math.min(1, Math.max(0, (p[1] - full) / (top - full))), 70));
+  g.add(kit.cyl(X, RIM + H + 30, Z, 5, full - (RIM + H + 30), { seg: 8, tone: 'mid' }));   // a 20 mm mesh cord (a 1 px line vanished at home-view size), then the thin line melts out above it
+  g.add(kit.meltingLine([X, full, Z], [X, top, Z], (p) => Math.min(1, Math.max(0, (p[1] - full) / (top - full))), 70));
   return g;
 }

@@ -36,10 +36,10 @@ export function createKit() {
   const uniforms = { uOpacity: { value: 1 } };
   // View fade: everything (fills, lines, silhouettes) thins into the backdrop colour with distance from a centre, between radii r0 and r1 (set with setViewFade).
   // The default radii are huge, so a scene that never sets them is untouched. The uniform objects are shared by every material, clones included.
-  const viewFade = { uVC: { value: new THREE.Vector3() }, uVR: { value: new THREE.Vector2(1e9, 2e9) }, uVH: { value: new THREE.Vector3() } };   // uVH: half-size of a box round uVC that stays clear (zero: a sphere)
+  const viewFade = { uVC: { value: new THREE.Vector3() }, uVR: { value: new THREE.Vector2(1e9, 2e9) }, uVH: { value: new THREE.Vector3() }, uVT: { value: new THREE.Vector2(1e9, 2e9) } };   // uVT: the top fade: fills and lines melt into the backdrop between these two heights (setTopFade), so a chimney, flue or cord that crosses the home's top thins out with no cap or edge   // uVH: half-size of a box round uVC that stays clear (zero: a sphere)
   const BACK = [BACKDROP >> 16, (BACKDROP >> 8) & 255, BACKDROP & 255].map((c) => (c / 255).toFixed(4)).join(',');   // the fills' own (display) values, so a faded thing becomes exactly the page's tone, never a darker grey
-  const VF_PARS = 'uniform vec3 uVC; uniform vec2 uVR; uniform vec3 uVH;';
-  const VF_MIX = (col, w) => `${col} = mix(${col}, vec3(${BACK}), smoothstep(uVR.x, uVR.y, length(max(abs(${w} - uVC) - uVH, 0.0))));`;
+  const VF_PARS = 'uniform vec3 uVC; uniform vec2 uVR; uniform vec3 uVH; uniform vec2 uVT;';
+  const VF_MIX = (col, w) => `${col} = mix(${col}, vec3(${BACK}), max(smoothstep(uVR.x, uVR.y, length(max(abs(${w} - uVC) - uVH, 0.0))), smoothstep(uVT.x, uVT.y, ${w}.y)));`;
   // The fill. `fade` makes a copy for the wall and floor that thins out with distance from a
   // centre (set with setFade), so the far ends of those big planes never show.
   const makeFill = (fade, tint = [1, 1, 1]) => new THREE.ShaderMaterial({
@@ -67,7 +67,6 @@ export function createKit() {
   const leafFill = makeFill(false, [0.62, 0.74, 0.60]);
   const linenFill = makeFill(false, [0.93, 0.915, 0.87]);   // a runner or a throw in faint linen
   const greyFill = makeFill(false, [0.86, 0.86, 0.86]);   // a jacket or a jumper in soft grey, one shade darker than the paper
-  const accentFill = makeFill(false, [0.96, 0.78, 0.7]);   // the home's one warm accent (setAccent): a cushion, a throw, a tea towel, a cloth in a soft colour
   const soilFill = makeFill(false, [0.72, 0.71, 0.69]);   // soil in a pot, an insole: a warm mid grey
   // Lines win ties with fills by a tiny pull toward the camera in clip space (about 0.1 px of depth at the wide view, never more than a fraction of a mm up close), so an edge 2 mm behind a fill stays hidden at every distance.
   const biased = (m) => {
@@ -81,7 +80,6 @@ export function createKit() {
     return m;
   };
   const lineGreen = biased(new LineMaterial({ color: 0x5f7f5b, linewidth: WIDTH, depthTest: true }));
-  const lineAccent = biased(new LineMaterial({ color: 0xa9654c, linewidth: WIDTH, depthTest: true }));
   const lineMid = biased(new LineMaterial({ color: TONES.mid, linewidth: WIDTH, depthTest: true }));
   const lineLo = biased(new LineMaterial({ color: TONES.lo, linewidth: WIDTH, depthTest: true }));
   const lineFaint = biased(new LineMaterial({ color: FAINT.color, linewidth: FAINT.width, depthTest: true }));
@@ -142,21 +140,21 @@ export function createKit() {
       });
     },
     // Everything thins into the backdrop colour between radii r0 and r1 (world units) round `centre`; a scene calls it each frame to keep a soft-edged cutout round the orbit target.
+    setTopFade(y0, y1) { viewFade.uVT.value.set(y0, y1); },   // the home's top: everything melts into the backdrop colour between y0 and y1 (mm)
     setViewFade(centre, r0, r1, half = null) { viewFade.uVC.value.copy(centre); viewFade.uVR.value.set(r0, r1); viewFade.uVH.value.copy(half || new THREE.Vector3()); },
     // Wall and floor thin out between r0 and r1 (world units) beyond the box that is `half` wide around `centre`.
     setFade(centre, half, r0, r1) { fadeFill.uniforms.uC.value.copy(centre); fadeFill.uniforms.uH.value.copy(half); fadeFill.uniforms.uR.value.set(r0, r1); },
     // The window size in CSS pixels; call it on every resize so lines stay 1 px.
-    // The home's accent colour (a hex string): the line takes it as is, the fill a soft tint of it. Textiles ask for it with tone: 'accent'.
-    setAccent(hex) { const c = new THREE.Color(hex), hsl = {}; c.getHSL(hsl); lineAccent.color.copy(new THREE.Color().setHSL(hsl.h, Math.min(0.55, hsl.s), Math.min(0.46, hsl.l))); const t = new THREE.Color().setHSL(hsl.h, Math.min(0.5, hsl.s), 0.86); accentFill.uniforms.uTint.value.set(t.r, t.g, t.b); },
-    setResolution(w, h) { lineFaint.resolution.set(w, h); lineMid.resolution.set(w, h); lineLo.resolution.set(w, h); seamLine.resolution.set(w, h); fadables.forEach((fa) => { fa.mid.resolution.set(w, h); fa.lo.resolution.set(w, h); fa.seam.resolution.set(w, h); }); lineGreen.resolution.set(w, h); lineAccent.resolution.set(w, h); loopMat.resolution.set(w, h); hullU.uRes.value.set(w, h); },
+    setAccent() {},   // the home has no accent colour (colour stays on paintings, the outside view and plants); kept so an old scene file that still names one loads
+    setResolution(w, h) { lineFaint.resolution.set(w, h); lineMid.resolution.set(w, h); lineLo.resolution.set(w, h); seamLine.resolution.set(w, h); fadables.forEach((fa) => { fa.mid.resolution.set(w, h); fa.lo.resolution.set(w, h); fa.seam.resolution.set(w, h); }); lineGreen.resolution.set(w, h); loopMat.resolution.set(w, h); hullU.uRes.value.set(w, h); },
     // 0..1, fills and lines together. Only a fade is transparent; at 1 everything is opaque,
     // so three.js does not sort the meshes every frame.
     // `dim` (0..1) lowers the kitchen alone, e.g. to 0.4 while the oven is highlighted; the backdrop stays full.
     setOpacity(o, dim = 1) {
       const f = o * dim, t = f < 0.999;
-      uniforms.uOpacity.value = f; backU.value = o; lineMid.opacity = lineLo.opacity = lineFaint.opacity = seamLine.opacity = lineGreen.opacity = lineAccent.opacity = f;
+      uniforms.uOpacity.value = f; backU.value = o; lineMid.opacity = lineLo.opacity = lineFaint.opacity = seamLine.opacity = lineGreen.opacity = f;
       paints.forEach(m => { m.transparent = t; });
-      accentFill.transparent = lineAccent.transparent = greyFill.transparent = linenFill.transparent = soilFill.transparent = leafFill.transparent = lineGreen.transparent = fill.transparent = hull.transparent = hullLo.transparent = hullGreen.transparent = lineMid.transparent = lineLo.transparent = lineFaint.transparent = seamLine.transparent = t;
+      greyFill.transparent = linenFill.transparent = soilFill.transparent = leafFill.transparent = lineGreen.transparent = fill.transparent = hull.transparent = hullLo.transparent = hullGreen.transparent = lineMid.transparent = lineLo.transparent = lineFaint.transparent = seamLine.transparent = t;
       fadeFill.transparent = true;
       if (backdropMat) backdropMat.transparent = o < 0.999;
       depthMeshes.forEach(m => { m.visible = t; });
@@ -167,7 +165,7 @@ export function createKit() {
     track(group) {
       roots.push(group);
       const twins = [];
-      group.traverse((o) => { if (o.isMesh && (o.material === fill || o.material === leafFill || o.material === soilFill || o.material === linenFill || o.material === greyFill || o.material === accentFill || paints.includes(o.material))) twins.push(o); });
+      group.traverse((o) => { if (o.isMesh && (o.material === fill || o.material === leafFill || o.material === soilFill || o.material === linenFill || o.material === greyFill || paints.includes(o.material))) twins.push(o); });
       twins.forEach((o) => { const t = new THREE.Mesh(o.geometry, depth); t.renderOrder = -10; o.add(t); depthMeshes.push(t); });
       return group;
     },
@@ -176,10 +174,11 @@ export function createKit() {
     // (so real edges show and gentle curves do not). `smooth: true` adds the silhouette too.
     outline(mesh, opts = {}) {
       if (opts.smoothShade) smoothNormals(mesh.geometry);
+      if (kit.noLines) return mesh;   // scene/geom/load.mjs wants the solid parts only: no outline lines
       if (!opts.tone) opts = { ...opts, tone: autoTone(mesh.geometry) };
       const edges = new THREE.EdgesGeometry(mesh.geometry, opts.crease ?? CREASE);
       if (edges.attributes.position.count) {
-        const l = new LineSegments2(new LineSegmentsGeometry().fromEdgesGeometry(edges), opts.leaf ? lineGreen : opts.tone === 'accent' ? lineAccent : opts.tone === 'lo' ? lineLo : lineMid);
+        const l = new LineSegments2(new LineSegmentsGeometry().fromEdgesGeometry(edges), opts.leaf ? lineGreen : opts.tone === 'lo' ? lineLo : lineMid);
         l.userData.kitLine = true;
         mesh.add(l);
       }
@@ -193,8 +192,8 @@ export function createKit() {
     },
     // Fill a geometry and outline it, at (x, y, z) — the position of the geometry's own origin.
     solid(geometry, x = 0, y = 0, z = 0, opts = {}) {
-      const m = new THREE.Mesh(geometry, opts.leaf ? leafFill : opts.soil ? soilFill : opts.linen ? linenFill : opts.grey ? greyFill : opts.tone === 'accent' ? accentFill : fill);   // soil: true draws earth in warm grey-brown; leaf: true draws foliage in the sage fill with a green outline
-      m.position.set(x, y, z);
+      const m = new THREE.Mesh(geometry, opts.leaf ? leafFill : opts.soil ? soilFill : opts.linen ? linenFill : opts.grey ? greyFill : fill);   // soil: true draws earth in warm grey-brown; leaf: true draws foliage in the sage fill with a green outline
+      m.position.set(x, y, z); if (opts.through) m.userData.through = opts.through;   // through: this part may pass through others of its asset (a trolley post through its trays); scene/geom/parts.mjs
       return kit.outline(m, opts);
     },
     // A box by its left-bottom-front corner and size; it reaches back (-z) by d.
@@ -214,8 +213,11 @@ export function createKit() {
     },
     // A cylinder standing on (x, y, z), axis up; `axis: 'z'` lays it front-to-back, 'x' left-to-right
     // (then (x, y, z) is the centre of its first end).
+    // content(obj): mark a thing as a separate body inside an asset (a magazine, a log, a plate, a hat): scene/selftest.mjs checks that it does not pass through anything else of the asset. Parts left unmarked are one rigid assembly (joinery may overlap).
+    through(obj, held) { obj.traverse((m) => { if (m.isMesh) m.userData.through = held ? 'held' : true; }); return obj; },   // through(obj, held): every part of obj may pass through other parts of its asset; held ('held'): it stands in a holder (a pen in a pot, an umbrella in a stand) and may not poke out below the asset's lowest part (a garment on a hanger, a pen in a pot); scene/geom/parts.mjs
+    content(obj) { obj.traverse((m) => { if (m.isMesh) m.userData.content = true; }); return obj; },
     cyl(x, y, z, r, h, opts = {}) {
-      const g = new THREE.CylinderGeometry(opts.rTop ?? r, r, h, opts.seg ?? 32);
+      const g = new THREE.CylinderGeometry(opts.rTop ?? r, r, h, opts.seg ?? 32, 1, !!opts.open);   // open: no end caps (a pipe whose top fades out)
       const m = kit.solid(g, x, y + h / 2, z, { smooth: true, ...opts });
       if (opts.axis === 'z') { m.rotation.x = Math.PI / 2; m.position.set(x, y, z - h / 2); }
       if (opts.axis === 'x') { m.rotation.z = Math.PI / 2; m.position.set(x + h / 2, y, z); }
@@ -223,9 +225,9 @@ export function createKit() {
     },
     // The fill shading times a painted canvas: for the things that carry a faint colour (a fruit, a butterfly wing). `uv` shapes map 0..1 across the canvas.
     // It follows the kitchen's fade like the plain fill; `double` shows both sides of a flat shape.
-    paint(canvas, double = false) {
-      const tex = new THREE.CanvasTexture(canvas);
-      tex.colorSpace = THREE.SRGBColorSpace;
+    paint(canvas, double = false, raw = false) {   // raw: the canvas shows exactly as drawn (no sRGB decode: this shader writes its colour without re-encoding, so a decoded photo would come out darker)
+      const tex = new THREE.CanvasTexture(canvas); tex.anisotropy = 16; tex.generateMipmaps = true; tex.minFilter = THREE.LinearMipmapLinearFilter;   // seen at a steep angle a painting must not smear: mipmaps plus anisotropic filtering (three clamps 16 to what the GPU has)
+      tex.colorSpace = raw ? THREE.NoColorSpace : THREE.SRGBColorSpace;
       const m = new THREE.ShaderMaterial({
         uniforms: { uOpacity: uniforms.uOpacity, uMap: { value: tex }, ...viewFade },
         side: double ? THREE.DoubleSide : THREE.FrontSide,
@@ -271,7 +273,7 @@ export function createKit() {
     lines(points, tone = 'lo') {
       const g = new LineSegmentsGeometry();
       if (points.length) g.setPositions(points.flat());
-      const l = new LineSegments2(g, tone === 'mid' ? lineMid : tone === 'faint' ? lineFaint : tone === 'green' ? lineGreen : tone === 'accent' ? lineAccent : lineLo);
+      const l = new LineSegments2(g, tone === 'mid' ? lineMid : tone === 'faint' ? lineFaint : tone === 'green' ? lineGreen : lineLo);
       l.userData.kitLine = true;
       return l;
     },
@@ -334,7 +336,7 @@ export function createKit() {
       if (kit.keepParts) return group;   // the scene checks need every part on its own (?check in the page address)
       group.updateMatrixWorld(true);
       const inv = group.matrixWorld.clone().invert();
-      const fills = [], soils = [], linens = [], greys = [], accents = [], hulls = [], hullsLo = [], hullsG = [], leaves = [], segs = { mid: [], lo: [], green: [], accent: [] };
+      const fills = [], soils = [], linens = [], greys = [], hulls = [], hullsLo = [], hullsG = [], leaves = [], segs = { mid: [], lo: [], green: [] };
       const bake = (geo, m, list) => {
         let g = geo.index ? geo.toNonIndexed() : geo.clone();
         g.applyMatrix4(m);
@@ -347,7 +349,7 @@ export function createKit() {
         if (o.isLineSegments2) {
           const a = o.geometry.attributes.instanceStart, b = o.geometry.attributes.instanceEnd, v = new THREE.Vector3();
           for (let i = 0; i < a.count; i++) {
-            const out = o.material === lineMid ? segs.mid : o.material === lineGreen ? segs.green : o.material === lineAccent ? segs.accent : segs.lo;
+            const out = o.material === lineMid ? segs.mid : o.material === lineGreen ? segs.green : segs.lo;
             v.fromBufferAttribute(a, i).applyMatrix4(m); out.push(v.x, v.y, v.z);
             v.fromBufferAttribute(b, i).applyMatrix4(m); out.push(v.x, v.y, v.z);
           }
@@ -359,7 +361,6 @@ export function createKit() {
         else if (o.isMesh && o.material === soilFill) bake(o.geometry, m, soils);
         else if (o.isMesh && o.material === linenFill) bake(o.geometry, m, linens);
         else if (o.isMesh && o.material === greyFill) bake(o.geometry, m, greys);
-        else if (o.isMesh && o.material === accentFill) bake(o.geometry, m, accents);
       });
       const kids = [...group.children];
       kids.forEach(c => group.remove(c));
@@ -377,8 +378,7 @@ export function createKit() {
       if (soils.length) group.add(mesh(soils, soilFill));
       if (linens.length) group.add(mesh(linens, linenFill));
       if (greys.length) group.add(mesh(greys, greyFill));
-      if (accents.length) group.add(mesh(accents, accentFill));
-      ['mid', 'lo', 'green', 'accent'].forEach((t) => { if (segs[t].length) { const l = kit.lines([], t); l.geometry.setPositions(segs[t]); group.add(l); } });
+      ['mid', 'lo', 'green'].forEach((t) => { if (segs[t].length) { const l = kit.lines([], t); l.geometry.setPositions(segs[t]); group.add(l); } });
       return group;
     }
   };

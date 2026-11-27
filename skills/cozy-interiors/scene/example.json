@@ -1,0 +1,678 @@
+{
+ "units": "mm",
+ "seed": 12,
+ "home": {
+  "height": 2700,
+  "floor": {
+   "style": "boards",
+   "seed": 12
+  },
+  "tiles": {
+   "origin": [
+    0,
+    0
+   ]
+  },
+  "walls": [
+   {
+    "id": "kitchen-back",
+    "from": [
+     5200,
+     0
+    ],
+    "to": [
+     0,
+     0
+    ],
+    "openings": [
+     {
+      "kind": "window",
+      "width": 1100,
+      "height": 1200,
+      "sill": 1000,
+      "at": 900
+     }
+    ]
+   },
+   {
+    "id": "kitchen-left",
+    "from": [
+     0,
+     0
+    ],
+    "to": [
+     0,
+     5200
+    ],
+    "openings": []
+   }
+  ],
+  "objects": [
+   {
+    "id": "kitchen-run",
+    "asset": "baseRun",
+    "at": [
+     0,
+     0,
+     600
+    ],
+    "mount": "floor",
+    "params": {
+     "depth": 600,
+     "modules": [
+      {
+       "w": 900,
+       "kind": "sink"
+      },
+      {
+       "w": 600,
+       "kind": "drawers",
+       "n": 3,
+       "ajar": 0.3
+      },
+      {
+       "w": 900,
+       "kind": "hob"
+      },
+      {
+       "w": 600,
+       "kind": "doors"
+      }
+     ]
+    },
+    "group": "kitchen:cook",
+    "hero": true,
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-run-hob",
+    "asset": "hob",
+    "at": [
+     1500,
+     0,
+     600
+    ],
+    "mount": "on",
+    "params": {},
+    "group": "kitchen:cook",
+    "area": "kitchen",
+    "depth": 600
+   },
+   {
+    "id": "kitchen-run-hood1",
+    "asset": "hood",
+    "at": [
+     1500,
+     0,
+     600
+    ],
+    "mount": "wall",
+    "params": {},
+    "group": "kitchen:cook",
+    "area": "kitchen",
+    "depth": 600
+   },
+   {
+    "id": "kitchen-run-pan2",
+    "asset": "pan",
+    "at": [
+     2175,
+     940,
+     400
+    ],
+    "turn": -35,
+    "mount": "on",
+    "params": {},
+    "group": "kitchen:cook",
+    "area": "kitchen",
+    "off": 400
+   },
+   {
+    "id": "kitchen-run-herbs3",
+    "asset": "herbs",
+    "at": [
+     1200,
+     900,
+     330
+    ],
+    "mount": "on",
+    "params": {},
+    "group": "kitchen:cook",
+    "area": "kitchen",
+    "off": 330
+   },
+   {
+    "id": "kitchen-run-fruitBowl4",
+    "asset": "fruitBowl",
+    "at": [
+     2690,
+     900,
+     330
+    ],
+    "mount": "on",
+    "params": {},
+    "group": "kitchen:cook",
+    "area": "kitchen",
+    "off": 330
+   },
+   {
+    "id": "kitchen-wc1",
+    "asset": "wallRun",
+    "at": [
+     2450,
+     0,
+     320
+    ],
+    "mount": "wall",
+    "params": {
+     "modules": [
+      {
+       "w": 500,
+       "kind": "door"
+      }
+     ],
+     "form": 1
+    },
+    "group": "kitchen:cook",
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-shelf",
+    "asset": "openShelf",
+    "at": [
+     450,
+     1520,
+     0
+    ],
+    "mount": "wall",
+    "params": {
+     "w": 830,
+     "plates": 4,
+     "mugs": 2,
+     "seed": 18,
+     "rack": "plates"
+    },
+    "group": "kitchen:cook",
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-runner",
+    "asset": "runner",
+    "at": [
+     1900,
+     0,
+     1250
+    ],
+    "turn": 90,
+    "mount": "floor",
+    "params": {
+     "w": 700,
+     "l": 2400,
+     "form": "stripe",
+     "fringe": "no",
+     "fold": "yes",
+     "seed": 73
+    },
+    "group": "kitchen:cook",
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-dresser",
+    "asset": "sideboard",
+    "at": [
+     210,
+     0,
+     2200
+    ],
+    "turn": 90,
+    "mount": "floor",
+    "params": {
+     "w": 1000,
+     "form": "drawers",
+     "legs": "hairpin"
+    },
+    "group": "kitchen:dresser",
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-dpic",
+    "asset": "picture",
+    "at": [
+     0,
+     1000,
+     2200
+    ],
+    "turn": 90,
+    "mount": "wall",
+    "params": {
+     "w": 600,
+     "h": 450,
+     "colour": "keep",
+     "form": 5
+    },
+    "group": "kitchen:dresser",
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-dplant",
+    "asset": "plant",
+    "at": [
+     210,
+     800,
+     2000
+    ],
+    "mount": "on",
+    "params": {
+     "form": 1
+    },
+    "group": "kitchen:dresser",
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-djug",
+    "asset": "bookStack",
+    "at": [
+     210,
+     800,
+     2415
+    ],
+    "mount": "on",
+    "params": {
+     "n": 2,
+     "seed": 18
+    },
+    "group": "kitchen:dresser",
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-shelves",
+    "asset": "openShelf",
+    "at": [
+     0,
+     1300,
+     4600
+    ],
+    "turn": 90,
+    "mount": "wall",
+    "params": {
+     "w": 900,
+     "plates": 6,
+     "mugs": 3,
+     "seed": 29,
+     "rack": "jars"
+    },
+    "group": "kitchen:shelves",
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-bsk",
+    "asset": "basket",
+    "at": [
+     1000,
+     0,
+     4500
+    ],
+    "mount": "floor",
+    "params": {
+     "form": 1
+    },
+    "group": "kitchen:shelves",
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-bench",
+    "asset": "chair",
+    "at": [
+     330,
+     0,
+     3450
+    ],
+    "turn": 90,
+    "mount": "floor",
+    "params": {
+     "form": "bentwood"
+    },
+    "group": "kitchen:bench",
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-bench2",
+    "asset": "chair",
+    "at": [
+     330,
+     0,
+     4050
+    ],
+    "turn": 90,
+    "mount": "floor",
+    "params": {
+     "form": "ladder"
+    },
+    "group": "kitchen:bench",
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-bt-rug",
+    "asset": "rug",
+    "at": [
+     3300,
+     0,
+     3200
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 2440,
+     "d": 2440,
+     "form": "round",
+     "border": 55,
+     "fringe": "ends"
+    },
+    "group": "kitchen:breakfast",
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-bt",
+    "asset": "roundTable",
+    "at": [
+     3300,
+     7,
+     3200
+    ],
+    "mount": "floor",
+    "params": {
+     "r": 520,
+     "h": 750
+    },
+    "group": "kitchen:breakfast",
+    "hero": true,
+    "area": "kitchen",
+    "lift": 7
+   },
+   {
+    "id": "kitchen-bt-cloth",
+    "asset": "tablecloth",
+    "at": [
+     3300,
+     757,
+     3200
+    ],
+    "mount": "on",
+    "params": {
+     "r": 520,
+     "drop": 260
+    },
+    "group": "kitchen:breakfast",
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-bt-chair-1",
+    "asset": "chair",
+    "at": [
+     3300,
+     7,
+     2450
+    ],
+    "mount": "floor",
+    "params": {
+     "form": "spindle"
+    },
+    "group": "kitchen:breakfast",
+    "area": "kitchen",
+    "lift": 7
+   },
+   {
+    "id": "kitchen-bt-chair-2",
+    "asset": "chair",
+    "at": [
+     4050,
+     7,
+     3200
+    ],
+    "turn": -90,
+    "mount": "floor",
+    "params": {
+     "form": "spindle"
+    },
+    "group": "kitchen:breakfast",
+    "area": "kitchen",
+    "lift": 7
+   },
+   {
+    "id": "kitchen-bt-mug",
+    "asset": "mug",
+    "at": [
+     3120,
+     773,
+     3200
+    ],
+    "mount": "on",
+    "params": {},
+    "group": "kitchen:breakfast",
+    "area": "kitchen",
+    "dx": -180
+   },
+   {
+    "id": "kitchen-bt-saltPepper",
+    "asset": "saltPepper",
+    "at": [
+     3560,
+     773,
+     3200
+    ],
+    "mount": "on",
+    "params": {
+     "form": "mill"
+    },
+    "group": "kitchen:breakfast",
+    "area": "kitchen",
+    "dx": 260
+   },
+   {
+    "id": "kitchen-stool",
+    "asset": "trolley",
+    "at": [
+     3400,
+     0,
+     230
+    ],
+    "mount": "floor",
+    "params": {},
+    "group": "kitchen:cook",
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-tfb",
+    "asset": "mug",
+    "at": [
+     3258.3,
+     820,
+     230
+    ],
+    "mount": "on",
+    "params": {},
+    "group": "kitchen:cook",
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-tjg",
+    "asset": "jug",
+    "at": [
+     3521.7,
+     820,
+     230
+    ],
+    "mount": "on",
+    "params": {
+     "r": 75,
+     "h": 250,
+     "form": "straight",
+     "band": "banded",
+     "handle": "loop"
+    },
+    "group": "kitchen:cook",
+    "area": "kitchen"
+   }
+  ],
+  "roll": {
+   "seed": 4,
+   "behind": [],
+   "areas": {
+    "kitchen": {
+     "doorOpen": 0,
+     "still": [
+      "utensilCrock",
+      "mokaPot",
+      "mug",
+      "saltPepper"
+     ],
+     "groups": 3,
+     "plantAt": [
+      "worktop",
+      "hanging",
+      "sill"
+     ],
+     "passages": 0,
+     "heroWindow": false,
+     "hero": "range hood over the hob",
+     "side": "left",
+     "accents": [
+      "fruit bowl",
+      "wall shelf with jars",
+      "herbs on the worktop"
+     ],
+     "foreground": "trolley",
+     "signs": [
+      "table runner",
+      "tablecloth"
+     ],
+     "pieces": [],
+     "named": [
+      "wall units over the run (wallRun)",
+      "open shelf with plates and jars (openShelf)",
+      "utensil crock beside the hob (utensilCrock)"
+     ],
+     "groupTexts": [
+      "range hood over the hob",
+      "open shelves with jars and a plant",
+      "sideboard or dresser with a still life and a picture"
+     ]
+    }
+   },
+   "plan": {
+    "links": [],
+    "areas": {
+     "kitchen": {
+      "room": 0,
+      "fit": [
+       6600,
+       5200
+      ]
+     }
+    }
+   }
+  },
+  "rolled": {
+   "kitchen": {
+    "rolled": [],
+    "skipped": [
+     {
+      "asset": "hanging",
+      "why": "no hanging-plant asset yet: the plant stands on the sill and the worktop instead"
+     },
+     {
+      "asset": "mokaPot",
+      "why": "the hob carries a pan under the hood: a moka pot would stand in its place"
+     },
+     {
+      "asset": "utensilCrock",
+      "why": "the hob has no room beside it for a crock: pans hang on the rail instead"
+     }
+    ]
+   }
+  },
+  "plan": {
+   "root": "kitchen",
+   "walk": [
+    "kitchen"
+   ],
+   "links": []
+  }
+ },
+ "areas": [
+  {
+   "id": "kitchen",
+   "name": "Kitchen",
+   "O": [
+    0,
+    0
+   ],
+   "psi": 0,
+   "bounds": {
+    "x0": 0,
+    "x1": 5200,
+    "z0": 0,
+    "z1": 5200,
+    "top": 2500
+   },
+   "camera": {
+    "home": {
+     "target": [
+      2800,
+      700,
+      2200
+     ],
+     "az": -25,
+     "el": 20,
+     "fit": "objects"
+    },
+    "shots": [
+     {
+      "name": "cook",
+      "from": [
+       1700,
+       1100,
+       6000
+      ],
+      "look": [
+       1212,
+       500,
+       371
+      ],
+      "fov": 40,
+      "subject": "kitchen:cook"
+     },
+     {
+      "name": "table",
+      "from": [
+       500,
+       1700,
+       6150
+      ],
+      "look": [
+       3080,
+       300,
+       2627
+      ],
+      "fov": 36,
+      "subject": "kitchen:breakfast"
+     },
+     {
+      "name": "cook2",
+      "from": [
+       200,
+       1000,
+       6000
+      ],
+      "look": [
+       1035,
+       700,
+       144
+      ],
+      "fov": 40,
+      "subject": "kitchen:cook"
+     }
+    ]
+   }
+  }
+ ]
+}

@@ -1,8 +1,7 @@
 {
  "floor": [
   "tiles",
-  "boards",
-  "plain"
+  "boards"
  ],
  "backing": [
   {
@@ -55,7 +54,7 @@
     {
      "kind": "window",
      "on": "first",
-     "sash": "fixed"
+     "sash": "out"
     }
    ],
    [
@@ -72,7 +71,7 @@
     {
      "kind": "window",
      "on": "second",
-     "sash": "fixed"
+     "sash": "out"
     },
     {
      "kind": "arch",
@@ -83,7 +82,7 @@
     {
      "kind": "window",
      "on": "first",
-     "sash": "fixed"
+     "sash": "out"
     },
     {
      "kind": "window",
@@ -94,7 +93,7 @@
     {
      "kind": "window",
      "on": "first",
-     "sash": "fixed"
+     "sash": "out"
     },
     {
      "kind": "arch",
@@ -114,30 +113,28 @@
   ],
   "accents": [
    "fruit bowl",
-   "cutting board",
+   "cutting board (leaning at the back of the prep worktop, flat by the sink with a knife, or hanging from the rail)",
    "pan on the hob",
    "jars",
-   "kettle",
+   "kettle on the worktop by the sink",
    "tea towel on a rail",
    "herbs on the worktop",
-   "stool",
    "trolley",
    "basket of vegetables",
    "wall shelf with jars"
   ],
   "more": [
    "dish rack by the sink (dishRack)",
-   "utensil crock (utensilCrock)",
+   "utensil crock beside the hob (utensilCrock)",
    "bread bin (breadBin)",
-   "toaster (toaster)",
+   "toaster on the worktop by the bread bin (toaster)",
    "moka pot on the hob (mokaPot)",
-   "pot rail with pans (potRail)",
-   "spice rack (spiceRack)",
-   "oven glove on a hook (ovenGlove)",
+   "pot rail with pans over or beside the hob (potRail)",
+   "spice rack on the wall by the hob (spiceRack)",
+   "oven glove on a hook by the hob (ovenGlove)",
    "wall clock (wallClock)",
    "cookbook on a stand (cookbookStand)",
    "watering can (wateringCan)",
-   "step stool by the larder (stepStool)",
    "crate of fruit (crate)"
   ],
   "shapeNotes": {
@@ -149,15 +146,21 @@
    "island": "a run on the wall and a freestanding island parallel to it, stools on its far side"
   },
   "foreground": [
-   "stool",
    "basket of vegetables",
-   "trolley",
-   "step stool"
+   "trolley"
   ],
-  "accentOn": [
-   "teaTowel",
-   "tablecloth",
-   "runner"
+  "foregroundSwap": [
+   "chair pulled out"
+  ],
+  "above": [
+   "wall units over the run (wallRun)",
+   "an open shelf with plates and jars over the worktop (openShelf)",
+   "a pot rail with pans over the hob (potRail)"
+  ],
+  "aboveNote": "something always hangs over a kitchen's straight run (above, one per kitchen, plus the range hood when the hero is the hood)",
+  "produce": [
+   "a crate of fruit (crate)",
+   "a basket of vegetables (basket)"
   ]
  },
  "dining": {
@@ -208,11 +211,10 @@
    "vase of branches",
    "book stack",
    "basket",
-   "mirror",
+   "mirror over the sideboard",
    "wall shelf",
    "cushion on a chair",
-   "floor lamp",
-   "bench"
+   "floor lamp beside the seat"
   ],
   "more": [
    "candlesticks (candlesticks)",
@@ -230,16 +232,8 @@
    "rug"
   ],
   "foreground": [
-   "stool",
    "basket",
-   "bench end",
    "chair pulled out"
-  ],
-  "accentOn": [
-   "tablecloth",
-   "benchCushion",
-   "tableRunner",
-   "cushion"
   ]
  },
  "living": {
@@ -296,16 +290,16 @@
    "cat",
    "basket",
    "pouf",
-   "mirror",
+   "picture or gallery over the sofa",
    "wall shelf",
-   "floor lamp",
-   "side table"
+   "floor lamp beside the seat",
+   "side table at the arm of the seat"
   ],
   "more": [
    "floor cushion (floorCushion)",
    "wood stove with a log basket (woodStove, logBasket)",
    "record player cabinet (recordPlayer)",
-   "magazine rack (magazineRack)",
+   "magazine box (magazineBox)",
    "plant stand (plantStand)",
    "gallery wall of frames (galleryWall)"
   ],
@@ -317,17 +311,12 @@
    "basket",
    "footstool",
    "log basket"
-  ],
-  "accentOn": [
-   "cushion",
-   "foldedThrow",
-   "cloth"
   ]
  },
  "bedroom": {
   "hero": [
    "bed with a headboard on the backing wall",
-   "bed under a window with a bedside table each side"
+   "bed with a bedside table each side, headboard on a wall without a window"
   ],
   "openings": [
    [
@@ -375,13 +364,12 @@
   ],
   "accents": [
    "cushion",
-   "mirror",
+   "leaning mirror by the wall, or mirror over the chest of drawers",
    "basket",
    "cat",
-   "floor lamp",
-   "bench at the foot of the bed",
+   "floor lamp beside the chair",
    "wall shelf",
-   "picture",
+   "picture over the bed, or on open wall at eye level",
    "book stack"
   ],
   "more": [
@@ -397,14 +385,8 @@
   ],
   "foreground": [
    "basket",
-   "bench at the foot of the bed",
    "clothes chair",
    "hamper"
-  ],
-  "accentOn": [
-   "duvetCloth",
-   "cushion",
-   "foldedThrow"
   ]
  },
  "reading-corner": {
@@ -460,10 +442,10 @@
   "accents": [
    "cushion",
    "book stack",
-   "side table",
+   "side table at the arm of the seat",
    "cat",
    "basket",
-   "picture",
+   "picture over the seat, or on open wall at eye level",
    "wall shelf",
    "vase of branches",
    "floor books",
@@ -472,7 +454,7 @@
   ],
   "more": [
    "floor cushion (floorCushion)",
-   "magazine rack (magazineRack)",
+   "magazine box (magazineBox)",
    "plant stand (plantStand)",
    "wall sconce (wallSconce)",
    "gallery wall of frames (galleryWall)"
@@ -481,12 +463,7 @@
    "footstool",
    "basket",
    "floor cushion",
-   "magazine rack"
-  ],
-  "accentOn": [
-   "cushion",
-   "foldedThrow",
-   "floorCushion"
+   "magazine box"
   ]
  },
  "hallway": {
@@ -528,7 +505,7 @@
    "coatHooks",
    "bench",
    "console",
-   "mirror",
+   "mirror over the console",
    "rug",
    "shoeRack",
    "coatStand",
@@ -537,32 +514,26 @@
   "accents": [
    "basket",
    "plant",
-   "picture",
+   "picture over the bench or console, or on open wall at eye level",
    "vase of branches",
-   "floor lamp",
-   "stool",
+   "floor lamp in a corner clear of the door",
    "key bowl (keyBowl)",
    "letter tray (letterTray)",
    "boots",
-   "hat on a hook (hungHat)",
-   "bag on a hook (hungBag)"
+   "hat on a hook beside the coat hooks, or on the coat stand (hungHat)",
+   "bag on a hook beside the coat hooks (hungBag)"
   ],
   "more": [
    "umbrella stand (umbrellaStand)",
    "pair of shoes (shoes)",
    "wall clock (wallClock)",
    "wall sconce (wallSconce)",
-   "magazine rack (magazineRack)"
+   "magazine box (magazineBox)"
   ],
   "foreground": [
-   "stool",
-   "shoes",
+   "shoes by the door, one neat pair and one dropped",
    "basket",
    "umbrella stand"
-  ],
-  "accentOn": [
-   "runner",
-   "hungBag"
   ]
  },
  "home-office": {
@@ -618,12 +589,12 @@
   ],
   "accents": [
    "book stack",
-   "floor lamp",
+   "floor lamp beside the reading chair or in a corner",
    "basket",
-   "picture",
+   "picture over the desk or shelf, or on open wall at eye level",
    "wall shelf",
    "cushion",
-   "mirror",
+   "mirror over the console",
    "task lamp (taskLamp)",
    "monitor",
    "notebook and pens (notebook)",
@@ -639,18 +610,13 @@
    "file box (fileBox)",
    "laptop (laptop)",
    "wall clock (wallClock)",
-   "magazine rack (magazineRack)",
+   "magazine box (magazineBox)",
    "plant stand (plantStand)"
   ],
   "foreground": [
-   "stool",
    "waste bin",
    "file box",
    "basket"
-  ],
-  "accentOn": [
-   "cushion",
-   "binders"
   ]
  },
  "backingWeights": {
@@ -745,15 +711,6 @@
    ]
   },
   {
-   "id": "folded throw",
-   "say": "a folded throw",
-   "in": [
-    "living",
-    "bedroom",
-    "reading-corner"
-   ]
-  },
-  {
    "id": "cloth dropped",
    "say": "a cloth dropped over something",
    "in": [
@@ -765,11 +722,9 @@
   },
   {
    "id": "shoes askew",
-   "say": "shoes kicked off",
+   "say": "shoes kicked off (one neat pair and one dropped: arrange mixed)",
    "in": [
-    "hallway",
-    "bedroom",
-    "living"
+    "hallway"
    ]
   },
   {
@@ -878,31 +833,761 @@
  ],
  "plantsNote": "plants is how many; plantPlaces says where each one lives. An area gets distinct places, so at most one floor plant.",
  "foregroundNote": "Each area's near-camera piece comes from its own use first; a plant only when none of these fits.",
- "accentTones": [
+ "passages": [
   {
-   "id": "terracotta",
-   "hex": "#c9775a"
+   "style": "round",
+   "say": "round arch"
   },
   {
-   "id": "mustard",
-   "hex": "#d1a53c"
+   "style": "cased",
+   "say": "cased opening (square head, casing)"
   },
   {
-   "id": "dusty blue",
-   "hex": "#6f8fb0"
+   "style": "pass",
+   "say": "pass-through (a hatch with its own counter under it; not walked through)",
+   "counter": true
   },
   {
-   "id": "rose",
-   "hex": "#cf8f93"
+   "style": "widepass",
+   "say": "wide pass-through (a half-wall hatch with its own counter, 2000 mm wide)",
+   "counter": true
   },
   {
-   "id": "olive",
-   "hex": "#8d9457"
+   "style": "portal",
+   "say": "portal (deep reveal, a step in the threshold)"
   },
   {
-   "id": "plum",
-   "hex": "#8a5f7d"
+   "style": "pocket",
+   "say": "pocket-door opening (door half slid into the wall)"
   }
  ],
- "accentNote": "One warm accent per home: hex goes to new Home({ accent }). Each area names the textile that carries it (accentOn); set tone: 'accent' on that piece (cushion, foldedThrow, cloth, tablecloth, teaTowel, benchCushion, floorCushion, runner, tableRunner, duvetCloth)."
+ "passageNote": "roll gives each arch an opening style from `passages`; a counter style (pass, widepass) is built with its own counter and is not a way through, so give it no `to`, or use the arch/cased kind for a connection. Style goes in the opening: { kind: 'arch', style, x }. A pass-through carries its own counter (worktop 400 mm into the room, a cabinet body under it): put no worktop or sideboard there and keep 600 mm of floor clear in front; a walk-through opening shows floor running on beyond and one thing of the next room (opening.hint: picture | rug | lamp | chair, else dealt from the position).",
+ "windows": [
+  {
+   "style": "sash",
+   "weight": {
+    "kitchen": 6,
+    "default": 4
+   },
+   "say": "two-sash window (the old kitchen's: thick frame, slightly open)"
+  },
+  {
+   "style": "picture",
+   "weight": {
+    "kitchen": 2,
+    "default": 3
+   },
+   "say": "picture window (one large fixed pane, slim frame; 2100 x 1400 mm, sill 650)"
+  },
+  {
+   "style": "pair",
+   "weight": {
+    "kitchen": 2,
+    "default": 2
+   },
+   "say": "tall pair (two tall narrow casements side by side, 1100 x 1800 mm, sill 450)"
+  },
+  {
+   "style": "wall",
+   "weight": {
+    "kitchen": 0,
+    "hallway": 0,
+    "default": 2
+   },
+   "say": "window wall (floor-level lights between slim mullions with a transom; 3800 x 2300 mm, sill 100; it takes the whole wall, so no other opening beside it)"
+  },
+  {
+   "style": "bay",
+   "weight": {
+    "kitchen": 0,
+    "hallway": 0,
+    "default": 1
+   },
+   "say": "bay window (three angled panes projecting 500 mm outside, a seat at the sill; 2400 x 1500 mm, sill 450; it takes the wall's middle, no other opening beside it)"
+  },
+  {
+   "style": "french",
+   "kind": "door",
+   "weight": {
+    "hallway": 0,
+    "default": 1
+   },
+   "say": "french glass doors to the outside (two leaves ajar, 1500 x 2250 mm; keep 1000 x 1500 mm of floor clear in front)"
+  },
+  {
+   "style": "slider",
+   "kind": "door",
+   "weight": {
+    "hallway": 0,
+    "default": 1
+   },
+   "say": "sliding glass doors to the outside (two panels, one half slid, 2400 x 2250 mm; keep the floor in front clear)"
+  }
+ ],
+ "windowsNote": "roll gives each window a style from `windows`; at most one wall, bay, french or slider per area, and a window with sash 'out' (over a sink: it opens outward, so the worktop and the sink do not stop it) stays a two-sash window. Style goes in the opening: { kind: 'window', style: 'picture' | 'pair' | 'wall' | 'bay', x } or { kind: 'door', style: 'french' | 'slider', x }; width, height and sill default from the style (opening.js STYLE). A glass door or wall of glass counts as an opening for the 1200 mm of clear wall rule, and its sheet of daylight lights the area.",
+ "boardPlaces": [
+  {
+   "id": "flat with a loaf",
+   "say": "flat on the worktop with a loaf, knife and a few vegetables on it"
+  },
+  {
+   "id": "table",
+   "say": "on the breakfast table, with bread or cheese on it"
+  },
+  {
+   "id": "hanging",
+   "say": "hanging from a rail or hook by its hole"
+  },
+  {
+   "id": "stacked",
+   "say": "two boards stacked on the worktop"
+  },
+  {
+   "id": "leaning",
+   "say": "leaning against the wall (the old way, at most one home in five)"
+  }
+ ],
+ "lights": {
+  "kitchen": [
+   {
+    "id": "pendant",
+    "w": 9
+   },
+   {
+    "id": "floor lamp",
+    "w": 1
+   }
+  ],
+  "dining": [
+   {
+    "id": "pendant",
+    "w": 9
+   },
+   {
+    "id": "wall light pair",
+    "w": 1
+   }
+  ],
+  "reading-corner": [
+   {
+    "id": "pendant",
+    "w": 5
+   },
+   {
+    "id": "floor lamp",
+    "w": 5
+   }
+  ],
+  "home-office": [
+   {
+    "id": "pendant",
+    "w": 4
+   },
+   {
+    "id": "desk lamp",
+    "w": 6
+   }
+  ],
+  "living": [
+   {
+    "id": "floor lamp",
+    "w": 5
+   },
+   {
+    "id": "pendant",
+    "w": 3
+   },
+   {
+    "id": "table lamp",
+    "w": 2
+   }
+  ],
+  "bedroom": [
+   {
+    "id": "table lamp",
+    "w": 6
+   },
+   {
+    "id": "pendant",
+    "w": 3
+   },
+   {
+    "id": "wall light pair",
+    "w": 1
+   }
+  ],
+  "hallway": [
+   {
+    "id": "pendant",
+    "w": 5
+   },
+   {
+    "id": "wall light pair",
+    "w": 5
+   }
+  ]
+ },
+ "lightNote": "area.light is the one lamp of the area. pendant: hang a.table(...).over('pendantLamp') (or over an island or a chair) so it reads in the home view; the roll deals one in most kitchens, dining areas and reading corners, so a pendant is a decision, not an extra. If the lamp would overlap the window in the home view, slide it along the table (over('pendantLamp', { dx })) rather than dropping it.",
+ "openPlan": {
+  "kitchenTiles": 0.45,
+  "chance": 0.4,
+  "joinable": ["kitchen", "dining", "living"],
+  "nook": { "reading-corner": "living" },
+  "nookChance": 0.7,
+  "wholeChainChance": 0.5,
+  "pairs": [{ "of": ["kitchen", "dining"], "w": 3 }, { "of": ["dining", "living"], "w": 3 }, { "of": ["kitchen", "living"], "w": 2 }],
+  "orders": [{ "of": ["kitchen", "dining", "living"], "w": 5 }, { "of": ["dining", "kitchen", "living"], "w": 1 }, { "of": ["kitchen", "living", "dining"], "w": 1 }],
+  "layouts": { "row": 1, "corner": 1 },
+  "overlap": [0, 250, 500, 750, 1000],
+  "secondChance": 0.5,
+  "separators": {
+   "island": { "furniture": true, "w": 4, "needs": "kitchen", "say": "a kitchen island facing the neighbour (the kitchen's shape is island)" },
+   "peninsula": { "furniture": true, "w": 3, "needs": "kitchen", "say": "a kitchen peninsula reaching toward the neighbour (the kitchen's shape is peninsula)" },
+   "sofaBack": { "furniture": true, "w": 4, "needs": "living", "say": "a sofa or armchair with its back to the neighbour" },
+   "openShelf": { "furniture": true, "w": 2, "say": "an open shelf unit seen from both sides" },
+   "rug": { "w": 3, "say": "a rug whose edge lies on the seam" },
+   "hangingLight": { "w": 3, "needs": "dining", "say": "a hanging light over the dining table, which stands by the seam" },
+   "halfWall": { "w": 0, "say": "a half wall about 1000 mm high (not built yet: weight 0 until the page draws it)" },
+   "floorChange": { "only": "second", "w": 0, "say": "a floor change: tiles in one area and boards beyond, in one straight line by the other separator" }
+  },
+  "note": "roll.mjs deals openPlan (about 2 homes in 5 with at least two joinable areas). chain = the joined areas in order, layout row (one long back wall) or corner (turns 90 degrees at seam `turn`), seams[i].separators (at least one furniture) and overlap mm. Each joined area's `backing` is set so no side wall stands on a seam. See openplan.mjs and compose.mjs H.join."
+ },
+"stillLife": {
+ "note": "For each waist-high top the roll deals 2 or 3 of its things (never a cloth, runner or rug: those are not things) and one wall arrangement for the longest bare wall stretch (check-home 'bare': a top over 0.4 m2 holds two things at least; no wall stretch over 1.8 m is empty between 1.0 and 2.0 m high). Put each thing on its top with a.onTop slots so nothing overlaps or overhangs.",
+ "kitchen": {
+  "tops": [
+   {
+    "id": "worktop",
+    "say": "the worktop beside the hob",
+    "things": [
+     "utensil crock beside the hob (utensilCrock)",
+     "jars (jars)",
+     "herbs in a pot (herbs)",
+     "cutting board with a loaf, leaning at the back of the prep worktop (cuttingBoard)",
+     "fruit bowl (fruitBowl)",
+     "moka pot (mokaPot)",
+     "bread bin (breadBin)",
+     "cookbook on a stand (cookbookStand)"
+    ]
+   },
+   {
+    "id": "table",
+    "say": "the breakfast table",
+    "things": [
+     "fruit bowl (fruitBowl)",
+     "jug of water (jug)",
+     "mug (mug)",
+     "vase of branches (vase)",
+     "bread basket (breadBasket)",
+     "salt and pepper (saltPepper)"
+    ]
+   }
+  ],
+  "wall": [
+   "open shelf with plates and jars (openShelf)",
+   "pot rail with pans over or beside the hob (potRail)",
+   "spice rack on the wall by the hob (spiceRack)",
+   "wall clock with a tea towel (wallClock, teaTowel)",
+   "picture over the table (picture)"
+  ]
+ },
+ "dining": {
+  "tops": [
+   {
+    "id": "table",
+    "say": "the dining table",
+    "things": [
+     "vase of branches (vase)",
+     "candlesticks (candlesticks)",
+     "jug of water (jug)",
+     "bread basket (breadBasket)",
+     "fruit bowl (fruitBowl)",
+     "place settings (placeSetting)"
+    ]
+   },
+   {
+    "id": "sideboard",
+    "say": "the sideboard",
+    "things": [
+     "lamp (readingLamp)",
+     "vase of branches (vase)",
+     "book stack (bookStack)",
+     "bowl (fruitBowl)",
+     "candlesticks (candlesticks)",
+     "framed photo (photoFrame)"
+    ]
+   }
+  ],
+  "wall": [
+   "mirror over the sideboard (mirror)",
+   "plates on the wall (wallPlates)",
+   "wall shelf over the sideboard, its bottom 400-600 over the top (wallShelf)",
+   "picture group over the sideboard (picture)",
+   "glazed cabinet with dishes (glazedCabinet)"
+  ]
+ },
+ "living": {
+  "tops": [
+   {
+    "id": "coffee table",
+    "say": "the coffee table",
+    "things": [
+     "book stack (bookStack)",
+     "mug (mug)",
+     "vase (vase)",
+     "candle (candlesticks)",
+     "bowl (fruitBowl)",
+     "magazines (magazineBox)"
+    ]
+   },
+   {
+    "id": "side table",
+    "say": "the side table",
+    "things": [
+     "lamp (readingLamp)",
+     "mug (mug)",
+     "book stack (bookStack)",
+     "small plant (plant)",
+     "glasses on a book (glassesBook)"
+    ]
+   }
+  ],
+  "wall": [
+   "gallery wall of frames over the sofa (galleryWall)",
+   "wall shelf above the side table, its bottom 400-600 over the top (wallShelf)",
+   "big picture over the sofa (picture)",
+   "mirror on the wall beside the window, never over the sofa (mirror)"
+  ]
+ },
+ "bedroom": {
+  "tops": [
+   {
+    "id": "bedside table",
+    "say": "each bedside table",
+    "things": [
+     "bedside lamp (bedsideLamp)",
+     "alarm clock (alarmClock)",
+     "glasses on a book (glassesBook)",
+     "mug (mug)",
+     "small plant (plant)"
+    ]
+   },
+   {
+    "id": "chest of drawers",
+    "say": "the chest of drawers",
+    "things": [
+     "letter tray (letterTray)",
+     "vase (vase)",
+     "framed photo (photoFrame)",
+     "book stack (bookStack)",
+     "lamp (readingLamp)"
+    ]
+   }
+  ],
+  "wall": [
+   "picture or gallery over the bed (galleryWall)",
+   "wall sconce either side of the bed (wallSconce)",
+   "mirror over the chest of drawers (mirror)",
+   "wall shelf with books (wallShelf)"
+  ]
+ },
+ "reading-corner": {
+  "tops": [
+   {
+    "id": "side table",
+    "say": "the side table by the chair",
+    "things": [
+     "book stack (bookStack)",
+     "mug (mug)",
+     "lamp (readingLamp)",
+     "glasses on a book (glassesBook)"
+    ]
+   },
+   {
+    "id": "shelf",
+    "say": "the shelf or window sill",
+    "things": [
+     "small plant (plant)",
+     "candle (candlesticks)",
+     "framed photo (photoFrame)",
+     "book stack (bookStack)"
+    ]
+   }
+  ],
+  "wall": [
+   "shelves with books and objects (readShelf)",
+   "gallery wall of frames (galleryWall)",
+   "wall sconce by the chair (wallSconce)",
+   "picture over the daybed (picture)"
+  ]
+ },
+ "hallway": {
+  "tops": [
+   {
+    "id": "console",
+    "say": "the console",
+    "things": [
+     "key bowl (keyBowl)",
+     "letter tray (letterTray)",
+     "lamp (readingLamp)",
+     "vase (vase)",
+     "framed photo (photoFrame)"
+    ]
+   }
+  ],
+  "wall": [
+   "mirror over the console (mirror)",
+   "coat hooks with a coat and hat (coatHooks, hungHat)",
+   "picture group (picture)",
+   "wall clock (wallClock)"
+  ]
+ },
+ "home-office": {
+  "tops": [
+   {
+    "id": "desk",
+    "say": "the desk",
+    "things": [
+     "desk organiser (deskOrganiser)",
+     "task lamp (taskLamp)",
+     "laptop (laptop)",
+     "notebook (notebook)",
+     "mug (mug)",
+     "small plant (plant)",
+     "printer (printer)"
+    ]
+   }
+  ],
+  "wall": [
+   "pinboard over the desk (pinboard)",
+   "wall shelf over the desk, its bottom 400-600 over the top (wallShelf)",
+   "picture or calendar over the desk (picture)",
+   "window with a curtain (curtain)"
+  ]
+ }
+},
+ "motion": {
+  "note": "Living, moving things dealt per area by motion-roll.mjs (read there and in src/motion/index.js). Each kind: say (plain words), needs (openWindow: the area has a window or glass door rendered open; openWay: that, or an arch, or a plain door open 60 degrees or more (a flier only); plant: the area has a plant), in (area kinds), weight. flies: it passes through the opening, so that window is opened wide enough (rules.js VISITOR_OPEN); a number (the bird: 800) is the narrowest window in mm it can use, and the roll deals it only to an area with a window that wide. Count: how many kinds one area gets (never the same kind twice). Add a kind here, in src/motion/<kind>.js and in the PLUGINS map of src/motion/index.js.",
+  "count": [
+   2,
+   3
+  ],
+  "caps": {
+   "cat": 1,
+   "flier": 2
+  },
+  "kinds": {
+   "wind": {
+    "say": "a leafy plant by the open window stirs in the breeze",
+    "needs": [
+     "openWindow",
+     "plantNear"
+    ],
+    "in": [
+     "kitchen",
+     "dining",
+     "living",
+     "bedroom",
+     "reading-corner",
+     "hallway",
+     "home-office"
+    ],
+    "weight": 3
+   },
+   "butterfly": {
+    "say": "a butterfly drifts in through the open window (or an arch or open door), wanders, perches, and leaves again",
+    "needs": [
+     "openWay"
+    ],
+    "in": [
+     "kitchen",
+     "dining",
+     "living",
+     "bedroom",
+     "reading-corner",
+     "hallway",
+     "home-office"
+    ],
+    "weight": 2,
+    "flies": true
+   },
+   "bee": {
+    "say": "a bee buzzes in through the open window (or an arch or open door), darts about, lands on a plant or the sill, and leaves again",
+    "needs": [
+     "openWay"
+    ],
+    "in": [
+     "kitchen",
+     "dining",
+     "living",
+     "bedroom",
+     "reading-corner",
+     "hallway",
+     "home-office"
+    ],
+    "weight": 2,
+    "flies": true
+   },
+   "bird": {
+    "say": "a small bird flies in through the wide open window (or an arch or open door), perches on the sill or a cabinet top, looks about, and leaves again",
+    "needs": [
+     "openWay"
+    ],
+    "in": [
+     "kitchen",
+     "dining",
+     "living",
+     "bedroom",
+     "reading-corner",
+     "hallway",
+     "home-office"
+    ],
+    "weight": 1,
+    "flies": 800
+   },
+  "cat": {
+   "say": "a cat asleep, curled on a sofa, bed, chair, rug or the floor, breathing slowly",
+   "needs": [],
+   "in": ["kitchen", "dining", "living", "bedroom", "reading-corner", "hallway", "home-office"],
+   "weight": 3
+  },
+  "paw": {
+   "say": "a cat's paw reaches out from behind a full-width curtain panel on a solid wall or sill, searching, and goes back",
+   "needs": ["curtain", "noGlass"],
+   "in": ["dining", "living", "bedroom", "reading-corner", "home-office"],
+   "weight": 2
+  }
+  }
+ },
+ "groups": {
+  "note": "every area has at least three shootable groups, each a compact subject for one tour shot (camera.md: a group is a few pieces, not the whole arrangement): the hero group and two more from `list`, each at its own place so the three shots can differ by 25 degrees. The places are wall places: the left and right ends of an open-plan area are its seams.",
+  "places": [
+   {
+    "id": "back-left",
+    "say": "on the back wall, left third"
+   },
+   {
+    "id": "back-right",
+    "say": "on the back wall, right third"
+   },
+   {
+    "id": "window-wall",
+    "say": "on the window wall or the second wall"
+   }
+  ],
+  "list": {
+   "dining": [
+    "sideboard or dresser with a still life on top and a picture, shelf or mirror above",
+    "plant corner: a floor plant on a plant stand, or with a basket beside it",
+    "bar cart or trolley with bottles and glasses",
+    "armchair with a floor lamp and a side table",
+    "glazed cabinet with dishes and a plant"
+   ],
+   "living": [
+    "bookcase or shelf unit with books and objects",
+    "side chair with a lamp and a small table",
+    "plant corner: a floor plant with a basket or pouf",
+    "console or sideboard with a still life under a picture",
+    "reading corner: armchair, floor lamp and a book stack",
+    "window seat with cushions"
+   ],
+   "kitchen": [
+    "island or table with two stools",
+    "tall unit or fridge with a trolley beside it",
+    "open shelves with jars and a plant",
+    "sideboard or dresser with a still life and a picture",
+    "plant corner: a floor plant with a basket"
+   ],
+   "bedroom": [
+    "wardrobe or chest of drawers with a still life and a mirror",
+    "armchair with a floor lamp and a side table",
+    "plant corner: a floor plant on a plant stand",
+    "desk or dressing table with a stool and a lamp"
+   ],
+   "reading-corner": [
+    "bookcase with books and objects",
+    "side table with a lamp and a cup, a pouf beside it",
+    "plant corner: a floor plant with a basket",
+    "window seat with cushions",
+    "armchair on a round rug, with a side table"
+   ],
+   "hallway": [
+    "console with a mirror, a key bowl and a plant",
+    "coat hooks with a bench, shoes and an umbrella stand",
+    "shelf with baskets above a bench",
+    "plant corner: a floor plant on a plant stand",
+    "runner rug down the hall"
+   ],
+   "home-office": [
+    "bookshelf with files and objects",
+    "armchair or sofa with a lamp and a side table",
+    "plant corner: a floor plant with a basket",
+    "console or sideboard with a printer and a still life",
+    "cabinet with a plant on top"
+   ]
+  }
+ },
+  "names": {
+    "note": "Roll phrase -> the assets the scene must hold (check-home 'rolled'). a|b means either; a+b means both, in one group for group texts. A phrase with a bracket name '(openShelf)' needs no entry here. motion:cat is satisfied by the area's cat motion.",
+    "things": {
+      "fruit bowl": "fruitBowl",
+      "cutting board (leaning at the back of the prep worktop, flat by the sink with a knife, or hanging from the rail)": "cuttingBoard",
+      "pan on the hob": "pan",
+      "jars": "jars",
+      "kettle on the worktop by the sink": "kettle",
+      "tea towel on a rail": "teaTowel",
+      "herbs on the worktop": "herbs",
+      "stool": "stool",
+      "trolley": "trolley",
+      "basket of vegetables": "basket",
+      "wall shelf with jars": "openShelf|wallShelf",
+      "vase of branches": "vase",
+      "book stack": "bookStack",
+      "basket": "basket",
+      "mirror over the sideboard": "mirror",
+      "wall shelf": "wallShelf|openShelf|shelf",
+      "cushion on a chair": "cushion",
+      "floor lamp beside the seat": "floorLamp",
+      "bench": "bench",
+      "cushion": "cushion",
+      "cat": "cat|motion:cat",
+      "pouf": "pouf",
+      "picture or gallery over the sofa": "picture|galleryWall",
+      "side table at the arm of the seat": "sideTable",
+      "leaning mirror by the wall, or mirror over the chest of drawers": "leaningMirror|mirror",
+      "floor lamp beside the chair": "floorLamp",
+      "picture over the bed, or on open wall at eye level": "picture",
+      "picture over the seat, or on open wall at eye level": "picture",
+      "floor books": "floorBooks",
+      "tea set": "teaSet",
+      "plant": "plant|floorPlant|herbs|pot",
+      "picture over the bench or console, or on open wall at eye level": "picture",
+      "floor lamp in a corner clear of the door": "floorLamp",
+      "boots": "boots",
+      "floor lamp beside the reading chair or in a corner": "floorLamp",
+      "picture over the desk or shelf, or on open wall at eye level": "picture",
+      "mirror over the console": "mirror",
+      "monitor": "monitor",
+      "pinboard": "pinboard",
+      "binders": "binders",
+      "printer": "printer",
+      "globe": "globe",
+      "step stool": "stepStool",
+      "chair pulled out": "chair",
+      "footstool": "footstool",
+      "log basket": "logBasket",
+      "clothes chair": "clothesChair",
+      "hamper": "hamper",
+      "floor cushion": "floorCushion",
+      "magazine box": "magazineBox",
+      "shoes": "shoes",
+      "shoes by the door, one neat pair and one dropped": "shoes",
+      "umbrella stand": "umbrellaStand",
+      "waste bin": "wasteBin",
+      "file box": "fileBox",
+      "table (round or long)": "table|roundTable",
+      "chairs": "chair",
+      "rug": "rug",
+      "curtain at a window": "curtain",
+      "bed": "bed",
+      "bedsideTable": "bedsideTable",
+      "wardrobe": "wardrobe",
+      "readingChair": "readingChair",
+      "floorLamp": "floorLamp",
+      "shelf": "shelf",
+      "daybed": "daybed",
+      "windowSeat": "windowSeat",
+      "readingLamp": "readingLamp",
+      "coatHooks": "coatHooks",
+      "console": "console",
+      "shoeRack": "shoeRack",
+      "coatStand": "coatStand",
+      "runner": "runner|tableRunner",
+      "desk": "desk",
+      "deskChair": "deskChair",
+      "teaTowel": "teaTowel",
+      "tablecloth": "tablecloth|cloth",
+      "tableRunner": "tableRunner|runner",
+      "benchCushion": "benchCushion|cushion",
+      "foldedThrow": "foldedThrow",
+      "cloth": "cloth|tablecloth|tableRunner|runner|foldedThrow|cushion|benchCushion|floorCushion|duvetCloth|bed",
+      "duvetCloth": "duvetCloth|bed",
+      "floorCushion": "floorCushion",
+      "hungBag": "hungBag",
+      "mug": "mug",
+      "book face down": "openBook",
+      "scuffed floor": "scuff",
+      "fallen leaf": "leaf",
+      "height chart": "heightChart",
+      "folded throw": "foldedThrow",
+      "shoes askew": "shoes",
+      "table runner": "tableRunner|runner",
+      "sofa scratches": "scratches",
+      "glasses on book": "glassesBook",
+      "clothes on chair": "clothesChair"
+    },
+    "hero": {
+      "range hood over the hob": "hood",
+      "tall pantry wall": "wallRun|fridge",
+      "open shelves and a dresser": "openShelf|wallShelf+sideboard",
+      "window over the sink": "baseRun",
+      "breakfast table by the window": "table|roundTable",
+      "long table under a pendant": "table+pendantLamp",
+      "round table on a rug": "roundTable|table+rug",
+      "sideboard with a big mirror": "sideboard+mirror",
+      "sofa with a rug and coffee table": "sofa+rug+coffeeTable",
+      "sofa under a window with a side table and a rug": "sofa+sideTable+rug",
+      "sofa with an armchair, a rug and a coffee table": "sofa+armchair+rug+coffeeTable",
+      "sofa facing a shelf wall, with a rug": "sofa+shelf+rug",
+      "shelf wall with an armchair": "shelf+armchair",
+      "two armchairs and a side table": "armchair+sideTable",
+      "bed with a headboard on the backing wall": "bed",
+      "bed with a bedside table each side, headboard on a wall without a window": "bed+bedsideTable",
+      "bed with its headboard on the second wall (the back wall holds the window)": "bed",
+      "bed with its headboard on a side wall (the back wall holds the window)": "bed",
+      "reading chair with a footstool and a floor lamp": "readingChair+footstool+floorLamp",
+      "daybed under shelves": "daybed+shelf",
+      "window seat with pillows and a reading lamp": "windowSeat+readingLamp",
+      "coat hooks over a bench": "coatHooks+bench",
+      "console with a mirror": "console+mirror",
+      "shoe rack by the door": "shoeRack",
+      "coat stand and a runner": "coatStand+runner",
+      "desk under a window": "desk",
+      "desk with a shelf wall": "desk+shelf",
+      "trestle desk with a pinboard above": "desk+pinboard",
+      "writing desk in a corner": "desk"
+    },
+    "groups": {
+      "island or table with two stools": "baseRun|table|roundTable+stool",
+      "tall unit or fridge with a trolley beside it": "fridge|wallRun+trolley",
+      "open shelves with jars and a plant": "openShelf|wallShelf",
+      "sideboard or dresser with a still life and a picture": "sideboard+picture",
+      "plant corner: a floor plant with a basket": "floorPlant+basket",
+      "sideboard or dresser with a still life on top and a picture, shelf or mirror above": "sideboard+picture|wallShelf|mirror",
+      "plant corner: a floor plant on a plant stand, or with a basket beside it": "floorPlant|plantStand",
+      "bar cart or trolley with bottles and glasses": "trolley",
+      "armchair with a floor lamp and a side table": "armchair+floorLamp+sideTable",
+      "glazed cabinet with dishes and a plant": "glazedCabinet",
+      "bookcase or shelf unit with books and objects": "shelf",
+      "side chair with a lamp and a small table": "chair|armchair+sideTable",
+      "plant corner: a floor plant with a basket or pouf": "floorPlant+basket|pouf",
+      "console or sideboard with a still life under a picture": "console|sideboard+picture",
+      "reading corner: armchair, floor lamp and a book stack": "armchair|readingChair+floorLamp+bookStack",
+      "runner rug down the hall": "runner+floorPlant",
+      "armchair on a round rug, with a side table": "armchair+rug+sideTable",
+      "window seat with cushions": "windowSeat+cushion",
+      "wardrobe or chest of drawers with a still life and a mirror": "wardrobe|chestOfDrawers+mirror|leaningMirror",
+      "plant corner: a floor plant on a plant stand": "floorPlant|plantStand",
+      "desk or dressing table with a stool and a lamp": "desk+stool",
+      "bookcase with books and objects": "shelf",
+      "side table with a lamp and a cup, a pouf beside it": "sideTable+pouf",
+      "console with a mirror, a key bowl and a plant": "console+mirror+keyBowl",
+      "coat hooks with a bench, shoes and an umbrella stand": "coatHooks+bench+umbrellaStand",
+      "shelf with baskets above a bench": "shelf+bench",
+      "bookshelf with files and objects": "shelf",
+      "armchair or sofa with a lamp and a side table": "armchair|sofa+sideTable",
+      "console or sideboard with a printer and a still life": "console|sideboard+printer",
+      "cabinet with a plant on top": "sideboard|glazedCabinet"
+    }
+  }
 }

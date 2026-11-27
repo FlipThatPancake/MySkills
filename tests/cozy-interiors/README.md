@@ -8,3 +8,5 @@ Working files for building the cozy-interiors skill; delete this folder once the
 - `planning/`: plan.md (decisions so far) and research.md.
 
 The PP Neue Montreal font in `kitchen-prototype/src/assets/fonts/` is licensed: keep this repo private until it is replaced with a free font.
+
+- `openings/pane.mjs`: blank-pane test. A room with every window and glass door kind, seen from seven cameras: the outside picture must show in every pane, and drawn the old way (no stencil clip) the check must fail. `isolate.mjs <scene.json> <area> [shot]` names the draw that paints over a window's picture (a fixer aid: hide each group of draws in turn and see which brings the magenta picture back).

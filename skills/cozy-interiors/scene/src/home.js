@@ -7,7 +7,7 @@
 //   An opening is { kind: 'window' | 'door' | 'arch', at (mm along the wall from `from`, to its middle), width, height, sill, hinge: 'l' | 'r', open (deg), to (area id: a click goes there), beyond: false (a real room lies beyond) }.
 //   Furniture faces the room as it stands: a wall's face is where an object's back sits.
 //   An object is { id, asset, at: [x, y, z], turn (deg about the vertical), mount: 'floor' | 'on' | 'wall' | 'ceiling' | 'lines', params, shadow: false, lift (mm: it stands on something this thick, like a rug) }; its contact shadow comes from the mount.
-import { halo } from './sheet.js';
+import { halo, stencilOut } from './sheet.js';
 import { floorLines } from './floor.js';
 import { opening } from './openings.js';
 
@@ -28,6 +28,18 @@ export function buildHome(kit, home, registry, areas = []) {
     objects[o.id] = g; objRoot.add(g);
   }
   objRoot.updateMatrixWorld(true);
+  // what stands between the camera and its target fades out (and returns once it no longer blocks): every object gets its own fade, except flat floor pieces; the area's own subject group (the hero's group) never fades in the home view
+  const heroGroups = {}; for (const o of home.objects || []) if (o.hero) (heroGroups[o.area] ||= new Set()).add(o.group);
+  const NOFADE = new Set(['rug', 'runner', 'doormat']), blockers = [];
+  for (const o of home.objects || []) { if (NOFADE.has(o.asset)) continue; const g = objects[o.id], fa = kit.fadable(); kit.useFade(g, fa); blockers.push({ id: o.id, g, fa, grp: !!o.group, area: o.area, main: !!(o.hero || heroGroups[o.area]?.has(o.group)), goal: 1, cur: undefined, last: 1, sv: { value: 1 } }); }   // sv: how much of the piece's contact shadow is drawn, the same number as its fade (halos and the baked light both read it)
+  // what a piece stands on: the blocker whose top meets its underside within 40 mm and whose footprint holds its middle (a vase on a table, a mug on a worktop). A flat floor piece (rug) does not carry, nor does a piece on the floor.
+  const supportOf = (B) => {
+    const b = new T.Box3().setFromObject(B.g); if (b.isEmpty() || b.min.y < 60) return null;
+    const cx = (b.min.x + b.max.x) / 2, cz = (b.min.z + b.max.z) / 2; let best = null;
+    for (const A of blockers) { if (A === B) continue; const a = new T.Box3().setFromObject(A.g); if (a.isEmpty() || Math.abs(a.max.y - b.min.y) > 40 || cx < a.min.x || cx > a.max.x || cz < a.min.z || cz > a.max.z) continue; if (!best || a.max.y > best.y) best = { A, y: a.max.y }; }
+    return best && best.A;
+  };
+  let supportsDone = false;
   const openables = Object.values(objects).flatMap((g) => g.userData.openables || []);
   const boxes = {}, feet = {};
   for (const o of home.objects || []) {
@@ -55,9 +67,25 @@ export function buildHome(kit, home, registry, areas = []) {
     return (endMats[key] = new T.MeshBasicMaterial({ color: new T.Color('#f4f4f1'), toneMapped: false, alphaMap: tex, transparent: true }));
   };
   const P = (a) => new T.Vector2(a[0], a[1]), near = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]) < 40;
-  const walls = (home.walls || []).map((w, i) => {
+  // a room seen through an arch or door is closed: the walls of its bounds that the plan leaves out (a hallway has a back and a side wall; its far end and other side are open for the camera) are built as closing walls, drawn only while the room is a neighbour behind a way through (area-run.js sync), so the opening shows a whole room and never haze
+  const closing = [];
+  if (home.closeRooms !== false) for (const a of areas) {
+    if (!a.bounds) continue;
+    const b = a.bounds, mine = (home.walls || []).filter((w) => w.id && w.id.startsWith(a.id + '-')), sibs = areas.filter((q) => q !== a && q.bounds && a.group && q.group === a.group), SIDES = [   // [axis, fixed coordinate, from, to]: the room is on the left of from -> to
+      ['z', b.z0, [b.x1, b.z0], [b.x0, b.z0]], ['z', b.z1, [b.x0, b.z1], [b.x1, b.z1]], ['x', b.x0, [b.x0, b.z0], [b.x0, b.z1]], ['x', b.x1, [b.x1, b.z1], [b.x1, b.z0]]];
+    SIDES.forEach(([axis, at, from, to], k) => {
+      const i = axis === 'z' ? 0 : 1, j = 1 - i, lo = Math.min(from[i], to[i]), hi = Math.max(from[i], to[i]), rev = from[i] > to[i];
+      const cover = mine.reduce((sum, w) => Math.abs(w.from[j] - at) < 300 && Math.abs(w.to[j] - at) < 300 ? sum + Math.max(0, Math.min(hi, Math.max(w.from[i], w.to[i])) - Math.max(lo, Math.min(w.from[i], w.to[i]))) : sum, 0);
+      if (cover >= 0.5 * (hi - lo)) return;
+      // an open-plan area's side that lies inside a sibling's bounds is a seam, not a wall: the stretches left over are its outer wall
+      let segs = [[lo, hi]];
+      for (const q of sibs) { const qb = q.bounds, [q0, q1] = axis === 'z' ? [qb.x0, qb.x1] : [qb.z0, qb.z1], [f0, f1] = axis === 'z' ? [qb.z0, qb.z1] : [qb.x0, qb.x1]; if (at < f0 - 50 || at > f1 + 50) continue; segs = segs.flatMap(([u, v]) => [[u, Math.min(v, q0)], [Math.max(u, q1), v]].filter(([x, y]) => y - x > 0)); }
+      segs.filter(([u, v]) => v - u > 800).forEach(([u, v], n) => { const pt = (t) => axis === 'z' ? [t, at] : [at, t]; closing.push({ id: `${a.id}-close${k}${n}`, from: pt(rev ? v : u), to: pt(rev ? u : v), openings: [], closing: true }); });
+    });
+  }
+  const walls = [...(home.walls || []), ...closing].map((w, i) => {
     const len = Math.hypot(w.to[0] - w.from[0], w.to[1] - w.from[1]), d = [(w.to[0] - w.from[0]) / len, (w.to[1] - w.from[1]) / len], n = [d[1], -d[0]];
-    return { ...w, i, len, d, n, vis: { value: 1 }, node: kit.group(), frames: kit.group(), fa: kit.fadable(), through: [], holes: [], built: [] };
+    return { ...w, i, len, d, n, vis: { value: 1 }, node: kit.group(), frames: kit.group(), fa: kit.fadable(), through: [], walk: [], holes: [], built: [] };
   });
   const walls_ = walls;
   for (const W of walls_) {
@@ -65,24 +93,30 @@ export function buildHome(kit, home, registry, areas = []) {
     node.position.set(W.to[0], 0, W.to[1]); node.rotation.y = Math.atan2(W.d[1], -W.d[0]);   // local x runs from `to` back toward `from`, local z is the room side
     for (const op of W.openings || []) {
       const b = opening(kit, op, vis), xc = len - op.at;
+      op.width ??= b.width; op.height ??= b.height; if (op.kind !== 'arch' || b.sill) op.sill ??= b.sill;   // the checks read the sizes the style gave
       b.group.rotation.y = -Math.PI / 2; b.group.position.set(xc, 0, 0);
       W.frames.add(b.group); W.built.push({ op, group: b.group, openables: b.openables }); openables.push(...b.openables); 
       W.holes.push(b.hole.map(([z, y]) => [xc - z, y]));
-      if (op.kind !== 'window') W.through.push([xc - b.width / 2, xc + b.width / 2]);
+      if (op.kind !== 'window' && !(op.sill > 0 || /pass$/.test(op.style || ''))) W.through.push([xc - b.width / 2, xc + b.width / 2, b.height]);
+      if (op.kind === 'arch' && !(op.sill > 0 || /pass$/.test(op.style || ''))) W.walk.push([xc - b.width / 2, xc + b.width / 2]);   // a way through: the floor runs on beyond it
     }
     const square = (o) => Math.abs(o.d[0] * W.d[0] + o.d[1] * W.d[1]) < 0.9;   // a corner, square or wide (120 degrees); two walls in a line are no corner
-    W.joinedTo = walls_.some((o) => o !== W && near(o.from, W.to) && square(o)); W.joinedFrom = walls_.some((o) => o !== W && near(o.to, W.from) && square(o));
+    const pool = W.closing ? walls_ : walls_.filter((o) => !o.closing);   // a real wall's corners and thinning ends do not change because a closing wall exists
+    W.joinedTo = pool.some((o) => o !== W && near(o.from, W.to) && square(o)); W.joinedFrom = pool.some((o) => o !== W && near(o.to, W.from) && square(o));
+    const line = (o) => Math.abs(o.d[0] * W.d[0] + o.d[1] * W.d[1]) > 0.999;   // an open-plan seam: the next wall runs on in a straight line, so this one does not thin out or draw a corner there
+    W.runsOnTo = pool.some((o) => o !== W && near(o.from, W.to) && line(o)); W.runsOnFrom = pool.some((o) => o !== W && near(o.to, W.from) && line(o));
     const s = new T.Shape([[0, -4], [len, -4], [len, H], [0, H]].map(([a, y]) => new T.Vector2(a, y)));
     W.holes.forEach((h) => s.holes.push(new T.Path(h.map(([a, y]) => new T.Vector2(a, y)))));
     const sg = new T.ShapeGeometry(s); { const ps = sg.attributes.position, uv = new Float32Array(ps.count * 2); for (let k = 0; k < ps.count; k++) { uv[2 * k] = ps.getX(k) / len; uv[2 * k + 1] = ps.getY(k) / H; } sg.setAttribute('uv', new T.BufferAttribute(uv, 2)); }
     // a free end and the top edge melt into the backdrop over their last END mm: the plane carries an alpha map (1 inside, 0 at the very edge)
-    const plane = new T.Mesh(sg, endMat(len, H, !W.joinedTo, !W.joinedFrom)); plane.position.z = -4; plane.userData.caster = true;
+    const plane = new T.Mesh(sg, endMat(len, H, !W.joinedTo && !W.runsOnTo, !W.joinedFrom && !W.runsOnFrom)); plane.position.z = -4; plane.userData.caster = true; plane.material = plane.material.clone(); W.plane = plane;   // an own copy of the tone, so the wall can fade out with its frames
     node.add(plane, W.frames);
     // seams: the wall meets the floor (broken where a door or arch lets the floor through), and the corner it makes with the next wall
     const seams = kit.group(); let a = 0;
     for (const [t0, t1] of [...W.through].sort((p, q) => p[0] - q[0]).concat([[len, len]])) { if (t0 > a) seams.add(kit.meltingLine([a, -1, 3], [Math.min(t0, len), -1, 3], () => 0)); a = Math.max(a, t1); }
     // a corner, or the free end of a loose wall, gets an edge line that melts out toward the top
     if (W.joinedTo) seams.add(kit.meltingLine([0, -1, 3], [0, 2900, 3], (p) => step((p[1] - 2400) / 400)));   // no line at a free end: the wall just thins out
+    if (W.closing && W.joinedFrom) seams.add(kit.meltingLine([len, -1, 3], [len, 2900, 3], (p) => step((p[1] - 2400) / 400)));   // a closing wall draws the corner at both its ends
     node.add(seams); W.seams = seams;
     kit.useFade(W.frames, W.fa); kit.useFade(seams, W.fa);
     // contact shadows on this wall: where it meets the floor and the corners
@@ -96,38 +130,41 @@ export function buildHome(kit, home, registry, areas = []) {
 
   // ---- floor and tiles
   // the floor reaches as far as the walls and every area's bounds (areas are open: their floor runs out in front of the walls)
-  const xs = [...walls.flatMap((w) => [w.from[0], w.to[0]]), ...areas.flatMap((a) => [a.bounds.x0, a.bounds.x1])], zs = [...walls.flatMap((w) => [w.from[1], w.to[1]]), ...areas.flatMap((a) => [a.bounds.z0, a.bounds.z1])];
+  const BEYOND = 1600, back = walls.filter((w) => w.walk.length).flatMap((w) => [w.from, w.to].map((q) => [q[0] - w.n[0] * BEYOND, q[1] - w.n[1] * BEYOND]));   // behind a wall with a way through, the floor runs on
+  const xs = [...walls.flatMap((w) => [w.from[0], w.to[0]]), ...areas.flatMap((a) => [a.bounds.x0, a.bounds.x1]), ...back.map((q) => q[0])], zs = [...walls.flatMap((w) => [w.from[1], w.to[1]]), ...areas.flatMap((a) => [a.bounds.z0, a.bounds.z1]), ...back.map((q) => q[1])];
   const bb = { x0: Math.min(...xs), x1: Math.max(...xs), z0: Math.min(...zs), z1: Math.max(...zs) };
-  const floor = new T.Mesh(new T.PlaneGeometry(bb.x1 - bb.x0 + 2 * EDGE, bb.z1 - bb.z0 + 2 * EDGE), wallMat);
+  const floor = new T.Mesh(new T.PlaneGeometry(bb.x1 - bb.x0 + 2 * EDGE, bb.z1 - bb.z0 + 2 * EDGE), stencilOut(kit, wallMat));
   floor.rotation.x = -Math.PI / 2; floor.position.set((bb.x0 + bb.x1) / 2, -4, (bb.z0 + bb.z1) / 2);
   group.add(floor);
   const style = home.floor?.style || (home.tiles ? 'tiles' : 'plain'), M = 1500;
   const out = (p) => Math.hypot(Math.max(bb.x0 - p[0], p[0] - bb.x1, 0), Math.max(bb.z0 - p[2], p[2] - bb.z1, 0));
   // the floor of an area stops at its backing walls (nothing lies behind them, at any angle) and runs out freely on its open sides
-  const EXT = 3000, regions = areas.map((a) => ({ b: a.bounds, ws: walls.filter((w) => w.id && w.id.startsWith(a.id + '-')) }));
+  const EXT = 3000, regions = areas.map((a) => ({ b: a.bounds, ws: walls.filter((w) => !w.closing && w.id && w.id.startsWith(a.id + '-')) }));   // the floor's reach follows the real walls; a closing wall is only drawn behind an opening
   const behind = (p) => !regions.length ? 0 : Math.min(...regions.map(({ b, ws }) => {
     let d = Math.hypot(Math.max(b.x0 - EXT - p[0], p[0] - b.x1 - EXT, 0), Math.max(b.z0 - EXT - p[2], p[2] - b.z1 - EXT, 0));
-    for (const w of ws) { const dx = p[0] - w.to[0], dz = p[2] - w.to[1], s = -(dx * w.d[0] + dz * w.d[1]); if (s >= 0 && s <= w.len) d = Math.max(d, -(dx * w.n[0] + dz * w.n[1])); }
+    for (const w of ws) { const dx = p[0] - w.to[0], dz = p[2] - w.to[1], s = -(dx * w.d[0] + dz * w.d[1]); if (s >= 0 && s <= w.len) { const k = -(dx * w.n[0] + dz * w.n[1]); d = Math.max(d, k > 0 && k < BEYOND && w.walk.some(([a, b]) => s > a && s < b) ? k * 80 / BEYOND : k); } }   // beyond an arch the floor lines carry on for BEYOND mm, fading
     return d;
   }));
   const tone = (p) => Math.max(step(out(p) / M), step(behind(p) / 80));
   let floorDraw = null;   // pencil seams (tiles or boards): redrawn as the camera moves, so lines that bunch up fade out
   if (style === 'tiles' || style === 'boards') {
     const F = home.floor || {};
-    floorDraw = floorLines(kit, { style, bb, M, tone, seed: F.seed || 1, board: F.board || 120 + 20 * ((F.seed || 1) % 4), angle: (F.angle || 0) * Math.PI / 180, cell: home.tiles?.size || 600, origin: home.tiles?.origin });
-    group.add(floorDraw.object);
+    const zones = F.zones || [], base = { bb, M, tone, seed: F.seed || 1, board: F.board || 120 + 20 * ((F.seed || 1) % 4), angle: (F.angle || 0) * Math.PI / 180, cell: home.tiles?.size || 600, origin: home.tiles?.origin };
+    const draws = [floorLines(kit, { ...base, style, except: zones.map((z) => z.rect) }), ...zones.map((z) => floorLines(kit, { ...base, style: z.style, clip: z.rect, edge: z.edge }))];   // open plan: a zone carries its own floor style, cut clean at the seam
+    floorDraw = { update: (camera) => draws.forEach((d) => d.update(camera)) }; for (const d of draws) group.add(d.object);
   }
 
   // ---- contact shadows, generated from each object's footprint and mount
-  const shadows = kit.group();
+  const shadows = kit.group(), shadowMasks = [];   // shadowMasks: where the baked light must let go of a faded floor piece's own contact shadow
   for (const o of home.objects || []) {
     if (o.shadow === false) continue;
-    const b = feet[o.id], g = objects[o.id];
+    const b = feet[o.id], g = objects[o.id], sv = blockers.find((B) => B.id === o.id)?.sv || null;
     if (o.mount === 'ceiling') continue;   // it is daylight: a lamp casts no light and no shadow
-    if (o.mount === 'floor') shadows.add(halo(kit, 'floor', b.min.x, b.max.x, b.min.z, b.max.z, (o.lift || 0) + 1.5, o.asset === 'rug' ? 0.14 : 0.26));
-    else if (o.mount === 'on' && o.asset !== 'hob') shadows.add(halo(kit, 'floor', b.min.x, b.max.x, b.min.z, b.max.z, b.min.y + 1.5, 0.3));
+    if (o.mount === 'floor') { shadows.add(halo(kit, 'floor', b.min.x, b.max.x, b.min.z, b.max.z, (o.lift || 0) + 1.5, o.asset === 'rug' ? 0.14 : 0.26, sv)); if (sv) shadowMasks.push({ box: [b.min.x, b.min.z, b.max.x, b.max.z], sv }); }
+    else if (o.mount === 'on' && o.asset !== 'hob') shadows.add(halo(kit, 'floor', b.min.x, b.max.x, b.min.z, b.max.z, b.min.y + 1.5, 0.3, sv));
     else if (o.mount === 'wall') {   // under a wall unit: on the wall it hangs from
       for (const W of walls) {
+        if (W.closing) continue;
         const c = [...[b.min.x, b.max.x].flatMap((x) => [b.min.z, b.max.z].map((z) => [x, z]))].map(([x, z]) => [(x - W.to[0]) * -W.d[0] + (z - W.to[1]) * -W.d[1], (x - W.to[0]) * W.n[0] + (z - W.to[1]) * W.n[1]]);
         const xa = Math.min(...c.map((p) => p[0])), xb = Math.max(...c.map((p) => p[0])), zn = Math.min(...c.map((p) => p[1]));
         if (xb - xa >= 300 && zn < 80 && zn > -80 && xa > -10 && xb < W.len + 10) { W.shadows.add(halo(kit, 'back', xa, xb, b.min.y, b.min.y + 250, -2, 0.22, W.vis)); break; }
@@ -136,21 +173,72 @@ export function buildHome(kit, home, registry, areas = []) {
   }
   group.add(shadows);
 
-  const w3 = 3 * Math.PI / 180;
+  const w3 = 3 * Math.PI / 180; let lastT;
   return {
-    group, objects, openables, walls, bounds: bb,
+    group, objects, openables, walls: walls.filter((w) => !w.closing), closers: walls.filter((w) => w.closing), bounds: bb, blockers, shadowMasks,
     // the footprint halos and wall-base shadows: kept as the fallback, hidden once the light is baked
     useBake(on = true) { shadows.visible = !on; for (const W of walls) W.shadows.visible = !on; },
     // Each frame: a wall's frames, window light, seams and shadows fade away once the camera is past that wall (over about 3 degrees).
-    update(camera, target) {
+    update(camera, target, rest = false, instant = false) {
       floorDraw?.update(camera);
-      const dist = camera.position.distanceTo(target), span = Math.max(1, dist * Math.sin(w3));
+      const now = performance.now(), dt = Math.min(0.1, (now - (lastT ?? now)) / 1000), ease = instant ? 1 : 1 - Math.exp(-dt / 0.07); lastT = now;   // what blocks the view fades over about a tenth of a second, then comes back the same way
+      const dist = camera.position.distanceTo(target), span = Math.min(200, Math.max(1, dist * Math.sin(w3)));   // never more than 200 mm: a wall the camera passes thins out over a short distance, not over metres
       for (const W of walls) {
-        const d = (camera.position.x - W.to[0]) * W.n[0] + (camera.position.z - W.to[1]) * W.n[1], s = step((d + span / 2) / span);
-        if (s !== W.last) { W.last = s; W.vis.value = s; W.fa.set(s); }
+        const d = (camera.position.x - W.to[0]) * W.n[0] + (camera.position.z - W.to[1]) * W.n[1];
+        let s = Math.min(step((d + span / 2) / span), d > 300 ? 1 : 0);   // a wall is out altogether when the camera is within 300 mm of its plane, so no half-faded sheet hangs in front of the lens
+        if (s > 0 && !W.closing && !W.noBlock && blocksView(W, camera.position, target, home.height || 2700)) s = 0;   // a wall that stands between the camera and the view centre (not through one of its openings) fades too, so a glide through the house never looks at the back of a wall
+        W.goal = s; let c = W.cur === undefined ? s : W.cur + (s - W.cur) * ease; if (Math.abs(c - s) < 0.02) c = s; W.cur = c;   // goal: where the fade is heading (the checks read it); cur: what is drawn now
+        if (c !== W.last) { W.last = c; W.vis.value = c; W.fa.set(c); if (W.plane) { W.plane.visible = c > 0.001; W.plane.material.opacity = c; } }
+      }
+      // the objects on the line from the camera to its target
+      camera.updateMatrixWorld(true);
+      const P = camera.position, ax = target.x - P.x, ay = target.y - P.y, az = target.z - P.z, pad = 30, tb = new T.Box3();
+      if (!supportsDone) { supportsDone = true; for (const B of blockers) B.onB = supportOf(B); for (const B of blockers) if (B.main) for (let A = B.onB, n = 0; A && n < 8; A = A.onB, n++) A.carriesMain = true; }   // a piece that carries the subject group (the hob under the pan) stays too, so the pan never hangs
+      for (const B of blockers) {
+        const b = boxes[B.id]; let hit = false;
+        if (!(rest && (B.main || B.carriesMain)) && !b.isEmpty()) {
+          tb.copy(b).expandByScalar(pad); let t0 = 0, t1 = 1;
+          for (const [o, d, lo, hi] of [[P.x, ax, tb.min.x, tb.max.x], [P.y, ay, tb.min.y, tb.max.y], [P.z, az, tb.min.z, tb.max.z]]) { if (Math.abs(d) < 1e-9) { if (o < lo || o > hi) { t0 = 2; break; } } else { let u = (lo - o) / d, v = (hi - o) / d; if (u > v) [u, v] = [v, u]; t0 = Math.max(t0, u); t1 = Math.min(t1, v); if (t0 > t1) break; } }
+          hit = t0 <= t1 && t0 <= 1 && !tb.clone().expandByScalar(70).containsPoint(target);   // not the thing the camera looks at
+          if (hit && home.rayFade !== true) B.share = screenShare(b, camera), B.near = b.distanceToPoint(P) / Math.max(1, Math.hypot(ax, ay, az)), hit = B.share >= BLOCK_SHARE && B.near < BLOCK_NEAR;   // the line crosses it: it fades only when it stands near the camera and covers a large share of the frame, so a low table in mid-room or a thin lamp never vanishes
+        }
+        if (B.wall === undefined) { B.wall = null; if (!b.isEmpty() && (b.min.y > 250 || B.g.userData.scene?.mount === 'wall')) { let best = 160;   /* a piece the scene hangs on a wall (a curtain reaches the floor) takes the wall too */ for (const W of walls) { if (W.closing) continue; const x = (b.min.x + b.max.x) / 2, z = (b.min.z + b.max.z) / 2, side = (x - W.to[0]) * W.n[0] + (z - W.to[1]) * W.n[1], al = -((x - W.to[0]) * W.d[0] + (z - W.to[1]) * W.d[1]), half = Math.abs(W.n[0]) * (b.max.x - b.min.x) / 2 + Math.abs(W.n[1]) * (b.max.z - b.min.z) / 2, gap = Math.abs(side) - half; if (gap < best && al > -100 && al < W.len + 100) { best = gap; B.wall = W; } } } }   // a piece hung on a wall (off the floor, touching its plane) takes that wall's fade
+        if (home.wallHang === false) B.wall = null;   // a regression fixture only: a piece hung on a wall no longer goes with it
+        if (home.blockerFade === false) hit = false;
+        B.raw = hit;   // what the camera's line says; the checks read it (would the home view fade this piece?)
+        if (hit && home.homeView && home.keepHomeView !== false && B.grp && B.area === home.curArea) hit = false;   // the home view never fades a piece of its own area's groups: the camera is meant to see them (the checks say when one stands in the line: move the target or the piece)
+        B.goal = hit || (B.wall && B.wall.goal === 0) ? 0 : 1;
+        B.own = B.goal;   // B.own: what the piece's own view says; what stands on a piece goes with it (below)
+      }
+      for (const B of blockers) { B.would = !!B.raw; for (let A = B.onB, n = 0; A && !B.would && n < 8; A = A.onB, n++) if (A.raw && !A.carriesMain) B.would = true; }
+      if (home.supportFade !== false) for (const B of blockers) { for (let A = B.onB, n = 0; A && n < 8; A = A.onB, n++) if (A.own === 0) { B.goal = 0; break; } }   // a faded table takes its vase along, so nothing hangs in the air
+      for (const B of blockers) {
+        let c = B.cur === undefined ? B.goal : B.cur + (B.goal - B.cur) * ease; if (Math.abs(c - B.goal) < 0.02) c = B.goal; B.cur = c;
+        if (c !== B.last) { B.last = c; B.fa.set(c); B.sv.value = home.shadowFade === false ? 1 : c; }
+        if (c <= 0.001 && B.g.visible) { B.g.visible = false; B.fh = true; } else if (c > 0.001 && B.fh) { B.g.visible = true; B.fh = false; }   // fully faded: not drawn at all (area-run's only() resets fh)
       }
     },
   };
+}
+
+// what a piece has to do to fade: stand in front of the target, within BLOCK_NEAR of the camera-to-target distance from the camera, and cover at least BLOCK_SHARE of the frame (its projected box)
+export const BLOCK_SHARE = 0.10, BLOCK_NEAR = 0.85;
+export function screenShare(box, camera) {
+  const v = new box.min.constructor(); let x0 = 9, y0 = 9, x1 = -9, y1 = -9;
+  for (let i = 0; i < 8; i++) {
+    v.set(i & 1 ? box.max.x : box.min.x, i & 2 ? box.max.y : box.min.y, i & 4 ? box.max.z : box.min.z);
+    if (v.clone().applyMatrix4(camera.matrixWorldInverse).z >= -10) return 1;   // a corner at or behind the lens: the piece is on top of the camera
+    v.project(camera); x0 = Math.min(x0, v.x); x1 = Math.max(x1, v.x); y0 = Math.min(y0, v.y); y1 = Math.max(y1, v.y);
+  }
+  return Math.max(0, Math.min(x1, 1) - Math.max(x0, -1)) * Math.max(0, Math.min(y1, 1) - Math.max(y0, -1)) / 4;
+}
+
+// does the wall W (a plan segment from `to` to `from`, with its ways through) stand between the camera and the view centre, below its top?
+export function blocksView(W, cam, tgt, top) {
+  const side = (p) => (p.x - W.to[0]) * W.n[0] + (p.z - W.to[1]) * W.n[1], a = side(cam), b = side(tgt);
+  if (!(a > 150 && b < -150)) return false;
+  const t = a / (a - b), x = cam.x + (tgt.x - cam.x) * t, y = cam.y + (tgt.y - cam.y) * t, z = cam.z + (tgt.z - cam.z) * t, s = -((x - W.to[0]) * W.d[0] + (z - W.to[1]) * W.d[1]);
+  return s > -2500 && s < W.len + 2500 && y < top;   // 2.5 m beyond either end too, and an arch or door does not save it: a wall in front of any part of the frame fades, so no sheet of a neighbour's wall hangs over the view (the wall's own arch is still seen when the camera stands in its room)
 }
 
 // An area's fade numbers, from its bounds { x0, x1, z0, z1, top }: the planes' box and the view fade's sphere, all in world mm.

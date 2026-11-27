@@ -1,6 +1,6 @@
 // @js:kitchen-fruitBowl — a low bowl of fruit for the corner of the return's counter. Origin: the middle of the bowl's foot on the counter top.
-// Apples of different sizes and colours (65-85 mm across), an orange and a pear, piled the way they settle: four apples round the floor of the bowl, the orange on top in the
-// middle and the pear lying in the gap at the back. Every coloured fruit carries a faint painted wash (off-white showing through), like the window's painted daylight.
+// Apples of different sizes and colours (65-85 mm across), an orange and a pear, piled the way they settle: three apples and the pear round the floor of the bowl (the pear takes one apple's slot, lying on the floor), the orange on top in the
+// middle. Every coloured fruit carries a faint painted wash (off-white showing through), like the window's painted daylight.
 // `group.userData.landing` is a spot on the top fruit (local mm) where the butterfly may rest.
 import { paintCanvas } from './paint.js';
 
@@ -20,9 +20,12 @@ export function fruitBowl(kit) {
   g.add(kit.lines(rim, 'mid'));
   // @js:kitchen-fruit — the fruit: a pear and painted apples and orange, piled in the bowl
   // the pear, off-white: a lathe bulb (its origin at the bulb's middle) with a narrow neck, lying with its neck toward +x
-  const pearProf = [[0.01, 0], [18, 1], [30, 12], [34, 28], [28, 45], [19, 60], [15, 72], [11, 86], [6, 94], [0.01, 96]].map(([r, y]) => new T.Vector2(r, y - 28));
-  const pear = kit.solid(new T.LatheGeometry(pearProf, 28), 0, 124, -64, { smooth: true, smoothShade: true, ...lo });
-  pear.rotation.set(0.15, 0, -1.2);
+  const d0 = 58, pearProf = [[0.01, -2], [16, 0], [28, 8], [34, 24], [33, 40], [27, 54], [21, 66], [19.5, 76], [21.5, 86], [20, 97], [12, 105], [3, 108], [0.01, 109]].map(([r, y]) => new T.Vector2(r, y - 22));   // a pear turned like a vase: a round lower bulb, a waist, a narrower rounded top
+  const pear = kit.group();
+  pear.add(kit.solid(new T.LatheGeometry(pearProf, 32), 0, 0, 0, { smooth: true, smoothShade: true, ...lo }));
+  pear.add(kit.solid(new T.CylinderGeometry(1.8, 2.4, 16, 6), 0.8, 94, 0, { smooth: true, ...lo }));   // the short stalk
+  pear.position.set(d0 * 0.707, 46 + 29.5, -d0 * 0.707);   // the pear takes one apple's slot, lying on its side on the bowl floor with its top toward the rim
+  pear.rotation.set(0, -0.8, -1.5);
   pear.scale.setScalar(0.85);
   g.add(pear);
   const merged = kit.merge(g);
@@ -54,7 +57,6 @@ export function fruitBowl(kit) {
   merged.add(apple(41, d * 0.707, 46 + 41 * 0.93, d * 0.707, wash([[214, 120, 104], [232, 176, 110], [236, 214, 128]], 3), 0.05));                  // red
   merged.add(apple(38, -d * 0.707, 46 + 38 * 0.93, d * 0.707, wash([[170, 198, 120], [198, 214, 142], [222, 224, 162]], 21), -0.08));             // green
   merged.add(apple(35, -d * 0.707, 46 + 35 * 0.93, -d * 0.707, wash([[242, 214, 122], [238, 178, 130], [246, 224, 152]], 17), 0.1));            // yellow with a blush
-  merged.add(apple(32.5, d * 0.707, 46 + 32.5 * 0.93, -d * 0.707, wash([[206, 120, 98], [186, 192, 118], [226, 208, 130]], 9), -0.05));        // small, red and green
   const o = new T.Mesh(new T.SphereGeometry(33, 24, 16), wash([[236, 168, 92], [240, 196, 108], [232, 150, 84]], 7));
   o.position.set(0, 122, 0); o.scale.y = 0.97;
   merged.add(kit.outline(o, { smooth: true, ...lo }));                                                                                           // the orange, on top in the middle

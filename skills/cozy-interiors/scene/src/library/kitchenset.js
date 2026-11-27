@@ -25,10 +25,10 @@ export function dishRack(kit, { w = 480, d = 320, form = 'plates', seed = 1 } = 
   g.add(kit.lines([[-w / 2 + 24, 23, d / 2 - 24], [w / 2 - 24, 23, d / 2 - 24], [w / 2 - 24, 23, d / 2 - 24], [w / 2 - 24, 23, -d / 2 + 24], [w / 2 - 24, 23, -d / 2 + 24], [-w / 2 + 24, 23, -d / 2 + 24], [-w / 2 + 24, 23, -d / 2 + 24], [-w / 2 + 24, 23, d / 2 - 24]], 'lo'));
   for (const z of [-d * 0.22, d * 0.22]) g.add(rod(kit, [-w / 2 + 30, 40, z], [w / 2 - 30, 40, z], 4, 4, 'lo'));   // two rails the dishes lean on
   if (form === 'plates') {
-    const n = 5, step = (w - 90) / n; for (let i = 0; i < n; i++) { const x = -w / 2 + 60 + i * step, p = kit.group(), r = 100 + R() * 14; p.add(kit.cyl(0, r, 0, r, 8, { axis: 'z', seg: 32 })); p.add(kit.lines(ringXY(0, r, r * 0.72, 4.5, 28), 'lo')); p.position.set(x, 24, -d * 0.04 + (R() - 0.5) * 20); p.rotation.y = 0.1 + R() * 0.1; p.rotation.x = -0.12; g.add(p); }
+    const n = 5, step = (w - 90) / n; for (let i = 0; i < n; i++) { const x = -w / 2 + 60 + i * step, p = kit.group(), r = 100 + R() * 14; const pi = kit.group(); pi.add(kit.cyl(0, r, 0, r, 8, { axis: 'z', seg: 32 })); pi.add(kit.lines(ringXY(0, r, r * 0.72, 4.5, 28), 'lo')); pi.rotation.y = Math.PI / 2; p.add(pi); p.position.set(x, 24, -d * 0.04 + (R() - 0.5) * 20); p.rotation.z = -0.1; kit.content(p); g.add(p); }
     for (let i = 0; i < n + 1; i++) { const x = -w / 2 + 44 + i * step; g.add(rod(kit, [x, 22, d * 0.22], [x, 70, d * 0.22], 3, 3, 'lo')); g.add(rod(kit, [x, 22, -d * 0.22], [x, 70, -d * 0.22], 3, 3, 'lo')); }
   } else if (form === 'mixed') {   // three plates on the left, two cups on pegs on the right
-    for (let i = 0; i < 3; i++) { const x = -w / 2 + 60 + i * (w * 0.5 - 60) / 3, p = kit.group(), r = 100 + R() * 14; p.add(kit.cyl(0, r, 0, r, 8, { axis: 'z', seg: 32 })); p.add(kit.lines(ringXY(0, r, r * 0.72, 4.5, 28), 'lo')); p.position.set(x, 24, -d * 0.04); p.rotation.x = -0.12; g.add(p); g.add(rod(kit, [x - 14, 22, d * 0.22], [x - 14, 70, d * 0.22], 3, 3, 'lo')); g.add(rod(kit, [x - 14, 22, -d * 0.22], [x - 14, 70, -d * 0.22], 3, 3, 'lo')); }
+    for (let i = 0; i < 3; i++) { const x = -w / 2 + 60 + i * (w * 0.5 - 60) / 3, p = kit.group(), r = 100 + R() * 14; const pi = kit.group(); pi.add(kit.cyl(0, r, 0, r, 8, { axis: 'z', seg: 32 })); pi.add(kit.lines(ringXY(0, r, r * 0.72, 4.5, 28), 'lo')); pi.rotation.y = Math.PI / 2; p.add(pi); p.position.set(x, 24, -d * 0.04); p.rotation.z = -0.1; g.add(kit.content(p)); g.add(rod(kit, [x - 14, 22, d * 0.22], [x - 14, 70, d * 0.22], 3, 3, 'lo')); g.add(rod(kit, [x - 14, 22, -d * 0.22], [x - 14, 70, -d * 0.22], 3, 3, 'lo')); }
     for (let i = 0; i < 2; i++) dryCup(kit, g, w / 2 - 70 - i * 100, (i ? 1 : -1) * d * 0.1, i ? (R() < 0.5 ? 'side' : 'up') : 'down', R);
   } else {   // cups upside down on pegs
     const n = 4; for (let i = 0; i < n; i++) dryCup(kit, g, -w / 2 + 70 + i * (w - 140) / (n - 1), (i % 2 ? 1 : -1) * d * 0.1, R() < 0.6 ? 'down' : R() < 0.5 ? 'side' : 'up', R);
@@ -42,13 +42,14 @@ export function utensilCrock(kit, { r = 70, h = 170, n = 5, seed = 2, style = 'p
   if (style === 'ribbed') { const rl = []; for (let i = 0; i < 14; i++) { const a = i / 14 * 6.2832; rl.push([Math.cos(a) * r * 1.01, h * 0.12, Math.sin(a) * r * 1.01], [Math.cos(a) * r * 1.02, h * 0.92, Math.sin(a) * r * 1.02]); } g.add(kit.lines(rl, 'faint')); }
   else if (style === 'banded') { g.add(kit.lines([...ringXZ(r * 1.01, h * 0.3, 28), ...ringXZ(r * 1.01, h * 0.34, 28)], 'mid')); }
   else g.add(kit.lines([[-r * 0.99, h * 0.5, 0], [r * 0.99, h * 0.5, 0]], 'faint'));
+  const a0 = R() * 6.2832; n = Math.min(n, 6);
   for (let i = 0; i < n; i++) {
-    const a = i / n * 6.2832 + R(), lean = 0.12 + R() * 0.25, len = 240 + R() * 90, k = mix === 'wood' ? 0 : mix === 'whisks' ? 2 : i % 3, bx = Math.cos(a) * r * 0.35, bz = Math.sin(a) * r * 0.35, ux = Math.cos(a) * lean, uz = Math.sin(a) * lean, m = Math.hypot(ux, 1, uz), u = [ux / m, 1 / m, uz / m];
+    const a = i / n * 6.2832 + a0 + (R() - 0.5) * 0.2, lean = Math.max(0.1, Math.min(0.12 + R() * 0.25, (r - 6 - 9 - 14 - r * 0.42) / (h - 20))), len = 240 + R() * 90, k = mix === 'wood' ? 0 : mix === 'whisks' ? 2 : i % 3, bx = Math.cos(a) * r * 0.42, bz = Math.sin(a) * r * 0.42, ux = Math.cos(a) * lean, uz = Math.sin(a) * lean, m = Math.hypot(ux, 1, uz), u = [ux / m, 1 / m, uz / m];
     const A = [bx, 20, bz], B = [bx + u[0] * (h + len - 20), 20 + u[1] * (h + len - 20), bz + u[2] * (h + len - 20)];
-    g.add(rod(kit, A, B, 9, 9, 'lo'));
+    g.add(kit.content(rod(kit, A, B, 9, 9, 'lo')));
     const q = new T.Quaternion().setFromUnitVectors(new T.Vector3(0, 1, 0), new T.Vector3(...u));
-    if (k === 0) { const hd = kit.solid(new T.SphereGeometry(32, 14, 10), 0, 0, 0, { smooth: true, tone: 'lo' }); hd.scale.set(0.85, 1.25, 0.28); hd.quaternion.copy(q); hd.position.set(B[0] + u[0] * 38, B[1] + u[1] * 38, B[2] + u[2] * 38); g.add(hd); }   // a wooden spoon: an oval bowl on the handle
-    else if (k === 1) { const bl = kit.solid(new T.BoxGeometry(62, 90, 6), 0, 0, 0, { tone: 'lo' }); bl.quaternion.copy(q); bl.position.set(B[0] + u[0] * 40, B[1] + u[1] * 40, B[2] + u[2] * 40); g.add(bl); }   // a spatula: a flat blade
+    if (k === 0) { const hd = kit.solid(new T.SphereGeometry(32, 14, 10), 0, 0, 0, { smooth: true, tone: 'lo' }); hd.scale.set(0.85, 1.25, 0.28); hd.quaternion.copy(q); hd.position.set(B[0] + u[0] * 38, B[1] + u[1] * 38, B[2] + u[2] * 38); g.add(kit.content(hd)); }   // a wooden spoon: an oval bowl on the handle
+    else if (k === 1) { const bl = kit.solid(new T.BoxGeometry(62, 90, 6), 0, 0, 0, { tone: 'lo' }); bl.quaternion.copy(q); bl.position.set(B[0] + u[0] * 40, B[1] + u[1] * 40, B[2] + u[2] * 40); g.add(kit.content(bl)); }   // a spatula: a flat blade
     else { const ell = [], c = [B[0] + u[0] * 52, B[1] + u[1] * 52, B[2] + u[2] * 52], e1 = new T.Vector3(1, 0, 0).applyQuaternion(q), e2 = new T.Vector3(0, 0, 1).applyQuaternion(q); for (const e of [e1, e2]) for (let j = 0; j < 20; j++) { const a0 = j / 20 * 6.2832, a1 = (j + 1) / 20 * 6.2832; for (const an of [a0, a1]) ell.push([c[0] + (e.x * Math.cos(an) * 24) + u[0] * Math.sin(an) * 52, c[1] + (e.y * Math.cos(an) * 24) + u[1] * Math.sin(an) * 52, c[2] + (e.z * Math.cos(an) * 24) + u[2] * Math.sin(an) * 52]); } g.add(kit.lines(ell, 'mid')); }   // a whisk: two crossed loops
   }
   return kit.merge(g);
@@ -58,12 +59,12 @@ export function breadBin(kit, { w = 380, d = 250, h = 210, form = 'roll', seed =
   const g = kit.group(), R = rnd(seed), pts = [];
   g.add(kit.rbox(-w / 2, 0, d / 2, w, h * 0.78, d, 16));
   if (form === 'roll') {
-    g.add(kit.cyl(-w / 2 + 6, h * 0.78 - 4, 0, d * 0.5 - 2, w - 12, { axis: 'x', seg: 28, tone: 'mid' }));   // the tambour
+    g.add(kit.cyl(-w / 2 + 6, h * 0.78 - 4, 0, d * 0.5 - 2, w - 12, { axis: 'x', seg: 28, tone: 'mid', through: true }));   // the tambour, half sunk in the body
     for (let i = 1; i < 6; i++) { const a = (i / 6) * 3.1416; pts.push([-w / 2 + 12, h * 0.78 - 4 + Math.sin(a) * (d * 0.5), Math.cos(a) * (d * 0.5) + 0.6], [w / 2 - 12, h * 0.78 - 4 + Math.sin(a) * (d * 0.5), Math.cos(a) * (d * 0.5) + 0.6]); }
     g.add(kit.cyl(0, h * 0.45, d / 2 + 6, 9, 14, { axis: 'z', seg: 10, tone: 'lo' }));
   } else {
     const lid = kit.group(); lid.add(kit.rbox(-w / 2, 0, d, w, 26, d, 10)); lid.position.set(0, h * 0.78, -d / 2); lid.rotation.x = -(9 + R() * 5) * DEG; g.add(lid); g.add(kit.cyl(-w / 2 + 20, h * 0.78 + 4, -d / 2 + 4, 8, w - 40, { axis: 'x', seg: 10, tone: 'lo' }));   // hinged at the back, resting on the rim, a hinge bar along it
-    const loaf = kit.cyl(-w * 0.3, h * 0.62, 0, 52, w * 0.6, { axis: 'x', seg: 18, tone: 'lo' }); g.add(loaf);
+    const loaf = kit.cyl(-w * 0.3, h * 0.62, 0, 52, w * 0.6, { axis: 'x', seg: 18, tone: 'lo' }); g.add(loaf);   // the loaf lies in the hollow bin, so it joins the body
     pts.push([-w * 0.25, h * 0.62 + 52, 30], [-w * 0.18, h * 0.62 + 40, 40]);
   }
   g.add(kit.lines(pts, 'lo'));
@@ -105,17 +106,17 @@ export function mokaPot(kit, { r = 62, h = 210, sides = 8, handle = 'black' } = 
 
 // ---- on the wall ---------------------------------------------------------------------------------------------------------------------------------
 export function potRail(kit, { w = 900, n = 4, seed = 4, mix = 'mixed' } = {}) {   // a rail with S-hooks: ladle, skillet, saucepan, sieve
-  const g = kit.group(), R = rnd(seed), T = kit.THREE, yR = 520, z = 60;
-  for (const s of [-1, 1]) g.add(rod(kit, [s * (w / 2 - 20), yR, 0], [s * (w / 2 - 20), yR, z], 8, 8, 'lo'));
+  const g = kit.group(), R = rnd(seed), T = kit.THREE, yR = 520, z = 70;
+  for (const s of [-1, 1]) g.add(rod(kit, [s * (w / 2 - 20), yR, 8], [s * (w / 2 - 20), yR, z], 8, 8, 'lo'));   // the brackets start 8 mm off the wall (the saucepans reach 64 mm behind the rail, so the rail stands at 70)
   g.add(kit.cyl(-w / 2, yR, z, 8, w, { axis: 'x', seg: 12, tone: 'lo' }));
   const kinds = mix === 'pans' ? ['skillet', 'saucepan', 'skillet', 'saucepan'] : mix === 'tools' ? ['ladle', 'sieve', 'ladle', 'sieve'] : ['skillet', 'ladle', 'saucepan', 'sieve']; let x = -w / 2 + 120;
   for (let i = 0; i < n && x < w / 2 - 80; i++) {
     const k = kinds[(i + Math.floor(R() * 4)) % 4], hook = (xx) => g.add(rod(kit, [xx, yR + 6, z], [xx, yR - 40, z], 3.5, 3.5, 'lo'));
     hook(x);
     if (k === 'ladle') { g.add(rod(kit, [x, yR - 40, z], [x, yR - 290, z + 6], 6, 6, 'lo')); g.add(kit.cyl(x, yR - 330, z + 18, 46, 20, { axis: 'z', seg: 24, tone: 'lo' })); g.add(kit.cyl(x, yR - 330, z + 20, 34, 6, { axis: 'z', seg: 22 })); g.add(kit.lines(ringXY(x, yR - 330, 30, z + 21, 20), 'lo')); x += 150; }   // a ladle: a round bowl facing out
-    else if (k === 'skillet') { const r = 105 + R() * 25; g.add(rod(kit, [x, yR - 40, z], [x, yR - 160, z], 7, 7, 'lo')); g.add(kit.cyl(x, yR - 160 - r, z + 8, r, 22, { axis: 'z', seg: 30, tone: 'lo' })); g.add(kit.lines(ringXY(x, yR - 160 - r, r * 0.78, z + 9, 26), 'mid')); x += r * 2 + 40; }
-    else if (k === 'saucepan') { const r = 80; g.add(rod(kit, [x, yR - 40, z], [x, yR - 130, z], 7, 7, 'lo')); g.add(kit.cyl(x, yR - 130 - r * 1.5, z + 6, r, 70, { axis: 'z', seg: 28 })); g.add(kit.lines(ringXY(x, yR - 130 - r * 1.5, r * 0.8, z + 7, 24), 'mid')); x += r * 2 + 50; }
-    else { const r = 70; g.add(rod(kit, [x, yR - 40, z], [x, yR - 110, z], 5, 5, 'lo')); g.add(kit.cyl(x, yR - 110 - r, z + 6, r, 26, { axis: 'z', seg: 26, tone: 'lo' })); g.add(kit.lines(ringXY(x, yR - 110 - r, r * 0.8, z + 7, 26), 'lo')); x += r * 2 + 40; }   // a sieve: a plain disc with a rim line
+    else if (k === 'skillet') { const r = 105 + R() * 25; g.add(rod(kit, [x, yR - 40, z], [x, yR - 166, z], 7, 7, 'lo')); g.add(kit.cyl(x, yR - 160 - r, z + 8, r, 22, { axis: 'z', seg: 30, tone: 'lo' })); g.add(kit.lines(ringXY(x, yR - 160 - r, r * 0.78, z + 9, 26), 'mid')); x += r * 2 + 40; }
+    else if (k === 'saucepan') { const r = 80; g.add(rod(kit, [x, yR - 40, z], [x, yR - 176, z], 7, 7, 'lo')); g.add(kit.cyl(x, yR - 130 - r * 1.5, z + 6, r, 70, { axis: 'z', seg: 28 })); g.add(kit.lines(ringXY(x, yR - 130 - r * 1.5, r * 0.8, z + 7, 24), 'mid')); x += r * 2 + 50; }
+    else { const r = 70; g.add(rod(kit, [x, yR - 40, z], [x, yR - 116, z], 5, 5, 'lo')); g.add(kit.cyl(x, yR - 110 - r, z + 6, r, 26, { axis: 'z', seg: 26, tone: 'lo' })); g.add(kit.lines(ringXY(x, yR - 110 - r, r * 0.8, z + 7, 26), 'lo')); x += r * 2 + 40; }   // a sieve: a plain disc with a rim line
   }
   return kit.merge(g);
 }
@@ -136,7 +137,7 @@ export function spiceRack(kit, { w = 480, rows = 2, seed = 6, style = 'jars' } =
   const g = kit.group(), R = rnd(seed), pts = [], rh = 150, d = 90;
   for (let r = 0; r < rows; r++) {
     const y = 30 + r * rh; g.add(kit.box(-w / 2, y, d, w, 14, d, lo)); g.add(kit.box(-w / 2, y + 14, d, w, 16, 8, lo));
-    let x = -w / 2 + 40; while (x < w / 2 - 40) { const hh = style === 'tins' ? 40 + R() * 14 : 70 + R() * 30, rr = style === 'tins' ? 38 + R() * 6 : 26 + R() * 6; g.add(kit.cyl(x + rr, y + 30, d / 2 + 6, rr, hh, { seg: 16 })); g.add(kit.cyl(x + rr, y + 30 + hh, d / 2 + 6, rr + 2, 12, { seg: 16, tone: 'lo' })); pts.push([x + rr - rr * 0.6, y + 30 + hh * 0.3, d / 2 + 6 + rr + 0.6], [x + rr + rr * 0.6, y + 30 + hh * 0.3, d / 2 + 6 + rr + 0.6]); x += rr * 2 + 14 + R() * 10; }
+    let x = -w / 2 + 40; while (x < w / 2 - 40) { const hh = style === 'tins' ? 40 + R() * 14 : 70 + R() * 30, rr = style === 'tins' ? 38 + R() * 6 : 26 + R() * 6; if (x + rr * 2 + 6 > w / 2 - 7) break; g.add(kit.cyl(x + rr, y + 30, d / 2 + 6, rr, hh, { seg: 16 })); g.add(kit.cyl(x + rr, y + 30 + hh, d / 2 + 6, rr + 2, 12, { seg: 16, tone: 'lo' })); pts.push([x + rr - rr * 0.6, y + 30 + hh * 0.3, d / 2 + 6 + rr + 0.6], [x + rr + rr * 0.6, y + 30 + hh * 0.3, d / 2 + 6 + rr + 0.6]); x += rr * 2 + 14 + R() * 10; }
   }
   for (const s of [-1, 1]) g.add(kit.box(s * (w / 2) - 7, 20, d, 14, (rows - 1) * rh + 130, d, lo));
   g.add(kit.lines(pts, 'faint'));
@@ -165,6 +166,7 @@ export function wallClock(kit, { r = 170, form = 'round', seed = 7, face = 'tick
 
 export function cookbookStand(kit, { w = 300, seed = 8, tilt: tl = 18, ledge = 'plain' } = {}) {   // a wooden stand: a tilted board, a front ledge, an open book held on it
   const g = kit.group(), R = rnd(seed), pts = [], h = 300, bd = 24;
+  g.add(kit.box(-w / 2, 0, 130, w, 14, 270, lo));   // a flat foot under the board, so the stand sits firm
   const board = kit.group(); board.add(kit.rbox(-w / 2, 0, bd, w, h, bd, 6)); board.position.set(0, 14, -40); board.rotation.x = -tl * DEG; g.add(board);
   if (ledge === 'rail') { g.add(rod(kit, [-w / 2, 40, 100], [w / 2, 40, 100], 9, 9, 'lo')); for (const sx of [-1, 1]) g.add(rod(kit, [sx * w / 2, 0, 100], [sx * w / 2, 40, 100], 8, 8, 'lo')); } else g.add(kit.box(-w / 2, 0, 90, w, 30, 40, lo));
   for (const s of [-1, 1]) g.add(rod(kit, [s * (w / 2 - 20), 20, -60], [s * (w / 2 - 20), 20, 80], 8, 8, 'lo'));

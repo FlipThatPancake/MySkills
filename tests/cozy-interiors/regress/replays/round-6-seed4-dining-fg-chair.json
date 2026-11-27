@@ -1,0 +1,1251 @@
+{
+ "units": "mm",
+ "seed": 4,
+ "home": {
+  "height": 2700,
+  "floor": {
+   "style": "boards",
+   "seed": 4
+  },
+  "tiles": {
+   "origin": [
+    0,
+    0
+   ]
+  },
+  "walls": [
+   {
+    "id": "dining-back",
+    "from": [
+     6100,
+     0
+    ],
+    "to": [
+     0,
+     0
+    ],
+    "openings": [
+     {
+      "kind": "window",
+      "at": 3300
+     }
+    ]
+   },
+   {
+    "id": "dining-left",
+    "from": [
+     0,
+     0
+    ],
+    "to": [
+     0,
+     5200
+    ],
+    "openings": [
+     {
+      "kind": "arch",
+      "style": "cased",
+      "width": 1000,
+      "to": "hallway",
+      "at": 1200
+     }
+    ]
+   },
+   {
+    "id": "dining-right",
+    "from": [
+     6100,
+     5200
+    ],
+    "to": [
+     6100,
+     0
+    ],
+    "openings": []
+   },
+   {
+    "id": "kitchen-back",
+    "from": [
+     6100,
+     12600
+    ],
+    "to": [
+     6100,
+     5200
+    ],
+    "openings": [
+     {
+      "kind": "window",
+      "sash": "out",
+      "at": 2250
+     }
+    ]
+   },
+   {
+    "id": "hallway-back",
+    "from": [
+     -200,
+     -2950
+    ],
+    "to": [
+     -5100,
+     -2950
+    ],
+    "openings": []
+   },
+   {
+    "id": "hallway-right",
+    "from": [
+     -200,
+     3850
+    ],
+    "to": [
+     -200,
+     -2950
+    ],
+    "openings": [
+     {
+      "kind": "arch",
+      "style": "cased",
+      "width": 1000,
+      "to": "dining",
+      "at": 2650
+     }
+    ]
+   }
+  ],
+  "objects": [
+   {
+    "id": "dining-table-rug",
+    "asset": "rug",
+    "at": [
+     3050,
+     0,
+     3285
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 2650,
+     "d": 2650,
+     "form": "round",
+     "border": 95,
+     "fringe": "none"
+    },
+    "group": "dining:diningset",
+    "area": "dining"
+   },
+   {
+    "id": "dining-table",
+    "asset": "roundTable",
+    "at": [
+     3050,
+     7,
+     3285
+    ],
+    "mount": "floor",
+    "params": {
+     "r": 625,
+     "h": 750
+    },
+    "group": "dining:diningset",
+    "hero": true,
+    "area": "dining",
+    "lift": 7
+   },
+   {
+    "id": "dining-table-chair-1",
+    "asset": "chair",
+    "at": [
+     3050,
+     7,
+     2430
+    ],
+    "mount": "floor",
+    "params": {
+     "form": "spindle"
+    },
+    "group": "dining:diningset",
+    "area": "dining",
+    "lift": 7
+   },
+   {
+    "id": "dining-table-chair-2",
+    "asset": "chair",
+    "at": [
+     3905,
+     7,
+     3285
+    ],
+    "turn": -90,
+    "mount": "floor",
+    "params": {
+     "form": "spindle"
+    },
+    "group": "dining:diningset",
+    "area": "dining",
+    "lift": 7
+   },
+   {
+    "id": "dining-table-chair-3",
+    "asset": "chair",
+    "at": [
+     3050,
+     7,
+     4140
+    ],
+    "turn": 180,
+    "mount": "floor",
+    "params": {
+     "form": "spindle"
+    },
+    "group": "dining:diningset",
+    "area": "dining",
+    "lift": 7
+   },
+   {
+    "id": "dining-table-chair-4",
+    "asset": "chair",
+    "at": [
+     2195,
+     7,
+     3285
+    ],
+    "turn": 90,
+    "mount": "floor",
+    "params": {
+     "form": "spindle"
+    },
+    "group": "dining:diningset",
+    "area": "dining",
+    "lift": 7
+   },
+   {
+    "id": "dining-plantcorner-plant",
+    "asset": "floorPlant",
+    "at": [
+     1020,
+     0,
+     350
+    ],
+    "mount": "floor",
+    "params": {
+     "form": 0
+    },
+    "group": "dining:plantcorner",
+    "area": "dining"
+   },
+   {
+    "id": "dining-plantcorner-soft",
+    "asset": "basket",
+    "at": [
+     380,
+     0,
+     230
+    ],
+    "mount": "floor",
+    "params": {
+     "form": 0
+    },
+    "group": "dining:plantcorner",
+    "area": "dining"
+   },
+   {
+    "id": "dining-furnart-furn",
+    "asset": "sideboard",
+    "at": [
+     5080,
+     0,
+     210
+    ],
+    "mount": "floor",
+    "params": {
+     "form": "drawers",
+     "legs": "plinth"
+    },
+    "group": "dining:furnart",
+    "area": "dining"
+   },
+   {
+    "id": "dining-furnart-still0",
+    "asset": "fruitBowl",
+    "at": [
+     4776.7,
+     800,
+     210
+    ],
+    "mount": "on",
+    "params": {},
+    "group": "dining:furnart",
+    "area": "dining"
+   },
+   {
+    "id": "dining-furnart-still1",
+    "asset": "plant",
+    "at": [
+     5403.3,
+     800,
+     210
+    ],
+    "mount": "on",
+    "params": {
+     "form": 5
+    },
+    "group": "dining:furnart",
+    "area": "dining"
+   },
+   {
+    "id": "dining-furnart-art",
+    "asset": "picture",
+    "at": [
+     5080,
+     1000,
+     0
+    ],
+    "mount": "wall",
+    "params": {
+     "w": 900,
+     "h": 680,
+     "form": 6
+    },
+    "group": "dining:furnart",
+    "area": "dining"
+   },
+   {
+    "id": "kitchen-run",
+    "asset": "baseRun",
+    "at": [
+     5500,
+     0,
+     5650
+    ],
+    "turn": -90,
+    "mount": "floor",
+    "params": {
+     "depth": 600,
+     "modules": [
+      {
+       "w": 600,
+       "kind": "drawers",
+       "n": 3
+      },
+      {
+       "w": 900,
+       "kind": "hob"
+      },
+      {
+       "w": 600,
+       "kind": "doors"
+      }
+     ]
+    },
+    "group": "kitchen:kitchenrun",
+    "hero": true,
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-run-hob",
+    "asset": "hob",
+    "at": [
+     5500,
+     0,
+     6250
+    ],
+    "turn": -90,
+    "mount": "on",
+    "params": {},
+    "group": "kitchen:kitchenrun",
+    "area": "kitchen",
+    "depth": 600
+   },
+   {
+    "id": "kitchen-run-hood1",
+    "asset": "hood",
+    "at": [
+     5500,
+     0,
+     6250
+    ],
+    "turn": -90,
+    "mount": "wall",
+    "params": {},
+    "group": "kitchen:kitchenrun",
+    "area": "kitchen",
+    "depth": 600
+   },
+   {
+    "id": "kitchen-run-pan2",
+    "asset": "pan",
+    "at": [
+     5700,
+     940,
+     6925
+    ],
+    "turn": -125,
+    "mount": "on",
+    "params": {},
+    "group": "kitchen:kitchenrun",
+    "area": "kitchen",
+    "off": 400
+   },
+   {
+    "id": "kitchen-openshelf-shelf",
+    "asset": "openShelf",
+    "at": [
+     6100,
+     1370,
+     11600
+    ],
+    "turn": -90,
+    "mount": "wall",
+    "params": {
+     "w": 830,
+     "plates": 6,
+     "mugs": 4,
+     "seed": 7,
+     "rack": "bowls"
+    },
+    "group": "kitchen:openshelf",
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-openshelf-plant",
+    "asset": "floorPlant",
+    "at": [
+     5750,
+     0,
+     12250
+    ],
+    "turn": -90,
+    "mount": "floor",
+    "params": {
+     "form": 1
+    },
+    "group": "kitchen:openshelf",
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-island-rug",
+    "asset": "rug",
+    "at": [
+     1670,
+     0,
+     8900
+    ],
+    "turn": -90,
+    "mount": "floor",
+    "params": {
+     "w": 2750,
+     "d": 2300,
+     "form": "borderless",
+     "border": 55,
+     "fringe": "ends"
+    },
+    "group": "kitchen:island",
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-island-table",
+    "asset": "table",
+    "at": [
+     1750,
+     7,
+     8900
+    ],
+    "turn": -90,
+    "mount": "floor",
+    "params": {
+     "w": 1250,
+     "d": 800,
+     "form": "pedestal"
+    },
+    "group": "kitchen:island",
+    "area": "kitchen",
+    "lift": 7
+   },
+   {
+    "id": "kitchen-island-stool1",
+    "asset": "stool",
+    "at": [
+     1070,
+     7,
+     8587.5
+    ],
+    "turn": 90,
+    "mount": "floor",
+    "params": {
+     "form": 1
+    },
+    "group": "kitchen:island",
+    "area": "kitchen",
+    "lift": 7
+   },
+   {
+    "id": "kitchen-island-stool2",
+    "asset": "stool",
+    "at": [
+     1070,
+     7,
+     9212.5
+    ],
+    "turn": 90,
+    "mount": "floor",
+    "params": {
+     "form": 1
+    },
+    "group": "kitchen:island",
+    "area": "kitchen",
+    "lift": 7
+   },
+   {
+    "id": "hallway-shoerack-rack",
+    "asset": "shoeRack",
+    "at": [
+     -1050,
+     0,
+     -2805
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 830,
+     "tiers": 2,
+     "form": "slat",
+     "fill": "few",
+     "seed": 62
+    },
+    "group": "hallway:shoerack",
+    "hero": true,
+    "area": "hallway"
+   },
+   {
+    "id": "hallway-shoerack-shoes",
+    "asset": "shoes",
+    "at": [
+     -1845,
+     0,
+     -2750
+    ],
+    "mount": "floor",
+    "params": {
+     "arrange": "neat",
+     "kind": "sneaker",
+     "pairs": 1
+    },
+    "group": "hallway:shoerack",
+    "area": "hallway",
+    "off": 200
+   },
+   {
+    "id": "hallway-benchgroup-bench",
+    "asset": "bench",
+    "at": [
+     -3950,
+     0,
+     -2760
+    ],
+    "mount": "floor",
+    "params": {
+     "form": "slatted"
+    },
+    "group": "hallway:benchgroup",
+    "area": "hallway"
+   },
+   {
+    "id": "hallway-benchgroup-art",
+    "asset": "coatHooks",
+    "at": [
+     -3950,
+     1550,
+     -2950
+    ],
+    "mount": "wall",
+    "params": {
+     "w": 900
+    },
+    "group": "hallway:benchgroup",
+    "area": "hallway"
+   },
+   {
+    "id": "hallway-benchgroup-shoes",
+    "asset": "shoes",
+    "at": [
+     -2930,
+     0,
+     -2790
+    ],
+    "mount": "floor",
+    "params": {
+     "arrange": "neat",
+     "kind": "sneaker",
+     "pairs": 2
+    },
+    "group": "hallway:benchgroup",
+    "area": "hallway",
+    "off": 160
+   },
+   {
+    "id": "hallway-benchgroup-umb",
+    "asset": "umbrellaStand",
+    "at": [
+     -4770,
+     0,
+     -2825
+    ],
+    "mount": "floor",
+    "params": {},
+    "group": "hallway:benchgroup",
+    "area": "hallway"
+   },
+   {
+    "id": "hallway-hallrunner-runner",
+    "asset": "runner",
+    "at": [
+     -2650,
+     0,
+     130
+    ],
+    "mount": "floor",
+    "params": {
+     "w": 740,
+     "l": 2500,
+     "form": "check",
+     "fringe": "yes",
+     "fold": "no",
+     "seed": 51
+    },
+    "group": "hallway:hallrunner",
+    "area": "hallway"
+   },
+   {
+    "id": "hallway-hallrunner-plant",
+    "asset": "floorPlant",
+    "at": [
+     -2650,
+     0,
+     1680
+    ],
+    "mount": "floor",
+    "params": {
+     "form": 2
+    },
+    "group": "hallway:hallrunner",
+    "area": "hallway"
+   },
+   {
+    "id": "dining-table-still0",
+    "asset": "fruitBowl",
+    "at": [
+     2767.7,
+     757,
+     3285
+    ],
+    "mount": "on",
+    "params": {},
+    "group": "dining:diningset",
+    "area": "dining"
+   },
+   {
+    "id": "dining-table-still1",
+    "asset": "breadBasket",
+    "at": [
+     3296.3,
+     757,
+     3285
+    ],
+    "mount": "on",
+    "params": {
+     "r": 186,
+     "bread": "loaf",
+     "seed": 18,
+     "cloth": "yes",
+     "rim": "plain"
+    },
+    "group": "dining:diningset",
+    "area": "dining"
+   },
+   {
+    "id": "dining-furnart-furn-still0",
+    "asset": "bookStack",
+    "at": [
+     4761.7,
+     800,
+     210
+    ],
+    "mount": "on",
+    "params": {
+     "n": 4,
+     "seed": 51
+    },
+    "group": "dining:furnart",
+    "area": "dining"
+   },
+   {
+    "id": "dining-furnart-furn-still1",
+    "asset": "candlesticks",
+    "at": [
+     5393.3,
+     800,
+     210
+    ],
+    "mount": "on",
+    "params": {
+     "n": 3,
+     "h": 230,
+     "form": "turned",
+     "seed": 7
+    },
+    "group": "dining:furnart",
+    "area": "dining"
+   },
+   {
+    "id": "dining-fg",
+    "asset": "chair",
+    "at": [
+     3050,
+     7,
+     4360
+    ],
+    "turn": 180,
+    "mount": "floor",
+    "params": {
+     "form": "upholstered"
+    },
+    "group": "dining:diningset",
+    "area": "dining",
+    "lift": 7
+   },
+   {
+    "id": "dining-fplant",
+    "asset": "floorPlant",
+    "at": [
+     5490,
+     0,
+     4264
+    ],
+    "mount": "floor",
+    "params": {
+     "form": 3
+    },
+    "group": "dining:diningset",
+    "area": "dining"
+   },
+   {
+    "id": "dining-wa172-0",
+    "asset": "picture",
+    "at": [
+     1500,
+     1234,
+     0
+    ],
+    "mount": "wall",
+    "params": {
+     "w": 700,
+     "h": 530,
+     "form": 4
+    },
+    "group": "dining:diningset",
+    "area": "dining"
+   },
+   {
+    "id": "kitchen-run-still0",
+    "asset": "utensilCrock",
+    "at": [
+     5782,
+     900,
+     6318.7
+    ],
+    "turn": -90,
+    "mount": "on",
+    "params": {
+     "r": 62,
+     "h": 189,
+     "n": 5,
+     "seed": 62,
+     "style": "ribbed",
+     "mix": "wood"
+    },
+    "group": "kitchen:kitchenrun",
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-run-still1",
+    "asset": "mokaPot",
+    "at": [
+     5940,
+     940,
+     6925
+    ],
+    "turn": -90,
+    "mount": "on",
+    "params": {
+     "r": 78,
+     "h": 225,
+     "sides": 8,
+     "handle": "black"
+    },
+    "group": "kitchen:kitchenrun",
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-island-table-still0",
+    "asset": "mug",
+    "at": [
+     1750,
+     757,
+     8656.7
+    ],
+    "turn": -90,
+    "mount": "on",
+    "params": {},
+    "group": "kitchen:island",
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-island-table-still1",
+    "asset": "saltPepper",
+    "at": [
+     1750,
+     757,
+     9118.3
+    ],
+    "turn": -90,
+    "mount": "on",
+    "params": {
+     "form": "mill"
+    },
+    "group": "kitchen:island",
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-fg",
+    "asset": "trolley",
+    "at": [
+     -1034,
+     0,
+     8900
+    ],
+    "turn": -90,
+    "mount": "floor",
+    "params": {},
+    "group": "kitchen:kitchenrun",
+    "area": "kitchen"
+   },
+   {
+    "id": "kitchen-wa237-0",
+    "asset": "openShelf",
+    "at": [
+     6100,
+     1300,
+     8900
+    ],
+    "turn": -90,
+    "mount": "wall",
+    "params": {
+     "w": 960,
+     "plates": 4,
+     "mugs": 2,
+     "seed": 84,
+     "rack": "jars"
+    },
+    "group": "kitchen:kitchenrun",
+    "area": "kitchen"
+   },
+   {
+    "id": "hallway-fg",
+    "asset": "shoes",
+    "at": [
+     -3875,
+     0,
+     2626
+    ],
+    "mount": "floor",
+    "params": {
+     "arrange": "neat",
+     "pairs": 1,
+     "kind": "boot"
+    },
+    "group": "hallway:shoerack",
+    "area": "hallway"
+   },
+   {
+    "id": "hallway-fplant",
+    "asset": "floorPlant",
+    "at": [
+     -1425,
+     0,
+     2626
+    ],
+    "mount": "floor",
+    "params": {
+     "form": 4
+    },
+    "group": "hallway:shoerack",
+    "area": "hallway"
+   },
+   {
+    "id": "hallway-wa63-0",
+    "asset": "wallClock",
+    "at": [
+     -2650,
+     1900,
+     -2950
+    ],
+    "mount": "wall",
+    "params": {
+     "r": 150,
+     "form": "round",
+     "seed": 40,
+     "face": "ticks",
+     "rim": "thin"
+    },
+    "group": "hallway:shoerack",
+    "area": "hallway"
+   }
+  ],
+  "roll": {
+   "seed": 4,
+   "behind": [],
+   "areas": {
+    "kitchen": {
+     "doorOpen": 0,
+     "still": [
+      "utensilCrock",
+      "mokaPot",
+      "mug",
+      "saltPepper"
+     ],
+     "groups": 3,
+     "plantAt": [
+      "worktop",
+      "hanging",
+      "sill"
+     ],
+     "passages": 0,
+     "heroWindow": false,
+     "hero": "range hood over the hob",
+     "side": "left",
+     "accents": [
+      "fruit bowl",
+      "wall shelf with jars",
+      "tea towel on a rail",
+      "herbs on the worktop"
+     ],
+     "foreground": "trolley",
+     "signs": [
+      "table runner",
+      "tablecloth"
+     ],
+     "pieces": [],
+     "named": [
+      "wall units over the run (wallRun)",
+      "open shelf with plates and jars (openShelf)",
+      "utensil crock beside the hob (utensilCrock)"
+     ],
+     "groupTexts": [
+      "range hood over the hob",
+      "open shelves with jars and a plant",
+      "island or table with two stools"
+     ]
+    },
+    "hallway": {
+     "doorOpen": 0,
+     "still": [],
+     "groups": 3,
+     "plantAt": [
+      "floor",
+      "hanging"
+     ],
+     "passages": 0,
+     "heroWindow": false,
+     "hero": "shoe rack by the door",
+     "side": "right",
+     "accents": [
+      "boots",
+      "bag on a hook beside the coat hooks (hungBag)",
+      "hat on a hook beside the coat hooks, or on the coat stand (hungHat)",
+      "vase of branches"
+     ],
+     "foreground": "shoes by the door, one neat pair and one dropped",
+     "signs": [
+      "fallen leaf",
+      "shoes askew",
+      "height chart"
+     ],
+     "pieces": [
+      "coatHooks",
+      "bench",
+      "console",
+      "mirror over the console",
+      "rug",
+      "shoeRack",
+      "coatStand",
+      "runner"
+     ],
+     "named": [
+      "wall clock (wallClock)",
+      "pair of shoes (shoes)"
+     ],
+     "groupTexts": [
+      "shoe rack by the door",
+      "coat hooks with a bench, shoes and an umbrella stand",
+      "runner rug down the hall"
+     ]
+    },
+    "dining": {
+     "doorOpen": 0,
+     "still": [
+      "fruitBowl",
+      "breadBasket",
+      "bookStack",
+      "candlesticks"
+     ],
+     "groups": 3,
+     "plantAt": [
+      "sill",
+      "shelf",
+      "floor"
+     ],
+     "passages": 0,
+     "heroWindow": false,
+     "hero": "round table on a rug",
+     "side": "left",
+     "accents": [
+      "mirror over the sideboard",
+      "cushion on a chair",
+      "vase of branches",
+      "floor lamp beside the seat"
+     ],
+     "foreground": "chair pulled out",
+     "signs": [
+      "drawer ajar",
+      "mug"
+     ],
+     "pieces": [
+      "table (round or long)",
+      "chairs",
+      "rug"
+     ],
+     "named": [
+      "picture group over the sideboard (picture)",
+      "place settings (placeSetting)"
+     ],
+     "groupTexts": [
+      "round table on a rug",
+      "plant corner: a floor plant on a plant stand, or with a basket beside it",
+      "sideboard or dresser with a still life on top and a picture, shelf or mirror above"
+     ]
+    }
+   },
+   "plan": {
+    "entry": "hallway",
+    "links": [
+     {
+      "id": "dining-kitchen",
+      "a": "dining",
+      "b": "kitchen",
+      "kind": "open",
+      "tree": true
+     },
+     {
+      "id": "dining-hallway",
+      "a": "dining",
+      "b": "hallway",
+      "kind": "arch",
+      "tree": true
+     }
+    ],
+    "areas": {
+     "dining": {
+      "fit": [
+       6100,
+       5200
+      ],
+      "need": {
+       "w": 5800,
+       "d": 5100,
+       "why": "back wall 3700 (plant corner 1300 + sideboard or dresser with a still life on top and a picture 1600 + gaps), side wall 0 (nothing), floor 900 + 2800 + 700 for hero (round table on a rug); back wall grown to 5800 for its groups and openings"
+      }
+     },
+     "kitchen": {
+      "fit": [
+       7400,
+       8700
+      ],
+      "need": {
+       "w": 7200,
+       "d": 8400,
+       "why": "back wall 5100 (hero (range hood over the hob) 3600 + open shelves with jars and a plant 700 + gaps), side wall 0 (nothing), floor 900 + 3250 + 700 for island or table with two stools; back wall grown to 7200 for its groups and openings"
+      }
+     },
+     "hallway": {
+      "fit": [
+       4900,
+       6800
+      ],
+      "need": {
+       "w": 4800,
+       "d": 6400,
+       "why": "back wall 4800 (hero (shoe rack by the door) 1700 + coat hooks with a bench 2300 + gaps), side wall 0 (nothing), floor 900 + 3200 + 700 for runner rug down the hall, 1 more way(s) through"
+      }
+     }
+    }
+   }
+  },
+  "plan": {
+   "root": "dining",
+   "walk": [
+    "dining",
+    "kitchen",
+    "hallway"
+   ],
+   "links": [
+    {
+     "a": "dining",
+     "b": "kitchen",
+     "kind": "open",
+     "p": [
+      1750,
+      5200
+     ],
+     "d": [
+      0,
+      1
+     ]
+    },
+    {
+     "a": "dining",
+     "b": "hallway",
+     "kind": "arch",
+     "p": [
+      0,
+      1200
+     ],
+     "d": [
+      -1,
+      0
+     ]
+    }
+   ]
+  }
+ },
+ "areas": [
+  {
+   "id": "dining",
+   "name": "dining",
+   "group": "g1",
+   "O": [
+    0,
+    0
+   ],
+   "psi": 0,
+   "bounds": {
+    "x0": 0,
+    "x1": 6100,
+    "z0": 0,
+    "z1": 5200,
+    "top": 2500
+   },
+   "camera": {
+    "home": {
+     "target": [
+      3337,
+      700,
+      1743
+     ],
+     "az": -25,
+     "el": 18,
+     "fit": "objects"
+    },
+    "shots": []
+   }
+  },
+  {
+   "id": "kitchen",
+   "name": "kitchen",
+   "group": "g1",
+   "O": [
+    6100,
+    5200
+   ],
+   "psi": 90,
+   "bounds": {
+    "x0": -2600,
+    "x1": 6100,
+    "z0": 5200,
+    "z1": 12600,
+    "top": 2500
+   },
+   "camera": {
+    "home": {
+     "target": [
+      3961,
+      700,
+      8453
+     ],
+     "az": -140,
+     "el": 18,
+     "fit": "objects"
+    },
+    "shots": []
+   }
+  },
+  {
+   "id": "hallway",
+   "name": "hallway",
+   "O": [
+    -5100,
+    -2950
+   ],
+   "psi": 0,
+   "bounds": {
+    "x0": -5100,
+    "x1": -200,
+    "z0": -2950,
+    "z1": 3850,
+    "top": 2500
+   },
+   "camera": {
+    "home": {
+     "target": [
+      -2974,
+      700,
+      -1884
+     ],
+     "az": 42,
+     "el": 18,
+     "fit": "objects"
+    },
+    "shots": []
+   }
+  }
+ ],
+ "groups": [
+  {
+   "id": "g1",
+   "areas": [
+    "dining",
+    "kitchen"
+   ],
+   "seams": [
+    {
+     "a": "dining",
+     "b": "kitchen",
+     "layout": "corner",
+     "share": 0,
+     "p0": [
+      6100,
+      5200
+     ],
+     "p1": [
+      -2600,
+      5200
+     ],
+     "normal": [
+      0,
+      1
+     ],
+     "kinds": []
+    }
+   ]
+  }
+ ]
+}

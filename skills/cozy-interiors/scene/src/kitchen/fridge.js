@@ -27,7 +27,16 @@ export function fridge(kit) {
   // Plain control panel on the left door: a 1 mm raised rounded plate, no content.
   g.add(kit.rbox(225 - 70, 1500 - 45, 1, 140, 90, 2, 12, { tone: 'lo' }));
 
-  // The family's fridge door: magnets, sticky notes and a photo on the right door, left of the handles' reach (x > 520), at eye height.
+  const sg = fridgeSigns(kit, g, {});
+  const out = kit.merge(g);
+  out.add(sg.plane); out.userData.signs = sg.signs;
+  return out;
+}
+
+// The family's fridge door, built for the side-by-side fridge's right door and reused on the other forms: a transform { tx, ty, s } (mm, scale) moves it onto any door. Everything but the print goes into `host` (before the fridge is merged); the print is a textured plane returned as `plane`, to add to the merged fridge.
+export function fridgeSigns(kit, host, { tx = 0, ty = 0, s = 1 } = {}) {
+  const g = kit.group();
+  // Magnets, sticky notes and a photo on the right door, left of the handles' reach (x > 520), at eye height.
   const T = kit.THREE, lo = { tone: 'lo' };
   // A flat outline [x, y] extruded `h` mm, standing on the door with its bottom at z.
   const shape = (pts, x, y, z, h, rotZ = 0) => {
@@ -84,8 +93,7 @@ export function fridge(kit) {
   photo.position.set(700, 1565, 0); photo.rotation.z = 0.05;
   g.add(photo);
 
-  const out = kit.merge(g);
-  // the print's picture (a drawing, not a fill): a plane on the border, added after the merge
+  g.position.set(tx, ty, 0); g.scale.set(s, s, 1); host.add(g);
   const cv = document.createElement('canvas'); cv.width = 536; cv.height = 344;
   const q = cv.getContext('2d');
   q.fillStyle = '#f2f4f3'; q.fillRect(0, 0, 536, 344);
@@ -110,7 +118,6 @@ export function fridge(kit) {
   const pic = new T.Mesh(new T.PlaneGeometry(134, 86), mat);
   pic.renderOrder = 1;
   pic.onBeforeRender = () => { mat.opacity = kit.fill.uniforms.uOpacity.value; };
-  pic.position.set(700 + 0.0, 1565 - 2, 2.9); pic.rotation.z = 0.05;
-  out.add(pic);
-  return out;
+  pic.position.set(tx + s * 700, ty + s * (1565 - 2), 2.9); pic.rotation.z = 0.05; pic.scale.set(s, s, 1);
+  return { plane: pic, signs: { notes: 4, magnets: 8, photo: 1 } };   // 4 sticky notes (each held by a magnet), 8 free magnets, one photo
 }

@@ -1,0 +1,31 @@
+// node assets/sheet.mjs <assets.json> <outdir> → close-up PNGs per object (front and a low angle; paintings from two cameras a few degrees apart, to show they do not flicker). Needs Playwright and esbuild (global).
+import { createRequire } from 'node:module';
+import { execSync } from 'node:child_process';
+import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
+import { join, resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+const here = dirname(fileURLToPath(import.meta.url)), scene = resolve(process.argv[2]), out = resolve(process.argv[3]), only = (process.env.ONLY || '').split(',').filter(Boolean);
+mkdirSync(out, { recursive: true });
+execSync(`node ${join(here, '../../../skills/cozy-interiors/scene/build.mjs')} ${scene}`, { stdio: 'ignore' });
+const { chromium } = createRequire(join(execSync('npm root -g', { encoding: 'utf8' }).trim(), 'x.js'))('playwright');
+const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
+const page = await browser.newPage({ viewport: { width: 700, height: 700 } });
+page.on('pageerror', (e) => console.log('PAGE ERROR', String(e)));
+await page.goto('file://' + scene.replace(/\.json$/, '.html'));
+await page.waitForFunction(() => window.cozyScene && window.cozyBaked, null, { timeout: 280000 });
+await page.evaluate(() => window.cozyScene.setArea('sheet', true));
+const S = JSON.parse(readFileSync(scene, 'utf8')), cells = [];
+for (const o of S.home.objects) {
+  const key = o.id.replace(/^sheet-/, ''); if (only.length ? !only.some((q) => key.startsWith(q) || o.asset === q) : !/^(pic|shoe|lamp|photo|hpend|pf|wseat|fr-|bed|bk-)/.test(key)) continue;
+  const [x, y0, z] = o.at, wall = o.mount === 'wall';
+  const FR = { 0: [455, 1500, 3800], 1: [300, 1200, 3400], 2: [300, 450, 1900] }[o.params?.form ?? 0];   // round 6: a fridge door (target height, distance) and a bed
+  const t = o.asset === 'basket' ? [x, 330, z] : o.asset === 'fridge' ? [x + FR[0], FR[1], z] : o.asset === 'bed' ? [x, 600, z + 100] : o.asset === 'hungHat' ? [x, y0 - 130, z] : o.mount === 'on' && !/photoFrame|taskLamp/.test(o.asset) ? [x, y0 + 80, z] : wall ? [x, y0 + 400, z] : o.asset === 'taskLamp' ? [x, y0 + 220, z] : o.asset === 'photoFrame' ? [x, y0 + 130, z] : o.asset === 'shoes' ? [x, 60, z] : o.asset === 'windowSeat' ? [x, 300, z] : [x, o.mount === 'ceiling' ? 1750 : 200, z];
+  const d = o.asset === 'basket' ? 1300 : o.asset === 'fridge' ? FR[2] : o.asset === 'bed' ? 4200 : o.asset === 'hungHat' ? 900 : o.asset === 'tableRunner' ? 5200 : o.mount === 'on' && !/photoFrame|taskLamp/.test(o.asset) ? 800 : o.mount === 'ceiling' ? 3600 : wall ? 1900 : o.asset === 'photoFrame' ? 750 : o.asset === 'taskLamp' ? 1300 : o.asset === 'shoes' ? 1000 : o.asset === 'windowSeat' ? 3000 : 1800;
+  const views = o.asset === 'basket' ? [['front', 10, 14, 1], ['low', 60, 8, 1], ['home', 10, 12, 3.2]] : o.asset === 'fridge' ? [['close', 0, 3, 1], ['home', 0, 6, 2.2]] : o.asset === 'bed' ? [['head', 25, 38, 1], ['close', 25, 40, 0.5], ['side', 80, 22, 1]] : wall ? [['a', 0, 8], ['b', 6, 8]] : o.asset === 'photoFrame' ? [['front', 8, 6], ['low', 70, 3]] : o.asset === 'taskLamp' ? [['side', 90, 6], ['front', 18, 10]] : o.mount === 'ceiling' ? [['up', 8, -22], ['under', 8, -50]] : [['front', 10, 14], ['low', 60, 8]];
+  for (const [name, az, el, dk = 1] of views) {
+    await page.evaluate(([d, az, el, t]) => { const C = window.cozyScene.controls; C.minDistance = 10; C.minAzimuthAngle = -Infinity; C.maxAzimuthAngle = Infinity; C.minPolarAngle = 0; C.maxPolarAngle = Math.PI; window.cozyScene.look(d, az, el, t); const c = window.cozyScene.camera; c.fov = 28; c.updateProjectionMatrix(); }, [d * dk, az, el, t]);
+    await page.waitForTimeout(1200);
+    const f = join(out, key + '-' + name + '.png'); await page.screenshot({ path: f, timeout: 120000 }); cells.push({ id: key, asset: o.asset, view: name, file: f });
+  }
+}
+writeFileSync(join(out, 'cells.json'), JSON.stringify(cells, null, 1)); await browser.close(); console.log(cells.length, 'cells');

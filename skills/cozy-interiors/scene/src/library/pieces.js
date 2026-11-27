@@ -9,16 +9,16 @@ const rnd = (seed) => { let r = (seed || 1) * 9301 + 49297; return () => { r = (
 export function sideTable(kit, { r = 230, h = 520, top = 'round', legs = 'splay', shelf = 'low', drawer = 'none', ajar = 0, tone } = {}) {
   const g = kit.group(), T = 30, round = top === 'round', lr = r * 0.62, pts = [];
   const props = { tone };
-  if (round) g.add(kit.cyl(0, h - T, 0, r, T, { rTop: r - 5, seg: 40, ...props }));
+  if (round) g.add(kit.rbox(-r, h - T, r, 2 * r, T, 2 * r, r - 0.5, props));   // a round top drawn as a fully rounded box: the geometry core then gets one clean convex body to stand things on (a 40-sided cone frustum tipped a plant)
   else g.add(kit.rbox(-r, h - T, r, 2 * r, T, 2 * r, top === 'rounded' ? r * 0.45 : 8, props));
   if (round) for (let i = 0; i < 3; i++) { const a = i * Math.PI * 2 / 3 + 0.5; pts.push([Math.cos(a) * lr, Math.sin(a) * lr]); }
   else for (const sx of [-1, 1]) for (const sz of [-1, 1]) pts.push([sx * (r - 38), sz * (r - 38)]);
   g.add(legParts(kit, legs, pts, h - T + 4, { r: 20, out: [0, 0] }));
   const ls = Math.min(170, h * 0.32);
-  if (shelf === 'low' && legs !== 'sled') { if (round) g.add(kit.cyl(0, ls, 0, lr + 40, 18, { seg: 36, tone: 'lo' })); else g.add(kit.rbox(-r + 22, ls, r - 22, 2 * r - 44, 18, 2 * r - 44, 6, { tone: 'lo' })); }
+  if (shelf === 'low' && legs !== 'sled') { if (round) g.add(kit.cyl(0, ls, 0, lr + 40, 18, { seg: 36, tone: 'lo', through: true })); else g.add(kit.rbox(-r + 22, ls, r - 22, 2 * r - 44, 18, 2 * r - 44, 6, { tone: 'lo', through: true })); }
   if (drawer !== 'none' && !round) {
     const dr = kit.group(), a = r - 26, dh = Math.min(110, h * 0.2);
-    dr.add(kit.rbox(-a, h - T - dh, a, 2 * a, dh, 2 * a, 6, { tone: 'lo' }));
+    dr.add(kit.rbox(-a, h - T - dh, a, 2 * a, dh, 2 * a, 6, { tone: 'lo', through: true }));
     dr.add(kit.lines([[-a + 8, h - T - dh + 8, a + 1], [a - 8, h - T - dh + 8, a + 1], [a - 8, h - T - 8, a + 1], [-a + 8, h - T - 8, a + 1], [-a + 8, h - T - 8, a + 1], [-a + 8, h - T - dh + 8, a + 1], [a - 8, h - T - 8, a + 1], [a - 8, h - T - dh + 8, a + 1]], 'lo'));
     dr.add(handle(kit, drawer, 0, h - T - dh / 2, a, { w: Math.min(90, a) }));
     dr.position.z = ajar; g.add(dr);   // ajar: how far the drawer is pulled out, in mm
@@ -26,7 +26,7 @@ export function sideTable(kit, { r = 230, h = 520, top = 'round', legs = 'splay'
   return kit.merge(g);
 }
 
-export function cushion(kit, { w = 440, h = 420, thick = 120, tone = 'mid', piping = 'none', pattern = 'plain', lean = 0, skew = 0, crease = 'none' } = {}) {
+export function cushion(kit, { w = 440, h = 420, thick = 120, tone = 'mid', piping = 'edge', pattern = 'plain', lean = 0, skew = 0, crease = 'none' } = {}) {
   const T = kit.THREE, g = kit.group(), edge = Math.min(26, thick * 0.25), dent = pattern === 'tufted' ? thick * 0.22 : thick * 0.08, pz = (x, y) => pillowZ(w, h, thick, edge, dent, x, y);
   g.add(kit.solid(pillowGeometry(T, { w, h, thick, edge, dent, skew: pattern === 'plain' ? skew : 0, crease: crease === 'soft' && pattern === 'plain' ? thick * 0.3 : 0 }), 0, h / 2, 0, { smooth: true, tone }));
   const m = Math.min(46, w * 0.1), P = [], face = (pairs, cut = 14) => { for (let i = 0; i < pairs.length; i += 2) { const [x0, y0] = pairs[i], [x1, y1] = pairs[i + 1]; let p = [x0, y0 + h / 2, pz(x0, y0)]; for (let k = 1; k <= cut; k++) { const x = x0 + (x1 - x0) * k / cut, y = y0 + (y1 - y0) * k / cut, q = [x, y + h / 2, pz(x, y)]; P.push(p, q); p = q; } } };
@@ -36,9 +36,13 @@ export function cushion(kit, { w = 440, h = 420, thick = 120, tone = 'mid', pipi
   if (pattern === 'stripes') { const yy = [-0.34, 0, 0.34].map((f) => f * h); face(yy.flatMap((y) => [[-w / 2 + m, y], [w / 2 - m, y]])); }
   else if (pattern === 'inset') face(loop(w / 2 - m * 1.4, h / 2 - m * 1.4));
   else if (pattern === 'diamond') face([[-w / 2 + m, 0], [0, h / 2 - m], [0, h / 2 - m], [w / 2 - m, 0], [w / 2 - m, 0], [0, -h / 2 + m], [0, -h / 2 + m], [-w / 2 + m, 0]]);
-  else if (pattern === 'tufted') { face([[-10, 0], [10, 0], [0, -10], [0, 10]], 2); for (const [x, y] of [[-0.3, -0.3], [0.3, -0.3], [-0.3, 0.3], [0.3, 0.3]]) face([[0, 0], [x * w * 0.9, y * h * 0.9]].map(([a, b]) => [a * 0.25, b * 0.25]), 6); }
-  if (P.length) g.add(kit.lines(P, 'lo'));
-  const out = kit.merge(g); out.rotation.x = -lean * Math.PI / 180; return out;
+  else if (pattern === 'tufted') { const bp = (x, y) => [x, y + h / 2, pz(x, y) + 1.5]; for (let k = 0; k < 12; k++) { const a0 = k / 12 * 6.2832, a1 = (k + 1) / 12 * 6.2832; P.push(bp(Math.cos(a0) * 8, Math.sin(a0) * 8), bp(Math.cos(a1) * 8, Math.sin(a1) * 8)); } const L = Math.min(w, h) * 0.2; for (let k = 0; k < 6; k++) { const a = k / 6 * 6.2832 + 0.4, mid = L * 0.55; P.push(bp(Math.cos(a) * 14, Math.sin(a) * 14), bp(Math.cos(a + 0.12) * mid, Math.sin(a + 0.12) * mid), bp(Math.cos(a + 0.12) * mid, Math.sin(a + 0.12) * mid), bp(Math.cos(a) * L, Math.sin(a) * L)); } }   // a button with soft pleats radiating from its dimple
+  if (pattern !== 'tufted') for (const [sx, sy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) for (const k of [0, 1]) {   // soft pinch wrinkles running in from each corner: the stuffing pulls toward the middle
+    const a = Math.atan2(h, w) + (k ? 0.22 : -0.1), L = Math.min(w, h) * (k ? 0.17 : 0.24), x0 = sx * (w / 2 - 22), y0 = sy * (h / 2 - 22); let p = [x0, y0 + h / 2, pz(x0, y0)];
+    for (let t = 1; t <= 5; t++) { const x = x0 - sx * Math.cos(a) * L * t / 5, y = y0 - sy * Math.sin(a) * L * t / 5 + 4 * Math.sin(t), q = [x, y + h / 2, pz(x, y)]; if (t < 5) P.push(p, q); p = q; }
+  }
+  if (P.length) g.add(kit.lines(P, 'mid'));
+  const out = kit.merge(g); out.rotation.order = "YXZ"; out.rotation.x = -lean * Math.PI / 180; return out;   // YXZ: the lean tilts about the cushion's own x axis, so it follows the turn the scene gives the piece (XYZ tipped a turned cushion sideways)
 }
 
 // a pointed leaf standing from `base` along `dir` (unit), length len, width wid

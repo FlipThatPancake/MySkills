@@ -14,13 +14,13 @@ export function bedFrame(kit, frame, { w, l, head, tone = 'mid' }) {
   const g = kit.group(), R = (cx, y, cz, ww, h, d, r, o) => kit.rbox(cx - ww / 2, y, cz + d / 2, ww, h, d, r, o), B = (cx, y, cz, ww, h, d, o) => kit.box(cx - ww / 2, y, cz + d / 2, ww, h, d, o);
   if (frame === 'legs') {   // slim rails on four tapered legs, a slatted timber headboard
     const pts = [[-w / 2 - 20, -l / 2 + 40], [w / 2 + 20, -l / 2 + 40], [-w / 2 - 20, l / 2 - 40], [w / 2 + 20, l / 2 - 40]];
-    g.add(legParts(kit, 'tapered', pts, 176, { r: 32 }));
-    for (const s of [-1, 1]) g.add(B(s * (w / 2 + 20), 170, 0, 40, 130, l - 60));
+    g.add(kit.through(legParts(kit, 'tapered', pts, 176, { r: 32 })));   // the duvet hangs down beside the legs
+    for (const s of [-1, 1]) g.add(B(s * (w / 2 + 20), 170, 0, 40, 130, l - 60, { through: true }));   // the duvet hangs over the rail
     g.add(B(0, 170, l / 2 - 50, w + 40, 130, 40)); g.add(B(0, 170, -l / 2 + 40, w + 40, 130, 40));
     g.add(R(0, 300, -l / 2 + 25, w + 60, head, 40, 6));
     const sl = []; for (let i = 1; i < 9; i++) { const x = -w / 2 - 30 + (w + 60) * i / 9; sl.push([x, 320, -l / 2 + 46], [x, 300 + head - 20, -l / 2 + 46]); } g.add(kit.lines(sl, 'lo'));
   } else if (frame === 'upholstered') {   // a padded base and a tall channelled headboard
-    g.add(R(0, 40, 0, w + 60, 260, l, 46, { tone })); g.add(B(0, 0, 0, w - 100, 50, l - 120, lo));
+    g.add(R(0, 40, 0, w + 60, 260, l, 46, { tone, through: true })); g.add(B(0, 0, 0, w - 100, 50, l - 120, lo));   // the duvet hangs over the side of the padded base
     const hb = softBox(kit, w + 60, head + 160, 130, { r: 46, bulge: 16, piping: 'edge', tone }); hb.position.set(0, 300 + head / 2 - 40, -l / 2 + 65); g.add(hb);
     const ch = []; for (let i = 1; i < 5; i++) { const x = -w / 2 - 30 + (w + 60) * i / 5; ch.push([x, 330, -l / 2 + 132], [x, 300 + head, -l / 2 + 132]); } g.add(kit.lines(ch, 'lo'));
   } else if (frame === 'platform') {   // a low wide platform with a ledge round it and a low padded head
@@ -51,7 +51,12 @@ export function bedsideLamp(kit, { h = 430, shade = 'drum', base = 'gourd', seed
 export function alarmClock(kit, { r = 55, kind = 'analog' } = {}) {
   const g = kit.group(), pts = [];
   if (kind === 'digital') {
-    g.add(kit.rbox(-70, 0, 36, 140, 70, 60, 10)); const z = 37, ys = 34; pts.push(...[[-48, 22], [-18, 22], [4, 22], [34, 22]].flatMap(([x, y]) => [[x, ys + 8, z + 0.1], [x + 24, ys + 8, z + 0.1]]));
+    g.add(kit.rbox(-70, 0, 36, 140, 70, 60, 10)); const z = 37;
+    g.add(kit.box(-58, 12, z + 4, 116, 46, 4, lo));   // dark display window, 4 mm proud of the face
+    const SEG = { 0: 'abcdef', 1: 'bc', 2: 'abdeg', 3: 'abcdg', 4: 'bcfg', 5: 'acdfg', 6: 'acdefg', 7: 'abc', 8: 'abcdefg', 9: 'abcdfg' }, dw = 16, dh = 30, y0 = 20, zz = z + 8.5;
+    const seg = (x, c) => ({ a: [[x, y0 + dh], [x + dw, y0 + dh]], b: [[x + dw, y0 + dh], [x + dw, y0 + dh / 2]], c: [[x + dw, y0 + dh / 2], [x + dw, y0]], d: [[x, y0], [x + dw, y0]], e: [[x, y0], [x, y0 + dh / 2]], f: [[x, y0 + dh / 2], [x, y0 + dh]], g: [[x, y0 + dh / 2], [x + dw, y0 + dh / 2]] }[c]);
+    [[-47, 0], [-25, 7], [8, 3], [30, 5]].forEach(([x, dg]) => { for (const c of SEG[dg]) { const [a, b] = seg(x, c); pts.push([a[0], a[1], zz], [b[0], b[1], zz]); } });
+    pts.push([-2, y0 + 9, zz], [2, y0 + 9, zz], [-2, y0 + 21, zz], [2, y0 + 21, zz]);
   } else {
     const cy = r + 6, z = 46; g.add(kit.cyl(0, cy, 44, r, 44, { axis: 'z', seg: 32 }));
     pts.push(...ring(r * 0.78, 28, (x, y) => [x, cy + y, z]), [0, cy, z], [0, cy + r * 0.5, z], [0, cy, z], [r * 0.34, cy - r * 0.1, z]);
@@ -105,7 +110,7 @@ export function clothesRail(kit, { w = 1100, h = 1650, items = 4, mix = 'mixed',
   g.add(rod(kit, [-w / 2 - 20, h, 0], [w / 2 + 20, h, 0], 14, 14, 'mid'));
   let gotGrey = false, x = -w / 2 + 80; for (let i = 0; i < items && x < w / 2 - 70; i++) {
     const k = KINDS[(i + Math.floor(R() * 4)) % KINDS.length], ry = i === 0 || R() < 0.25 ? (R() - 0.5) * 1.1 : (R() < 0.5 ? 1 : -1) * (1.15 + R() * 0.3), q = garment(kit, k, { tone: 'mid', R, front: Math.abs(ry) < 0.7, grey: Math.abs(ry) < 0.7 && !gotGrey && (gotGrey = true) });
-    q.position.set(x, h - 8, 0); q.rotation.y = ry; g.add(q);   // most hang edge-on to the rail, a few turned to show their front
+    q.position.set(x, h - 8, 0); q.rotation.y = ry; g.add(kit.through(q));   // most hang edge-on to the rail, a few turned to show their front
     x += 70 + R() * 55 + (Math.abs(q.rotation.y) < 0.7 ? 150 : 0);
   }
   return kit.merge(g);

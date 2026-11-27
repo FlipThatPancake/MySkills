@@ -152,7 +152,10 @@
     "mount": "floor",
     "params": {
      "w": 2900,
-     "d": 1900
+     "d": 1900,
+     "form": "striped",
+     "border": 65,
+     "fringe": "none"
     },
     "group": "living:seating rug",
     "area": "living"
@@ -365,7 +368,7 @@
     ],
     "mount": "floor",
     "params": {
-     "form": 0
+     "form": 4
     },
     "group": "living:room edge",
     "area": "living"
@@ -453,7 +456,10 @@
     "mount": "floor",
     "params": {
      "w": 2200,
-     "d": 1600
+     "d": 1600,
+     "form": "borderless",
+     "border": 95,
+     "fringe": "ends"
     },
     "group": "reading:reading group",
     "area": "reading"
@@ -537,7 +543,7 @@
     "asset": "sideTable",
     "at": [
      13050,
-     0,
+     7,
      1500
     ],
     "mount": "floor",
@@ -551,14 +557,15 @@
      "tone": "mid"
     },
     "group": "reading:chair side",
-    "area": "reading"
+    "area": "reading",
+    "lift": 7
    },
    {
     "id": "reading-tea",
     "asset": "teaSet",
     "at": [
      13050,
-     540,
+     547,
      1500
     ],
     "mount": "on",
@@ -577,7 +584,7 @@
     "asset": "mug",
     "at": [
      12950,
-     540,
+     547,
      1450
     ],
     "mount": "on",
@@ -590,7 +597,7 @@
     "asset": "floorBooks",
     "at": [
      12950,
-     0,
+     7,
      2150
     ],
     "turn": 15,
@@ -602,7 +609,8 @@
      "seed": 40
     },
     "group": "reading:chair side",
-    "area": "reading"
+    "area": "reading",
+    "lift": 7
    },
    {
     "id": "reading-basket",
@@ -682,11 +690,11 @@
     "at": [
      9200,
      0,
-     280
+     350
     ],
     "mount": "floor",
     "params": {
-     "form": 1
+     "form": 0
     },
     "group": "reading:window seat",
     "area": "reading"
@@ -720,7 +728,8 @@
     ],
     "mount": "floor",
     "params": {
-     "w": 1000
+     "w": 1000,
+     "form": "trestle"
     },
     "group": "hallway:hooks",
     "hero": true,
@@ -998,7 +1007,7 @@
     ],
     "mount": "floor",
     "params": {
-     "form": 2
+     "form": 1
     },
     "group": "hallway:runner",
     "area": "hallway"

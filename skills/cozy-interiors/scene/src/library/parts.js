@@ -8,9 +8,9 @@ export const HANDLES = ['bar', 'knob', 'cup', 'cutout'];
 export const ARMS = ['track', 'rolled', 'flared', 'none'];
 
 // a rod between two points (radius r at A, r2 at B)
-export function rod(kit, a, b, r, r2 = r, tone) {
+export function rod(kit, a, b, r, r2 = r, tone, through = false) {   // through: it may pass through another part of its asset (a pen standing in a pot)
   const T = kit.THREE, A = new T.Vector3(...a), B = new T.Vector3(...b), d = B.clone().sub(A), len = d.length();
-  const m = kit.solid(new T.CylinderGeometry(r2, r, len, 12), 0, 0, 0, { smooth: true, tone });
+  const m = kit.solid(new T.CylinderGeometry(r2, r, len, 12), 0, 0, 0, { smooth: true, tone, through });
   m.position.copy(A.clone().add(B).multiplyScalar(0.5)); m.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), d.normalize());
   return m;
 }
@@ -31,7 +31,7 @@ export function legs(kit, style, pts, top, o = {}) {
       const pr = [[r * 0.55, 0], [r * 0.7, top * 0.03], [r * 0.5, top * 0.08], [r * 0.5, top * 0.35], [r * 0.85, top * 0.42], [r * 0.5, top * 0.5], [r * 0.6, top * 0.85], [r * 0.95, top * 0.9], [r, top]].map(([a, y]) => new T.Vector2(a, y));
       g.add(kit.solid(new T.LatheGeometry(pr, 16), x, 0, z, { smooth: true, tone }));
     } else if (style === 'hairpin') { const rr = Math.max(r * 0.2, 4), s = r * 0.9; for (const k of [-1, 1]) g.add(rod(kit, [x + k * s * (Math.abs(x - cx) > Math.abs(z - cz) ? 0 : 1), top, z + k * s * (Math.abs(x - cx) > Math.abs(z - cz) ? 1 : 0)], [x, 0, z], rr, rr, tone)); }
-    else if (style === 'splay') { const out = Math.min(top * 0.22, 90); g.add(rod(kit, [x, top, z], [x + sx * out * 0.7, 4, z + sz * out * 0.7], r * 0.62, r * 0.42, tone)); }
+    else if (style === 'splay') { const out = Math.min(top * 0.22, 90); { const dx = sx * out * 0.7, dz = sz * out * 0.7, re = r * 0.42, yEnd = re * Math.sin(Math.atan2(Math.hypot(dx, dz), top)) + 0.3; g.add(rod(kit, [x, top, z], [x + dx, yEnd, z + dz], r * 0.62, re, tone)); } }   // the foot's lowest edge rests on the floor (it ended 4 mm above it: round 6, 32 seeds floating)
     else if (style === 'ball') { g.add(rod(kit, [x, top, z], [x, r * 1.1, z], r * 0.5, r * 0.5, tone)); g.add(kit.solid(new T.SphereGeometry(r * 0.9, 14, 10), x, r * 0.9, z, { smooth: true, tone })); }
   }
   return g;
@@ -69,4 +69,17 @@ export function arms(kit, style, { w, d, y0, top, armW = 170, tone } = {}) {
     }
   }
   return g;
+}
+// A tube along a curve with a radius that tapers: rings carried along the curve by parallel transport (each ring's frame turns the least it can from the one before), so it neither twists nor kinks.
+export function sweptTube(kit, pts, r0, r1, seg = 10, opts = {}) {   // opts.caps false: leave both ends open (the geometry core then treats it as a thin shell, so a handle does not outweigh the vessel it hangs on)
+  const { caps = true, ...so } = opts;
+  const T = kit.THREE, P = pts.map((p) => new T.Vector3(...p)), pos = [], idx = [], n = P.length;
+  const tan = P.map((p, i) => P[Math.min(n - 1, i + 1)].clone().sub(P[Math.max(0, i - 1)]).normalize());
+  let nrm = new T.Vector3(1, 0, 0); const frames = [];
+  for (let i = 0; i < n; i++) { if (i) { const ax = tan[i - 1].clone().cross(tan[i]); if (ax.length() > 1e-6) nrm.applyAxisAngle(ax.normalize(), Math.acos(Math.max(-1, Math.min(1, tan[i - 1].dot(tan[i]))))); } nrm.sub(tan[i].clone().multiplyScalar(nrm.dot(tan[i]))).normalize(); frames.push([nrm.clone(), tan[i].clone().cross(nrm).normalize()]); }
+  for (let i = 0; i < n; i++) { const r = r0 + (r1 - r0) * i / (n - 1); for (let k = 0; k < seg; k++) { const a = k / seg * Math.PI * 2, v = frames[i][0].clone().multiplyScalar(Math.cos(a) * r).add(frames[i][1].clone().multiplyScalar(Math.sin(a) * r)).add(P[i]); pos.push(v.x, v.y, v.z); } }
+  for (let i = 0; i < n - 1; i++) for (let k = 0; k < seg; k++) { const a = i * seg + k, b = i * seg + (k + 1) % seg, c = a + seg, d = b + seg; idx.push(a, b, c, b, d, c); }
+  if (caps) for (const [ring, flip] of [[0, false], [n - 1, true]]) { const ci = pos.length / 3; pos.push(P[ring].x, P[ring].y, P[ring].z); for (let k = 0; k < seg; k++) { const a = ring * seg + k, b = ring * seg + (k + 1) % seg; idx.push(...(flip ? [ci, b, a] : [ci, a, b])); } }
+  const geo = new T.BufferGeometry(); geo.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); geo.setIndex(idx); geo.computeVertexNormals();
+  return kit.solid(geo, 0, 0, 0, { smooth: true, tone: 'lo', ...so });
 }

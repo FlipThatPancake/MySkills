@@ -5,6 +5,8 @@
 // floorLamp({ h = 1650 }), picture({ w = 600, h = 800, seed }), sideboard({ w = 1600, h = 800, d = 420, doors = 3 }), stool({ h = 650 }), bench({ w = 1200, d = 380, h = 450 }), curtain({ w = 1500, h = 2300, panels = 2 }).
 const rnd = (seed) => { let r = (seed || 1) * 9301 + 49297; return () => { r = (r * 9301 + 49297) % 233280; return r / 233280; }; };
 const lo = { tone: 'lo' };
+import { rod } from './parts.js';
+import { bookRow } from './books.js';
 
 function boxes(kit) {   // boxes by their middle (x, z) and bottom (y), not by a corner
   return {
@@ -24,12 +26,21 @@ export function coffeeTable(kit, { w = 1000, d = 600, h = 380 } = {}) {
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) g.add(bx(sx * (w / 2 - 70), 0, sz * (d / 2 - 60), 44, h - TT, 44));
   return kit.merge(g);
 }
-export function rug(kit, { w = 2400, d = 1700, border = 70 } = {}) {
+export function rug(kit, { w = 2400, d = 1700, border = 70, form = 'plain', fringe = 'none' } = {}) {   // form plain (a border of two lines) | striped (bands along the length) | borderless (a plain mat with a faint weave) | round (a disc, diameter the smaller of w and d) | runner (use a long narrow w x d; stripes and fringe at both ends)
   const { rb } = boxes(kit), g = kit.group(), T = 7, y = T + 0.4, pts = [];
-  g.add(rb(0, 0, 0, w, T, d, 24, lo));
   const rect = (i) => { const x = w / 2 - i, z = d / 2 - i, c = [[-x, y, z], [x, y, z], [x, y, -z], [-x, y, -z]]; for (let k = 0; k < 4; k++) pts.push(c[k], c[(k + 1) % 4]); };
-  rect(border); rect(border + 28);
-  g.add(kit.lines(pts, 'mid'));
+  if (form === 'round') {
+    const r = Math.min(w, d) / 2; g.add(kit.cyl(0, 0, 0, r, T, { seg: 56, tone: 'lo' }));
+    for (const f of [0.9, 0.82, 0.45]) { const rr = r * f, n = 56; for (let k = 0; k < n; k++) { const a = k / n * 6.2832, b = (k + 1) / n * 6.2832; pts.push([Math.cos(a) * rr, y, Math.sin(a) * rr], [Math.cos(b) * rr, y, Math.sin(b) * rr]); } }
+  } else {
+    g.add(rb(0, 0, 0, w, T, d, form === 'runner' ? 8 : 24, lo));
+    if (form === 'plain') { rect(border); rect(border + 28); }
+    else if (form === 'striped') { rect(border * 0.6); for (let k = -3; k <= 3; k++) { if (k % 2 === 0) continue; const z = k * d / 8; pts.push([-w / 2 + border * 0.6, y, z], [w / 2 - border * 0.6, y, z], [-w / 2 + border * 0.6, y, z + 36], [w / 2 - border * 0.6, y, z + 36]); } }
+    else if (form === 'runner') { rect(border * 0.5); rect(border * 0.5 + 22); for (const e of [-1, 1]) for (let k = 0; k < 14; k++) { const z = -d / 2 + 30 + k * (d - 60) / 13; pts.push([e * w / 2, y - 3, z], [e * (w / 2 + 55), 0.5, z + (k % 2 ? 6 : -6)]); } }
+    else { for (let k = 0; k < 9; k++) { const x = -w / 2 + (k + 0.5) * w / 9; pts.push([x, y, -d / 2 + 60], [x, y, d / 2 - 60]); } }   // borderless: a faint weave
+  }
+  if (fringe === 'ends' && form !== 'runner' && form !== 'round') for (const e of [-1, 1]) for (let k = 0; k < 16; k++) { const z = -d / 2 + 40 + k * (d - 80) / 15; pts.push([e * w / 2, y - 3, z], [e * (w / 2 + 50), 0.5, z + (k % 2 ? 6 : -6)]); }   // fringe: short tassels at the two short ends
+  g.add(kit.lines(pts, form === 'borderless' ? 'lo' : 'mid'));
   return kit.merge(g);
 }
 export function shelf(kit, { w = 800, h = 1800, d = 320, shelves = 5, seed = 3, form: form0 = 0, fill, base = 'plinth', back = 'closed' } = {}) {   // space: meta.js SPACE.shelf; fill books|boxes|mixed (form 0|1|2 still works)
@@ -42,14 +53,9 @@ export function shelf(kit, { w = 800, h = 1800, d = 320, shelves = 5, seed = 3, 
   if (base === 'plinth') g.add(bx(0, 0, 8, w - 2 * T, P, d - 30, lo));   // the plinth, set back
   else { const pts = []; for (const sx of [-1, 1]) for (const sz of [-1, 1]) pts.push([sx * (w / 2 - 50), sz * (d / 2 - 40)]); g.add(legParts(kit, base === 'legs' ? 'tapered' : 'block', pts, P + 2, { r: base === 'legs' ? 24 : 30, out: [0, 0] })); }
   const T3 = kit.THREE, inner = w - 2 * T, x0s = -inner / 2 + 12, dep = d - 90;
-  const run = (x, y, gap, len) => {   // a row of books as one skyline: mixed heights and widths, one leaning at the end, a few spine lines
-    const pts = [[x, 0]], hmax = Math.min(gap - 30, 300); let cx = x; const sp = [];
-    while (cx < x + len - 60) { const bw = 20 + R() * 32, bh = Math.min(hmax, 150 + R() * 170); pts.push([cx, bh], [cx + bw, bh]); if (R() < 0.45) sp.push(cx + bw); cx += bw; }
-    pts.push([cx, 0]);
-    const geo = new T3.ExtrudeGeometry(new T3.Shape(pts.map(([a, b]) => new T3.Vector2(a, b))), { depth: dep, bevelEnabled: false }), m = kit.solid(geo, 0, y, -dep / 2, { tone: 'lo' }); g.add(m);
-    if (sp.length) g.add(kit.lines(sp.flatMap((a) => [[a, y + 12, dep / 2 + 0.5], [a, y + Math.min(hmax, 150 + R() * 100), dep / 2 + 0.5]]), 'lo'));
-    const lb = bx(cx + 70, 0, 0, 30, Math.min(hmax, 240), dep, lo); lb.position.set(cx + 50, y + Math.min(hmax, 240) / 2, 0); lb.rotation.z = 0.2 + R() * 0.1; lb.position.x = cx + 60 + 12; g.add(lb);   // a leaning book
-    return cx + 130;
+  const run = (x, y, gap, len) => {   // a row of separate books: mixed heights, widths, depths and tones, spine bands, sometimes one leaning at the end
+    const { group, end } = bookRow(kit, { x, y, z: 0, len, dep, hmax: Math.min(gap - 30, 300), R, lean: R() < 0.5 }); g.add(group);
+    return end + 20;
   };
   const stack = (x, y, gap) => { let yy = y; const n = 2 + (R() * 2 | 0); for (let k = 0; k < n; k++) { const bh = 24 + R() * 14, bw = 200 - k * 14 + R() * 20; const b = bx(x + bw / 2, yy, 0, bw, bh, dep * 0.8, k % 2 ? lo : {}); b.rotation.y = (R() - 0.5) * 0.2; g.add(b); yy += bh; } return x + 230; };
   const bowl = (x, y, gap) => { const r = 60 + R() * 30, hh = Math.min(gap - 40, 70 + R() * 90), v = vessel(kit, PROFILES[R() < 0.5 ? 'tulip' : 'belly'](r, hh), { contents: 'none', seg: 24 }); v.position.set(x + r, y, 0); g.add(v); return x + 2 * r + 30; };
@@ -72,32 +78,46 @@ export function floorLamp(kit, { h = 1650 } = {}) {
 export function picture(kit, { w = 600, h = 800, seed = 2 } = {}) {
   const g = kit.group(), R = rnd(seed), F = 28, D = 24, pts = [];
   g.add(kit.rbox(-w / 2, 0, D, w, h, D, 4));                                                             // the frame
-  g.add(kit.box(-w / 2 + F, F, D + 2, w - 2 * F, h - 2 * F, 2, lo));                                     // the mat
-  const x0 = -w / 2 + F + 36, x1 = w / 2 - F - 36, y0 = F + 36, y1 = h - F - 36, z = D + 4.5;
+  g.add(kit.box(-w / 2 + F, F, D + 4, w - 2 * F, h - 2 * F, 4, lo));                                     // the mat
+  const x0 = -w / 2 + F + 36, x1 = w / 2 - F - 36, y0 = F + 36, y1 = h - F - 36, z = D + 7;
   for (let k = 0; k < 3; k++) {                                                                          // soft hills and a sun, drawn as lines
     let px = x0, py = y0 + (y1 - y0) * (0.18 + 0.2 * k);
     for (let i = 1; i <= 12; i++) { const nx = x0 + (x1 - x0) * i / 12, ny = y0 + (y1 - y0) * (0.18 + 0.2 * k) + Math.sin(i * 0.8 + R() * 2 + k) * (y1 - y0) * 0.05; pts.push([px, py, z], [nx, ny, z]); px = nx; py = ny; }
   }
-  for (let i = 0; i < 24; i++) { const a = i / 24 * Math.PI * 2, b = (i + 1) / 24 * Math.PI * 2, cx = x1 - (x1 - x0) * 0.22, cy = y1 - (y1 - y0) * 0.16, r = (x1 - x0) * 0.09; pts.push([cx + r * Math.cos(a), cy + r * Math.sin(a), z], [cx + r * Math.cos(b), cy + r * Math.sin(b), z]); }
+  for (let i = 0; i < 24; i++) { const a = i / 24 * Math.PI * 2, b = (i + 1) / 24 * Math.PI * 2, cx = x1 - (x1 - x0) * 0.22, cy = y1 - (y1 - y0) * 0.16, r = Math.min((x1 - x0) * 0.09, (y1 - y0) * 0.11); pts.push([cx + r * Math.cos(a), cy + r * Math.sin(a), z], [cx + r * Math.cos(b), cy + r * Math.sin(b), z]); }
   g.add(kit.lines(pts, 'mid'));
   return kit.merge(g);
 }
-export function sideboard(kit, { w = 1600, h = 800, d = 420, doors = 3 } = {}) {
-  const { bx, rb } = boxes(kit), g = kit.group(), L = 150, pts = [], z = d / 2 + 0.6, bw = w - 40;
-  for (const sx of [-1, 1]) for (const sz of [-1, 1]) g.add(kit.cyl(sx * (w / 2 - 80), 0, sz * (d / 2 - 60), 22, L, { rTop: 16, seg: 12, ...lo }));   // tapered legs
-  g.add(rb(0, L, 0, bw, h - L - 22, d - 20, 6));                                                         // the carcass
+export function sideboard(kit, { w = 1600, h = 800, d = 420, doors = 3, form = 'doors', legs = 'tapered' } = {}) {   // form doors | drawers (two rows of drawer fronts) | mixed (doors at the ends, a drawer stack between) | open (open shelves); legs tapered | plinth | hairpin
+  const { bx, rb } = boxes(kit), g = kit.group(), L = legs === 'plinth' ? 90 : 150, pts = [], z = d / 2 + 0.6, bw = w - 40;
+  if (legs === 'plinth') g.add(bx(0, 0, 0, bw - 60, L, d - 70, lo));
+  else for (const sx of [-1, 1]) for (const sz of [-1, 1]) g.add(legs === 'hairpin' ? kit.cyl(sx * (w / 2 - 80), 0, sz * (d / 2 - 60), 7, L, { seg: 8, ...lo }) : kit.cyl(sx * (w / 2 - 80), 0, sz * (d / 2 - 60), 22, L, { rTop: 16, seg: 12, ...lo }));
+  if (form === 'open') { const t = 22, ht = h - L - 22; for (const sx of [-1, 1]) g.add(bx(sx * (bw / 2 - t / 2), L, 0, t, ht, d - 20)); g.add(bx(0, L, 0, bw, t, d - 20)); g.add(bx(0, L + ht / 2, 0, bw, t, d - 20)); g.add(bx(0, L, -d / 2 + 16, bw, ht, 12, lo)); }
+  else g.add(rb(0, L, 0, bw, h - L - 22, d - 20, 6));                                                         // the carcass
   g.add(rb(0, h - 22, 0, w, 22, d, 6));                                                                  // the top, overhanging
-  const cw = bw / doors;
-  for (let i = 0; i < doors; i++) {
-    const x0 = -bw / 2 + i * cw + 12, x1 = -bw / 2 + (i + 1) * cw - 12, y0 = L + 18, y1 = h - 22 - 18;
-    for (const [a, b] of [[[x0, y0], [x1, y0]], [[x1, y0], [x1, y1]], [[x1, y1], [x0, y1]], [[x0, y1], [x0, y0]]]) pts.push([a[0], a[1], z], [b[0], b[1], z]);
-    const hx = i % 2 === 0 ? x1 - 36 : x0 + 36; g.add(kit.cyl(hx, (y0 + y1) / 2 - 30, z - 4, 7, 60, { axis: 'z', seg: 10, ...lo }));
+  const y0 = L + 18, y1 = h - 22 - 18, frame = (x0, x1, a, b) => { for (const [p, q] of [[[x0, a], [x1, a]], [[x1, a], [x1, b]], [[x1, b], [x0, b]], [[x0, b], [x0, a]]]) pts.push([p[0], p[1], z], [q[0], q[1], z]); };
+  const knob = (x, y) => g.add(kit.cyl(x, y, z - 4, 7, 12, { axis: 'z', seg: 10, ...lo }));
+  if (form === 'open') {   // open shelves with a few things on them: a book stack, a box, a bowl
+    const mid = L + (h - L - 22) / 2, hs = [[-bw * 0.32, 0.3, 0], [-bw * 0.12, 0.2, 1], [bw * 0.3, 0.18, 2], [-bw * 0.28, 0.25, 3], [bw * 0.05, 0.3, 4]];
+    for (const [x, , k] of hs) { const up = k > 2, y = up ? mid + 22 : L + 22; if (k === 0 || k === 3) for (let i = 0; i < 4; i++) g.add(bx(x, y + i * 34, 0, 260 - i * 12, 32, 200)); else if (k === 1 || k === 4) g.add(rb(x, y, 0, 220, 150, 200, 10)); else g.add(kit.cyl(x, y, 0, 120, 70, { rTop: 150, seg: 16 })); }
+    pts.push([-bw / 2 + 22, mid, z], [bw / 2 - 22, mid, z]);
+  } else if (form === 'drawers') {
+    const cols = Math.max(2, doors), cw = bw / cols, rh = (y1 - y0) / 2; for (let c = 0; c < cols; c++) for (let r = 0; r < 2; r++) { const x0 = -bw / 2 + c * cw + 12, x1 = -bw / 2 + (c + 1) * cw - 12, a = y0 + r * rh + 4, b = y0 + (r + 1) * rh - 4; frame(x0, x1, a, b); knob((x0 + x1) / 2, (a + b) / 2); }
+  } else if (form === 'mixed') {
+    const dw = bw * 0.26, sw = (bw - 2 * dw) / 1; for (const [x0, x1, i] of [[-bw / 2 + 12, -bw / 2 + dw - 12, 0], [bw / 2 - dw + 12, bw / 2 - 12, 1]]) { frame(x0, x1, y0, y1); g.add(kit.cyl(i ? x0 + 36 : x1 - 36, (y0 + y1) / 2 - 30, z - 4, 7, 60, { axis: 'z', seg: 10, ...lo })); }
+    const rh = (y1 - y0) / 3; for (let r = 0; r < 3; r++) { const a = y0 + r * rh + 4, b = y0 + (r + 1) * rh - 4; frame(-bw / 2 + dw + 12, bw / 2 - dw - 12, a, b); knob(0, (a + b) / 2); }
+  } else {
+    const cw = bw / doors;
+    for (let i = 0; i < doors; i++) { const x0 = -bw / 2 + i * cw + 12, x1 = -bw / 2 + (i + 1) * cw - 12; frame(x0, x1, y0, y1); const hx = i % 2 === 0 ? x1 - 36 : x0 + 36; g.add(kit.cyl(hx, (y0 + y1) / 2 - 30, z - 4, 7, 60, { axis: 'z', seg: 10, ...lo })); }
   }
   g.add(kit.lines(pts, 'lo'));
   return kit.merge(g);
 }
-export function bench(kit, { w = 1200, d = 380, h = 450 } = {}) {
+export function bench(kit, { w = 1200, d = 380, h = 450, form = 'plank' } = {}) {   // form plank (a thick top on four legs and stretchers) | slatted (a top of slats with gaps) | upholstered (a padded seat on short legs) | trestle (a top on two slab ends)
   const { bx, rb } = boxes(kit), g = kit.group(), TT = 40;
+  if (form === 'slatted') { const n = 5, sw = (d - 4 * 10) / n; for (let k = 0; k < n; k++) g.add(rb(0, h - TT, -d / 2 + sw / 2 + k * (sw + 10), w, TT, sw, 4)); for (const sx of [-1, 1]) g.add(bx(sx * (w / 2 - 90), 0, 0, 40, h - TT, d - 40)); g.add(bx(0, 130, 0, w - 180, 28, 36, lo)); return kit.merge(g); }
+  if (form === 'trestle') { g.add(rb(0, h - TT, 0, w, TT, d, 8)); for (const sx of [-1, 1]) g.add(rb(sx * (w / 2 - 110), 0, 0, 50, h - TT, d - 40, 4)); g.add(bx(0, h - TT - 90, 0, w - 220, 60, 30, lo)); return kit.merge(g); }
+  if (form === 'upholstered') { for (const sx of [-1, 1]) for (const sz of [-1, 1]) g.add(kit.cyl(sx * (w / 2 - 70), 0, sz * (d / 2 - 50), 16, h - 110, { rTop: 24, seg: 12, ...lo })); g.add(rb(0, h - 110, 0, w, 110, d, 30)); g.add(kit.lines([[-w / 2 + 50, h - 40, d / 2 + 1], [w / 2 - 50, h - 40, d / 2 + 1]], 'lo')); return kit.merge(g); }
   g.add(rb(0, h - TT, 0, w, TT, d, 8));
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) g.add(bx(sx * (w / 2 - 70), 0, sz * (d / 2 - 50), 46, h - TT, 46));
   for (const sz of [-1, 1]) g.add(bx(0, 120, sz * (d / 2 - 50), w - 140, 30, 36, lo));   // a stretcher between each pair of legs
@@ -113,6 +133,28 @@ export function stool(kit, { h = 650 } = {}) {   // a bar stool: round seat, fou
   g.add(kit.cyl(0, top, 0, RS, 40, { seg: 36 }));
   return kit.merge(g);
 }
+// a window blind, drawn part way: origin the middle of the window's full width at the bottom of its full height, standing out from the wall (+z). form roller (a flat fabric on a tube, a hem bar, a pull cord)
+// or roman (a flat fabric with soft horizontal folds, a headrail); w, h: the window the blind covers; drawn: how much of h is lowered from the top (0.2 to 0.9).
+export function blind(kit, { w = 1200, h = 1500, form = 'roller', drawn = 0.5, tone = 'mid' } = {}) {
+  const T = kit.THREE, g = kit.group(), L = Math.round(h * drawn), top = h + 50, bw = w - 20, S = 200;   // S: the blind stands S mm off the wall on two end brackets, clearing the sill's lip and open sashes
+  const bracket = (x, zRail, yRail) => { g.add(kit.box(x - 12, yRail - 30, 6, 24, 60, 6, lo)); g.add(rod(kit, [x, yRail, 6], [x, yRail, zRail], 7, 7, 'lo')); };   // a wall plate and an arm that reaches the rail
+  if (form === 'roman') {
+    g.add(kit.box(-w / 2, top - 6, S + 50, w, 56, 50, lo));   // the headrail, its back face at S
+    for (const sx of [-1, 1]) bracket(sx * (w / 2 - 50), S, top + 14);
+    const fold = Math.min(Math.round(L * 0.5), 280), N = Math.max(2, Math.round(fold / 90)), A = 26, TH = 10, y0 = top - L + fold, pts = [[S + 6, top - 6], [S + 6, y0]];   // a side view: hangs flat, then the folds stack at the bottom only
+    for (let k = 1; k <= N * 2; k++) pts.push([S + 6 + (k % 2 ? A : 0), y0 - fold * k / (N * 2)]);
+    const sh = new T.Shape([...pts, ...pts.map(([z, y]) => [z + TH, y]).reverse()].map(([z, y]) => new T.Vector2(z, y))), geo = new T.ExtrudeGeometry(sh, { depth: bw, bevelEnabled: false }); geo.rotateY(-Math.PI / 2); geo.translate(bw / 2, 0, 0);   // the shape's first coordinate becomes the depth from the wall
+    g.add(kit.solid(geo, 0, 0, 0, { tone }));
+  } else {
+    g.add(kit.cyl(-w / 2, top - 22, S + 24, 24, w, { axis: 'x', seg: 20, ...lo }));   // the roller tube, its back at S
+    for (const sx of [-1, 1]) bracket(sx * (w / 2 + 14), S + 24, top - 22);
+    g.add(kit.box(-bw / 2, top - 44 - L, S + 40 + 10, bw, L, 5, { tone }));   // the fabric, hanging flat just in front of the tube
+    g.add(kit.rbox(-bw / 2, top - 44 - L - 14, S + 40 + 14, bw, 20, 16, 6, { tone: 'lo' }));   // the hem bar
+    g.add(kit.lines([[bw / 2 - 40, top - 44 - L - 4, S + 64], [bw / 2 - 40, top - 44 - L - 4 - 140, S + 64]], 'lo'));   // the pull cord
+  }
+  return kit.merge(g);
+}
+
 export function curtain(kit, { w = 1500, h = 2300, panels = 2 } = {}) {
   const T = kit.THREE, g = kit.group(), pw = w * 0.22, N = 9, A = 34, TH = 14, ROD = h + 70;
   g.add(kit.cyl(-w / 2 - 70, ROD, 90, 12, w + 140, { axis: 'x', seg: 14, ...lo }));

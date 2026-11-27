@@ -27,13 +27,12 @@ const H = new Home({ seed: 845071, floor: 'boards' });
   T.on('plant', { y: 757 });
   T.on('jug', { y: 757, dx: -250, dz: 150 });
   // by the arch: tall plant and the height chart on the jamb
-  a.put('fp', 'floorPlant', [5500, 420], 0, { group: 'arch', params: { form: 1 } });
+  a.put('fp', 'floorPlant', [5500, 420], 0, { group: 'wall', params: { form: 1 } });
   back.put('hc', 'heightChart', 5230, 6, { group: 'arch' });
-  a.put('stool', 'stool', [4300, 2900], 0, { group: 'breakfast' });
+  a.put('stool', 'stool', [4880, 2700], 0, { group: 'breakfast' });
   a.view({ target: [2700, 700, 1500], az: 20, el: 16 });
   a.shot('cook', [6500, 1100, 5700], [2251, 900, 847], 40, 'cook');
-  a.shot('table', [1700, 1700, 5700], [5761, 300, 2986], 30, 'breakfast');
-  a.shot('arch', [2300, 1000, 4800], [5185, 900, -181], 34, 'arch');
+  a.shot('table', [2900, 2100, 6000], [6026, 300, 2815], 30, 'breakfast');
 }
 
 // ================= DINING: wide-angle backing (120), long table under a pendant, door on the right wall, window on the back wall
@@ -53,15 +52,15 @@ const H = new Home({ seed: 845071, floor: 'boards' });
   back.place('mirror', 'mirror', 3800, { group: 'sideboard', y: 1150, params: { shape: 'round', w: 700, h: 700 } });
   back.place('pot', 'plant', 3200, { group: 'sideboard', y: 800 });
   back.place('jug', 'jug', 4300, { group: 'sideboard', y: 800, off: 150 });
-  a.put('fp1', 'floorPlant', [1300, 3700], 0, { group: 'floor', params: { form: 2 } });
+  a.put('fp1', 'floorPlant', [1500, 2700], 0, { group: 'floor', params: { form: 2 } });
   right.place('pic', 'picture', 3150, { group: 'floor', y: 1300 });
   a.put('logs2', 'basket', [5250, 480], 0, { group: 'sideboard', params: { form: 1 } });
   a.put('scuff', 'scuff', [3500, 1500], 0, { group: 'floor', mount: 'lines' });
   const V = JSON.parse(process.env.DV || '{"az":0,"el":22,"t":[3300,600,1600]}');
   a.view({ target: V.t, az: V.az, el: V.el });
-  a.shot('table', [1400, 1250, 6600], [3088, 900, 2478], 36, 'table set');
-  a.shot('window', [2300, 1900, 5400], [1458, 249, 260], 36, 'window');
-  a.shot('sideboard', [7100, 1000, 5100], [3701, 900, 711], 34, 'sideboard');
+  a.shot('table', [500, 1100, 6000], [3153, 900, 2385], 36, 'table set');
+  a.shot('window', [2600, 2100, 4800], [2700, 1100, 144], 32, 'window');
+  a.shot('sideboard', [6500, 700, 5100], [3700, 900, 638], 34, 'sideboard');
 }
 
 // ================= LIVING: wide-angle backing (120), sofa + armchair + rug + coffee table, window and arch on the back wall, wood stove
@@ -69,7 +68,7 @@ const H = new Home({ seed: 845071, floor: 'boards' });
   const a = H.area('living', 'Living', { rect: [0, 0, 6400, 4200] });
   const back = a.back(6400, [{ kind: 'window', x: 1500, width: 1400, height: 1300, sill: 900 }, { kind: 'arch', x: 5300, width: 1000, height: 2100 }]);
   const right = a.right(3800, [], 120);
-  a.put('rug', 'rug', [3500, 2300], 0, { group: 'extra', params: { w: 2000, d: 1300 } });
+  a.put('rug', 'rug', [2900, 1800], 0, { group: 'extra', params: { w: 3300, d: 2700 } });
   back.place('sofa', 'sofa', 3500, { group: 'sofa', hero: true, y: 7, lift: 7, params: { seats: 3 } });
   a.put('arm', 'armchair', [1500, 2100], facing([1500, 2100], [3500, 2400]), { group: 'window', y: 7, lift: 7 });
   a.put('coffee', 'coffeeTable', [3500, 2450], 0, { group: 'coffee group', y: 7, lift: 7 });
@@ -81,15 +80,15 @@ const H = new Home({ seed: 845071, floor: 'boards' });
   back.place('curtain', 'curtain', 1500, { group: 'window', params: { w: 1900 } });
   right.place('stove', 'woodStove', 1700, { group: 'stove', off: 435 });
   right.place('logs', 'logBasket', 2550, { group: 'stove', off: 280 });
-  a.put('fp1', 'floorPlant', [1900, 3350], 0, { group: 'extra', params: { form: 0 } });
+  a.put('fp1', 'floorPlant', [1900, 3650], 0, { group: 'extra', params: { form: 0 } });
   a.put('fp2', 'floorPlant', [6150, 450], 0, { group: 'stove', params: { form: 3 } });
   a.put('leaf', 'leaf', [2050, 3250], 0, { group: 'extra', mount: 'lines' });
   a.put('scr', 'scratches', [2447, 600], -90, { group: 'sofa', y: 330, mount: 'lines' });
   a.view({ target: [3300, 600, 1500], az: 20, el: 16 });
-  a.shot('sofa', [3200, 1100, 5400], [2922, 900, 415], 40, 'sofa');
-  a.shot('stove', [1400, 1700, 4200], [6597, 500, 934], 34, 'stove');
+  a.shot('sofa', [2900, 1100, 5400], [2922, 900, 380], 40, 'sofa');
+  a.shot('stove', [1400, 1700, 4500], [6567, 500, 934], 34, 'stove');
   a.shot('window', [8000, 850, 3900], [1751, 1204, 705], 34, 'window');
-  a.shot('coffee', [1700, 1250, 6300], [3837, 900, 2608], 30, 'coffee group');
+  a.shot('coffee', [5000, 1250, 6000], [3064, 300, 2634], 28, 'coffee group');
 }
 
 H.write(new URL('./round-1a.json', import.meta.url).pathname, fs);
