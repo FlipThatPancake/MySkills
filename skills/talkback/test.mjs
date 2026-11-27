@@ -99,12 +99,14 @@ check('found an empty spot to comment on', !!spot);
 if (spot) {
   await p.mouse.click(...spot);
   await settle(400);
-  const open = await ui(() => { const bub = $('.box .bub'), f = $('.box .card'); if (!bub) return null; const r = rect(bub); return { tip: $('.box').classList.contains('flip') ? [r.right - 1, r.bottom - 2] : [r.left + 1, r.bottom - 2], pins: $$('.pin').filter(shown).length, fieldH: rect(f).height, inView: rect($('.box')).left >= 0 && rect($('.box')).right <= innerWidth }; });
+  const open = await ui(() => { const bub = $('.box .bub'), f = $('.box .card'); if (!bub) return null; const r = rect(bub); return { tip: $('.box').classList.contains('flip') ? [r.right - 1, r.bottom - 2] : [r.left + 1, r.bottom - 2], pins: $$('.pin').filter(shown).length, fieldH: rect(f).height, level: Math.abs((r.top + r.height / 2) - (rect($('.box .go')).top + rect($('.box .go')).height / 2)), inside: $('.box').classList.contains('inside'), left: $('.box').classList.contains('left'), opts: window.talkbackOptions || {}, inView: rect($('.box')).left >= 0 && rect($('.box')).right <= innerWidth }; });
   check('clicking opens a comment box', !!open);
   check('the bubble tip sits on the clicked spot', open && near(open.tip, spot), open && JSON.stringify(open.tip) + ' vs ' + JSON.stringify(spot));
   check('no numbered pin while the new box is open', open && open.pins === 0, open && open.pins + ' pins');
   check('an empty box is one line tall', open && open.fieldH <= 64, open && open.fieldH + 'px');
   check('the box stays on screen', open && open.inView);
+  check('the pin is level with the input line', open && open.level <= 1.5, open && open.level.toFixed(1) + 'px apart');
+  check('the pin and turn options take effect', open && open.inside === (open.opts.pin === 'inside') && open.left === (open.opts.userTurns === 'left'), open && JSON.stringify([open.inside, open.left, open.opts.pin, open.opts.userTurns]));
   check('the page does not receive the click', (await p.evaluate(() => window.__cmClicks)) === 0);
   await p.keyboard.type('Point comment');
   await p.keyboard.press('Enter');
@@ -294,6 +296,9 @@ try {
   await cp.waitForTimeout(500);
   const sent2 = await cp.evaluate(() => window.__sent);
   check('claude.ai: a follow-up goes into the same thread', sent2.length === 2 && sent2[1].threadId === 't1', JSON.stringify(sent2[1]));
+  for (let i = 0; i < 12; i++) { await cp.keyboard.type('Another message number ' + i + ' that makes the thread longer'); await cp.keyboard.press('Enter'); await cp.waitForTimeout(150); }
+  const longTip = await cui(() => { const r = $('.box .bub').getBoundingClientRect(), f = $('.box').classList.contains('flip'); return [f ? r.right - 1 : r.left + 1, r.bottom - 2]; });
+  check('claude.ai: after a long thread the bubble tip still sits on the spot', near(longTip, spot), JSON.stringify(longTip) + ' vs ' + JSON.stringify(spot));
   await cp.close();
 } catch (e) {
   check(`the claude.ai test stopped at "${stage}"`, false, String(e.message).split('\n')[0]);

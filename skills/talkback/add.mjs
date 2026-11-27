@@ -7,6 +7,7 @@ const args = process.argv.slice(2);
 const spot = (args.find((a) => a.startsWith('--toolbar=')) || '--toolbar=bottom-center').slice(10);
 if (!/^(top|bottom)-(left|center|right)$/.test(spot)) { console.error('unknown toolbar spot: ' + spot); process.exit(1); }
 const layout = args.includes('--layout=column') ? ", layout: 'column'" : '';
+for (const [k, ok] of [['--pin=', ['outside', 'inside']], ['--user-turns=', ['indent', 'left']]]) { const v = (args.find((a) => a.startsWith(k)) || '').slice(k.length); if (args.some((a) => a.startsWith(k)) && !ok.includes(v)) { console.error('unknown ' + k.slice(2, -1) + ': ' + v + ' (use ' + ok.join(' or ') + ')'); process.exit(1); } }
 const pin = args.includes('--pin=inside') ? ", pin: 'inside'" : '';
 const turns = args.includes('--user-turns=left') ? ", userTurns: 'left'" : '';
 const theme = (args.find((a) => a.startsWith('--theme=')) || '--theme=author').slice(8);

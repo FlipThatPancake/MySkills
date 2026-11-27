@@ -162,8 +162,8 @@
   // Popup choices: where the pin sits and how your turns line up.
   const pinInside = () => (window.talkbackOptions || {}).pin === 'inside';
   const turnsLeft = () => (window.talkbackOptions || {}).userTurns === 'left';
-  const INK = { '': '#585854', queued: '#0a7bd4', ready: '#0a7bd4', picked: '#0a7bd4', asks: '#b86e00', done: '#16883f', resolved: '#5f5f5f' };
-  const DOT = { queued: '#8b8b8b', ready: '#0d99ff', picked: '#0d99ff', asks: '#f69b13', done: '#1fbf5a', resolved: '#8b8b8b' };
+  const INK = { err: '#a71414', '': '#585854', queued: '#0a7bd4', ready: '#0a7bd4', picked: '#0a7bd4', asks: '#b86e00', done: '#16883f', resolved: '#5f5f5f' };
+  const DOT = { err: '#e5484d', queued: '#8b8b8b', ready: '#0d99ff', picked: '#0d99ff', asks: '#f69b13', done: '#1fbf5a', resolved: '#8b8b8b' };
   const chipOf = (c) => {
     const ty = (c.target && c.target.type) || '', txt = isText(c) || /^(text|p|h\d|li|blockquote|label|td|th)/.test(ty) ? 'text' : /^(img|svg|canvas|video|picture)/.test(ty) ? 'image' : /^(button|a|link|input|select|textarea)/.test(ty) ? 'button' : 'spot';
     const name = c.target.name || (isText(c) ? cut(c.quote, 40) : c.target.text ? cut(c.target.text, 40) : ty);
@@ -212,17 +212,17 @@
     .panel button{padding:6px 12px;border:1px solid #dfdeda55;border-radius:99px;font-size:12px}
     /* the comment popup: one card holding the thread and the line you type in, with a round pin level with that line */
     .box{position:fixed;left:0;top:0;display:flex;align-items:flex-end;pointer-events:auto;--surf:#fff;--ring:#7a7a76;--hair:#d0cfca;--chip:#ecebe8;--ink:#1f1f1f;--soft:#585854;--sub:#62625d}
-    .card{box-sizing:border-box;width:360px;max-width:calc(100vw - 24px);padding:14px;background:var(--surf);border:1px solid var(--ring);border-radius:26px;color:var(--ink);font-size:15px;line-height:1.4;text-wrap:pretty;
+    .card{box-sizing:border-box;width:360px;max-width:calc(100vw - 46px);padding:14px;background:var(--surf);border:1px solid var(--ring);border-radius:26px;color:var(--ink);font-size:15px;line-height:1.4;text-wrap:pretty;
       box-shadow:0 10px 30px #00000024;animation:pop .22s ease;margin:0 0 -12px -4px}
     .box.flip{flex-direction:row-reverse}.box.flip .card{margin:0 -4px -12px 0}
-    .box.inside .card{margin:0 0 -15px -7px;border-bottom-left-radius:4px}
+    .box.inside .card{margin:0 0 -15px -7px;border-bottom-left-radius:4px;max-width:calc(100vw - 16px)}
     .box.inside.flip .card{margin:0 -7px -15px 0;border-radius:26px 26px 4px 26px}
     .bub{flex:none;position:relative;z-index:2;display:grid;place-items:center;width:34px;height:34px;border-radius:17px 17px 17px 3px;background:var(--surf);
       box-shadow:inset 0 0 0 1px var(--ring),0 2px 8px #0003;color:var(--pc,var(--soft))}
     .bub svg{width:17px;height:17px}
     .box.flip .bub{border-radius:17px 17px 3px 17px}
     .box.inside .bub{width:28px;height:28px;margin:0 0 0 -8px;align-self:flex-end;border-radius:14px 14px 14px 3px;box-shadow:inset 0 0 0 1px var(--ring)}
-    .box.inside.flip .bub{margin:0 -8px 0 0;border-radius:14px 14px 3px 14px;order:1}
+    .box.inside.flip .bub{margin:0 -8px 0 8px;border-radius:14px 14px 3px 14px;order:1}
     .box.inside .bub svg{width:15px;height:15px}
     .box.inside .hd .bub{align-self:center}
     .hd{display:flex;align-items:center;gap:8px;min-height:28px;margin:0 0 10px;font-size:12px}
@@ -241,12 +241,14 @@
     .mk{flex:none;display:grid;place-items:center;width:1.35em;height:1.35em;margin-block:calc((1lh - 1.35em) / 2);border-radius:50%;background:var(--surf);box-shadow:inset 0 0 0 1px var(--ring)}
     .mk svg{width:.85em;height:.85em}
     .tx{white-space:pre-wrap;overflow-wrap:anywhere}
-    .tx small,.sm{display:block;margin-top:2px;font-size:12px;line-height:1.35;color:var(--soft)}
+    .tx small,.sm{display:block;margin:2px 0 0;font-size:12px;line-height:1.35;color:var(--soft)}
+    .sm{margin-left:30px}
     .tx button{margin-left:8px;padding:2px 8px;border-radius:99px;box-shadow:inset 0 0 0 1px var(--ring);font-size:12px}
     .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
     .cmp{display:flex;gap:10px;align-items:flex-start;min-height:28px}
     .conv:not([hidden])~.cmp{margin:8px -8px 0;padding:10px 8px 0;border-top:1px solid var(--hair)}
-    .conv:not([hidden])~.cmp textarea{padding-left:30px}.box.inside .conv:not([hidden])~.cmp textarea{padding-left:0}
+    .conv:not([hidden])~.cmp textarea{padding-left:30px}.box:not(.left) .conv:not([hidden])~.cmp textarea{padding-left:60px}
+    .box.inside.left .conv:not([hidden])~.cmp textarea{padding-left:0}.box.inside:not(.left) .conv:not([hidden])~.cmp textarea{padding-left:30px}
     textarea{box-sizing:border-box;flex:1;min-width:0;max-height:160px;resize:none;border:0;outline:0;padding:3.5px 0;background:none;font:inherit;color:inherit}
     textarea::placeholder{color:var(--sub)}
     .cb{flex:none;align-self:flex-end;display:grid;place-items:center;width:26px;height:26px;margin-block:1px;border-radius:50%;background:none;color:var(--sub);box-shadow:inset 0 0 0 1px var(--ring)}
@@ -367,7 +369,7 @@
     el.className = 'box' + (pinInside() ? ' inside' : '') + (turnsLeft() ? ' left' : '');
     el.style.setProperty('--c', colorOf(c));
     const pin = '<div class="bub"></div>';
-    el.innerHTML = (pinInside() ? '' : pin) + '<div class="card"><div class="conv" hidden></div><div class="cmp">' + (pinInside() ? pin : '') + '<textarea rows="1" placeholder="Add a comment"></textarea><button class="cb del" title="Delete" aria-label="Delete">' + TRASH + '</button><button class="cb go" title="' + (live.on || cc ? 'Send to agent (Enter)' : 'Save (Enter)') + '" aria-label="Send">' + SEND + '</button></div></div>';
+    el.innerHTML = (pinInside() ? '' : pin) + '<div class="card"><div class="conv" hidden></div><div class="cmp">' + (pinInside() ? pin : '') + '<textarea rows="1" aria-label="Comment" placeholder="Add a comment"></textarea><button class="cb del" title="Delete" aria-label="Delete">' + TRASH + '</button><button class="cb go" title="' + (live.on || cc ? 'Send to agent (Enter)' : 'Save (Enter)') + '" aria-label="Send">' + SEND + '</button></div></div>';
     const ta = el.querySelector('textarea'), go = el.querySelector('.go'), del = el.querySelector('.del');
     const fit = () => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; go.disabled = !ta.value.trim(); };
     const talking = chat() && (c.msgs || []).length; // a conversation: the field is for the next message
@@ -432,6 +434,14 @@
         // A point comment hangs from the bubble's tip, its bottom corner, flipping left near the right edge; a text comment sits under its text.
         const flip = isText(box.c) ? px + 8 + w > innerWidth - 8 : px + w > innerWidth - 8;
         box.el.classList.toggle('flip', flip);
+        // A long thread scrolls inside the room the page leaves, so the pin can stay on its spot.
+        const ml = box.el.querySelector('.ml');
+        if (ml && ml.offsetParent) {
+          const chrome = box.el.querySelector('.card').offsetHeight - ml.offsetHeight, over = pinInside() ? 15 : 12;
+          const room = isText(box.c) ? innerHeight - 20 - (py + 10) + over - chrome : py + over - 8 - chrome;
+          const cap = Math.round(clamp(room, 90, 300));
+          if (ml.style.maxHeight !== cap + 'px') { const end = ml.scrollTop + ml.clientHeight >= ml.scrollHeight - 2; ml.style.maxHeight = cap + 'px'; if (end) ml.scrollTop = ml.scrollHeight; }
+        }
         const x = isText(box.c) ? clamp(px + 8, 8, innerWidth - w - 8) : clamp(flip ? px - w : px, 8, innerWidth - w - 8);
         box.el.style.transform = `translate(${x}px,${clamp(isText(box.c) ? py + 10 : py - h, 8, innerHeight - h - 20)}px)`;
       }
@@ -549,7 +559,7 @@
   }
   // The pin carries the state: your initial-free person while your message waits, the agent's spark when it spoke last, a tick when resolved.
   function paintPin() {
-    const b = box.el.querySelector('.bub'), c = box.c, ms = c.msgs || [], s = chat() && ms.length ? stOf(c) : '';
+    const b = box.el.querySelector('.bub'), c = box.c, ms = c.msgs || [], err = cc && ms.some((m) => m.err), s = err ? 'err' : chat() && ms.length ? stOf(c) : '';
     b.innerHTML = !chat() || !ms.length ? PIN.add : c.resolved ? PIN.tick : ms[ms.length - 1].who === 'user' ? PIN.person : PIN.spark;
     b.style.setProperty('--pc', INK[s] || INK['']);
     box.el.dataset.st = s;
@@ -569,7 +579,7 @@
     conv.textContent = '';
     const hd = h('div', 'hd', undefined, conv);
     if (pinInside() && c.resolved) hd.prepend(bub);
-    h('span', 'stl', cc ? (c.resolved ? 'Resolved' : ms.some((m) => !m.sent) ? 'Sending…' : 'Sent to Claude') : STL[stOf(c)] + (stOf(c) === 'picked' ? ' ' + hm(ms.filter((m) => m.picked).pop().picked) : ''), hd);
+    h('span', 'stl', cc ? (c.resolved ? 'Resolved' : ms.some((m) => m.err) ? 'Not sent' : ms.some((m) => !m.sent) ? 'Sending…' : 'Sent to Claude') : STL[stOf(c)] + (stOf(c) === 'picked' ? ' ' + hm(ms.filter((m) => m.picked).pop().picked) : ''), hd);
     if (c.resolved) h('span', 'first', '· ' + cut(c.text || ms[0].text, 60), hd);
     else { const [icon, name] = chipOf(c), chip = h('span', 'chip', undefined, hd); chip.innerHTML = icon; h('span', '', name, chip); }
     const rs = h('button', 'rs', undefined, hd);
