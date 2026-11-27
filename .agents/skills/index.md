@@ -1,6 +1,7 @@
 # Skills
 
 <!-- written by scripts/skill-index.mjs -->
+- `21st-components`: Use when the user asks for a React component, block or theme from 21st.dev (21dev), or for a polished React piece such as a pricing card, hero or navbar that 21st.dev could supply. `.agents/skills/21st-components/SKILL.md`
 - `add-skill`: Use when the user asks to add, import, install or update a skill in a project. `.agents/skills/add-skill/SKILL.md`
 - `blend-along`: Use when the user asks to work in Blender to plan, build, revise, inspect, or troubleshoot a scene, object, or script. `.agents/skills/blend-along/SKILL.md`
 - `blender-addon-development`: Use when writing, packaging, debugging, or testing a Blender add-on or extension (operators, panels, properties, draw handlers, blender_manifest.toml), including add-ons whose data or tools agents read through an MCP. For using add-ons that are already installed, use blend-along instead. `.agents/skills/blender-addon-development/SKILL.md`
