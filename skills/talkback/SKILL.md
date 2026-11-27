@@ -27,8 +27,8 @@ Optional page hooks, defined before the install block:
 
 Pick the route your setup allows and tell the user which one it is. Download and Copy JSON work everywhere. On the user's computer, go live:
 1. Run `node <skill folder>/live.mjs serve --open page.html` in the background. It serves the page's folder on 127.0.0.1 and prints the link with a secret token; open that link, never the file.
-2. Run `node <skill folder>/live.mjs wait` in the background. It returns new messages as JSON (`n`, `target`, `selector`, `quote`, `context`, `messages`, `earlier`) or `{"timeout":true}`; start it again each time it returns.
-3. Answer every message with `node <skill folder>/live.mjs reply <n> "text" [--done]`. Ask with concrete options when a message is vague. Use `--done` when the work is finished and the user should check it.
+2. Run `node <skill folder>/live.mjs wait --dir=<page's folder>` in the background. It returns new messages as JSON (`n`, `page`, `target`, `selector`, `quote`, `context`, `messages`, `earlier`) or `{"timeout":true}`; start it again each time it returns.
+3. Answer every message with `node <skill folder>/live.mjs reply <n> "text" [--done] --dir=<page's folder>`. Ask with concrete options when a message is vague. Use `--done` when the work is finished and the user should check it.
 4. When the page changes, the user sees "Updated, reload". `window.commentRestore = ({ context, extras }) => {...}` restores page state (open tab, form values) after that reload.
 
 On claude.ai (a cloud session the user follows in claude.ai), publish the page as an Artifact with `capabilities: {comments: {}}` and tell the user to open the link in their browser. Talkback keeps its own comment mode and sends each message through claude.ai's Send to Claude, with the target appended to the text; the first send asks the user for consent. Send to Claude wakes the session that published the page: read the thread, edit, republish and reply there; the user sees replies in claude.ai's comment panel, not in Talkback. Leave resolving to the user.
