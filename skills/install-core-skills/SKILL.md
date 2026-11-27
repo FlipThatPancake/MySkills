@@ -11,11 +11,12 @@ Source: `skills/<name>/` in this repo at its current commit. Target: the repo th
 
 ## Install and update
 - Add each core skill the target lacks, with add-skill.
-- For every other skill the target has that MySkills also has, compare it with the version at the commit the project recorded, or with MySkills' current version if none is recorded.
+- For every other skill the target has that MySkills also has, compare it with the version at the commit the project recorded.
+- If none is recorded, search MySkills' git history for a version identical to the target's copy: a match means no local edits, no match means local edits.
 - No local edits: replace it with the new version.
 - Local edits: list them for the user to resolve, and leave those skills as they are until then.
 - Leave skills MySkills lacks alone.
-- Record the commit where add-skill records its source and revision.
+- Record the MySkills commit in the project's lock file or sync list; if it has none, in `skills/myskills-source.txt`.
 
 ## Make threads read them
 - Copy `scripts/skill-index.mjs` and `scripts/ship-checks/skill-index.sh` into the target, then run the script to write `.agents/skills/index.md`.
@@ -25,7 +26,8 @@ Source: `skills/<name>/` in this repo at its current commit. Target: the repo th
   Same rule: create it with only those two lines, or add what's missing to the existing file.
 
 ## Ship
-Put the changes on a branch in the target and open a PR to main.
+Put the changes on a branch in the target and open a PR to its default branch.
+If the repo has no commits, ask the user, then push the install as its first commit on `main`.
 
 ## Check
 Does every core skill open from `.claude/skills` and `.agents/skills`? Does the index list every installed skill? Does `CLAUDE.md` reach the index through real files? Is the commit recorded?
