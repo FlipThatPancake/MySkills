@@ -11,11 +11,13 @@ The toolbar must not cover the page's content or distract from it. If the projec
 
 ## Install
 
-Run `node <skill folder>/add.mjs --toolbar=<spot> [--layout=column] [--theme=agent-default] [--css=<file>] page.html`. It inlines [talkback.js](talkback.js) before the closing body tag and replaces an earlier copy, including one from the old comment-mode name, so the page stays a single file. Where Node is unavailable, paste the file's contents into a script tag at the end of the body between `<!-- talkback:start -->` and `<!-- talkback:end -->`, after `window.talkbackOptions = { toolbar: '<spot>' };` (add `layout: 'column'` for stacked buttons). Never rewrite the script; if it needs a change, change the kit.
+Run `node <skill folder>/add.mjs --toolbar=<spot> [--layout=column] [--pin=inside] [--user-turns=left] [--theme=agent-default] [--css=<file>] page.html`. It inlines [talkback.js](talkback.js) before the closing body tag and replaces an earlier copy, including one from the old comment-mode name, so the page stays a single file. Where Node is unavailable, paste the file's contents into a script tag at the end of the body between `<!-- talkback:start -->` and `<!-- talkback:end -->`, after `window.talkbackOptions = { toolbar: '<spot>' };` (add `layout: 'column'` for stacked buttons). Never rewrite the script; if it needs a change, change the kit.
 
 After installing, run `node <skill folder>/test.mjs page.html` and fix every failure before handing the page over. It clicks past a first-visit dialog by itself; for another kind of first-visit screen, add `--setup='<JS that dismisses it>'`.
 
 Select text to comment on exact words, or click anything the hover outline shows: a line of text, a text block, an image, a control, an SVG shape, a formula, or empty space. With Talkback off, only the toggle stays, plus a download button showing how many comments are unsaved. The look is the `author` theme ([themes/author.css](themes/author.css)) unless `--theme=agent-default` is given. `agent-default` keeps the plain look built into talkback.js: use it when the agent should choose the look, and fit the toolbar to the page with CSS passed as `--css=<file>`, aimed at the classes in that script's style block. Give key visuals a name with `data-comment="Force arrow"` so the export names them instead of describing their shape.
+
+`--pin=inside` puts the pin in the input row; `--user-turns=left` aligns the user's turns left instead of indenting them.
 
 Optional page hooks, defined before the install block:
 - `window.commentContext = () => ({ ... })` for state that changes what a comment means, such as the open tab or a slider value. It is stored with each comment.
