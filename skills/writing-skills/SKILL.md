@@ -1,6 +1,6 @@
 ---
 name: writing-skills
-description: "Use when creating, revising, generalizing, or evaluating agent skills and their SKILL.md files, turning a repeatable workflow into a skill, improving skill activation or behavior, adapting a skill for Claude Code and ChatGPT/Codex, or editing project instructions that load or share a skill's workflow. Excludes ordinary task execution and unrelated edits to app or repository instructions."
+description: "Use before writing, editing or reviewing any skill or file in a skill's folder, including turning a workflow into a skill or editing project instructions that load one."
 ---
 
 # Writing skills
@@ -54,5 +54,12 @@ Read only what the task needs:
 
 - [patterns.md](references/patterns.md): choosing between outcome guidance, a conditional rule, a template, and an exact procedure.
 - [evaluation.md](references/evaluation.md): designing an evaluation when the host's normal checks leave a relevant question unanswered.
-- [platforms.md](references/platforms.md): shared format, host differences, and project loaders.
+- [platforms.md](references/platforms.md): when the skill must run on more than one host, or a project loads it.
 - [sources.md](references/sources.md): official guidance behind these choices; recheck changing platform details when implementation depends on them.
+
+## Before showing a draft
+
+- Does the description list only triggers, most common first?
+- Does every line add something the host or always-loaded context lacks?
+- Does each rule say what to do, with any exception on its own "if" line?
+- Did I read each reference whose case applies?
